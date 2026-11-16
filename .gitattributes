@@ -1,6 +1,7 @@
 # Composer installs nforst/fagus from GitHub's archives, which leave out what is marked here: the
 # package is the PHP code in php/, without the engine's sources and tests.
 /.github export-ignore
+/art export-ignore
 /bench export-ignore
 /crates export-ignore
 /docs export-ignore

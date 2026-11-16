@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="art/banner.png" alt="Fagus: HTML and CSS to PDF for PHP and Laravel, without a browser" width="1280">
+</p>
+
+<p align="center">
+  <a href="https://github.com/nforst/fagus/actions/workflows/ci.yml"><img src="https://github.com/nforst/fagus/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://packagist.org/packages/nforst/fagus"><img src="https://img.shields.io/packagist/v/nforst/fagus" alt="Latest version on Packagist"></a>
+  <a href="https://packagist.org/packages/nforst/fagus"><img src="https://img.shields.io/packagist/dependency-v/nforst/fagus/php" alt="PHP version"></a>
+  <a href="#license"><img src="https://img.shields.io/packagist/l/nforst/fagus" alt="Licence"></a>
+</p>
+
 # Fagus
 
 HTML and CSS to PDF for PHP and Laravel, without a browser.
