@@ -14,7 +14,7 @@ A release consists of the `fagus` binary for every platform, attached to a GitHu
 
    This commit changes nothing but `Release.php`, so the binaries are those of the code it is tagged with.
 4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. Then run the corpus checks: `tools/validate.sh` and the comparison with Chrome.
-5. **Tag and publish.** Tag the pin commit `v0.1.0`, push the tag, then publish the draft release, which takes the existing tag. The Composer package is released with the same tag: Packagist reads `composer.json` at the root of this repository.
+5. **Tag and publish.** Tag the pin commit `v0.1.0`, push the tag, then publish the draft release, which takes the existing tag. The Composer package is released with the same tag: Packagist reads `composer.json` at the root of this repository. [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) shows the documentation of the new tag within about ten minutes.
 
 ## Composer
 

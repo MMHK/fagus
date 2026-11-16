@@ -7,3 +7,4 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 - No `unsafe` code. Every crate forbids it.
 - Behaviour follows the CSS specifications; appearance is compared with Chrome. Print features that Chrome lacks follow the specifications and WeasyPrint.
 - Every bug fix comes with a test.
+- The documentation is in `docs/` and is published on [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) (`main` under `/docs/next`). Every page needs an entry in `docs/nav.yml`; run `php tools/check-docs.php` after changing the pages, which also checks the links between them.
