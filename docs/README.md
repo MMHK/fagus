@@ -17,6 +17,7 @@ things up in.
   own, worker processes, speed and memory.
 - [Troubleshooting](troubleshooting.md): error messages, diagnostics, differences from Chrome, and
   moving from Dompdf, mPDF, Browsershot or Snappy.
+- [Docs for AI assistants](ai-assistants.md): `llms.txt` and an MCP server for coding assistants.
 
 ## Writing documents
 
