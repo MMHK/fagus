@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tables</title>
+<style>
+@page { size: A4; margin: 12mm; }
+body { margin: 0; font: 9pt/1.4 Inter, sans-serif; color: #111; }
+h2 { font-size: 10pt; margin: 5mm 0 2mm; }
+table { margin-bottom: 3mm; }
+.collapse { border-collapse: collapse; width: 100%; }
+.collapse td, .collapse th { border: 1px solid #94a3b8; padding: 1.5mm 2mm; }
+.collapse th { background: #e2e8f0; text-align: left; }
+.collapse .thick { border: 3px solid #2563eb; }
+.zebra tbody tr:nth-child(even) { background: #f1f5f9; }
+.separate { border-collapse: separate; border-spacing: 2mm; border: 2px solid #111; }
+.separate td { border: 1px solid #e11d48; padding: 1mm; }
+caption { caption-side: bottom; font-size: 8pt; color: #475569; padding-top: 1mm; }
+.fixed { table-layout: fixed; width: 100%; border-collapse: collapse; }
+.fixed td { border: 1px solid #cbd5e1; padding: 1mm; overflow: hidden; }
+.baseline td { vertical-align: baseline; border: 1px solid #cbd5e1; }
+</style></head>
+<body>
+<h2>Spans and collapsed borders</h2>
+<table class="collapse zebra">
+<thead><tr><th rowspan="2">Position</th><th colspan="2">Menge</th><th rowspan="2">Betrag</th></tr>
+<tr><th>Anzahl</th><th>Einheit</th></tr></thead>
+<tbody>
+<tr><td>Beratung</td><td>2</td><td>Std.</td><td>190,00 €</td></tr>
+<tr><td rowspan="2">Entwicklung über zwei Zeilen</td><td>8</td><td>Std.</td><td>760,00 €</td></tr>
+<tr><td>4</td><td class="thick">Std.</td><td>380,00 €</td></tr>
+<tr><td colspan="3">Zwischensumme</td><td>1.330,00 €</td></tr>
+</tbody>
+</table>
+<h2>Separate borders and a caption</h2>
+<table class="separate"><caption>Tabelle 2: getrennte Rahmen</caption>
+<tr><td>a</td><td>b with more text</td><td>c</td></tr>
+<tr><td colspan="2">spans two</td><td>d</td></tr>
+</table>
+<h2>Fixed layout with col widths</h2>
+<table class="fixed"><colgroup><col style="width: 30%"><col><col style="width: 20mm"></colgroup>
+<tr><td>30 percent</td><td>rest of the table width goes here</td><td>20mm</td></tr>
+</table>
+<h2>Baseline alignment</h2>
+<table class="baseline"><tr><td style="font-size: 16pt">Big</td><td>small</td><td style="padding-top: 4mm">padded</td></tr></table>
+</body></html>

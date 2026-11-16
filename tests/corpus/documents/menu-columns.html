@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Speisekarte Gasthaus Zur Linde</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@font-face { font-family: Display; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff"); font-weight: 100 900; }
+@page { size: A4; margin: 14mm 14mm 12mm; background: #fbf6ec; }
+html { font: 9pt/1.4 Inter, sans-serif; color: #3b2f2f; }
+body { margin: 0; }
+header { text-align: center; border-bottom: .6mm solid #6b3e26; padding-bottom: 3mm; margin-bottom: 5mm; }
+header h1 { font: 800 28pt/1 Display, sans-serif; letter-spacing: .12em; margin: 0; color: #6b3e26; font-variant: small-caps; }
+header p { margin: 1mm 0 0; font-style: italic; color: #7d6658; }
+.menu { column-count: 2; column-gap: 10mm; column-rule: .3mm dotted #b8977e; }
+section { break-inside: avoid; margin-bottom: 5mm; }
+h2 { font: 700 11pt/1.2 Display, sans-serif; text-transform: uppercase; letter-spacing: .2em; color: #6b3e26; margin: 0 0 2mm; display: flex; align-items: center; gap: 2mm; }
+h2::before, h2::after { content: ""; flex: 1; border-top: .3mm solid #b8977e; }
+.dish { display: flex; align-items: baseline; gap: 1.5mm; margin-bottom: .6mm; }
+.dish .name { font-weight: 700; }
+.dish .lead { flex: 1; border-bottom: .35mm dotted #8c7262; transform: translateY(-.8mm); min-width: 5mm; }
+.dish .price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.desc { color: #6d5a50; font-size: 8pt; margin: 0 0 2mm; padding-right: 12mm; }
+.tag { font-size: 6.5pt; vertical-align: super; color: #2e7d32; font-weight: 700; letter-spacing: .05em; }
+.special { column-span: all; background: #6b3e26; color: #fbf6ec; text-align: center; padding: 2.5mm 6mm; margin: 1mm 0 5mm; border-radius: 1.5mm; }
+.special b { font: 700 11pt Display, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+footer { margin-top: 3mm; font-size: 7pt; color: #7d6658; text-align: center; border-top: .3mm solid #b8977e; padding-top: 2mm; }
+sup { font-size: 6pt; }
+</style></head><body>
+<header><h1>Gasthaus Zur Linde</h1><p>Regionale Küche seit 1887 · Dorfplatz 3 · Wernigerode</p></header>
+<div class="menu">
+<section><h2>Vorspeisen</h2>
+<div class="dish"><span class="name">Harzer Käsebrett</span><span class="lead"></span><span class="price">9,50 €</span></div><p class="desc">Harzer Roller, Ziegenkäse vom Hof Bergmann, Feigensenf, Bauernbrot</p>
+<div class="dish"><span class="name">Kürbiscremesuppe <span class="tag">VEGAN</span></span><span class="lead"></span><span class="price">6,80 €</span></div><p class="desc">mit gerösteten Kernen und Kürbiskernöl</p>
+<div class="dish"><span class="name">Rinderkraftbrühe</span><span class="lead"></span><span class="price">7,20 €</span></div><p class="desc">mit Markklößchen und Gemüsestreifen</p>
+<div class="dish"><span class="name">Wildkräutersalat</span><span class="lead"></span><span class="price">8,90 €</span></div><p class="desc">Himbeer-Vinaigrette, karamellisierte Walnüsse<sup>1</sup></p>
+</section>
+<section><h2>Hauptgerichte</h2>
+<div class="dish"><span class="name">Harzer Wildschweinbraten</span><span class="lead"></span><span class="price">24,50 €</span></div><p class="desc">Wacholderrahmsoße, Rotkohl mit Apfel, hausgemachte Klöße</p>
+<div class="dish"><span class="name">Forelle Müllerin Art</span><span class="lead"></span><span class="price">21,90 €</span></div><p class="desc">aus der Bode, Petersilienkartoffeln, brauner Butter und Mandeln</p>
+<div class="dish"><span class="name">Schnitzel „Lindenwirt“</span><span class="lead"></span><span class="price">18,80 €</span></div><p class="desc">vom Landschwein, Pilzrahm, Bratkartoffeln mit Speck und Zwiebeln</p>
+<div class="dish"><span class="name">Rinderroulade nach Omas Rezept</span><span class="lead"></span><span class="price">22,40 €</span></div><p class="desc">Speck, Gurke, Senf, Rotkohl und Salzkartoffeln</p>
+<div class="dish"><span class="name">Spinatknödel <span class="tag">VEGETARISCH</span></span><span class="lead"></span><span class="price">15,90 €</span></div><p class="desc">Bergkäse, zerlassene Butter, Parmesan und Salat der Saison</p>
+<div class="dish"><span class="name">Linsen-Gemüse-Curry <span class="tag">VEGAN</span></span><span class="lead"></span><span class="price">14,50 €</span></div><p class="desc">Kokosmilch, Koriander, Basmatireis</p>
+</section>
+<div class="special"><b>Martinsgans</b> — vom 11. bis 22. November ganze und halbe Gänse auf Vorbestellung, mit Rotkohl, Grünkohl und Klößen</div>
+<section><h2>Für die Kleinen</h2>
+<div class="dish"><span class="name">Kinderschnitzel mit Pommes</span><span class="lead"></span><span class="price">8,50 €</span></div>
+<div class="dish"><span class="name">Nudeln mit Tomatensoße</span><span class="lead"></span><span class="price">6,50 €</span></div>
+<div class="dish"><span class="name">Fischstäbchen, Kartoffelpüree</span><span class="lead"></span><span class="price">7,90 €</span></div>
+</section>
+<section><h2>Nachspeisen</h2>
+<div class="dish"><span class="name">Rote Grütze</span><span class="lead"></span><span class="price">6,50 €</span></div><p class="desc">mit Vanillesoße</p>
+<div class="dish"><span class="name">Apfelstrudel</span><span class="lead"></span><span class="price">7,20 €</span></div><p class="desc">warm, mit Vanilleeis und Sahne</p>
+<div class="dish"><span class="name">Harzer Baumkuchenspitzen</span><span class="lead"></span><span class="price">5,40 €</span></div><p class="desc">Zartbitterschokolade, Espresso</p>
+</section>
+<section><h2>Getränke</h2>
+<div class="dish"><span class="name">Hasseröder Pils 0,3 l</span><span class="lead"></span><span class="price">3,60 €</span></div>
+<div class="dish"><span class="name">Apfelschorle 0,4 l</span><span class="lead"></span><span class="price">3,90 €</span></div>
+<div class="dish"><span class="name">Grauburgunder, Saale-Unstrut 0,2 l</span><span class="lead"></span><span class="price">6,80 €</span></div>
+<div class="dish"><span class="name">Kaffee, Tasse</span><span class="lead"></span><span class="price">2,90 €</span></div>
+<div class="dish"><span class="name">Harzer Kräuterlikör 2 cl</span><span class="lead"></span><span class="price">3,20 €</span></div>
+</section>
+</div>
+<footer><sup>1</sup> enthält Schalenfrüchte · Alle Preise inklusive Mehrwertsteuer · Informationen zu Allergenen erhalten Sie bei unserem Servicepersonal.</footer>
+</body></html>

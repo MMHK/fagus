@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Modern CSS</title>
+<style>
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+@layer base, utilities;
+@property --prop-color { syntax: '<color>'; inherits: false; initial-value: #16a34a; }
+@page { size: A4; margin: 12mm; }
+body { margin: 0; font-family: Inter, sans-serif; font-size: 8pt; color: #111; }
+h1 { font-size: 13pt; margin: 0 0 3mm; }
+.grid4 { width: 100%; border-collapse: separate; border-spacing: 2.5mm; }
+.grid4 td { width: 25%; vertical-align: top; padding: 0; }
+.t { height: 20mm; border: 1px solid #999; position: relative; }
+.lbl { position: absolute; left: 1.5mm; bottom: 1mm; right: 1.5mm; font-weight: 700; color: #111; background: rgba(255,255,255,.85); padding: 0.5mm 1mm; }
+/* each test: red means the feature was ignored, green means it worked */
+.t1 { background: red; background: oklch(0.72 0.19 142); }
+.t2 { background: red; background: oklab(0.72 -0.17 0.13); }
+.t3 { background: red; background: color-mix(in oklab, #16a34a 85%, white); }
+.t4 { background: red; background: lch(62% 70 140); }
+@layer utilities { .t5 { background: #16a34a; } }
+@layer base { .t5 { background: red; } }
+.t6 { background: red; &.ok { background: #16a34a; } }
+.t7 { background: red; } :is(.t7) { background: #16a34a; }
+:where(.t8) { background: #16a34a; }
+.t9 { background: red; } .t9:has(.inner) { background: #16a34a; }
+.t10 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5mm; padding: 1.5mm; background: #fff; }
+.t10 > i { display: block; height: 9mm; background: #16a34a; }
+.t11 { background: #16a34a; } .t11 > b { display: block; height: 100%; background: red; width: 100%; width: calc(0% + 0px); }
+.t12 { background: var(--prop-color, red); }
+.t13 { background: red; background: linear-gradient(#16a34a, #16a34a), red; }
+.t14 { background: red; background: linear-gradient(to right in oklab, #15803d, #22c55e); }
+.t15 { background: red; } @supports (color: color-mix(in lab, red, red)) { .t15 { background: #16a34a; } }
+.t16 { background: var(--missing, var(--also-missing, #16a34a)); }
+.t17 { background: red; } .t17 > b { position: absolute; inset: 0; background: #16a34a; }
+.t18 { display: flex; gap: 3mm; padding: 1.5mm; } .t18 > i { flex: 1; height: 9mm; background: #16a34a; }
+.t19 { background: #fff; } .t19 > b { display: block; width: 60%; aspect-ratio: 4 / 1; background: #16a34a; margin: 1.5mm; }
+.t20 { background: #fff; } .t20 > b { display: block; width: 8mm; height: 8mm; margin: 2mm; background: #16a34a; translate: 15mm 0; rotate: 20deg; }
+.t21 { background: #fff; } .t21 > b { display: block; width: 25mm; height: 8mm; margin: 3mm; background: #16a34a; box-shadow: 0 2mm 3mm rgba(0,0,0,.45); border-radius: 2mm; }
+.t22 { background: red; background: rgb(22 163 74 / 100%); }
+.t23 { background: red; } .t23 { background: color-mix(in oklab, oklch(0.72 0.19 142) 100%, transparent); }
+.t24 { background: #fff; } .t24 > b { display: block; margin: 2mm; height: 8mm; background: #16a34a; width: min(100%, 50mm); max-width: clamp(10mm, 50%, 80mm); }
+</style></head>
+<body>
+<h1>Moderne CSS-Features (Tailwind v4 nutzt die meisten davon)</h1>
+<table class="grid4">
+<tr><td><div class="t t1"><div class="lbl">1 oklch()</div></div></td><td><div class="t t2"><div class="lbl">2 oklab()</div></div></td><td><div class="t t3"><div class="lbl">3 color-mix()</div></div></td><td><div class="t t4"><div class="lbl">4 lch()</div></div></td></tr>
+<tr><td><div class="t t5"><div class="lbl">5 @layer</div></div></td><td><div class="t t6 ok"><div class="lbl">6 CSS-Nesting</div></div></td><td><div class="t t7"><div class="lbl">7 :is()</div></div></td><td><div class="t t8"><div class="lbl">8 :where()</div></div></td></tr>
+<tr><td><div class="t t9"><span class="inner"></span><div class="lbl">9 :has()</div></div></td><td><div class="t t10"><i></i><i></i><i></i><div class="lbl">10 Grid (3 Spalten)</div></div></td><td><div class="t t11"><b></b><div class="lbl">11 calc() mit %</div></div></td><td><div class="t t12"><div class="lbl">12 @property</div></div></td></tr>
+<tr><td><div class="t t13"><div class="lbl">13 mehrere Hintergründe</div></div></td><td><div class="t t14"><div class="lbl">14 Verlauf "in oklab"</div></div></td><td><div class="t t15"><div class="lbl">15 @supports</div></div></td><td><div class="t t16"><div class="lbl">16 var()-Fallbacks</div></div></td></tr>
+<tr><td><div class="t t17"><b></b><div class="lbl">17 inset</div></div></td><td><div class="t t18"><i></i><i></i><div class="lbl">18 Flex mit gap</div></div></td><td><div class="t t19"><b></b><div class="lbl">19 aspect-ratio</div></div></td><td><div class="t t20"><b></b><div class="lbl">20 translate/rotate</div></div></td></tr>
+<tr><td><div class="t t21"><b></b><div class="lbl">21 box-shadow</div></div></td><td><div class="t t22"><div class="lbl">22 rgb( / %)</div></div></td><td><div class="t t23"><div class="lbl">23 Tailwind-Opacity</div></div></td><td><div class="t t24"><b></b><div class="lbl">24 min()/clamp() mit %</div></div></td></tr>
+</table>
+</body></html>

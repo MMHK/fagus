@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Software Licence and Support Agreement</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 22mm 18mm 24mm;
+  @bottom-center { content: counter(page) " / " counter(pages); font: 8pt Inter, sans-serif; color: #555; }
+}
+/* Facing pages: the wider margin is the binding edge */
+@page :left { margin-left: 16mm; margin-right: 28mm;
+  @top-left { content: "Software Licence and Support Agreement"; font: italic 8pt Inter, sans-serif; color: #555; border-bottom: .5pt solid #999; vertical-align: bottom; padding-bottom: 2mm; }
+  @bottom-left { content: "Initials: ______ / ______"; font: 7pt Inter, sans-serif; color: #777; }
+}
+@page :right { margin-left: 28mm; margin-right: 16mm;
+  @top-right { content: "Agreement no. KX-2026-0193"; font: italic 8pt Inter, sans-serif; color: #555; border-bottom: .5pt solid #999; vertical-align: bottom; padding-bottom: 2mm; }
+  @bottom-right { content: "Initials: ______ / ______"; font: 7pt Inter, sans-serif; color: #777; }
+}
+@page :first { margin: 30mm 28mm 24mm;
+  @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; }
+  @bottom-center { content: "Confidential"; font: 700 7pt Inter, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: #a00; }
+}
+@page annex { size: A4 landscape; margin: 15mm 20mm; @top-left { content: "Annex A: Service levels"; font: italic 8pt Inter, sans-serif; } @top-right { content: none; } }
+html { counter-reset: clause; }
+body { margin: 0; font: 9.5pt/1.5 Inter, sans-serif; color: #111; text-align: justify; hyphens: auto; }
+.cover { text-align: center; break-after: page; }
+.cover h1 { font-size: 20pt; line-height: 1.2; margin: 30mm 0 6mm; letter-spacing: -.01em; }
+.cover .between { margin: 14mm 0 4mm; font-style: italic; color: #555; }
+.cover .party { font-weight: 700; font-size: 11pt; }
+.cover .party small { display: block; font-weight: 400; font-size: 9pt; color: #555; }
+.cover .and { margin: 4mm 0; font-style: italic; color: #555; }
+.cover .ref { margin-top: 30mm; font-size: 8.5pt; color: #555; }
+h2 { font-size: 10.5pt; margin: 7mm 0 2mm; break-after: avoid; counter-increment: clause; counter-reset: sub; text-align: left; }
+h2::before { content: counter(clause) ".\2002"; }
+p.c { margin: 0 0 2.2mm; padding-left: 9mm; text-indent: -9mm; counter-increment: sub; }
+p.c::before { content: counter(clause) "." counter(sub); display: inline-block; width: 9mm; text-indent: 0; font-weight: 700; }
+dl.defs { margin: 0 0 2mm 9mm; }
+dl.defs dt { font-weight: 700; }
+dl.defs dd { margin: 0 0 1.5mm 6mm; }
+.recital { margin: 0 0 2mm; }
+.recital::before { content: "(" counter(sub, upper-alpha) ")\2003"; counter-increment: sub; font-weight: 700; }
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 14mm; margin-top: 10mm; break-inside: avoid; text-align: left; }
+.sign div { border-top: .5pt solid #000; padding-top: 1.5mm; font-size: 8.5pt; }
+.sign div b { display: block; margin-top: 10mm; }
+.annex { page: annex; text-align: left; }
+.annex h2::before { content: none; }
+table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+th, td { border: .5pt solid #888; padding: 1.5mm 2mm; vertical-align: top; }
+th { background: #eef0f3; text-align: left; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+</style>
+</head>
+<body>
+<section class="cover">
+  <h1>Software Licence and<br>Support Agreement</h1>
+  <div>for the KALIX warehouse management system</div>
+  <div class="between">between</div>
+  <div class="party">Kalix Software GmbH<small>Speicherstadt 9, 20457 Hamburg, Germany (“Licensor”)</small></div>
+  <div class="and">and</div>
+  <div class="party">Baltic Cold Chain AB<small>Hamnvägen 14, 211 20 Malmö, Sweden (“Licensee”)</small></div>
+  <div class="ref">Agreement no. KX-2026-0193 · Version 3 of 2 November 2026</div>
+</section>
+<h2>Recitals</h2>
+<p class="recital">The Licensor develops and distributes the KALIX warehouse management system and provides support and maintenance services for it.</p>
+<p class="recital">The Licensee operates three refrigerated warehouses in Malmö, Gdańsk and Klaipėda and wishes to use KALIX in all of them.</p>
+<p class="recital">The parties wish to set out the terms on which the Licensor grants the licence and provides the services.</p>
+<h2>Definitions</h2>
+<dl class="defs">
+<dt>“Software”</dt><dd>the KALIX warehouse management system in the object code version current at the Effective Date, including the mobile scanner application and all updates provided under this Agreement.</dd>
+<dt>“Documentation”</dt><dd>the user and administrator manuals published by the Licensor in English and Swedish, as updated from time to time.</dd>
+<dt>“Site”</dt><dd>each warehouse of the Licensee listed in Annex A, together with the offices that serve it.</dd>
+<dt>“Business Day”</dt><dd>any day other than a Saturday, Sunday or public holiday in Hamburg or Malmö.</dd>
+<dt>“Incident”</dt><dd>any failure of the Software to perform substantially in accordance with the Documentation, classified by priority as set out in Annex A.</dd>
+</dl>
+<h2>Grant of licence</h2>
+<p class="c">The Licensor grants the Licensee a non-exclusive, non-transferable licence to install and use the Software at the Sites for the Licensee’s internal business purposes for the term of this Agreement.</p>
+<p class="c">The licence covers up to 180 named users and 260 mobile scanners. Additional users and devices may be added at the prices in the Licensor’s price list current at the time of the order, less the discount agreed in clause 6.3.</p>
+<p class="c">The Licensee shall not decompile, disassemble or otherwise reverse engineer the Software except to the extent that such restriction is prohibited by applicable law, in particular to obtain the information necessary to achieve interoperability with other programs.</p>
+<p class="c">The Licensee may make one copy of the Software for backup purposes and such copies of the Documentation as it reasonably requires for its own use.</p>
+<h2>Implementation</h2>
+<p class="c">The Licensor shall implement the Software at the Sites in accordance with the project plan agreed in writing. Go-live for the Malmö site is planned for 1 March 2027 and for the remaining Sites within six months thereafter.</p>
+<p class="c">The Licensee shall provide timely access to its premises, systems and staff, and shall appoint a project manager with authority to take decisions on its behalf. Delays caused by the Licensee extend the Licensor’s deadlines accordingly.</p>
+<p class="c">Acceptance testing takes place at each Site over ten Business Days. The Software is accepted if no Incident of priority 1 or 2 remains open at the end of the test period, or if the Licensee uses the Software productively for more than five Business Days.</p>
+<h2>Support and maintenance</h2>
+<p class="c">The Licensor shall provide support for the Software through its service desk on Business Days from 07:00 to 19:00 Central European Time, and around the clock for Incidents of priority 1.</p>
+<p class="c">The Licensor shall respond to and resolve Incidents within the times set out in Annex A. If it misses a resolution time, the Licensee is entitled to the service credits set out there, which are the Licensee’s sole remedy for such delay unless the delay is caused intentionally or by gross negligence.</p>
+<p class="c">Updates and new releases of the Software are included in the maintenance fee. The Licensor supports each release for at least 24 months after its general availability.</p>
+<h2>Data protection</h2>
+<p class="c">To the extent that the Licensor processes personal data on behalf of the Licensee, the parties shall conclude a data processing agreement in accordance with Article 28 of the General Data Protection Regulation before such processing begins.</p>
+<p class="c">The Licensor shall host all production data in data centres within the European Economic Area and shall not transfer such data to third countries without the Licensee’s prior written consent.</p>
+<h2>Fees and payment</h2>
+<p class="c">The one-off licence fee is EUR 186,000.00. It is payable in three instalments of one third each upon signature, upon acceptance at the Malmö site and upon acceptance at the last Site.</p>
+<p class="c">The annual maintenance fee is 19 % of the licence fee and is invoiced annually in advance, starting from acceptance at the Malmö site. The Licensor may adjust it once per calendar year by no more than the change in the German consumer price index.</p>
+<p class="c">The Licensee receives a discount of 12 % on the list price for additional users and devices ordered within the first 36 months of the term.</p>
+<p class="c">Invoices are due 30 days after receipt. All fees are exclusive of value added tax, which is charged under the reverse charge procedure where applicable.</p>
+<h2>Liability</h2>
+<p class="c">Each party is liable without limitation for damage caused intentionally or by gross negligence, for injury to life, body or health, and under the Product Liability Act.</p>
+<p class="c">In all other cases, each party’s liability for breach of a material contractual obligation is limited to the damage typically foreseeable at the time of conclusion of this Agreement, and in total to the fees paid in the twelve months preceding the event giving rise to the claim.</p>
+<h2>Term and termination</h2>
+<p class="c">This Agreement enters into force on signature and runs for an initial term of five years. It renews automatically for successive periods of two years unless terminated with twelve months’ notice to the end of a term.</p>
+<p class="c">Either party may terminate this Agreement for good cause without notice. Good cause includes in particular a material breach that is not remedied within 30 days of written notice.</p>
+<p class="c">Upon termination the Licensee shall cease using the Software and, at the Licensor’s option, return or destroy all copies. The Licensor shall provide the Licensee’s data in a documented, machine-readable format for 90 days after termination.</p>
+<h2>Final provisions</h2>
+<p class="c">This Agreement is governed by the laws of the Federal Republic of Germany, excluding the United Nations Convention on Contracts for the International Sale of Goods. The courts of Hamburg have exclusive jurisdiction.</p>
+<p class="c">Amendments must be made in writing. Should any provision be or become invalid, the validity of the remaining provisions remains unaffected.</p>
+<div class="sign">
+  <div>Hamburg, ____________ 2026<b>Kalix Software GmbH</b>Dr. Henrike Voss, Managing Director</div>
+  <div>Malmö, ____________ 2026<b>Baltic Cold Chain AB</b>Erik Lindqvist, CEO</div>
+</div>
+<section class="annex">
+<h2>Annex A: Sites and service levels</h2>
+<table>
+<thead><tr><th>Priority</th><th>Description</th><th>Response</th><th>Resolution</th><th>Service credit per hour late</th></tr></thead>
+<tbody>
+<tr><td>1 – Critical</td><td>Outbound or inbound operations at a Site stopped; no workaround.</td><td class="n">30 min</td><td class="n">4 h</td><td class="n">EUR 1,500.00</td></tr>
+<tr><td>2 – High</td><td>Major function impaired, e.g. wave planning or label printing unavailable; workaround with significant effort.</td><td class="n">2 h</td><td class="n">1 Business Day</td><td class="n">EUR 400.00</td></tr>
+<tr><td>3 – Medium</td><td>Function impaired with reasonable workaround.</td><td class="n">1 Business Day</td><td class="n">10 Business Days</td><td class="n">–</td></tr>
+<tr><td>4 – Low</td><td>Cosmetic defects, questions about use, documentation errors.</td><td class="n">3 Business Days</td><td class="n">next release</td><td class="n">–</td></tr>
+</tbody>
+</table>
+<p style="margin-top:4mm">Sites: Malmö (Hamnvägen 14), Gdańsk (ul. Przemysłowa 8), Klaipėda (Minijos g. 180). Service credits are capped at 15 % of the annual maintenance fee per contract year.</p>
+</section>
+</body>
+</html>

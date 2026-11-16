@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Quittio's default template as its Blade views write it for mPDF, with the mPDF constructs in standard CSS and Fagus extensions (see README.md). -->
+<meta charset="utf-8">
+<style>
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; font-style: normal; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; font-style: normal; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+/* Following pages start below their header (logo, title, number and buyer); the first page with the letterhead. */
+    @page { size: A4; margin: 40mm 19mm 37mm 20mm;
+      @top-center { content: element(quittioHeader); vertical-align: top; padding-top: 14.6mm; }
+      @bottom-center { content: element(quittioFooter); vertical-align: bottom; padding-bottom: 5.5mm; } }
+    @page :first { margin-top: 15mm; @top-center { content: none; } }
+    @page slip { margin: 40mm 0 0 0; @top-center { padding-left: 20mm; padding-right: 19mm; }
+      @bottom-center { content: none; } }
+    
+    /* The page of the payment slip: no footer, the slip takes the bottom 105 mm. */
+    
+    body { font-family: inter; font-size: 9.75pt; color: #15171c; line-height: 1.45; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { vertical-align: top; padding: 0; line-height: 1.5; }
+    .muted { color: #5f6470; }
+    .small { font-size: 7.9pt; }
+    .right { text-align: right; }
+    .letterhead td { height: 30mm; }
+    .company { font-size: 16.5pt; font-weight: bold; color: #2741d9; line-height: 1.2; }
+    .issuer-address { font-size: 7.9pt; color: #5f6470; }
+    /* mPDF ignores margin and padding of blocks inside table cells; spacing there uses cell padding. */
+    /* The address field is positioned on the page (letter layout, e.g. DIN 5008), whatever the letterhead height. */
+    .address { position: absolute; top: 30mm; left: 0mm; width: 85mm; height: 45mm; overflow: visible; }
+    .sender-line { font-size: 9pt; color: #5f6470; border-bottom: 0.26mm solid #cdd0d6; padding-bottom: 1.2mm; line-height: 1.3; }
+    .address-lines { font-size: 10.5pt; line-height: 1.5; padding-top: 2.2mm; }
+    .mark { position: absolute; left: -20mm; width: 4.2mm; height: 0; border-top: 0.26mm solid #cdd0d6; }
+    .head td.address-space { width: 108.6mm; height: 41.8mm; }
+    .meta td { font-size: 9.4pt; padding-bottom: 0.75mm; line-height: 1.5; }
+    .meta td.label { color: #5f6470; padding-right: 4mm; }
+    .meta td.value { text-align: right; }
+    h1 { font-size: 13.5pt; color: #2741d9; font-weight: normal; font-weight: bold; margin: 0 0 5mm 0; line-height: 1.5; }
+    .lines th { font-size: 9pt; color: #5f6470; font-weight: normal; font-weight: bold; text-align: left; padding: 0 0 2mm 0; border-bottom: 0.26mm solid #15171c; }
+    .lines td { padding: 2.2mm 0 2.6mm 0; border-bottom: 0.26mm solid #e6e8ec; }
+    .lines .num { text-align: right; white-space: nowrap; }
+    /* mPDF does not let one class rule override another on the same cell: muted cells have a class of their own. */
+    .lines td.position, .lines td.quiet { color: #5f6470; }
+    .lines .name { font-weight: bold; }
+    .lines .group td { font-weight: bold; padding-top: 5mm; }
+    .lines .sub td { color: #5f6470; font-size: 9pt; padding-top: 1mm; }
+    /* Highlighted lines (LineBuilder::highlight()): shaded, marked in the secondary colour. */
+    .lines .highlight td { background-color: #f8fafc; }
+    .lines .highlight td.position { border-left: 0.8mm solid #2741d9; padding-left: 1.5mm; }
+    /* Carry-over rows at page breaks (filled in by the PDF renderer). */
+    .lines .carry td { border-bottom: 0; padding-top: 3.6mm; }
+    .lines .carry-in td { border-bottom: 0.26mm solid #e6e8ec; padding-top: 2.2mm; }
+    .lines td.carry-amount { font-weight: bold; }
+    .description { color: #5f6470; font-size: 9pt; }
+    .totals { width: 74.2mm; margin-left: auto; margin-top: 3.1mm; page-break-inside: avoid; }
+    .totals td { padding: 0.47mm 0; }
+    .totals tr.gap td { height: 2.2mm; padding: 0; line-height: 1; }
+    .totals td.label { color: #5f6470; }
+    .totals .grand td { border-top: 0.26mm solid #15171c; padding-top: 3.1mm; vertical-align: bottom; line-height: 1.2; }
+    .totals td.grand-label { font-size: 10.5pt; font-weight: bold; }
+    .totals .grand td.amount { font-size: 12.75pt; font-weight: bold; color: #2741d9; }
+    .section { margin-top: 8.3mm; page-break-inside: avoid; }
+    .section-title { font-size: 9pt; color: #2741d9; font-weight: bold; }
+    .payment td { font-size: 9.4pt; }
+    .payment td.terms { width: 77mm; padding-right: 6mm; }
+    td.qr { width: 17mm; text-align: center; padding-left: 4mm; }
+    .payment td.section-title { font-size: 9pt; padding-bottom: 0.7mm; }
+    .qr-caption { font-size: 7.9pt; color: #5f6470; text-align: center; }
+    .running td { vertical-align: top; }
+    .running-title { font-size: 11.25pt; font-weight: bold; color: #2741d9; }
+    .running-meta { font-size: 9pt; color: #5f6470; }
+    /* Payment slip (Swiss QR bill): receipt 62 mm and payment part 148 mm, 105 mm high, at the bottom of the page. */
+    .slip { position: absolute; font-family: inter; color: #000; line-height: 1.15; }
+    .slip-title { font-size: 11pt; font-weight: bold; }
+    .slip-heading { font-size: 8pt; font-weight: bold; padding-top: 2.6mm; }
+    .slip-value { font-size: 10pt; }
+    .receipt .slip-heading { font-size: 6pt; padding-top: 2.4mm; }
+    .receipt .slip-value { font-size: 8pt; }
+    .slip-field { border: 0.26mm solid #000; }
+    .footer-rule { border-top: 0.26mm solid #e6e8ec; }
+    .footer td { font-size: 7.9pt; color: #5f6470; padding: 3.4mm 3mm 0 0; }
+    .page-number { font-size: 7.9pt; color: #5f6470; text-align: center; padding-top: 6.9mm; }
+    .mpdf-pageno::after { content: counter(page); }
+    .mpdf-nbpg::after { content: counter(pages); }
+    .slip-page { page: slip; position: relative; height: 0; }
+    body { margin: 0; }
+    .lines tbody tr[data-carry-over] { string-set: carry-over attr(data-carry-over); }
+    .lines .carry { -fagus-repeat: at-break; }
+    .mpdf-amount::after { content: string(carry-over); }
+    .mpdf-next::after { content: counter(-fagus-next-page); }
+    .mpdf-previous::after { content: counter(-fagus-previous-page); }
+    @supports not (-fagus-repeat: at-break) { .lines .carry { display: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="mpdf-running" style="position: running(quittioHeader);">
+    <table class="running"><tr>
+        <td>
+                            <span class="company">Bergsoft AG</span>
+                    </td>
+        <td class="right">
+            <div class="running-title">Rechnung RE-2026-0042</div>
+            <div class="running-meta">Muster GmbH</div>
+            <div class="running-meta">Rechnungsdatum 05.10.2026</div>
+        </td>
+    </tr></table>
+</div>
+
+<div class="mpdf-running" style="position: running(quittioFooter);">
+            <div class="footer-rule"><table class="footer"><tr>
+                            
+                                    <td style="width: 43.8mm;">Bergsoft AG<br>Bahnhofstrasse 12<br>8001 Zürich<br> </td>
+                                    <td style="width: 43.8mm;">+41 44 123 45 67<br>rechnung@bergsoft.example<br> </td>
+                                    <td style="width: 43.8mm;">MWST-Nr. CHE-123.456.788 MWST<br> </td>
+                                    <td style="width: 39.6mm;"></td>
+                                    </tr></table></div>
+        <div class="page-number">Seite <span class="mpdf-pageno"></span> von <span class="mpdf-nbpg"></span></div>
+</div>
+
+
+
+
+<div class="address">
+    <div class="sender-line">Bergsoft AG · Bahnhofstrasse 12 · 8001 Zürich
+</div>
+    <div class="address-lines">Muster GmbH<br>
+    Marktgasse 28<br>
+    3011 Bern<br>
+</div>
+</div>
+
+<table class="letterhead"><tr>
+    <td>
+                    <div class="company">Bergsoft AG</div>
+                    </td>
+</tr></table>
+
+<table class="head"><tr>
+    <td class="address-space">&nbsp;</td>
+    <td class="meta-cell">
+        <table class="meta">
+    <tr><td class="label">Rechnungsnummer</td><td class="value">RE-2026-0042</td></tr>
+    <tr><td class="label">Rechnungsdatum</td><td class="value">05.10.2026</td></tr>
+                        <tr><td class="label">Leistungsdatum</td><td class="value">30.09.2026</td></tr>
+                    
+        
+                </table>
+    </td>
+</tr></table>
+
+<h1>Rechnung</h1>
+<table class="lines">
+    <thead><tr>
+        <th style="width: 11.1mm;">Pos.</th>
+        <th style="width: 79.9mm;">Beschreibung</th>
+        <th class="num" style="width: 24mm;">Menge</th>
+                    <th class="num" style="width: 27mm;">Einzelpreis</th>
+                        <th class="num" style="width: 29mm;">Betrag</th>
+            </tr>
+    <tr class="carry carry-in"><td></td><td colspan="3" class="quiet">Übertrag von Seite <span class="mpdf-previous"></span></td><td class="num quiet"><span class="mpdf-amount"></span></td></tr></thead>
+    <tfoot><tr class="carry carry-out"><td colspan="2" class="quiet">Fortsetzung auf Seite <span class="mpdf-next"></span></td><td colspan="2" class="quiet" style="padding-left: 5.8mm;">Übertrag</td><td class="num carry-amount"><span class="mpdf-amount"></span></td></tr></tfoot>
+    <tbody>
+    <!--quittio:rows-->
+                                <tr class="line" data-carry-over="377.04 CHF">
+                <td class="position">1</td>
+                <td>
+                    <div class="name"> Webentwicklung Frontend 1</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">8 Stk.</td>
+                                    <td class="num quiet">47.13 CHF </td>
+                                        <td class="num">377.04 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="1&#039;640.94 CHF">
+                <td class="position">2</td>
+                <td>
+                    <div class="name"> Datenbankmigration 2</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">15 Tag</td>
+                                    <td class="num quiet">84.26 CHF </td>
+                                        <td class="num">1&#039;263.90 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="4&#039;311.52 CHF">
+                <td class="position">3</td>
+                <td>
+                    <div class="name"> Hosting Managed Server 3</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">22 Monat</td>
+                                    <td class="num quiet">121.39 CHF </td>
+                                        <td class="num">2&#039;670.58 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="5&#039;262.64 CHF">
+                <td class="position">4</td>
+                <td>
+                    <div class="name"> Schulung Redaktion 4</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">6 Std.</td>
+                                    <td class="num quiet">158.52 CHF </td>
+                                        <td class="num">951.12 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="7&#039;806.09 CHF">
+                <td class="position">5</td>
+                <td>
+                    <div class="name"> Lizenz Jahresabo 5</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">13 Stk.</td>
+                                    <td class="num quiet">195.65 CHF </td>
+                                        <td class="num">2&#039;543.45 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="12&#039;461.69 CHF">
+                <td class="position">6</td>
+                <td>
+                    <div class="name"> Support-Paket Gold 6</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">20 Tag</td>
+                                    <td class="num quiet">232.78 CHF </td>
+                                        <td class="num">4&#039;655.60 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="13&#039;541.33 CHF">
+                <td class="position">7</td>
+                <td>
+                    <div class="name"> Projektmanagement 7</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">4 Monat</td>
+                                    <td class="num quiet">269.91 CHF </td>
+                                        <td class="num">1&#039;079.64 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="16&#039;907.77 CHF">
+                <td class="position">8</td>
+                <td>
+                    <div class="name"> Design Iteration 8</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">11 Std.</td>
+                                    <td class="num quiet">306.04 CHF </td>
+                                        <td class="num">3&#039;366.44 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="23&#039;084.83 CHF">
+                <td class="position">9</td>
+                <td>
+                    <div class="name"> Testautomatisierung 9</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">18 Stk.</td>
+                                    <td class="num quiet">343.17 CHF </td>
+                                        <td class="num">6&#039;177.06 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="23&#039;845.43 CHF">
+                <td class="position">10</td>
+                <td>
+                    <div class="name"> Beratung Konzeptphase 10</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">2 Tag</td>
+                                    <td class="num quiet">380.30 CHF </td>
+                                        <td class="num">760.60 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="27&#039;602.30 CHF">
+                <td class="position">11</td>
+                <td>
+                    <div class="name"> Webentwicklung Frontend 11</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">9 Monat</td>
+                                    <td class="num quiet">417.43 CHF </td>
+                                        <td class="num">3&#039;756.87 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="34&#039;875.26 CHF">
+                <td class="position">12</td>
+                <td>
+                    <div class="name"> Datenbankmigration 12</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">16 Std.</td>
+                                    <td class="num quiet">454.56 CHF </td>
+                                        <td class="num">7&#039;272.96 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="46&#039;184.13 CHF">
+                <td class="position">13</td>
+                <td>
+                    <div class="name"> Hosting Managed Server 13</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">23 Stk.</td>
+                                    <td class="num quiet">491.69 CHF </td>
+                                        <td class="num">11&#039;308.87 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="49&#039;885.87 CHF">
+                <td class="position">14</td>
+                <td>
+                    <div class="name"> Schulung Redaktion 14</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">7 Tag</td>
+                                    <td class="num quiet">528.82 CHF </td>
+                                        <td class="num">3&#039;701.74 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="57&#039;809.17 CHF">
+                <td class="position">15</td>
+                <td>
+                    <div class="name"> Lizenz Jahresabo 15</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">14 Monat</td>
+                                    <td class="num quiet">565.95 CHF </td>
+                                        <td class="num">7&#039;923.30 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="70&#039;452.85 CHF">
+                <td class="position">16</td>
+                <td>
+                    <div class="name"> Support-Paket Gold 16</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">21 Std.</td>
+                                    <td class="num quiet">602.08 CHF </td>
+                                        <td class="num">12&#039;643.68 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="73&#039;648.90 CHF">
+                <td class="position">17</td>
+                <td>
+                    <div class="name"> Projektmanagement 17</div>
+                                                                                                                                                            </td>
+                <td class="num quiet">5 Stk.</td>
+                                    <td class="num quiet">639.21 CHF </td>
+                                        <td class="num">3&#039;196.05 CHF</td>
+                            </tr>
+                                <tr class="line" data-carry-over="81&#039;764.98 CHF">
+                <td class="position">18</td>
+                <td>
+                    <div class="name"> Design Iteration 18</div>
+                    <div class="description">Leistung gemäß Angebot, inklusive Abstimmung und Dokumentation der Ergebnisse</div>                                                                                                                                        </td>
+                <td class="num quiet">12 Tag</td>
+                                    <td class="num quiet">676.34 CHF </td>
+                                        <td class="num">8&#039;116.08 CHF</td>
+                            </tr>
+                                    <!--/quittio:rows-->
+    </tbody>
+</table>
+
+
+
+<table class="totals">
+        <tr><td class="label">Nettobetrag</td><td class="right">81&#039;764.98 CHF</td></tr>
+            <tr><td class="label">MWST 8.1 %</td><td class="right">6&#039;622.96 CHF</td></tr>
+                
+        <tr class="gap"><td></td><td></td></tr>
+        <tr class="grand"><td class="grand-label">Gesamtbetrag</td><td class="right amount">88&#039;387.94 CHF</td></tr>
+    </table>
+<div class="section">
+    
+    <table><tr>
+        <td>
+            <table class="payment">
+                <tr>
+                    <td class="terms section-title">Zahlung</td>                    <td class="section-title">Bankverbindung</td>
+                </tr>
+                <tr>
+                                            <td class="terms">
+                                                                                                <div class="">Bitte bis zum 04.11.2026 überweisen.</div>
+                                                                                                                                            </td>
+                                        <td>
+                                                                                                                                                    
+                                                                <div>CH44 3199 9123 0008 8901 2</div>
+                                <div class="muted">Zweck: RE-2026-0042</div>
+                                                                        </td>
+                </tr>
+            </table>
+        </td>
+            </tr></table>
+</div>
+<div class="slip-page">
+<div class="slip" style="top: 148mm; left: 0mm; width: 210mm; text-align: center; font-size: 7pt;">Vor der Einzahlung abzutrennen</div>
+<div class="slip" style="top: 152mm; left: 0mm; width: 210mm; height: 0.2mm; border-top: 0.2mm dashed #000;"></div>
+<div class="slip" style="top: 152mm; left: 62mm; width: 0.2mm; height: 105mm; border-left: 0.2mm dashed #000;"></div>
+<div class="slip receipt" style="top: 157mm; left: 5mm; width: 52mm; height: 56mm;">
+    <div class="slip-title">Empfangsschein</div>
+            <div class="slip-heading">Konto / Zahlbar an</div>
+                <div class="slip-value">CH44 3199 9123 0008 8901 2</div><div class="slip-value">Bergsoft AG</div><div class="slip-value">Bahnhofstrasse 12</div><div class="slip-value">8001 Zürich</div>            <div class="slip-heading">Referenz</div>
+                <div class="slip-value">00 00000 00000 00000 02026 00427</div>            <div class="slip-heading">Zahlbar durch</div>
+                <div class="slip-value">Muster GmbH</div><div class="slip-value">Marktgasse 28</div><div class="slip-value">3011 Bern</div>    </div>
+<div class="slip receipt" style="top: 220mm; left: 5mm; width: 52mm;">
+    <table><tr>
+        <td style="width: 16mm;"><div class="slip-heading" style="padding-top: 0;">Währung</div><div class="slip-value">CHF</div></td>
+        <td><div class="slip-heading" style="padding-top: 0;">Betrag</div><div class="slip-value">88 387.94</div></td>
+    </tr></table>
+</div>
+<div class="slip receipt" style="top: 234mm; left: 5mm; width: 52mm; text-align: right;"><div class="slip-heading" style="padding-top: 0;">Annahmestelle</div></div>
+<div class="slip" style="top: 157mm; left: 67mm; width: 51mm;"><div class="slip-title">Zahlteil</div></div>
+<div class="slip" style="top: 169mm; left: 67mm; width: 46mm; height: 46mm;"><img src="data:image/png;base64,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" style="width: 46mm; height: 46mm;"></div>
+<div class="slip" style="top: 188.5mm; left: 86.5mm; width: 7mm; height: 7mm;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAIAAAD7KTLjAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABWUlEQVR42u3dQQ6FIAxAQWt6/yvjDQwkGKTMrF2oL2Xz02+01i7Oc3sFwiM8wiM8wiM8wiM8wiM8f5E9F0WEN7WRnt9fTLyjHuERHuERHuERHuERHuERHuERHuERHuERHuERHuERHuERXniER3iEp5os+VRz/7Wx5M6oiXfUIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCC4/wCI/wCE8JK7dl5+607nifC/dwTbyjHuERHuERHuERHuERHuERHuERHuERHuERHuERHuERHuERXniOs3KT5rs9Et+dM/EIj/AILzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCI7zwCM8ZsuRTldxvNfEIj/AIj/AIj/AILzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzCIzzC8ybmfo0TE4/wCI/wCI/wCI/wCI/wCM+gB0buFlacY4pNAAAAAElFTkSuQmCC" style="width: 7mm; height: 7mm;"></div><div class="slip" style="top: 220mm; left: 67mm; width: 51mm;">
+    <table><tr>
+        <td style="width: 16mm;"><div class="slip-heading" style="padding-top: 0;">Währung</div><div class="slip-value">CHF</div></td>
+        <td><div class="slip-heading" style="padding-top: 0;">Betrag</div><div class="slip-value">88 387.94</div></td>
+    </tr></table>
+</div>
+<div class="slip" style="top: 157mm; left: 118mm; width: 87mm; height: 85mm;">
+            <div class="slip-heading"  style="padding-top: 0;" >Konto / Zahlbar an</div>
+                <div class="slip-value">CH44 3199 9123 0008 8901 2</div><div class="slip-value">Bergsoft AG</div><div class="slip-value">Bahnhofstrasse 12</div><div class="slip-value">8001 Zürich</div>            <div class="slip-heading" >Referenz</div>
+                <div class="slip-value">00 00000 00000 00000 02026 00427</div>            <div class="slip-heading" >Zusätzliche Informationen</div>
+                <div class="slip-value">RE-2026-0042</div>            <div class="slip-heading" >Zahlbar durch</div>
+                <div class="slip-value">Muster GmbH</div><div class="slip-value">Marktgasse 28</div><div class="slip-value">3011 Bern</div>    </div>
+
+</div>
+</body>
+</html>

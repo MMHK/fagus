@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NL-400 Label Printer: User Manual</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A5; margin: 18mm 15mm 20mm; @bottom-center { content: counter(page); font: 8pt "Inter"; }
+  @top-center { content: "NL-400 User Manual"; font: 7.5pt "Inter"; color: #666; } }
+@page :first { @top-center { content: none; } }
+html { font: 9.5pt/1.5 "Inter", sans-serif; color: #111; }
+body { margin: 0; counter-reset: para; }
+h1 { font-size: 16pt; text-align: center; margin: 30mm 0 4mm; line-height: 1.25; }
+.date { text-align: center; color: #555; margin-bottom: 12mm; }
+h2 { font-size: 10.5pt; margin: 14pt 0 5pt; text-align: center; break-after: avoid; }
+h2 small { display: block; font-size: 9.5pt; font-weight: 400; }
+section > p { margin: 0 0 4pt; text-align: justify; hyphens: manual; -webkit-hyphens: manual; hyphenate-limit-chars: 6 3 3; widows: 2; orphans: 2; }
+section > p::before { content: "(" counter(item) ") "; counter-increment: item; }
+section { counter-reset: item; }
+section.one > p::before { content: none; }
+.toc { break-after: page; columns: 1; }
+.toc ol { padding: 0; list-style: none; }
+.toc li { display: flex; gap: 4pt; margin: 2pt 0; }
+.toc li span:first-child { width: 26pt; flex: none; }
+.sig { margin-top: 18pt; display: grid; grid-template-columns: 1fr 1fr; gap: 20pt 14pt; break-inside: avoid; }
+.sig div { border-top: 0.5pt solid #000; padding-top: 2pt; font-size: 8pt; }
+</style>
+</head>
+<body>
+<h1>NL-400 Label Printer: User Manual</h1>
+<p class="date">Revision 7, November 2026</p>
+<nav class="toc"><h2>Contents</h2><ol>
+<li><span>1</span><span>Getting started</span></li>
+<li><span>2</span><span>Safety instructions</span></li>
+<li><span>3</span><span>Installing the printer</span></li>
+<li><span>4</span><span>Loading media</span></li>
+<li><span>5</span><span>Configuring the driver</span></li>
+<li><span>6</span><span>Printing from applications</span></li>
+<li><span>7</span><span>Maintenance</span></li>
+<li><span>8</span><span>Troubleshooting</span></li>
+<li><span>9</span><span>Technical data</span></li>
+<li><span>10</span><span>Getting started (part 2)</span></li>
+<li><span>11</span><span>Safety instructions (part 2)</span></li>
+<li><span>12</span><span>Installing the printer (part 2)</span></li>
+<li><span>13</span><span>Loading media (part 2)</span></li>
+<li><span>14</span><span>Configuring the driver (part 2)</span></li>
+<li><span>15</span><span>Printing from applications (part 2)</span></li>
+<li><span>16</span><span>Maintenance (part 2)</span></li>
+<li><span>17</span><span>Troubleshooting (part 2)</span></li>
+<li><span>18</span><span>Technical data (part 2)</span></li>
+<li><span>19</span><span>Getting started (part 3)</span></li>
+<li><span>20</span><span>Safety instructions (part 3)</span></li>
+<li><span>21</span><span>Installing the printer (part 3)</span></li>
+<li><span>22</span><span>Loading media (part 3)</span></li>
+<li><span>23</span><span>Configuring the driver (part 3)</span></li>
+<li><span>24</span><span>Printing from applications (part 3)</span></li>
+<li><span>25</span><span>Maintenance (part 3)</span></li>
+<li><span>26</span><span>Troubleshooting (part 3)</span></li>
+<li><span>27</span><span>Technical data (part 3)</span></li>
+</ol></nav>
+<section><h2>Section&nbsp;1<small>Getting started</small></h2>
+<p>This manual describes the installation, configuration and daily operation of the Northwind Label Printer NL-400. Read it completely before you put the printer into service, and keep it near the printer for later reference.</p>
+<p>The printer is designed for printing shipping labels, product labels and receipts on direct thermal and thermal transfer media between 25&nbsp;mm and 112&nbsp;mm wide. Any other use is considered improper; the manufacturer accepts no liability for damage resulting from it.</p>
+<p>Unpack the printer and check that the delivery is complete: the printer, the power supply with its cable, a USB cable, a sample roll of labels and this manual. Keep the original packaging in case you need to return the printer for service.</p>
+</section>
+<section><h2>Section&nbsp;2<small>Safety instructions</small></h2>
+<p>Only connect the printer to a grounded outlet whose voltage matches the rating on the power supply. Do not use the printer near water or in rooms with a relative humidity above 85&nbsp;percent, and never open the housing while the printer is connected to power.</p>
+<p>The print head becomes hot during operation. Let it cool down for at least five minutes before you touch it or clean it. Never use sharp objects to remove labels that are stuck in the paper path; you may damage the head or the platen roller.</p>
+<p>Children must not play with the printer or its packaging. Cleaning and maintenance must not be carried out by children without supervision.</p>
+</section>
+<section><h2>Section&nbsp;3<small>Installing the printer</small></h2>
+<p>Place the printer on a stable, level surface with at least ten centimeters of free space at the back and on both sides, so that the air can circulate. Avoid direct sunlight and sources of heat such as radiators.</p>
+<p>Connect the power supply to the socket at the back of the printer and then to the outlet. Connect the printer to your computer with the USB cable, or to your network with an Ethernet cable if you want to share it between several computers.</p>
+<p>Switch the printer on with the button on its left side. The status light first flashes orange while the printer runs its self-test; after about ten seconds it turns green to show that the printer is ready.</p>
+</section>
+<section><h2>Section&nbsp;4<small>Loading media</small></h2>
+<p>Open the cover by pressing the two release buttons on the sides and lifting it until it locks in the vertical position. Pull the media guides apart, insert the roll so that the labels unwind from the top with the printable side facing up, and push the guides back until they touch the roll lightly.</p>
+<p>Feed the start of the labels under the sensor and over the platen roller until about two centimeters stick out of the front. Close the cover firmly; you should hear both sides click into place. Press the feed button once to advance the labels to the first tear-off position.</p>
+<p>When you use a new type of media, run the automatic calibration: hold the feed button for three seconds until the status light flashes twice, then release it. The printer feeds several labels and measures their length and the gap between them.</p>
+</section>
+<section><h2>Section&nbsp;5<small>Configuring the driver</small></h2>
+<p>Install the driver from the included download link or from the support page. During installation, choose the connection type – USB or network – and, for network printers, enter the IP address that the printer shows on its configuration label.</p>
+<p>In the printing preferences, set the label size, the print speed and the darkness. Higher speeds shorten the printing time but may reduce the quality of barcodes on some media; start with the default values and adjust them in small steps.</p>
+<p>For thermal transfer printing, select the ribbon type that matches your labels: wax for paper labels, wax-resin for coated paper and resin for synthetic labels that must withstand abrasion or chemicals.</p>
+</section>
+<section><h2>Section&nbsp;6<small>Printing from applications</small></h2>
+<p>Most shipping and inventory applications can print directly to the printer. Choose the printer in the application's print dialog and make sure that the page size there matches the label size set in the driver; otherwise labels may be scaled or cut off.</p>
+<p>Applications that create PDF files should embed fonts and print at 100&nbsp;percent scale without fitting to the page. Barcodes print most reliably when their bar widths are whole multiples of the printer's dot size of 0.125&nbsp;mm.</p>
+</section>
+<section><h2>Section&nbsp;7<small>Maintenance</small></h2>
+<p>Clean the print head every time you change the ribbon, or after every roll of direct thermal labels. Switch the printer off, open the cover and wipe the head from the middle to the outside with a cleaning pen or a lint-free cloth moistened with isopropyl alcohol.</p>
+<p>Clean the platen roller and the sensors once a month or whenever labels leave residues of adhesive. Turn the roller by hand while you wipe it, so that you clean its whole surface. Let all parts dry for at least a minute before you close the cover.</p>
+<p>Update the firmware when the support page lists a new version. Updates are installed from the configuration utility and take about two minutes; do not switch the printer off while the status light flashes.</p>
+</section>
+<section><h2>Section&nbsp;8<small>Troubleshooting</small></h2>
+<p>If the printer does not feed labels, check that the cover is closed on both sides and that the media guides are not too tight. If the status light flashes red, the printer is out of labels or ribbon, or the media sensor cannot find the gap between labels; reload the media and run the calibration again.</p>
+<p>If printing is faint or incomplete, increase the darkness in steps of two, clean the print head, and check that the ribbon matches the labels. Vertical white lines across all labels usually mean that the print head is dirty or damaged at that position.</p>
+<p>If labels are printed with an offset, check the label size in the driver and in the application, and adjust the top position in the printer settings. Small offsets of up to one millimeter can be corrected with the tear-off adjustment.</p>
+</section>
+<section><h2>Section&nbsp;9<small>Technical data</small></h2>
+<p>Print method: direct thermal and thermal transfer. Resolution: 203&nbsp;dpi (8&nbsp;dots per millimeter). Maximum print width: 104&nbsp;mm. Maximum print speed: 152&nbsp;mm per second. Interfaces: USB&nbsp;2.0, Ethernet 10/100, optional Wi-Fi.</p>
+<p>Media: rolls with an outer diameter of up to 127&nbsp;mm on cores of 25&nbsp;mm or 38&nbsp;mm; labels, tags and continuous paper with a thickness of 0.06&nbsp;mm to 0.19&nbsp;mm. Ribbons: up to 300&nbsp;m long, ink side out, on cores of 12.7&nbsp;mm.</p>
+<p>Operating conditions: 5&nbsp;°C to 40&nbsp;°C, 20 to 85&nbsp;percent relative humidity without condensation. Power supply: 100–240&nbsp;V AC, 50/60&nbsp;Hz; printer input 24&nbsp;V DC, 2.5&nbsp;A. Dimensions: 226 × 186 × 171&nbsp;mm; weight 2.1&nbsp;kg.</p>
+</section>
+<section><h2>Section&nbsp;10<small>Getting started (part 2)</small></h2>
+<p>This manual describes the installation, configuration and daily operation of the Northwind Label Printer NL-400. Read it completely before you put the printer into service, and keep it near the printer for later reference.</p>
+<p>The printer is designed for printing shipping labels, product labels and receipts on direct thermal and thermal transfer media between 25&nbsp;mm and 112&nbsp;mm wide. Any other use is considered improper; the manufacturer accepts no liability for damage resulting from it.</p>
+<p>Unpack the printer and check that the delivery is complete: the printer, the power supply with its cable, a USB cable, a sample roll of labels and this manual. Keep the original packaging in case you need to return the printer for service.</p>
+</section>
+<section><h2>Section&nbsp;11<small>Safety instructions (part 2)</small></h2>
+<p>Only connect the printer to a grounded outlet whose voltage matches the rating on the power supply. Do not use the printer near water or in rooms with a relative humidity above 85&nbsp;percent, and never open the housing while the printer is connected to power.</p>
+<p>The print head becomes hot during operation. Let it cool down for at least five minutes before you touch it or clean it. Never use sharp objects to remove labels that are stuck in the paper path; you may damage the head or the platen roller.</p>
+<p>Children must not play with the printer or its packaging. Cleaning and maintenance must not be carried out by children without supervision.</p>
+</section>
+<section><h2>Section&nbsp;12<small>Installing the printer (part 2)</small></h2>
+<p>Place the printer on a stable, level surface with at least ten centimeters of free space at the back and on both sides, so that the air can circulate. Avoid direct sunlight and sources of heat such as radiators.</p>
+<p>Connect the power supply to the socket at the back of the printer and then to the outlet. Connect the printer to your computer with the USB cable, or to your network with an Ethernet cable if you want to share it between several computers.</p>
+<p>Switch the printer on with the button on its left side. The status light first flashes orange while the printer runs its self-test; after about ten seconds it turns green to show that the printer is ready.</p>
+</section>
+<section><h2>Section&nbsp;13<small>Loading media (part 2)</small></h2>
+<p>Open the cover by pressing the two release buttons on the sides and lifting it until it locks in the vertical position. Pull the media guides apart, insert the roll so that the labels unwind from the top with the printable side facing up, and push the guides back until they touch the roll lightly.</p>
+<p>Feed the start of the labels under the sensor and over the platen roller until about two centimeters stick out of the front. Close the cover firmly; you should hear both sides click into place. Press the feed button once to advance the labels to the first tear-off position.</p>
+<p>When you use a new type of media, run the automatic calibration: hold the feed button for three seconds until the status light flashes twice, then release it. The printer feeds several labels and measures their length and the gap between them.</p>
+</section>
+<section><h2>Section&nbsp;14<small>Configuring the driver (part 2)</small></h2>
+<p>Install the driver from the included download link or from the support page. During installation, choose the connection type – USB or network – and, for network printers, enter the IP address that the printer shows on its configuration label.</p>
+<p>In the printing preferences, set the label size, the print speed and the darkness. Higher speeds shorten the printing time but may reduce the quality of barcodes on some media; start with the default values and adjust them in small steps.</p>
+<p>For thermal transfer printing, select the ribbon type that matches your labels: wax for paper labels, wax-resin for coated paper and resin for synthetic labels that must withstand abrasion or chemicals.</p>
+</section>
+<section><h2>Section&nbsp;15<small>Printing from applications (part 2)</small></h2>
+<p>Most shipping and inventory applications can print directly to the printer. Choose the printer in the application's print dialog and make sure that the page size there matches the label size set in the driver; otherwise labels may be scaled or cut off.</p>
+<p>Applications that create PDF files should embed fonts and print at 100&nbsp;percent scale without fitting to the page. Barcodes print most reliably when their bar widths are whole multiples of the printer's dot size of 0.125&nbsp;mm.</p>
+</section>
+<section><h2>Section&nbsp;16<small>Maintenance (part 2)</small></h2>
+<p>Clean the print head every time you change the ribbon, or after every roll of direct thermal labels. Switch the printer off, open the cover and wipe the head from the middle to the outside with a cleaning pen or a lint-free cloth moistened with isopropyl alcohol.</p>
+<p>Clean the platen roller and the sensors once a month or whenever labels leave residues of adhesive. Turn the roller by hand while you wipe it, so that you clean its whole surface. Let all parts dry for at least a minute before you close the cover.</p>
+<p>Update the firmware when the support page lists a new version. Updates are installed from the configuration utility and take about two minutes; do not switch the printer off while the status light flashes.</p>
+</section>
+<section><h2>Section&nbsp;17<small>Troubleshooting (part 2)</small></h2>
+<p>If the printer does not feed labels, check that the cover is closed on both sides and that the media guides are not too tight. If the status light flashes red, the printer is out of labels or ribbon, or the media sensor cannot find the gap between labels; reload the media and run the calibration again.</p>
+<p>If printing is faint or incomplete, increase the darkness in steps of two, clean the print head, and check that the ribbon matches the labels. Vertical white lines across all labels usually mean that the print head is dirty or damaged at that position.</p>
+<p>If labels are printed with an offset, check the label size in the driver and in the application, and adjust the top position in the printer settings. Small offsets of up to one millimeter can be corrected with the tear-off adjustment.</p>
+</section>
+<section><h2>Section&nbsp;18<small>Technical data (part 2)</small></h2>
+<p>Print method: direct thermal and thermal transfer. Resolution: 203&nbsp;dpi (8&nbsp;dots per millimeter). Maximum print width: 104&nbsp;mm. Maximum print speed: 152&nbsp;mm per second. Interfaces: USB&nbsp;2.0, Ethernet 10/100, optional Wi-Fi.</p>
+<p>Media: rolls with an outer diameter of up to 127&nbsp;mm on cores of 25&nbsp;mm or 38&nbsp;mm; labels, tags and continuous paper with a thickness of 0.06&nbsp;mm to 0.19&nbsp;mm. Ribbons: up to 300&nbsp;m long, ink side out, on cores of 12.7&nbsp;mm.</p>
+<p>Operating conditions: 5&nbsp;°C to 40&nbsp;°C, 20 to 85&nbsp;percent relative humidity without condensation. Power supply: 100–240&nbsp;V AC, 50/60&nbsp;Hz; printer input 24&nbsp;V DC, 2.5&nbsp;A. Dimensions: 226 × 186 × 171&nbsp;mm; weight 2.1&nbsp;kg.</p>
+</section>
+<section><h2>Section&nbsp;19<small>Getting started (part 3)</small></h2>
+<p>This manual describes the installation, configuration and daily operation of the Northwind Label Printer NL-400. Read it completely before you put the printer into service, and keep it near the printer for later reference.</p>
+<p>The printer is designed for printing shipping labels, product labels and receipts on direct thermal and thermal transfer media between 25&nbsp;mm and 112&nbsp;mm wide. Any other use is considered improper; the manufacturer accepts no liability for damage resulting from it.</p>
+<p>Unpack the printer and check that the delivery is complete: the printer, the power supply with its cable, a USB cable, a sample roll of labels and this manual. Keep the original packaging in case you need to return the printer for service.</p>
+</section>
+<section><h2>Section&nbsp;20<small>Safety instructions (part 3)</small></h2>
+<p>Only connect the printer to a grounded outlet whose voltage matches the rating on the power supply. Do not use the printer near water or in rooms with a relative humidity above 85&nbsp;percent, and never open the housing while the printer is connected to power.</p>
+<p>The print head becomes hot during operation. Let it cool down for at least five minutes before you touch it or clean it. Never use sharp objects to remove labels that are stuck in the paper path; you may damage the head or the platen roller.</p>
+<p>Children must not play with the printer or its packaging. Cleaning and maintenance must not be carried out by children without supervision.</p>
+</section>
+<section><h2>Section&nbsp;21<small>Installing the printer (part 3)</small></h2>
+<p>Place the printer on a stable, level surface with at least ten centimeters of free space at the back and on both sides, so that the air can circulate. Avoid direct sunlight and sources of heat such as radiators.</p>
+<p>Connect the power supply to the socket at the back of the printer and then to the outlet. Connect the printer to your computer with the USB cable, or to your network with an Ethernet cable if you want to share it between several computers.</p>
+<p>Switch the printer on with the button on its left side. The status light first flashes orange while the printer runs its self-test; after about ten seconds it turns green to show that the printer is ready.</p>
+</section>
+<section><h2>Section&nbsp;22<small>Loading media (part 3)</small></h2>
+<p>Open the cover by pressing the two release buttons on the sides and lifting it until it locks in the vertical position. Pull the media guides apart, insert the roll so that the labels unwind from the top with the printable side facing up, and push the guides back until they touch the roll lightly.</p>
+<p>Feed the start of the labels under the sensor and over the platen roller until about two centimeters stick out of the front. Close the cover firmly; you should hear both sides click into place. Press the feed button once to advance the labels to the first tear-off position.</p>
+<p>When you use a new type of media, run the automatic calibration: hold the feed button for three seconds until the status light flashes twice, then release it. The printer feeds several labels and measures their length and the gap between them.</p>
+</section>
+<section><h2>Section&nbsp;23<small>Configuring the driver (part 3)</small></h2>
+<p>Install the driver from the included download link or from the support page. During installation, choose the connection type – USB or network – and, for network printers, enter the IP address that the printer shows on its configuration label.</p>
+<p>In the printing preferences, set the label size, the print speed and the darkness. Higher speeds shorten the printing time but may reduce the quality of barcodes on some media; start with the default values and adjust them in small steps.</p>
+<p>For thermal transfer printing, select the ribbon type that matches your labels: wax for paper labels, wax-resin for coated paper and resin for synthetic labels that must withstand abrasion or chemicals.</p>
+</section>
+<section><h2>Section&nbsp;24<small>Printing from applications (part 3)</small></h2>
+<p>Most shipping and inventory applications can print directly to the printer. Choose the printer in the application's print dialog and make sure that the page size there matches the label size set in the driver; otherwise labels may be scaled or cut off.</p>
+<p>Applications that create PDF files should embed fonts and print at 100&nbsp;percent scale without fitting to the page. Barcodes print most reliably when their bar widths are whole multiples of the printer's dot size of 0.125&nbsp;mm.</p>
+</section>
+<section><h2>Section&nbsp;25<small>Maintenance (part 3)</small></h2>
+<p>Clean the print head every time you change the ribbon, or after every roll of direct thermal labels. Switch the printer off, open the cover and wipe the head from the middle to the outside with a cleaning pen or a lint-free cloth moistened with isopropyl alcohol.</p>
+<p>Clean the platen roller and the sensors once a month or whenever labels leave residues of adhesive. Turn the roller by hand while you wipe it, so that you clean its whole surface. Let all parts dry for at least a minute before you close the cover.</p>
+<p>Update the firmware when the support page lists a new version. Updates are installed from the configuration utility and take about two minutes; do not switch the printer off while the status light flashes.</p>
+</section>
+<section><h2>Section&nbsp;26<small>Troubleshooting (part 3)</small></h2>
+<p>If the printer does not feed labels, check that the cover is closed on both sides and that the media guides are not too tight. If the status light flashes red, the printer is out of labels or ribbon, or the media sensor cannot find the gap between labels; reload the media and run the calibration again.</p>
+<p>If printing is faint or incomplete, increase the darkness in steps of two, clean the print head, and check that the ribbon matches the labels. Vertical white lines across all labels usually mean that the print head is dirty or damaged at that position.</p>
+<p>If labels are printed with an offset, check the label size in the driver and in the application, and adjust the top position in the printer settings. Small offsets of up to one millimeter can be corrected with the tear-off adjustment.</p>
+</section>
+<section><h2>Section&nbsp;27<small>Technical data (part 3)</small></h2>
+<p>Print method: direct thermal and thermal transfer. Resolution: 203&nbsp;dpi (8&nbsp;dots per millimeter). Maximum print width: 104&nbsp;mm. Maximum print speed: 152&nbsp;mm per second. Interfaces: USB&nbsp;2.0, Ethernet 10/100, optional Wi-Fi.</p>
+<p>Media: rolls with an outer diameter of up to 127&nbsp;mm on cores of 25&nbsp;mm or 38&nbsp;mm; labels, tags and continuous paper with a thickness of 0.06&nbsp;mm to 0.19&nbsp;mm. Ribbons: up to 300&nbsp;m long, ink side out, on cores of 12.7&nbsp;mm.</p>
+<p>Operating conditions: 5&nbsp;°C to 40&nbsp;°C, 20 to 85&nbsp;percent relative humidity without condensation. Power supply: 100–240&nbsp;V AC, 50/60&nbsp;Hz; printer input 24&nbsp;V DC, 2.5&nbsp;A. Dimensions: 226 × 186 × 171&nbsp;mm; weight 2.1&nbsp;kg.</p>
+</section>
+<div class="sig"><div>Northwind Devices Ltd., Leeds</div><div>Document NL-400-EN, revision 7</div></div>
+</body>
+</html>

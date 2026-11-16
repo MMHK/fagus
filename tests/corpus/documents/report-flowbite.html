@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project status report</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 14mm 14mm 16mm; }
+/* Tailwind CSS v3.4 preflight (excerpt) and the utilities this page uses, as the CLI compiles them */
+*, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #e5e7eb; }
+*, ::before, ::after { --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / 0.5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: normal; }
+body { margin: 0; line-height: inherit; }
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; }
+h1, h2, h3, h4 { font-size: inherit; font-weight: inherit; }
+ol, ul { list-style: none; padding: 0; }
+img, svg { display: block; vertical-align: middle; }
+table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.mt-1 { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .mt-4 { margin-top: 1rem; } .mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; } .mb-2 { margin-bottom: 0.5rem; } .ml-auto { margin-left: auto; }
+.block { display: block; } .flex { display: flex; } .inline-flex { display: inline-flex; } .grid { display: grid; } .table { display: table; }
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.aspect-video { aspect-ratio: 16 / 9; } .aspect-square { aspect-ratio: 1 / 1; }
+.h-2 { height: 0.5rem; } .h-8 { height: 2rem; } .h-10 { height: 2.5rem; } .h-full { height: 100%; }
+.w-2 { width: 0.5rem; } .w-8 { width: 2rem; } .w-10 { width: 2.5rem; } .w-full { width: 100%; } .w-1\/3 { width: 33.333333%; }
+.min-w-0 { min-width: 0px; } .flex-1 { flex: 1 1 0%; } .shrink-0 { flex-shrink: 0; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.col-span-2 { grid-column: span 2 / span 2; }
+.flex-col { flex-direction: column; } .flex-wrap { flex-wrap: wrap; }
+.items-start { align-items: flex-start; } .items-center { align-items: center; } .items-baseline { align-items: baseline; }
+.justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+.gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; } .gap-6 { gap: 1.5rem; }
+.space-x-2 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(0.5rem * var(--tw-space-x-reverse)); margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse))); }
+.-space-x-2 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(-0.5rem * var(--tw-space-x-reverse)); margin-left: calc(-0.5rem * calc(1 - var(--tw-space-x-reverse))); }
+.space-y-1 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(0.25rem * var(--tw-space-y-reverse)); }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(0.75rem * var(--tw-space-y-reverse)); }
+.divide-x > :not([hidden]) ~ :not([hidden]) { --tw-divide-x-reverse: 0; border-right-width: calc(1px * var(--tw-divide-x-reverse)); border-left-width: calc(1px * calc(1 - var(--tw-divide-x-reverse))); }
+.divide-y > :not([hidden]) ~ :not([hidden]) { --tw-divide-y-reverse: 0; border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse))); border-bottom-width: calc(1px * var(--tw-divide-y-reverse)); }
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) { --tw-divide-opacity: 1; border-color: rgb(229 231 235 / var(--tw-divide-opacity)); }
+.overflow-hidden { overflow: hidden; } .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.whitespace-nowrap { white-space: nowrap; }
+.rounded { border-radius: 0.25rem; } .rounded-full { border-radius: 9999px; } .rounded-lg { border-radius: 0.5rem; } .rounded-xl { border-radius: 0.75rem; } .rounded-md { border-radius: 0.375rem; }
+.border { border-width: 1px; } .border-b { border-bottom-width: 1px; } .border-2 { border-width: 2px; } .border-l-4 { border-left-width: 4px; }
+.border-white { --tw-border-opacity: 1; border-color: rgb(255 255 255 / var(--tw-border-opacity)); }
+.border-gray-200 { --tw-border-opacity: 1; border-color: rgb(229 231 235 / var(--tw-border-opacity)); }
+.border-amber-400 { --tw-border-opacity: 1; border-color: rgb(251 191 36 / var(--tw-border-opacity)); }
+.bg-white { --tw-bg-opacity: 1; background-color: rgb(255 255 255 / var(--tw-bg-opacity)); }
+.bg-gray-50 { --tw-bg-opacity: 1; background-color: rgb(249 250 251 / var(--tw-bg-opacity)); }
+.bg-gray-100 { --tw-bg-opacity: 1; background-color: rgb(243 244 246 / var(--tw-bg-opacity)); }
+.bg-gray-200 { --tw-bg-opacity: 1; background-color: rgb(229 231 235 / var(--tw-bg-opacity)); }
+.bg-blue-600 { --tw-bg-opacity: 1; background-color: rgb(37 99 235 / var(--tw-bg-opacity)); }
+.bg-blue-100 { --tw-bg-opacity: 1; background-color: rgb(219 234 254 / var(--tw-bg-opacity)); }
+.bg-green-100 { --tw-bg-opacity: 1; background-color: rgb(220 252 231 / var(--tw-bg-opacity)); }
+.bg-green-500 { --tw-bg-opacity: 1; background-color: rgb(34 197 94 / var(--tw-bg-opacity)); }
+.bg-red-100 { --tw-bg-opacity: 1; background-color: rgb(254 226 226 / var(--tw-bg-opacity)); }
+.bg-red-500 { --tw-bg-opacity: 1; background-color: rgb(239 68 68 / var(--tw-bg-opacity)); }
+.bg-amber-50 { --tw-bg-opacity: 1; background-color: rgb(255 251 235 / var(--tw-bg-opacity)); }
+.bg-amber-400 { --tw-bg-opacity: 1; background-color: rgb(251 191 36 / var(--tw-bg-opacity)); }
+.bg-indigo-500 { --tw-bg-opacity: 1; background-color: rgb(99 102 241 / var(--tw-bg-opacity)); }
+.bg-pink-500 { --tw-bg-opacity: 1; background-color: rgb(236 72 153 / var(--tw-bg-opacity)); }
+.bg-teal-500 { --tw-bg-opacity: 1; background-color: rgb(20 184 166 / var(--tw-bg-opacity)); }
+.bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
+.from-blue-600 { --tw-gradient-from: #2563eb var(--tw-gradient-from-position); --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-indigo-400 { --tw-gradient-to: #818cf8 var(--tw-gradient-to-position); }
+.object-cover { object-fit: cover; }
+.p-1 { padding: 0.25rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; } .p-5 { padding: 1.25rem; }
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; } .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; } .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; } .px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.pl-4 { padding-left: 1rem; } .pt-4 { padding-top: 1rem; }
+.text-left { text-align: left; } .text-center { text-align: center; } .text-right { text-align: right; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; } .text-base { font-size: 1rem; line-height: 1.5rem; }
+.text-lg { font-size: 1.125rem; line-height: 1.75rem; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+.font-medium { font-weight: 500; } .font-semibold { font-weight: 600; } .font-bold { font-weight: 700; }
+.uppercase { text-transform: uppercase; } .italic { font-style: italic; } .tabular-nums { --tw-numeric-spacing: tabular-nums; font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction); }
+.leading-none { line-height: 1; } .leading-tight { line-height: 1.25; } .tracking-tight { letter-spacing: -0.025em; } .tracking-wider { letter-spacing: 0.05em; }
+.text-white { --tw-text-opacity: 1; color: rgb(255 255 255 / var(--tw-text-opacity)); }
+.text-gray-400 { --tw-text-opacity: 1; color: rgb(156 163 175 / var(--tw-text-opacity)); }
+.text-gray-500 { --tw-text-opacity: 1; color: rgb(107 114 128 / var(--tw-text-opacity)); }
+.text-gray-600 { --tw-text-opacity: 1; color: rgb(75 85 99 / var(--tw-text-opacity)); }
+.text-gray-700 { --tw-text-opacity: 1; color: rgb(55 65 81 / var(--tw-text-opacity)); }
+.text-gray-900 { --tw-text-opacity: 1; color: rgb(17 24 39 / var(--tw-text-opacity)); }
+.text-blue-700 { --tw-text-opacity: 1; color: rgb(29 78 216 / var(--tw-text-opacity)); }
+.text-blue-800 { --tw-text-opacity: 1; color: rgb(30 64 175 / var(--tw-text-opacity)); }
+.text-green-800 { --tw-text-opacity: 1; color: rgb(22 101 52 / var(--tw-text-opacity)); }
+.text-red-800 { --tw-text-opacity: 1; color: rgb(153 27 27 / var(--tw-text-opacity)); }
+.text-amber-800 { --tw-text-opacity: 1; color: rgb(146 64 14 / var(--tw-text-opacity)); }
+.shadow-sm { --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color); box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow); }
+.ring-1 { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color); box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
+.ring-2 { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color); box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
+.ring-inset { --tw-ring-inset: inset; }
+.ring-white { --tw-ring-opacity: 1; --tw-ring-color: rgb(255 255 255 / var(--tw-ring-opacity)); }
+.ring-gray-900\/5 { --tw-ring-color: rgb(17 24 39 / 0.05); }
+.ring-blue-700\/10 { --tw-ring-color: rgb(29 78 216 / 0.1); }
+.ring-green-600\/20 { --tw-ring-color: rgb(22 163 74 / 0.2); }
+.ring-red-600\/10 { --tw-ring-color: rgb(220 38 38 / 0.1); }
+.ring-offset-2 { --tw-ring-offset-width: 2px; }
+.break-inside-avoid { break-inside: avoid; }
+.first-letter\:uppercase::first-letter { text-transform: uppercase; }
+.last\:border-0:last-child { border-width: 0px; }
+.odd\:bg-white:nth-child(odd) { --tw-bg-opacity: 1; background-color: rgb(255 255 255 / var(--tw-bg-opacity)); }
+.even\:bg-gray-50:nth-child(even) { --tw-bg-opacity: 1; background-color: rgb(249 250 251 / var(--tw-bg-opacity)); }
+</style>
+</head>
+<body class="text-gray-900">
+<header class="flex items-center justify-between border-b border-gray-200 py-3">
+  <div class="flex items-center gap-3">
+    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-400 text-white font-bold">N</div>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight leading-tight">Northwind Portal Relaunch</h1>
+      <p class="text-sm text-gray-500">Status report · Sprint 14 · 2 to 13 November 2026</p>
+    </div>
+  </div>
+  <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 ring-1 ring-inset ring-green-600/20">On track</span>
+</header>
+
+<section class="mt-6 grid grid-cols-4 gap-4">
+  <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Budget used</p>
+    <p class="mt-2 text-3xl font-semibold tabular-nums leading-none">61<span class="text-lg text-gray-400">%</span></p>
+    <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200"><div class="h-full rounded-full bg-blue-600" style="width: 61%"></div></div>
+  </div>
+  <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Story points</p>
+    <p class="mt-2 text-3xl font-semibold tabular-nums leading-none">48<span class="text-lg text-gray-400">/52</span></p>
+    <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200"><div class="h-full rounded-full bg-green-500" style="width: 92%"></div></div>
+  </div>
+  <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Open defects</p>
+    <p class="mt-2 text-3xl font-semibold tabular-nums leading-none">17</p>
+    <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200"><div class="h-full rounded-full bg-red-500" style="width: 34%"></div></div>
+  </div>
+  <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Go-live</p>
+    <p class="mt-2 text-3xl font-semibold tabular-nums leading-none">23.02.</p>
+    <p class="mt-4 text-xs text-gray-500">unchanged since sprint 9</p>
+  </div>
+</section>
+
+<section class="mt-8 grid grid-cols-3 gap-6">
+  <div class="col-span-2">
+    <h2 class="text-lg font-semibold">Milestones</h2>
+    <ul class="mt-2 divide-y divide-gray-200 rounded-lg ring-1 ring-gray-900/5">
+      <li class="flex items-center gap-4 px-4 py-3">
+        <span class="w-2 h-2 shrink-0 rounded-full bg-green-500"></span>
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium">Design system in Figma and Storybook</p><p class="truncate text-xs text-gray-500">Tokens, typography, 41 components, dark mode variants and the accessibility review by the external auditor</p></div>
+        <span class="text-sm tabular-nums text-gray-500 whitespace-nowrap">04.09.2026</span>
+      </li>
+      <li class="flex items-center gap-4 px-4 py-3">
+        <span class="w-2 h-2 shrink-0 rounded-full bg-green-500"></span>
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium">Headless CMS migration</p><p class="truncate text-xs text-gray-500">3 412 pages moved, redirects for all legacy URLs, editors trained in two sessions</p></div>
+        <span class="text-sm tabular-nums text-gray-500 whitespace-nowrap">16.10.2026</span>
+      </li>
+      <li class="flex items-center gap-4 px-4 py-3">
+        <span class="w-2 h-2 shrink-0 rounded-full bg-amber-400"></span>
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium">Checkout and payment provider</p><p class="truncate text-xs text-gray-500">Waiting for the acquirer's production credentials; sandbox tests pass for cards, SEPA and invoice</p></div>
+        <span class="text-sm tabular-nums text-gray-500 whitespace-nowrap">27.11.2026</span>
+      </li>
+      <li class="flex items-center gap-4 px-4 py-3">
+        <span class="w-2 h-2 shrink-0 rounded-full bg-gray-200"></span>
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium">Load test and security review</p><p class="truncate text-xs text-gray-500">Booked with the penetration testers for the second week of January</p></div>
+        <span class="text-sm tabular-nums text-gray-500 whitespace-nowrap">15.01.2027</span>
+      </li>
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-lg font-semibold">Team</h2>
+    <div class="mt-2 flex -space-x-2">
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-semibold text-white ring-2 ring-white">AK</span>
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-pink-500 text-xs font-semibold text-white ring-2 ring-white">MB</span>
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-500 text-xs font-semibold text-white ring-2 ring-white">JS</span>
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-xs font-semibold text-white ring-2 ring-white">LW</span>
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600 ring-2 ring-white">+3</span>
+    </div>
+    <dl class="mt-4 space-y-1 text-sm">
+      <div class="flex justify-between"><dt class="text-gray-500">Product owner</dt><dd>A. Krämer</dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Tech lead</dt><dd>J. Sørensen</dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Velocity</dt><dd class="tabular-nums">46.5 SP</dd></div>
+    </dl>
+    <div class="mt-4 flex space-x-2">
+      <span class="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 ring-1 ring-inset ring-blue-700/10">Next.js</span>
+      <span class="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 ring-1 ring-inset ring-blue-700/10">Sanity</span>
+      <span class="rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 ring-1 ring-inset ring-red-600/10">PCI scope</span>
+    </div>
+  </div>
+</section>
+
+<section class="mt-8">
+  <h2 class="text-lg font-semibold">Screens delivered</h2>
+  <div class="mt-2 grid grid-cols-3 gap-4">
+    <figure class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/5">
+      <img class="aspect-video w-full object-cover" src="../images/photo.jpg" alt="">
+      <figcaption class="p-3"><p class="text-sm font-semibold">Product detail</p><p class="mt-1 line-clamp-2 text-xs text-gray-600">Gallery with zoom, variant picker, delivery estimate by postcode and a sticky basket button that follows the reader down the long specification table on narrow screens.</p></figcaption>
+    </figure>
+    <figure class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/5">
+      <div class="aspect-video w-full bg-gradient-to-br from-blue-600 to-indigo-400"></div>
+      <figcaption class="p-3"><p class="text-sm font-semibold">Account overview</p><p class="mt-1 line-clamp-2 text-xs text-gray-600">Orders, returns and saved addresses in one place.</p></figcaption>
+    </figure>
+    <figure class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/5">
+      <div class="aspect-video w-full bg-amber-50 p-4"><div class="h-full rounded-md border-2 border-amber-400"></div></div>
+      <figcaption class="p-3"><p class="text-sm font-semibold">Store finder</p><p class="mt-1 line-clamp-3 text-xs text-gray-600">Map with clustered markers, opening hours with holiday exceptions, filters for services such as click and collect, repair desk and returns, and a list view that prints well for the stores' notice boards.</p></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="mt-8 break-inside-avoid">
+  <h2 class="text-lg font-semibold">Risks</h2>
+  <table class="mt-2 w-full text-left text-sm">
+    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+      <tr><th class="px-3 py-2 font-medium">#</th><th class="px-3 py-2 font-medium">Risk</th><th class="px-3 py-2 font-medium">Owner</th><th class="px-3 py-2 font-medium text-right">Impact</th></tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <tr class="odd:bg-white even:bg-gray-50"><td class="px-3 py-2 tabular-nums">R1</td><td class="px-3 py-2">Production credentials of the acquirer arrive after the code freeze</td><td class="px-3 py-2">A. Krämer</td><td class="px-3 py-2 text-right tabular-nums">€ 18,000</td></tr>
+      <tr class="odd:bg-white even:bg-gray-50"><td class="px-3 py-2 tabular-nums">R2</td><td class="px-3 py-2">Search index rebuild takes longer than the maintenance window</td><td class="px-3 py-2">J. Sørensen</td><td class="px-3 py-2 text-right tabular-nums">€ 4,500</td></tr>
+      <tr class="odd:bg-white even:bg-gray-50"><td class="px-3 py-2 tabular-nums">R3</td><td class="px-3 py-2">Two front-end developers on parental leave in January</td><td class="px-3 py-2">M. Becker</td><td class="px-3 py-2 text-right tabular-nums">€ 11,200</td></tr>
+      <tr class="odd:bg-white even:bg-gray-50"><td class="px-3 py-2 tabular-nums">R4</td><td class="px-3 py-2">Legacy ERP export changes its CSV encoding again</td><td class="px-3 py-2">L. Wagner</td><td class="px-3 py-2 text-right tabular-nums">€ 900</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<aside class="mt-6 rounded-md border-l-4 border-amber-400 bg-amber-50 p-4 text-sm text-amber-800">
+  <p class="font-semibold">Decision needed by 20 November</p>
+  <p class="mt-1">Either we keep the go-live date and launch checkout with invoice payment only, or we move the date by two weeks. The steering committee is asked to choose one of the two at its next meeting.</p>
+</aside>
+</body>
+</html>

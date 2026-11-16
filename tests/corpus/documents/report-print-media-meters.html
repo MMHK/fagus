@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Q3 2026 Sales Report</title>
+<style>
+@font-face { font-family: Geist; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Geist; src: url(../../fonts/Inter-Regular.ttf); font-weight: 500; }
+@font-face { font-family: Geist; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 15mm 14mm; }
+:root { --bg: #0b0f19; --fg: #e5e7eb; --card: #111827; --muted: #9ca3af; --accent: #22d3ee; --line: #1f2937; }
+@media print { :root { --bg: #fff; --fg: #111827; --card: #f9fafb; --muted: #6b7280; --accent: #0891b2; --line: #e5e7eb; } nav, .actions { display: none !important; } .grid { gap: 8px !important; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 9pt/1.45 Geist, sans-serif; }
+nav { display: flex; gap: 1rem; padding: 1rem; background: #000; }
+h1 { font-size: 20pt; margin: 0; letter-spacing: -.02em; }
+.sub { color: var(--muted); margin: 2px 0 14px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.card.span2 { grid-column: span 2; } .card.span4 { grid-column: 1 / -1; }
+.k { color: var(--muted); font-size: 7.5pt; text-transform: uppercase; letter-spacing: .08em; }
+.v { font-size: 17pt; font-weight: 700; font-variant-numeric: tabular-nums; }
+progress, meter { width: 100%; height: 8px; display: block; margin-top: 6px; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; border-bottom: 1px solid var(--line); padding-top: 8px; }
+.bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+.bar i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(to top, color-mix(in srgb, var(--accent) 60%, white), var(--accent)); }
+.bar b { font-size: 7pt; font-weight: 500; margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+.labels { display: flex; gap: 6px; } .labels span { flex: 1; text-align: center; font-size: 7pt; color: var(--muted); }
+.pie { width: 110px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(#0891b2 0 42%, #6366f1 42% 71%, #f59e0b 71% 88%, #10b981 88% 100%); margin: 6px auto; position: relative; }
+.pie::after { content: ""; position: absolute; inset: 28%; border-radius: 50%; background: var(--card); }
+.legend { list-style: none; padding: 0; margin: 0; font-size: 7.5pt; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+.legend li::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; background: var(--c); vertical-align: -1px; }
+table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+thead th { position: sticky; top: 0; background: var(--card); text-align: left; font-weight: 500; color: var(--muted); border-bottom: 1px solid var(--line); padding: 4px 6px; }
+tbody tr:nth-child(odd) { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+td.name { max-width: 0; width: 34%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+tbody { counter-reset: rank; } tbody tr { counter-increment: rank; } td.rank::before { content: counter(rank, decimal-leading-zero); color: var(--muted); }
+.trend { display: inline-block; width: 40px; height: 12px; vertical-align: middle; }
+.up { color: #059669; } .down { color: #dc2626; }
+tr:has(.down) td.name { font-style: normal; color: color-mix(in srgb, var(--fg) 70%, #dc2626); }
+.actions button { all: unset; padding: 4px 10px; background: var(--accent); }
+details { margin-top: 10px; } summary { font-weight: 700; }
+</style></head><body>
+<nav><a href="#">Dashboard</a><a href="#">Reports</a><a href="#">Settings</a></nav>
+<div class="actions"><button>Export CSV</button><button>Print</button></div>
+<h1>Q3 2026 Sales Report</h1>
+<p class="sub">Northern Europe · July–September 2026 · generated 13 Nov 2026 09:12 CET</p>
+<div class="grid">
+  <div class="card"><div class="k">Revenue</div><div class="v">€4.82M</div><meter min="0" max="5" low="2" high="4" optimum="5" value="4.82"></meter></div>
+  <div class="card"><div class="k">Gross margin</div><div class="v">38.4%</div><meter min="0" max="100" low="30" high="45" optimum="60" value="38.4"></meter></div>
+  <div class="card"><div class="k">New customers</div><div class="v">1,284</div><progress max="1500" value="1284"></progress></div>
+  <div class="card"><div class="k">Churn</div><div class="v">2.1%</div><meter min="0" max="10" low="3" high="6" optimum="0" value="2.1"></meter></div>
+  <div class="card span2"><div class="k">Monthly revenue (k€)</div>
+    <div class="bars"><div class="bar"><b>1,412</b><i style="height:72%"></i></div><div class="bar"><b>1,530</b><i style="height:78%"></i></div><div class="bar"><b>1,878</b><i style="height:96%"></i></div><div class="bar"><b>1,265</b><i style="height:64.6%"></i></div><div class="bar"><b>1,604</b><i style="height:81.9%"></i></div><div class="bar"><b>1,951</b><i style="height:99.6%"></i></div></div>
+    <div class="labels"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div>
+  <div class="card span2"><div class="k">Revenue by channel</div><div style="display:flex; gap:12px; align-items:center"><div class="pie"></div>
+    <ul class="legend"><li style="--c:#0891b2">Direct 42%</li><li style="--c:#6366f1">Partners 29%</li><li style="--c:#f59e0b">Marketplace 17%</li><li style="--c:#10b981">Inside sales 12%</li></ul></div></div>
+  <div class="card span4"><div class="k" style="margin-bottom:4px">Top accounts</div>
+  <table><thead><tr><th>#</th><th>Account</th><th>Region</th><th class="n">Q2</th><th class="n">Q3</th><th class="n">Δ</th><th>Trend</th></tr></thead><tbody>
+    <tr><td class="rank"></td><td class="name">Fjordline Logistics AS — group framework incl. subsidiaries</td><td>NO</td><td class="n">412,800</td><td class="n">488,250</td><td class="n up">+18.3%</td><td><svg class="trend" viewBox="0 0 40 12"><polyline points="0,10 8,8 16,9 24,5 32,4 40,1" fill="none" stroke="#059669" stroke-width="1.5"/></svg></td></tr>
+    <tr><td class="rank"></td><td class="name">Helsinki Metro Facilities Oy</td><td>FI</td><td class="n">301,120</td><td class="n">287,400</td><td class="n down">−4.6%</td><td><svg class="trend" viewBox="0 0 40 12"><polyline points="0,3 8,4 16,2 24,6 32,7 40,8" fill="none" stroke="#dc2626" stroke-width="1.5"/></svg></td></tr>
+    <tr><td class="rank"></td><td class="name">Brightwater Coffee Roasters Ltd</td><td>UK</td><td class="n">96,040</td><td class="n">143,900</td><td class="n up">+49.8%</td><td><svg class="trend" viewBox="0 0 40 12"><polyline points="0,11 8,10 16,7 24,7 32,3 40,2" fill="none" stroke="#059669" stroke-width="1.5"/></svg></td></tr>
+    <tr><td class="rank"></td><td class="name">Aarhus Kommune, Teknik og Miljø, Afdeling for Bygninger og Ejendomme</td><td>DK</td><td class="n">210,000</td><td class="n">210,000</td><td class="n">0.0%</td><td><svg class="trend" viewBox="0 0 40 12"><polyline points="0,6 40,6" fill="none" stroke="#6b7280" stroke-width="1.5"/></svg></td></tr>
+    <tr><td class="rank"></td><td class="name">Göteborgs Hamn AB</td><td>SE</td><td class="n">158,330</td><td class="n">171,010</td><td class="n up">+8.0%</td><td><svg class="trend" viewBox="0 0 40 12"><polyline points="0,8 8,9 16,6 24,7 32,5 40,4" fill="none" stroke="#059669" stroke-width="1.5"/></svg></td></tr>
+  </tbody></table></div>
+</div>
+<details open><summary>Method</summary><p>Revenue is recognised at invoice date, net of credit notes. Accounts are grouped by billing entity; a group framework counts once. Figures in euros at the ECB reference rate of the invoice date.</p></details>
+<details><summary>Raw data</summary><p>Hidden in print unless opened.</p></details>
+</body></html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+@page { size: A4; margin: 15mm; }
+body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; }
+.head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 3px double #333; padding-bottom: 8px; }
+.en { direction: ltr; text-align: left; }
+.ar { text-align: right; }
+.title { text-align: center; font-size: 14pt; font-weight: bold; letter-spacing: 2px; }
+.title small { display: block; font-size: 10pt; font-weight: normal; text-transform: uppercase; letter-spacing: 3px; }
+dl { display: grid; grid-template-columns: max-content 1fr max-content; gap: 3px 10px; margin: 12px 0; }
+dt { font-weight: bold; }
+dd { margin: 0; }
+dd.en { text-align: left; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #555; padding: 4px 6px; vertical-align: top; }
+th { background: #eee; font-size: 9pt; }
+th span { display: block; font-weight: normal; direction: ltr; }
+td.n { text-align: left; direction: ltr; white-space: nowrap; }
+.sum { margin-top: 10px; display: flex; flex-direction: row; gap: 20px; justify-content: flex-end; }
+.sum div { border: 1px solid #333; padding: 6px 12px; }
+.words { margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="ar"><b>مصنع الخليج للمواد الغذائية</b><br>المنطقة الصناعية الثانية، دبي<br>هاتف ‎+971 4 055 0192</div>
+  <div class="title">فاتورة<small>Invoice</small></div>
+  <div class="en"><b>Gulf Food Industries LLC</b><br>Industrial Area 2, Dubai, UAE<br>Tel +971 4 055 0192</div>
+</div>
+<dl>
+  <dt>رقم الفاتورة</dt><dd>GF/24/1183</dd><dd class="en">Invoice No.</dd>
+  <dt>التاريخ</dt><dd>21-08-2024</dd><dd class="en">Date</dd>
+  <dt>العميل</dt><dd>سوبرماركت الوفاء – Al Wafa Supermarket</dd><dd class="en">Customer</dd>
+  <dt>شروط الدفع</dt><dd>30 يوماً صافي</dd><dd class="en">Payment terms</dd>
+</dl>
+<table>
+  <tr><th>م<span>No.</span></th><th>الصنف<span>Item</span></th><th>Description</th><th>الوحدة<span>Unit</span></th><th>الكمية<span>Qty</span></th><th>السعر<span>Price AED</span></th><th>القيمة<span>Amount AED</span></th></tr>
+  <tr><td>1</td><td>تمر خلاص فاخر</td><td class="en">Premium Khalas dates</td><td>كرتون 5 كغ</td><td class="n">40</td><td class="n">85.00</td><td class="n">3,400.00</td></tr>
+  <tr><td>2</td><td>زيت زيتون بكر ممتاز</td><td class="en">Extra virgin olive oil, 1 L</td><td>زجاجة</td><td class="n">120</td><td class="n">32.50</td><td class="n">3,900.00</td></tr>
+  <tr><td>3</td><td>هيل أخضر</td><td class="en">Green cardamom (500 g)</td><td>كيس</td><td class="n">25</td><td class="n">74.00</td><td class="n">1,850.00</td></tr>
+  <tr><td>4</td><td>أرز بسمتي سيلا</td><td class="en">Sella basmati rice, 10 kg</td><td>كيس</td><td class="n">60</td><td class="n">58.75</td><td class="n">3,525.00</td></tr>
+</table>
+<div class="sum">
+  <div>المجموع / Subtotal: <b dir="ltr">12,675.00 AED</b></div>
+  <div>ضريبة 5% / VAT: <b dir="ltr">633.75 AED</b></div>
+  <div>الإجمالي / Total: <b dir="ltr">13,308.75 AED</b></div>
+</div>
+<p class="words">المبلغ بالحروف: ثلاثة عشر ألفاً وثلاثمائة وثمانية دراهم وخمسة وسبعون فلساً فقط لا غير.</p>
+<p class="en words">Amount in words: Thirteen thousand three hundred eight dirhams and seventy-five fils only.</p>
+</body>
+</html>

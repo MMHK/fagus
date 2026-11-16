@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Dienstleistungsvertrag</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page {
+  size: A4;
+  margin: 22mm 20mm 25mm 25mm;
+  @bottom-center { content: "Seite " counter(page) " von " counter(pages); font: 8pt "Inter"; color: #555; }
+  @bottom-right { content: "Initialen: ______"; font: 8pt "Inter"; color: #555; }
+  @top-left { content: "Dienstleistungsvertrag Nr. 2026-0417"; font: 8pt "Inter"; color: #777; }
+}
+@page :first { @top-left { content: none; } }
+html { font: 10pt/1.45 "Inter", sans-serif; color: #1a1a1a; }
+body { margin: 0; }
+h1 { font-size: 17pt; margin: 0 0 4pt; letter-spacing: -0.01em; }
+.sub { color: #555; margin: 0 0 16pt; }
+.parties { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8pt 14pt; margin-bottom: 14pt; }
+.parties .and { align-self: center; color: #777; font-style: italic; }
+.parties p { margin: 0; }
+p { margin: 0 0 6pt; text-align: justify; hyphens: manual; widows: 3; orphans: 3; }
+ol.clauses { counter-reset: clause; list-style: none; padding: 0; margin: 0; }
+ol.clauses > li { counter-increment: clause; margin-top: 12pt; }
+ol.clauses > li > h2 { font-size: 11pt; margin: 0 0 4pt; break-after: avoid; }
+ol.clauses > li > h2::before { content: "§ " counter(clause) " "; }
+ol.sub { counter-reset: item; list-style: none; padding-left: 0; margin: 0; }
+ol.sub > li { counter-increment: item; position: relative; padding-left: 28pt; margin-bottom: 4pt; text-align: justify; }
+ol.sub > li::before { content: counter(clause) "." counter(item); position: absolute; left: 0; font-weight: 700; }
+ol.deep { counter-reset: deep; list-style: none; padding-left: 0; margin: 3pt 0 0; }
+ol.deep > li { counter-increment: deep; padding-left: 34pt; text-indent: -34pt; margin-bottom: 2pt; }
+ol.deep > li::before { content: counter(clause) "." counter(item) "." counter(deep); display: inline-block; width: 34pt; text-indent: 0; }
+ol.alpha { list-style-type: lower-alpha; padding-left: 18pt; margin: 3pt 0; }
+ol.alpha li::marker { content: "(" counter(list-item, lower-alpha) ") "; color: #444; }
+.def { font-weight: 700; }
+.sig { width: 100%; border-collapse: collapse; margin-top: 30pt; break-inside: avoid; }
+.sig td { width: 50%; padding: 0 12pt 0 0; vertical-align: bottom; }
+.sig .line { border-top: 0.75pt solid #000; padding-top: 3pt; font-size: 8.5pt; }
+.sig .place { height: 34pt; }
+.annex { break-before: page; }
+.box { border: 0.75pt solid #999; padding: 6pt 8pt; margin: 8pt 0; background: #f6f6f4; break-inside: avoid; }
+</style>
+</head>
+<body>
+<h1>Dienstleistungs&shy;vertrag</h1>
+<p class="sub">Vertrag Nr. 2026-0417 &middot; Stand: 13.&nbsp;November&nbsp;2026</p>
+<div class="parties">
+  <div><p><b>Muster&shy;software GmbH</b></p><p>Hauptstraße 12</p><p>10115 Berlin</p><p>– nachfolgend „Auftraggeber“ –</p></div>
+  <div class="and">und</div>
+  <div><p><b>Beispiel IT-Beratung UG (haftungs&shy;beschränkt)</b></p><p>Am Markt 3</p><p>80331 München</p><p>– nachfolgend „Auftragnehmer“ –</p></div>
+</div>
+<ol class="clauses">
+<li><h2>Vertragsgegenstand</h2>
+<ol class="sub">
+<li>Der Auftragnehmer erbringt für den Auftraggeber Beratungs- und Entwicklungs&shy;leistungen im Bereich der elektronischen Rechnungs&shy;stellung nach Maßgabe dieses Vertrages und der als <span class="def">Anlage&nbsp;1</span> beigefügten Leistungs&shy;beschreibung.</li>
+<li>Der Auftragnehmer erbringt die Leistungen in eigener Verantwortung. Er ist bei der Durchführung der übertragenen Tätigkeiten keinen Weisungen des Auftraggebers unterworfen, soweit sich aus diesem Vertrag nichts anderes ergibt.
+<ol class="deep">
+<li>Ort und Zeit der Leistungs&shy;erbringung bestimmt der Auftragnehmer nach pflichtgemäßem Ermessen unter Berücksichtigung der berechtigten Interessen des Auftraggebers.</li>
+<li>Der Auftragnehmer darf Unterauftragnehmer nur mit vorheriger schriftlicher Zustimmung des Auftraggebers einsetzen; die Zustimmung darf nicht unbillig verweigert werden.</li>
+<li>Termine und Fristen sind nur verbindlich, wenn sie ausdrücklich als „verbindlich“ bezeichnet worden sind.</li>
+</ol></li>
+<li>Nicht Gegenstand dieses Vertrages sind insbesondere:
+<ol class="alpha">
+<li>die Rechts- und Steuerberatung,</li>
+<li>der Betrieb von Rechenzentrums&shy;infrastruktur des Auftraggebers,</li>
+<li>die Schulung von Endanwendern, soweit sie über eine Einweisung von bis zu zwei Stunden hinausgeht.</li>
+</ol></li>
+</ol></li>
+<li><h2>Vergütung und Zahlungsbedingungen</h2>
+<ol class="sub">
+<li>Der Auftragnehmer erhält für seine Tätigkeit ein Honorar von 115,00&nbsp;€ je Stunde zuzüglich der jeweils gültigen gesetzlichen Umsatzsteuer. Reisezeiten werden zu 50&nbsp;% vergütet.</li>
+<li>Der Auftragnehmer stellt seine Leistungen monatlich nachträglich in Rechnung. Der Rechnung ist ein Tätigkeits&shy;nachweis beizufügen, aus dem sich Datum, Dauer und Inhalt der erbrachten Leistungen ergeben.</li>
+<li>Rechnungen sind innerhalb von 14&nbsp;Tagen nach Zugang ohne Abzug zur Zahlung fällig. Bei Zahlung innerhalb von 7&nbsp;Tagen gewährt der Auftragnehmer 2&nbsp;% Skonto.
+<ol class="deep">
+<li>Rechnungen werden ausschließlich elektronisch im Format XRechnung oder ZUGFeRD (Profil EN&nbsp;16931) übermittelt.</li>
+<li>Einwendungen gegen eine Rechnung sind innerhalb von vier Wochen nach Zugang schriftlich geltend zu machen; das Unterlassen rechtzeitiger Einwendungen gilt als Genehmigung.</li>
+</ol></li>
+</ol></li>
+<li><h2>Mitwirkungspflichten des Auftraggebers</h2>
+<ol class="sub">
+<li>Der Auftraggeber unterstützt den Auftragnehmer bei der Erfüllung seiner vertraglichen Pflichten. Er stellt insbesondere rechtzeitig alle Informationen, Unterlagen und Zugänge zur Verfügung, die für die Leistungs&shy;erbringung erforderlich sind.</li>
+<li>Der Auftraggeber benennt einen Ansprech&shy;partner, der befugt ist, verbindliche Entscheidungen zu treffen oder kurzfristig herbeizuführen.</li>
+<li>Kommt der Auftraggeber seinen Mitwirkungs&shy;pflichten nicht oder nicht rechtzeitig nach, verlängern sich vereinbarte Fristen angemessen. Mehraufwand wird nach §&nbsp;2 gesondert vergütet.</li>
+</ol></li>
+<li><h2>Nutzungsrechte</h2>
+<ol class="sub">
+<li>Der Auftragnehmer räumt dem Auftraggeber an allen im Rahmen dieses Vertrages geschaffenen Arbeits&shy;ergebnissen das ausschließliche, zeitlich, räumlich und inhaltlich unbeschränkte Recht zur Nutzung in allen bekannten Nutzungsarten ein.</li>
+<li>Die Rechte gehen mit vollständiger Zahlung der jeweiligen Vergütung auf den Auftraggeber über. Bis dahin ist die Nutzung widerruflich gestattet.</li>
+<li>Für Open-Source-Komponenten gelten vorrangig die jeweiligen Lizenz&shy;bedingungen; der Auftragnehmer weist den Auftraggeber auf deren Einsatz vor der Verwendung hin.</li>
+</ol>
+<div class="box"><b>Hinweis:</b> Die Einräumung der Nutzungsrechte umfasst auch das Recht zur Bearbeitung und Unterlizenzierung an verbundene Unternehmen im Sinne der §§&nbsp;15&nbsp;ff.&nbsp;AktG.</div></li>
+<li><h2>Vertraulichkeit und Datenschutz</h2>
+<ol class="sub">
+<li>Die Parteien verpflichten sich, alle ihnen im Zusammenhang mit diesem Vertrag bekannt gewordenen vertraulichen Informationen der jeweils anderen Partei geheim zu halten und nicht für eigene Zwecke außerhalb dieses Vertrages zu verwenden.</li>
+<li>Soweit der Auftragnehmer personenbezogene Daten im Auftrag verarbeitet, schließen die Parteien einen gesonderten Vertrag nach Art.&nbsp;28 DSGVO.</li>
+<li>Die Pflichten nach diesem Paragraphen bestehen auch nach Beendigung des Vertrages für einen Zeitraum von fünf Jahren fort.</li>
+</ol></li>
+<li><h2>Haftung</h2>
+<ol class="sub">
+<li>Der Auftragnehmer haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.</li>
+<li>Bei leicht fahrlässiger Verletzung einer wesentlichen Vertragspflicht ist die Haftung auf den vertrags&shy;typischen, vorhersehbaren Schaden begrenzt, höchstens jedoch auf den Betrag der im laufenden Kalenderjahr gezahlten Vergütung.</li>
+<li>Im Übrigen ist die Haftung ausgeschlossen. Die Haftung nach dem Produkthaftungs&shy;gesetz bleibt unberührt.</li>
+</ol></li>
+<li><h2>Laufzeit und Kündigung</h2>
+<ol class="sub">
+<li>Der Vertrag tritt mit Unterzeichnung in Kraft und läuft auf unbestimmte Zeit. Er kann von jeder Partei mit einer Frist von drei Monaten zum Ende eines Kalender&shy;quartals gekündigt werden.</li>
+<li>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Ein wichtiger Grund liegt für den Auftraggeber insbesondere vor, wenn
+<ol class="alpha">
+<li>der Auftragnehmer trotz Abmahnung wiederholt gegen wesentliche Vertragspflichten verstößt,</li>
+<li>über das Vermögen des Auftragnehmers das Insolvenz&shy;verfahren eröffnet oder die Eröffnung mangels Masse abgelehnt wird.</li>
+</ol></li>
+<li>Kündigungen bedürfen der Schriftform. Die elektronische Form (§&nbsp;126a&nbsp;BGB) genügt.</li>
+</ol></li>
+<li><h2>Schlussbestimmungen</h2>
+<ol class="sub">
+<li>Änderungen und Ergänzungen dieses Vertrages bedürfen der Textform. Dies gilt auch für die Aufhebung dieses Formerfordernisses.</li>
+<li>Sollte eine Bestimmung dieses Vertrages unwirksam sein oder werden, so wird dadurch die Wirksamkeit der übrigen Bestimmungen nicht berührt. Die Parteien verpflichten sich, die unwirksame Bestimmung durch eine wirksame zu ersetzen, die dem wirtschaftlichen Zweck der unwirksamen Bestimmung am nächsten kommt.</li>
+<li>Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist, soweit gesetzlich zulässig, Berlin.</li>
+</ol></li>
+</ol>
+<table class="sig">
+<tr><td class="place">Berlin, den ____________</td><td class="place">München, den ____________</td></tr>
+<tr><td><div class="line">Musters&shy;oftware GmbH<br>vertreten durch die Geschäftsführerin Anna Muster</div></td><td><div class="line">Beispiel IT-Beratung UG (haftungsbeschränkt)<br>vertreten durch den Geschäftsführer Jonas Beispiel</div></td></tr>
+</table>
+<section class="annex">
+<h1>Anlage 1 – Leistungsbeschreibung</h1>
+<p class="sub">zum Dienstleistungsvertrag Nr. 2026-0417</p>
+<ol class="clauses" style="counter-reset: clause 0">
+<li><h2>Ausgangslage</h2><p>Der Auftraggeber betreibt eine Software zur Erstellung von Rechnungen für kleine und mittlere Unternehmen. Ab dem 1.&nbsp;Januar&nbsp;2027 müssen inländische Unternehmen im B2B-Bereich elektronische Rechnungen ausstellen können; die Software soll hierfür erweitert werden.</p></li>
+<li><h2>Leistungsumfang</h2>
+<ol class="sub">
+<li>Analyse der bestehenden Daten&shy;modelle und Abbildung auf die semantischen Elemente der EN&nbsp;16931.</li>
+<li>Implementierung der Ausgabe in den Syntaxen UBL&nbsp;2.1 und UN/CEFACT CII D16B einschließlich der Validierung gegen die offiziellen Schematron-Regeln.</li>
+<li>Erstellung einer hybriden PDF/A-3-Ausgabe (ZUGFeRD&nbsp;2.3) mit eingebettetem XML.</li>
+</ol></li>
+</ol>
+</section>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Room booking request</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 18mm 20mm; }
+body { font: 10.5pt/1.45 Inter, sans-serif; color: #1f2933; margin: 0; }
+h1 { font-size: 17pt; margin: 0 0 2pt; }
+.lead { color: #52606d; margin: 0 0 14pt; }
+form > fieldset { margin: 0 0 12pt; }
+legend { font-weight: 700; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt 14pt; }
+label { display: block; font-size: 9pt; color: #3e4c59; margin-bottom: 2pt; }
+.wide { grid-column: 1 / -1; }
+.inline label { display: inline; font-size: 10.5pt; color: inherit; margin: 0 14pt 0 3pt; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select { width: 100%; box-sizing: border-box; }
+textarea { width: 100%; box-sizing: border-box; }
+table { border-collapse: collapse; width: 100%; font-size: 9.5pt; }
+th, td { border: 1px solid #cbd2d9; padding: 3pt 5pt; text-align: left; }
+th { background: #f5f7fa; }
+td input { width: 3.5em; }
+.terms { font-size: 9pt; color: #3e4c59; }
+.actions { margin-top: 10pt; }
+.sig { margin-top: 26pt; display: flex; gap: 24pt; }
+.sig div { flex: 1; border-top: 1px solid #1f2933; padding-top: 3pt; font-size: 8.5pt; color: #52606d; }
+</style>
+</head>
+<body>
+<h1>Room booking request</h1>
+<p class="lead">Community centre Am Stadtpark · please print, sign and hand in at the front desk.</p>
+
+<form action="/bookings" method="post">
+<fieldset>
+  <legend>Applicant</legend>
+  <div class="grid">
+    <div><label for="name">Full name</label><input type="text" id="name" name="name" value="Johanna Brückner"></div>
+    <div><label for="org">Organisation (optional)</label><input type="text" id="org" name="org" placeholder="Club, company or association"></div>
+    <div><label for="mail">Email</label><input type="email" id="mail" name="mail" value="j.brueckner@example.org"></div>
+    <div><label for="tel">Phone</label><input type="tel" id="tel" name="tel" value="+49 351 0555 0193"></div>
+    <div class="wide"><label for="street">Street and number</label><input type="text" id="street" name="street" value="Lindenallee 17b"></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Booking</legend>
+  <div class="grid">
+    <div><label for="room">Room</label>
+      <select id="room" name="room">
+        <option>Hall A (up to 120 people)</option>
+        <option selected>Seminar room 2 (up to 24 people)</option>
+        <option>Kitchen and café</option>
+      </select></div>
+    <div><label for="date">Date</label><input type="date" id="date" name="date" value="2026-12-12"></div>
+    <div><label for="from">From</label><input type="text" id="from" name="from" value="14:00"></div>
+    <div><label for="people">Expected guests</label><input type="number" id="people" name="people" value="18" min="1" max="120"></div>
+    <div class="wide inline">Type of event:
+      <input type="radio" id="t1" name="type" value="private"><label for="t1">private</label>
+      <input type="radio" id="t2" name="type" value="club" checked><label for="t2">club or association</label>
+      <input type="radio" id="t3" name="type" value="commercial"><label for="t3">commercial</label>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Equipment</legend>
+  <table>
+    <thead><tr><th>Item</th><th>Fee</th><th>Quantity</th><th>Needed</th></tr></thead>
+    <tbody>
+      <tr><td>Projector with HDMI cable</td><td>15.00 €</td><td><input type="number" value="1"></td><td><input type="checkbox" checked></td></tr>
+      <tr><td>Flip chart and markers</td><td>5.00 €</td><td><input type="number" value="2"></td><td><input type="checkbox" checked></td></tr>
+      <tr><td>Microphone set</td><td>20.00 €</td><td><input type="number" value="0"></td><td><input type="checkbox"></td></tr>
+      <tr><td>Crockery (per 10 people)</td><td>8.00 €</td><td><input type="number" value="2"></td><td><input type="checkbox" checked></td></tr>
+    </tbody>
+  </table>
+</fieldset>
+
+<fieldset>
+  <legend>Remarks</legend>
+  <textarea name="remarks" rows="4">We would like to set up the tables in a U shape. A colleague will collect the key on Friday afternoon.
+Please let us know if the room is free until 20:00.</textarea>
+</fieldset>
+
+<p class="terms"><input type="checkbox" id="agb" checked> <label for="agb" style="display:inline">I have read the house rules and accept the fee schedule of 1 January 2026.</label><br>
+<input type="checkbox" id="news"> <label for="news" style="display:inline">Send me the programme of the centre by email.</label></p>
+
+<div class="actions"><button type="submit">Send request</button> <button type="reset">Clear form</button> <input type="button" value="Print"></div>
+</form>
+
+<div class="sig"><div>Place, date</div><div>Signature of the applicant</div><div>Received by (front desk)</div></div>
+</body>
+</html>

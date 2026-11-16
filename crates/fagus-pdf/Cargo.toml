@@ -1,0 +1,44 @@
+[package]
+name = "fagus-pdf"
+description = "PDF output for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus-dom.workspace = true
+fagus-paint.workspace = true
+fagus-text.workspace = true
+krilla.workspace = true
+krilla-svg.workspace = true
+skrifa.workspace = true
+tiny-skia.workspace = true
+png.workspace = true
+zune-jpeg.workspace = true
+image-webp.workspace = true
+gif.workspace = true
+usvg.workspace = true
+resvg.workspace = true
+# Not used directly: switches krilla's compression to the faster zlib-rs backend.
+flate2.workspace = true
+fagus-style.workspace = true
+fagus-css.workspace = true
+fagus-layout.workspace = true
+rustc-hash.workspace = true
+# Compresses the object streams side by side; krilla compresses pages with it.
+rayon = { workspace = true, optional = true }
+thiserror.workspace = true
+
+[features]
+default = ["parallel"]
+# Compresses page contents, images and object streams on a pool of threads, one per processor
+# (`RAYON_NUM_THREADS` sets how many). Without it, a document is written on one thread.
+parallel = ["dep:rayon", "krilla/rayon"]

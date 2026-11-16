@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Invoice INV-2026-0419</title>
+<style>
+/*! tailwindcss v4.1.11 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+@font-face { font-family: InterVariable; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; font-style: normal; }
+@font-face { font-family: InterVariable; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; font-style: normal; }
+@font-face { font-family: InterVariable; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@layer theme {
+  :root, :host {
+    --font-sans: InterVariable, ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --color-sky-50: oklch(97.7% 0.013 236.62);
+    --color-sky-600: oklch(58.8% 0.158 241.966);
+    --color-sky-700: oklch(50% 0.134 242.749);
+    --color-emerald-600: oklch(59.6% 0.145 163.225);
+    --color-rose-600: oklch(58.6% 0.253 17.585);
+    --color-amber-500: oklch(76.9% 0.188 70.08);
+    --color-zinc-50: oklch(98.5% 0 0);
+    --color-zinc-100: oklch(96.7% 0.001 286.375);
+    --color-zinc-200: oklch(92% 0.004 286.32);
+    --color-zinc-400: oklch(70.5% 0.015 286.067);
+    --color-zinc-500: oklch(55.2% 0.016 285.938);
+    --color-zinc-600: oklch(44.2% 0.017 285.786);
+    --color-zinc-900: oklch(21% 0.006 285.885);
+    --color-zinc-950: oklch(14.1% 0.005 285.823);
+    --color-white: #fff;
+    --spacing: 0.25rem;
+    --text-xs: 0.75rem; --text-xs--line-height: calc(1 / 0.75);
+    --text-sm: 0.875rem; --text-sm--line-height: calc(1.25 / 0.875);
+    --text-base: 1rem; --text-base--line-height: calc(1.5 / 1);
+    --text-xl: 1.25rem; --text-xl--line-height: calc(1.75 / 1.25);
+    --text-3xl: 1.875rem; --text-3xl--line-height: calc(2.25 / 1.875);
+    --font-weight-normal: 400; --font-weight-medium: 500; --font-weight-semibold: 600;
+    --tracking-tight: -0.025em; --tracking-wider: 0.05em;
+    --radius-md: 0.375rem; --radius-lg: 0.5rem; --radius-xl: 0.75rem; --radius-full: 9999px;
+    --default-font-family: var(--font-sans);
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; }
+  html, :host { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif); }
+  h1, h2, h3, h4 { font-size: inherit; font-weight: inherit; }
+  b, strong { font-weight: bolder; }
+  small { font-size: 80%; }
+  table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+  ol, ul, menu { list-style: none; }
+  img, svg { display: block; vertical-align: middle; }
+  :where(dl) { margin: 0; }
+}
+@layer utilities {
+  .absolute { position: absolute; }
+  .relative { position: relative; }
+  .inset-y-0 { inset-block: calc(var(--spacing) * 0); }
+  .start-0 { inset-inline-start: calc(var(--spacing) * 0); }
+  .mt-1 { margin-top: calc(var(--spacing) * 1); }
+  .mt-2 { margin-top: calc(var(--spacing) * 2); }
+  .mt-6 { margin-top: calc(var(--spacing) * 6); }
+  .mt-10 { margin-top: calc(var(--spacing) * 10); }
+  .ms-auto { margin-inline-start: auto; }
+  .flex { display: flex; }
+  .grid { display: grid; }
+  .inline-flex { display: inline-flex; }
+  .size-11 { width: calc(var(--spacing) * 11); height: calc(var(--spacing) * 11); }
+  .size-2 { width: calc(var(--spacing) * 2); height: calc(var(--spacing) * 2); }
+  .w-1 { width: calc(var(--spacing) * 1); }
+  .w-full { width: 100%; }
+  .w-72 { width: calc(var(--spacing) * 72); }
+  .max-w-prose { max-width: 65ch; }
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-cols-\[1fr_auto\] { grid-template-columns: 1fr auto; }
+  .items-center { align-items: center; }
+  .items-start { align-items: flex-start; }
+  .justify-between { justify-content: space-between; }
+  .gap-1\.5 { gap: calc(var(--spacing) * 1.5); }
+  .gap-3 { gap: calc(var(--spacing) * 3); }
+  .gap-x-8 { column-gap: calc(var(--spacing) * 8); }
+  .gap-y-1 { row-gap: calc(var(--spacing) * 1); }
+  .space-y-1 { :where(& > :not(:last-child)) { --tw-space-y-reverse: 0; margin-block-start: calc(calc(var(--spacing) * 1) * var(--tw-space-y-reverse)); margin-block-end: calc(calc(var(--spacing) * 1) * calc(1 - var(--tw-space-y-reverse))); } }
+  .space-y-3 { :where(& > :not(:last-child)) { --tw-space-y-reverse: 0; margin-block-start: calc(calc(var(--spacing) * 3) * var(--tw-space-y-reverse)); margin-block-end: calc(calc(var(--spacing) * 3) * calc(1 - var(--tw-space-y-reverse))); } }
+  .divide-y { :where(& > :not(:last-child)) { --tw-divide-y-reverse: 0; border-bottom-style: var(--tw-border-style); border-top-style: var(--tw-border-style); border-top-width: calc(1px * var(--tw-divide-y-reverse)); border-bottom-width: calc(1px * calc(1 - var(--tw-divide-y-reverse))); } }
+  .divide-zinc-200 { :where(& > :not(:last-child)) { border-color: var(--color-zinc-200); } }
+  .overflow-hidden { overflow: hidden; }
+  .rounded-full { border-radius: var(--radius-full); }
+  .rounded-lg { border-radius: var(--radius-lg); }
+  .rounded-xl { border-radius: var(--radius-xl); }
+  .rounded-e-xl { border-start-end-radius: var(--radius-xl); border-end-end-radius: var(--radius-xl); }
+  .border { border-style: var(--tw-border-style); border-width: 1px; }
+  .border-t { border-top-style: var(--tw-border-style); border-top-width: 1px; }
+  .border-b { border-bottom-style: var(--tw-border-style); border-bottom-width: 1px; }
+  .border-s-4 { border-inline-start-style: var(--tw-border-style); border-inline-start-width: 4px; }
+  .border-dashed { --tw-border-style: dashed; border-style: dashed; }
+  .border-zinc-200 { border-color: var(--color-zinc-200); }
+  .border-zinc-950\/10 { border-color: color-mix(in srgb, oklch(14.1% 0.005 285.823) 10%, transparent); @supports (color: color-mix(in lab, red, red)) { border-color: color-mix(in oklab, var(--color-zinc-950) 10%, transparent); } }
+  .border-sky-600 { border-color: var(--color-sky-600); }
+  .bg-white { background-color: var(--color-white); }
+  .bg-zinc-50 { background-color: var(--color-zinc-50); }
+  .bg-sky-600 { background-color: var(--color-sky-600); }
+  .bg-sky-50 { background-color: var(--color-sky-50); }
+  .bg-emerald-600 { background-color: var(--color-emerald-600); }
+  .bg-emerald-600\/10 { background-color: color-mix(in srgb, oklch(59.6% 0.145 163.225) 10%, transparent); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--color-emerald-600) 10%, transparent); } }
+  .bg-rose-600\/10 { background-color: color-mix(in srgb, oklch(58.6% 0.253 17.585) 10%, transparent); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--color-rose-600) 10%, transparent); } }
+  .bg-linear-to-r { --tw-gradient-position: to right in oklab; background-image: linear-gradient(var(--tw-gradient-stops)); }
+  .from-sky-600 { --tw-gradient-from: var(--color-sky-600); --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position)); }
+  .to-emerald-600 { --tw-gradient-to: var(--color-emerald-600); --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position)); }
+  .p-6 { padding: calc(var(--spacing) * 6); }
+  .px-2 { padding-inline: calc(var(--spacing) * 2); }
+  .px-3 { padding-inline: calc(var(--spacing) * 3); }
+  .py-0\.5 { padding-block: calc(var(--spacing) * 0.5); }
+  .py-2\.5 { padding-block: calc(var(--spacing) * 2.5); }
+  .py-3 { padding-block: calc(var(--spacing) * 3); }
+  .ps-5 { padding-inline-start: calc(var(--spacing) * 5); }
+  .pt-4 { padding-top: calc(var(--spacing) * 4); }
+  .pb-8 { padding-bottom: calc(var(--spacing) * 8); }
+  .text-start { text-align: start; }
+  .text-end { text-align: end; }
+  .text-3xl { font-size: var(--text-3xl); line-height: var(--tw-leading, var(--text-3xl--line-height)); }
+  .text-xl { font-size: var(--text-xl); line-height: var(--tw-leading, var(--text-xl--line-height)); }
+  .text-base { font-size: var(--text-base); line-height: var(--tw-leading, var(--text-base--line-height)); }
+  .text-sm { font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); }
+  .text-xs { font-size: var(--text-xs); line-height: var(--tw-leading, var(--text-xs--line-height)); }
+  .text-\[11px\] { font-size: 11px; }
+  .leading-6 { --tw-leading: calc(var(--spacing) * 6); line-height: calc(var(--spacing) * 6); }
+  .font-medium { --tw-font-weight: var(--font-weight-medium); font-weight: var(--font-weight-medium); }
+  .font-semibold { --tw-font-weight: var(--font-weight-semibold); font-weight: var(--font-weight-semibold); }
+  .tracking-tight { --tw-tracking: var(--tracking-tight); letter-spacing: var(--tracking-tight); }
+  .tracking-wider { --tw-tracking: var(--tracking-wider); letter-spacing: var(--tracking-wider); }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+  .whitespace-nowrap { white-space: nowrap; }
+  .text-white { color: var(--color-white); }
+  .text-zinc-400 { color: var(--color-zinc-400); }
+  .text-zinc-500 { color: var(--color-zinc-500); }
+  .text-zinc-600 { color: var(--color-zinc-600); }
+  .text-zinc-900 { color: var(--color-zinc-900); }
+  .text-zinc-950 { color: var(--color-zinc-950); }
+  .text-sky-700 { color: var(--color-sky-700); }
+  .text-emerald-600 { color: var(--color-emerald-600); }
+  .text-rose-600 { color: var(--color-rose-600); }
+  .uppercase { text-transform: uppercase; }
+  .italic { font-style: italic; }
+  .tabular-nums { --tw-numeric-spacing: tabular-nums; font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,); }
+  .shadow-xs { --tw-shadow: 0 1px 2px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.05)); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
+  .ring-1 { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
+  .ring-inset { --tw-ring-inset: inset; }
+  .ring-emerald-600\/20 { --tw-ring-color: color-mix(in srgb, oklch(59.6% 0.145 163.225) 20%, transparent); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent); } }
+  .ring-rose-600\/20 { --tw-ring-color: color-mix(in srgb, oklch(58.6% 0.253 17.585) 20%, transparent); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--color-rose-600) 20%, transparent); } }
+  .ring-zinc-950\/5 { --tw-ring-color: color-mix(in srgb, oklch(14.1% 0.005 285.823) 5%, transparent); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--color-zinc-950) 5%, transparent); } }
+  .\*\:py-2 { :is(& > *) { padding-block: calc(var(--spacing) * 2); } }
+  .\[\&_td\]\:px-3 { & td { padding-inline: calc(var(--spacing) * 3); } }
+  .\[\&_th\]\:px-3 { & th { padding-inline: calc(var(--spacing) * 3); } }
+  .has-\[\.credit\]\:bg-rose-600\/10 { &:has(*:is(.credit)) { background-color: color-mix(in srgb, oklch(58.6% 0.253 17.585) 10%, transparent); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--color-rose-600) 10%, transparent); } } }
+  .odd\:bg-zinc-50 { &:nth-child(odd) { background-color: var(--color-zinc-50); } }
+  .last\:border-0 { &:last-child { border-style: var(--tw-border-style); border-width: 0px; } }
+  .print\:shadow-none { @media print { --tw-shadow: 0 0 #0000; box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); } }
+}
+@property --tw-space-y-reverse { syntax: "*"; inherits: false; initial-value: 0; }
+@property --tw-divide-y-reverse { syntax: "*"; inherits: false; initial-value: 0; }
+@property --tw-border-style { syntax: "*"; inherits: false; initial-value: solid; }
+@property --tw-leading { syntax: "*"; inherits: false; }
+@property --tw-font-weight { syntax: "*"; inherits: false; }
+@property --tw-tracking { syntax: "*"; inherits: false; }
+@property --tw-gradient-position { syntax: "*"; inherits: false; }
+@property --tw-gradient-from { syntax: "<color>"; inherits: false; initial-value: #0000; }
+@property --tw-gradient-to { syntax: "<color>"; inherits: false; initial-value: #0000; }
+@property --tw-gradient-via-stops { syntax: "*"; inherits: false; }
+@property --tw-gradient-from-position { syntax: "<length-percentage>"; inherits: false; initial-value: 0%; }
+@property --tw-gradient-to-position { syntax: "<length-percentage>"; inherits: false; initial-value: 100%; }
+@property --tw-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-shadow-color { syntax: "*"; inherits: false; }
+@property --tw-inset-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-inset-ring-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-ring-color { syntax: "*"; inherits: false; }
+@property --tw-ring-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-ring-inset { syntax: "*"; inherits: false; }
+@property --tw-ring-offset-width { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --tw-ring-offset-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-numeric-spacing { syntax: "*"; inherits: false; }
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop { --tw-space-y-reverse: 0; --tw-divide-y-reverse: 0; --tw-border-style: solid; --tw-shadow: 0 0 #0000; --tw-inset-shadow: 0 0 #0000; --tw-inset-ring-shadow: 0 0 #0000; --tw-ring-offset-width: 0px; --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-gradient-from: #0000; --tw-gradient-to: #0000; --tw-gradient-from-position: 0%; --tw-gradient-to-position: 100%; }
+  }
+}
+@page { size: A4; margin: 16mm 16mm 20mm;
+  @bottom-left { content: "Northwind Analytics GmbH · Invoice INV-2026-0419"; font: 8pt InterVariable; color: oklch(55.2% 0.016 285.938); }
+  @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 8pt InterVariable; color: oklch(55.2% 0.016 285.938); } }
+</style></head>
+<body class="text-sm text-zinc-600">
+<div class="h-1 w-full bg-linear-to-r from-sky-600 to-emerald-600 rounded-full" style="height:4px"></div>
+<header class="mt-6 flex items-start justify-between">
+  <div class="flex items-center gap-3">
+    <div class="size-11 rounded-xl bg-sky-600 text-white inline-flex items-center font-semibold text-xl" style="justify-content:center">N</div>
+    <div>
+      <div class="text-base font-semibold text-zinc-950 tracking-tight">Northwind Analytics</div>
+      <div class="text-xs text-zinc-500">Data platforms · Reporting · Training</div>
+    </div>
+  </div>
+  <div class="text-end">
+    <h1 class="text-3xl font-semibold tracking-tight text-zinc-950">Invoice</h1>
+    <p class="mt-1 text-xs text-zinc-500 tabular-nums">INV-2026-0419 · issued 4 November 2026</p>
+  </div>
+</header>
+
+<section class="mt-10 grid grid-cols-3 gap-x-8">
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Billed to</h2>
+    <address class="mt-2 text-zinc-900" style="font-style:normal">Harbour &amp; Pike Logistics Ltd<br>Attn. Accounts Payable<br>14 Wapping Lane<br>London E1W 2RG<br>United Kingdom</address>
+  </div>
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">From</h2>
+    <address class="mt-2 text-zinc-900" style="font-style:normal">Northwind Analytics GmbH<br>Rosenthaler Straße 40<br>10178 Berlin<br>Germany<br>VAT DE 318 552 904</address>
+  </div>
+  <dl class="grid grid-cols-[1fr_auto] gap-y-1 text-xs" style="align-content:start">
+    <dt class="text-zinc-500">Invoice date</dt><dd class="text-end text-zinc-900 tabular-nums">04.11.2026</dd>
+    <dt class="text-zinc-500">Service period</dt><dd class="text-end text-zinc-900 tabular-nums">Oct 2026</dd>
+    <dt class="text-zinc-500">Due date</dt><dd class="text-end text-zinc-900 tabular-nums">04.12.2026</dd>
+    <dt class="text-zinc-500">PO number</dt><dd class="text-end text-zinc-900 tabular-nums">HP-77120</dd>
+    <dt class="text-zinc-500">Status</dt>
+    <dd class="text-end"><span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 ring-1 ring-inset ring-emerald-600/20"><span class="size-2 rounded-full bg-emerald-600"></span>Open</span></dd>
+  </dl>
+</section>
+
+<p class="mt-10 max-w-prose text-pretty text-zinc-600">Thank you for working with us again this quarter. As agreed in the framework contract of 12 March 2026, consulting days are billed at the day rate below; licence fees are billed monthly in advance. Please quote the invoice number with your payment.</p>
+
+<div class="mt-6 overflow-hidden rounded-xl border border-zinc-200 shadow-xs print:shadow-none">
+<table class="w-full text-start [&_td]:px-3 [&_th]:px-3">
+  <thead class="bg-zinc-50 text-xs text-zinc-500">
+    <tr class="*:py-2"><th class="text-start font-medium">Description</th><th class="text-end font-medium">Qty</th><th class="text-end font-medium">Unit</th><th class="text-end font-medium">Rate</th><th class="text-end font-medium">Amount</th></tr>
+  </thead>
+  <tbody class="divide-y divide-zinc-200 tabular-nums text-zinc-900">
+    <tr class="*:py-3"><td><div class="font-medium">Platform licence “Insight Pro”</div><div class="text-xs text-zinc-500">25 seats, November 2026, billed monthly in advance</div></td><td class="text-end">25</td><td class="text-end">seat</td><td class="text-end">€ 48.00</td><td class="text-end">€ 1,200.00</td></tr>
+    <tr class="*:py-3"><td><div class="font-medium">Data warehouse migration</div><div class="text-xs text-zinc-500">Snowflake to Postgres, schema mapping and backfill, 6–17 Oct</div></td><td class="text-end">8</td><td class="text-end">day</td><td class="text-end">€ 1,150.00</td><td class="text-end">€ 9,200.00</td></tr>
+    <tr class="*:py-3"><td><div class="font-medium">Dashboard workshop</div><div class="text-xs text-zinc-500">On site in London, two trainers, incl. preparation</div></td><td class="text-end">1</td><td class="text-end">day</td><td class="text-end">€ 2,400.00</td><td class="text-end">€ 2,400.00</td></tr>
+    <tr class="*:py-3"><td><div class="font-medium">Travel expenses</div><div class="text-xs text-zinc-500">Flights BER–LCY, two nights, receipts attached</div></td><td class="text-end">1</td><td class="text-end">flat</td><td class="text-end">€ 861.40</td><td class="text-end">€ 861.40</td></tr>
+    <tr class="*:py-3 has-[.credit]:bg-rose-600/10"><td><div class="font-medium credit text-rose-600">Credit note CN-2026-031</div><div class="text-xs text-zinc-500">Service outage of 22 September, 2 days of licence fees</div></td><td class="text-end">1</td><td class="text-end">—</td><td class="text-end">€ −80.00</td><td class="text-end text-rose-600">€ −80.00</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="mt-6 flex">
+  <dl class="ms-auto w-72 space-y-1 tabular-nums">
+    <div class="flex justify-between"><dt>Subtotal</dt><dd class="text-zinc-900">€ 13,581.40</dd></div>
+    <div class="flex justify-between"><dt>Reverse charge (0 % VAT)</dt><dd class="text-zinc-900">€ 0.00</dd></div>
+    <div class="flex justify-between border-t border-zinc-200 pt-4 text-base font-semibold text-zinc-950" style="margin-top:.5rem"><dt>Total due</dt><dd>€ 13,581.40</dd></div>
+  </dl>
+</div>
+
+<aside class="relative mt-10 rounded-e-xl bg-sky-50 p-6 ps-5 border-s-4 border-sky-600">
+  <h3 class="font-semibold text-sky-700">Payment</h3>
+  <div class="mt-2 grid grid-cols-3 gap-x-8 text-xs">
+    <div><div class="text-zinc-500">Account holder</div><div class="text-zinc-900">Northwind Analytics GmbH</div></div>
+    <div><div class="text-zinc-500">IBAN</div><div class="text-zinc-900 tabular-nums">DE89 3704 0044 0532 0130 00</div></div>
+    <div><div class="text-zinc-500">BIC</div><div class="text-zinc-900">COBADEFFXXX</div></div>
+  </div>
+  <p class="mt-2 text-xs text-zinc-600 text-balance">The supply is subject to the reverse charge procedure: VAT is owed by the recipient according to Article 196 of Council Directive 2006/112/EC.</p>
+</aside>
+
+<footer class="mt-10 border-t border-dashed border-zinc-200 pt-4 grid grid-cols-3 gap-x-8 text-xs text-zinc-500">
+  <div>Northwind Analytics GmbH<br>Managing directors: Lea Brandt, Tomás Ferreira<br>Amtsgericht Charlottenburg HRB 214 778</div>
+  <div>hello@northwind-analytics.example<br>+49 30 23125 129<br>northwind-analytics.example</div>
+  <div class="italic">Questions about this invoice? Reply to the e-mail it came with, or call us on weekdays from 9 to 17 CET.</div>
+</footer>
+</body></html>

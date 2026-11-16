@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "puppeteer": "^25.17.0"
+  }
+}

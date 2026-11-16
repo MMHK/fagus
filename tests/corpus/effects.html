@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Shadows and transforms</title>
+<style>
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@page { size: A4; margin: 10mm; }
+body { margin: 0; font: 7pt Inter, sans-serif; color: #111; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6mm; }
+.case { height: 34mm; background: #f8fafc; position: relative; }
+.case p { position: absolute; left: 1mm; bottom: 0; margin: 0; }
+.b { position: absolute; left: 8mm; top: 6mm; width: 20mm; height: 12mm; background: #fff; }
+.s1 .b { box-shadow: 0 2mm 3mm rgba(0,0,0,.45); border-radius: 2mm; }
+.s2 .b { box-shadow: 4px 4px 0 #2563eb; }
+.s3 .b { box-shadow: 0 0 0 3px #16a34a, 0 0 12px 6px rgba(225,29,72,.6); }
+.s4 .b { box-shadow: inset 0 0 8px 2px rgba(0,0,0,.5); border-radius: 50%; }
+.s5 .b { box-shadow: inset 6px 6px 0 #fde047; border: 2px solid #111; }
+.s6 .b { background: transparent; box-shadow: 0 6px 10px -2px rgba(37,99,235,.8); border: 1px dashed #999; }
+.t1 .b { background: #16a34a; rotate: 20deg; }
+.t2 .b { background: #16a34a; translate: 15mm 4mm; }
+.t3 .b { background: #16a34a; transform: rotate(-30deg) scale(.8); transform-origin: left top; }
+.t4 .b { background: #16a34a; transform: skewX(20deg); }
+.t5 .b { background: #2563eb; scale: 1.4 .6; opacity: .6; }
+.t6 .b { background: #e11d48; transform: translate(-50%, 0) rotate(45deg); left: 50%; }
+.a1 .b { width: 30mm; height: auto; aspect-ratio: 16 / 9; background: #f59e0b; }
+.a2 .b { width: auto; height: 10mm; aspect-ratio: 3; right: auto; background: #f59e0b; }
+</style></head>
+<body>
+<div class="grid">
+<div class="case s1"><div class="b"></div><p>shadow blur, rounded</p></div>
+<div class="case s2"><div class="b"></div><p>hard offset shadow</p></div>
+<div class="case s3"><div class="b"></div><p>spread ring + glow</p></div>
+<div class="case s4"><div class="b"></div><p>inset blur, ellipse</p></div>
+<div class="case s5"><div class="b"></div><p>inset hard, border</p></div>
+<div class="case s6"><div class="b"></div><p>negative spread, transparent</p></div>
+<div class="case t1"><div class="b"></div><p>rotate: 20deg</p></div>
+<div class="case t2"><div class="b"></div><p>translate: 15mm 4mm</p></div>
+<div class="case t3"><div class="b"></div><p>rotate(-30deg) scale(.8), left top</p></div>
+<div class="case t4"><div class="b"></div><p>skewX(20deg)</p></div>
+<div class="case t5"><div class="b"></div><p>scale: 1.4 .6, opacity</p></div>
+<div class="case t6"><div class="b"></div><p>translate(-50%) rotate(45deg)</p></div>
+<div class="case a1"><div class="b"></div><p>aspect-ratio 16/9 from width</p></div>
+<div class="case a2"><div class="b"></div><p>aspect-ratio 3 from height</p></div>
+</div>
+</body></html>

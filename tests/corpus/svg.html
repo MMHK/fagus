@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Inline SVG</title>
+<style>
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 15mm; }
+body { margin: 0; font: 11pt/1.4 Inter, sans-serif; color: #1f2937; }
+.icon { width: 20px; height: 20px; vertical-align: middle; }
+.paid { color: #2563eb; } .open { color: #dc2626; }
+.row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.wide { width: 500px; border: 1px solid #cbd5e1; margin-bottom: 8px; }
+.box { display: inline-block; border: 1px solid #e11d48; }
+</style></head>
+<body>
+<!-- A sprite of symbols and a gradient, used by the SVGs below. -->
+<svg style="position: absolute; width: 0; height: 0">
+  <symbol id="check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+  <linearGradient id="brand" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+</svg>
+<p class="paid">Bezahlt <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> am 3. November</p>
+<p class="open">Offen <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#check"/></svg> Mahnung</p>
+<div class="row"><svg width="120" height="40" viewBox="0 0 120 40"><title>Muster GmbH</title><rect width="120" height="40" rx="8" fill="url(#brand)"/><text x="60" y="26" font-size="16" text-anchor="middle" fill="#fff" font-weight="700">Muster</text></svg><span>Logo mit Verlauf und Text in der Schrift des Dokuments</span></div>
+<div class="wide"><svg viewBox="0 0 40 10" aria-hidden="true"><rect width="40" height="10" fill="#16a34a"/></svg></div>
+<div class="wide"><span class="box"><svg viewBox="0 0 40 10" aria-hidden="true"><rect width="40" height="10"/></svg></span> leer beim Einpassen</div>
+<div class="wide"><svg width="50%" height="30" viewBox="0 0 40 10" preserveAspectRatio="none" aria-hidden="true"><rect width="40" height="10" fill="#0891b2"/></svg></div>
+<p>Pfeil <svg width="2em" height="1em" viewBox="0 0 20 10"><title>nach</title><path d="M0 5h16M12 1l4 4-4 4" stroke="currentColor" fill="none"/></svg> Ende, und ohne viewBox abgeschnitten:
+<svg width="80" height="40" style="width: 40px; height: 40px" aria-hidden="true"><rect width="80" height="40" fill="#2563eb"/><circle cx="40" cy="20" r="18" fill="#f59e0b"/></svg></p>
+</body>
+</html>

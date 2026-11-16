@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Images</title>
+<style>
+@font-face { font-family: Brand; src: url(../fonts/Inter-Bold.ttf); }
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@page { size: A4; margin: 10mm; }
+body { margin: 0; font: 9pt/1.4 Inter, sans-serif; color: #111; }
+h1 { font: 16pt Brand; margin: 0 0 3mm; }
+.row { display: flex; gap: 4mm; align-items: flex-end; margin-bottom: 4mm; }
+.row > div { font-size: 7pt; }
+.narrow { width: 30mm; border: 1px solid #cbd5e1; }
+.narrow img { max-width: 100%; display: block; }
+.centered { display: block; margin: 0 auto 4mm; height: 12mm; }
+.bg { height: 22mm; margin-bottom: 3mm; border: 1px solid #cbd5e1; }
+.cover { background: url(images/photo.jpg) center / cover no-repeat; }
+.contain { background: #f8fafc url(images/photo.jpg) center / contain no-repeat; }
+.tiles { background: url(images/pattern.png); }
+.missing { width: 20mm; height: 10mm; border: 1px dashed #e11d48; }
+</style></head>
+<body>
+<h1>Bilder und eigene Schriften</h1>
+<div class="row">
+<div><img src="images/logo.png"><br>intrinsic</div>
+<div><img src="images/logo.png" width="120"><br>width attribute</div>
+<div><img src="images/logo.png" style="height: 10mm"><br>height 10mm</div>
+<div class="narrow"><img src="images/photo.jpg">max-width: 100%</div>
+</div>
+<img class="centered" src="images/logo.png">
+<img class="centered" src="images/logo.svg">
+<p>Text with an inline <img src="images/logo.png" style="height: 1.2em; vertical-align: middle"> image and a data URL <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEXhHUiIMSLzAAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC" style="width: 3mm; height: 3mm"> square.</p>
+<div class="bg cover"></div>
+<div class="bg contain"></div>
+<div class="bg tiles"></div>
+<img class="missing" src="images/does-not-exist.png">
+</body></html>

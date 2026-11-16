@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>SEPA-Überweisung</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 12mm 15mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 9pt/1.35 Inter, sans-serif; color: #111; }
+h1 { font-size: 15pt; margin: 0; }
+.mono { font-family: Menlo, "DejaVu Sans Mono", monospace; }
+header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #111; padding-bottom: 2mm; }
+header .bank { text-align: right; font-size: 8pt; color: #444; }
+.slip { margin-top: 6mm; background: #fde9ec; border: 1px solid #c8102e; padding: 4mm 5mm 5mm; position: relative; }
+.slip::before { content: "SEPA-Überweisung / Zahlschein"; position: absolute; top: -2.4mm; left: 4mm; background: #fff; padding: 0 1.5mm; font-weight: 700; font-size: 8pt; color: #c8102e; }
+.field { margin-top: 2.5mm; }
+.field label { display: block; font-size: 6.5pt; color: #c8102e; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .6mm; }
+.comb { display: grid; grid-template-columns: repeat(var(--n), 4.6mm); height: 6.4mm; background: #fff; border: 1px solid #c8102e; width: max-content; }
+.comb span { border-right: 1px solid #f1a7b4; text-align: center; font: 11pt/6.2mm Menlo, "DejaVu Sans Mono", monospace; }
+.comb span:last-child { border-right: 0; }
+.comb.iban span:nth-child(4n) { border-right-color: #c8102e; }
+.row { display: flex; gap: 4mm; align-items: flex-end; }
+.amount { display: flex; align-items: center; gap: 2mm; }
+.amount .cur { font-weight: 700; font-size: 10pt; }
+.lined { height: 6.4mm; background: #fff repeating-linear-gradient(to right, transparent 0 calc(4.6mm - 1px), #f1a7b4 0 4.6mm); }
+.sign { flex: 1; border-bottom: 1px solid #c8102e; height: 10mm; position: relative; }
+.sign span { position: absolute; bottom: -4mm; left: 0; font-size: 6.5pt; color: #c8102e; }
+.qrbox { display: grid; grid-template-columns: 34mm 1fr; gap: 5mm; margin-top: 9mm; align-items: start; border: 1px dashed #999; padding: 4mm; border-radius: 2mm; }
+.qr { width: 34mm; height: 34mm; display: block; }
+.qrbox h2 { font-size: 11pt; margin: 0 0 1.5mm; }
+.qrbox dl { display: grid; grid-template-columns: max-content 1fr; gap: .8mm 4mm; margin: 2mm 0 0; }
+.qrbox dt { color: #666; }
+.qrbox dd { margin: 0; }
+.iban-print { font-size: 10.5pt; letter-spacing: .05em; word-spacing: .2em; white-space: nowrap; }
+.epc { margin-top: 6mm; font-size: 7.5pt; }
+.epc pre { background: #f4f4f4; border-left: 3px solid #999; padding: 2mm 3mm; margin: 1mm 0 0; font-size: 7.5pt; line-height: 1.4; }
+.cut { margin: 8mm 0 0; border-top: 1px dashed #777; text-align: center; font-size: 7pt; color: #777; }
+.cut span { position: relative; top: -.8em; background: #fff; padding: 0 2mm; }
+.receipt { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; font-size: 8.5pt; }
+.receipt div { border-bottom: 1px dotted #999; padding: 1mm 0; display: flex; justify-content: space-between; }
+.receipt b { font-weight: 700; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Zahlungsaufforderung</h1><div>Rechnung RE-2026-04417 vom 02.11.2026</div></div>
+  <div class="bank">Stadtwerke Lindenau GmbH<br>Gaswerkstraße 3 · 04179 Leipzig<br>USt-IdNr. DE 811 204 337</div>
+</header>
+<p>Bitte überweisen Sie den Rechnungsbetrag bis zum <b>16.11.2026</b>. Am schnellsten geht es mit dem GiroCode: Öffnen Sie die Überweisung in Ihrer Banking-App, wählen Sie »Scannen« und prüfen Sie die übernommenen Angaben.</p>
+<section class="slip">
+  <div class="field"><label>Name des Zahlungsempfängers</label><div class="comb " style="--n:27"><span>S</span><span>T</span><span>A</span><span>D</span><span>T</span><span>W</span><span>E</span><span>R</span><span>K</span><span>E</span><span>&nbsp;</span><span>L</span><span>I</span><span>N</span><span>D</span><span>E</span><span>N</span><span>A</span><span>U</span><span>&nbsp;</span><span>G</span><span>M</span><span>B</span><span>H</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span></div></div>
+  <div class="field"><label>IBAN des Zahlungsempfängers</label><div class="comb iban" style="--n:22"><span>D</span><span>E</span><span>8</span><span>9</span><span>3</span><span>7</span><span>0</span><span>4</span><span>0</span><span>0</span><span>4</span><span>4</span><span>0</span><span>5</span><span>3</span><span>2</span><span>0</span><span>1</span><span>3</span><span>0</span><span>0</span><span>0</span></div></div>
+  <div class="row">
+    <div class="field"><label>BIC des Zahlungsempfängers</label><div class="comb " style="--n:11"><span>C</span><span>O</span><span>B</span><span>A</span><span>D</span><span>E</span><span>F</span><span>F</span><span>X</span><span>X</span><span>X</span></div></div>
+    <div class="field amount"><div><label>Betrag: Euro, Cent</label><div class="comb " style="--n:10"><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>1</span><span>8</span><span>4</span><span>,</span><span>3</span><span>7</span></div></div><span class="cur">EUR</span></div>
+  </div>
+  <div class="field"><label>Kunden-Referenznummer / Verwendungszweck</label><div class="comb " style="--n:27"><span>R</span><span>E</span><span>-</span><span>2</span><span>0</span><span>2</span><span>6</span><span>-</span><span>0</span><span>4</span><span>4</span><span>1</span><span>7</span><span>&nbsp;</span><span>K</span><span>D</span><span>&nbsp;</span><span>3</span><span>0</span><span>0</span><span>5</span><span>1</span><span>2</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span></div></div>
+  <div class="field"><label>noch Verwendungszweck</label><div class="lined" style="width:124.2mm;border:1px solid #c8102e"></div></div>
+  <div class="field"><label>Name des Kontoinhabers / Zahlers</label><div class="comb " style="--n:27"><span>A</span><span>D</span><span>A</span><span>&nbsp;</span><span>M</span><span>U</span><span>S</span><span>T</span><span>E</span><span>R</span><span>F</span><span>R</span><span>A</span><span>U</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span></div></div>
+  <div class="field"><label>IBAN des Kontoinhabers</label><div class="comb iban" style="--n:22"><span>D</span><span>E</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span><span>&nbsp;</span></div></div>
+  <div class="row" style="margin-top:4mm"><div class="sign"><span>Datum</span></div><div class="sign" style="flex:2"><span>Unterschrift(en)</span></div></div>
+</section>
+<section class="qrbox">
+  <svg class="qr" viewBox="-4 -4 41 41" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="-4" y="-4" width="41" height="41" fill="#fff"/><path fill="#000" d="M0,0h1v1h-1zM1,0h1v1h-1zM2,0h1v1h-1zM3,0h1v1h-1zM4,0h1v1h-1zM5,0h1v1h-1zM6,0h1v1h-1zM8,0h1v1h-1zM9,0h1v1h-1zM10,0h1v1h-1zM11,0h1v1h-1zM12,0h1v1h-1zM14,0h1v1h-1zM15,0h1v1h-1zM19,0h1v1h-1zM21,0h1v1h-1zM23,0h1v1h-1zM24,0h1v1h-1zM26,0h1v1h-1zM27,0h1v1h-1zM28,0h1v1h-1zM29,0h1v1h-1zM30,0h1v1h-1zM31,0h1v1h-1zM32,0h1v1h-1zM0,1h1v1h-1zM6,1h1v1h-1zM8,1h1v1h-1zM11,1h1v1h-1zM16,1h1v1h-1zM18,1h1v1h-1zM19,1h1v1h-1zM21,1h1v1h-1zM23,1h1v1h-1zM26,1h1v1h-1zM32,1h1v1h-1zM0,2h1v1h-1zM2,2h1v1h-1zM3,2h1v1h-1zM4,2h1v1h-1zM6,2h1v1h-1zM9,2h1v1h-1zM10,2h1v1h-1zM12,2h1v1h-1zM13,2h1v1h-1zM14,2h1v1h-1zM15,2h1v1h-1zM16,2h1v1h-1zM18,2h1v1h-1zM19,2h1v1h-1zM20,2h1v1h-1zM22,2h1v1h-1zM23,2h1v1h-1zM26,2h1v1h-1zM28,2h1v1h-1zM29,2h1v1h-1zM30,2h1v1h-1zM32,2h1v1h-1zM0,3h1v1h-1zM2,3h1v1h-1zM3,3h1v1h-1zM4,3h1v1h-1zM6,3h1v1h-1zM8,3h1v1h-1zM9,3h1v1h-1zM16,3h1v1h-1zM21,3h1v1h-1zM22,3h1v1h-1zM23,3h1v1h-1zM26,3h1v1h-1zM28,3h1v1h-1zM29,3h1v1h-1zM30,3h1v1h-1zM32,3h1v1h-1zM0,4h1v1h-1zM2,4h1v1h-1zM3,4h1v1h-1zM4,4h1v1h-1zM6,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM12,4h1v1h-1zM14,4h1v1h-1zM15,4h1v1h-1zM16,4h1v1h-1zM17,4h1v1h-1zM19,4h1v1h-1zM20,4h1v1h-1zM23,4h1v1h-1zM26,4h1v1h-1zM28,4h1v1h-1zM29,4h1v1h-1zM30,4h1v1h-1zM32,4h1v1h-1zM0,5h1v1h-1zM6,5h1v1h-1zM11,5h1v1h-1zM13,5h1v1h-1zM14,5h1v1h-1zM15,5h1v1h-1zM16,5h1v1h-1zM17,5h1v1h-1zM20,5h1v1h-1zM24,5h1v1h-1zM26,5h1v1h-1zM32,5h1v1h-1zM0,6h1v1h-1zM1,6h1v1h-1zM2,6h1v1h-1zM3,6h1v1h-1zM4,6h1v1h-1zM5,6h1v1h-1zM6,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM16,6h1v1h-1zM18,6h1v1h-1zM20,6h1v1h-1zM22,6h1v1h-1zM24,6h1v1h-1zM26,6h1v1h-1zM27,6h1v1h-1zM28,6h1v1h-1zM29,6h1v1h-1zM30,6h1v1h-1zM31,6h1v1h-1zM32,6h1v1h-1zM9,7h1v1h-1zM10,7h1v1h-1zM11,7h1v1h-1zM13,7h1v1h-1zM14,7h1v1h-1zM17,7h1v1h-1zM22,7h1v1h-1zM23,7h1v1h-1zM24,7h1v1h-1zM2,8h1v1h-1zM4,8h1v1h-1zM5,8h1v1h-1zM6,8h1v1h-1zM11,8h1v1h-1zM16,8h1v1h-1zM18,8h1v1h-1zM23,8h1v1h-1zM27,8h1v1h-1zM28,8h1v1h-1zM29,8h1v1h-1zM30,8h1v1h-1zM31,8h1v1h-1zM32,8h1v1h-1zM3,9h1v1h-1zM9,9h1v1h-1zM11,9h1v1h-1zM15,9h1v1h-1zM16,9h1v1h-1zM18,9h1v1h-1zM19,9h1v1h-1zM20,9h1v1h-1zM22,9h1v1h-1zM24,9h1v1h-1zM25,9h1v1h-1zM26,9h1v1h-1zM29,9h1v1h-1zM0,10h1v1h-1zM1,10h1v1h-1zM2,10h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM14,10h1v1h-1zM15,10h1v1h-1zM17,10h1v1h-1zM18,10h1v1h-1zM22,10h1v1h-1zM24,10h1v1h-1zM26,10h1v1h-1zM27,10h1v1h-1zM30,10h1v1h-1zM31,10h1v1h-1zM0,11h1v1h-1zM1,11h1v1h-1zM2,11h1v1h-1zM3,11h1v1h-1zM4,11h1v1h-1zM5,11h1v1h-1zM8,11h1v1h-1zM10,11h1v1h-1zM11,11h1v1h-1zM12,11h1v1h-1zM13,11h1v1h-1zM14,11h1v1h-1zM17,11h1v1h-1zM18,11h1v1h-1zM20,11h1v1h-1zM22,11h1v1h-1zM25,11h1v1h-1zM29,11h1v1h-1zM0,12h1v1h-1zM1,12h1v1h-1zM2,12h1v1h-1zM3,12h1v1h-1zM4,12h1v1h-1zM6,12h1v1h-1zM7,12h1v1h-1zM8,12h1v1h-1zM12,12h1v1h-1zM13,12h1v1h-1zM14,12h1v1h-1zM15,12h1v1h-1zM16,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM22,12h1v1h-1zM24,12h1v1h-1zM25,12h1v1h-1zM26,12h1v1h-1zM27,12h1v1h-1zM28,12h1v1h-1zM30,12h1v1h-1zM32,12h1v1h-1zM0,13h1v1h-1zM1,13h1v1h-1zM2,13h1v1h-1zM3,13h1v1h-1zM4,13h1v1h-1zM5,13h1v1h-1zM13,13h1v1h-1zM14,13h1v1h-1zM16,13h1v1h-1zM19,13h1v1h-1zM25,13h1v1h-1zM2,14h1v1h-1zM3,14h1v1h-1zM4,14h1v1h-1zM5,14h1v1h-1zM6,14h1v1h-1zM13,14h1v1h-1zM19,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM23,14h1v1h-1zM25,14h1v1h-1zM29,14h1v1h-1zM30,14h1v1h-1zM2,15h1v1h-1zM3,15h1v1h-1zM4,15h1v1h-1zM8,15h1v1h-1zM9,15h1v1h-1zM10,15h1v1h-1zM14,15h1v1h-1zM16,15h1v1h-1zM17,15h1v1h-1zM18,15h1v1h-1zM20,15h1v1h-1zM23,15h1v1h-1zM24,15h1v1h-1zM27,15h1v1h-1zM28,15h1v1h-1zM29,15h1v1h-1zM31,15h1v1h-1zM0,16h1v1h-1zM3,16h1v1h-1zM6,16h1v1h-1zM8,16h1v1h-1zM11,16h1v1h-1zM12,16h1v1h-1zM14,16h1v1h-1zM15,16h1v1h-1zM16,16h1v1h-1zM17,16h1v1h-1zM18,16h1v1h-1zM20,16h1v1h-1zM23,16h1v1h-1zM27,16h1v1h-1zM28,16h1v1h-1zM29,16h1v1h-1zM32,16h1v1h-1zM0,17h1v1h-1zM1,17h1v1h-1zM2,17h1v1h-1zM3,17h1v1h-1zM5,17h1v1h-1zM7,17h1v1h-1zM8,17h1v1h-1zM10,17h1v1h-1zM11,17h1v1h-1zM20,17h1v1h-1zM22,17h1v1h-1zM25,17h1v1h-1zM26,17h1v1h-1zM28,17h1v1h-1zM29,17h1v1h-1zM30,17h1v1h-1zM31,17h1v1h-1zM1,18h1v1h-1zM3,18h1v1h-1zM5,18h1v1h-1zM6,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM11,18h1v1h-1zM14,18h1v1h-1zM15,18h1v1h-1zM16,18h1v1h-1zM17,18h1v1h-1zM18,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM25,18h1v1h-1zM26,18h1v1h-1zM28,18h1v1h-1zM29,18h1v1h-1zM30,18h1v1h-1zM31,18h1v1h-1zM0,19h1v1h-1zM4,19h1v1h-1zM5,19h1v1h-1zM7,19h1v1h-1zM8,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM18,19h1v1h-1zM19,19h1v1h-1zM24,19h1v1h-1zM25,19h1v1h-1zM26,19h1v1h-1zM0,20h1v1h-1zM2,20h1v1h-1zM4,20h1v1h-1zM6,20h1v1h-1zM7,20h1v1h-1zM8,20h1v1h-1zM9,20h1v1h-1zM12,20h1v1h-1zM13,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM21,20h1v1h-1zM25,20h1v1h-1zM26,20h1v1h-1zM27,20h1v1h-1zM30,20h1v1h-1zM31,20h1v1h-1zM1,21h1v1h-1zM2,21h1v1h-1zM5,21h1v1h-1zM7,21h1v1h-1zM8,21h1v1h-1zM10,21h1v1h-1zM14,21h1v1h-1zM16,21h1v1h-1zM18,21h1v1h-1zM19,21h1v1h-1zM21,21h1v1h-1zM24,21h1v1h-1zM25,21h1v1h-1zM26,21h1v1h-1zM29,21h1v1h-1zM30,21h1v1h-1zM31,21h1v1h-1zM0,22h1v1h-1zM1,22h1v1h-1zM2,22h1v1h-1zM3,22h1v1h-1zM6,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM13,22h1v1h-1zM15,22h1v1h-1zM16,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM19,22h1v1h-1zM20,22h1v1h-1zM21,22h1v1h-1zM23,22h1v1h-1zM25,22h1v1h-1zM26,22h1v1h-1zM29,22h1v1h-1zM30,22h1v1h-1zM31,22h1v1h-1zM32,22h1v1h-1zM1,23h1v1h-1zM2,23h1v1h-1zM4,23h1v1h-1zM5,23h1v1h-1zM8,23h1v1h-1zM9,23h1v1h-1zM10,23h1v1h-1zM12,23h1v1h-1zM15,23h1v1h-1zM16,23h1v1h-1zM19,23h1v1h-1zM21,23h1v1h-1zM22,23h1v1h-1zM23,23h1v1h-1zM28,23h1v1h-1zM29,23h1v1h-1zM30,23h1v1h-1zM0,24h1v1h-1zM1,24h1v1h-1zM2,24h1v1h-1zM5,24h1v1h-1zM6,24h1v1h-1zM11,24h1v1h-1zM12,24h1v1h-1zM13,24h1v1h-1zM15,24h1v1h-1zM16,24h1v1h-1zM18,24h1v1h-1zM19,24h1v1h-1zM20,24h1v1h-1zM22,24h1v1h-1zM26,24h1v1h-1zM27,24h1v1h-1zM28,24h1v1h-1zM31,24h1v1h-1zM32,24h1v1h-1zM8,25h1v1h-1zM10,25h1v1h-1zM12,25h1v1h-1zM13,25h1v1h-1zM14,25h1v1h-1zM15,25h1v1h-1zM18,25h1v1h-1zM19,25h1v1h-1zM22,25h1v1h-1zM26,25h1v1h-1zM27,25h1v1h-1zM31,25h1v1h-1zM32,25h1v1h-1zM0,26h1v1h-1zM1,26h1v1h-1zM2,26h1v1h-1zM3,26h1v1h-1zM4,26h1v1h-1zM5,26h1v1h-1zM6,26h1v1h-1zM8,26h1v1h-1zM11,26h1v1h-1zM14,26h1v1h-1zM15,26h1v1h-1zM16,26h1v1h-1zM17,26h1v1h-1zM18,26h1v1h-1zM21,26h1v1h-1zM22,26h1v1h-1zM23,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM27,26h1v1h-1zM30,26h1v1h-1zM31,26h1v1h-1zM32,26h1v1h-1zM0,27h1v1h-1zM6,27h1v1h-1zM9,27h1v1h-1zM11,27h1v1h-1zM12,27h1v1h-1zM15,27h1v1h-1zM16,27h1v1h-1zM18,27h1v1h-1zM19,27h1v1h-1zM21,27h1v1h-1zM23,27h1v1h-1zM25,27h1v1h-1zM26,27h1v1h-1zM27,27h1v1h-1zM31,27h1v1h-1zM0,28h1v1h-1zM2,28h1v1h-1zM3,28h1v1h-1zM4,28h1v1h-1zM6,28h1v1h-1zM10,28h1v1h-1zM11,28h1v1h-1zM15,28h1v1h-1zM17,28h1v1h-1zM21,28h1v1h-1zM23,28h1v1h-1zM24,28h1v1h-1zM27,28h1v1h-1zM28,28h1v1h-1zM29,28h1v1h-1zM31,28h1v1h-1zM32,28h1v1h-1zM0,29h1v1h-1zM2,29h1v1h-1zM3,29h1v1h-1zM4,29h1v1h-1zM6,29h1v1h-1zM8,29h1v1h-1zM12,29h1v1h-1zM13,29h1v1h-1zM15,29h1v1h-1zM17,29h1v1h-1zM18,29h1v1h-1zM19,29h1v1h-1zM22,29h1v1h-1zM25,29h1v1h-1zM26,29h1v1h-1zM27,29h1v1h-1zM28,29h1v1h-1zM29,29h1v1h-1zM30,29h1v1h-1zM31,29h1v1h-1zM32,29h1v1h-1zM0,30h1v1h-1zM2,30h1v1h-1zM3,30h1v1h-1zM4,30h1v1h-1zM6,30h1v1h-1zM9,30h1v1h-1zM11,30h1v1h-1zM16,30h1v1h-1zM21,30h1v1h-1zM24,30h1v1h-1zM25,30h1v1h-1zM27,30h1v1h-1zM29,30h1v1h-1zM31,30h1v1h-1zM0,31h1v1h-1zM6,31h1v1h-1zM11,31h1v1h-1zM13,31h1v1h-1zM16,31h1v1h-1zM21,31h1v1h-1zM24,31h1v1h-1zM26,31h1v1h-1zM29,31h1v1h-1zM31,31h1v1h-1zM32,31h1v1h-1zM0,32h1v1h-1zM1,32h1v1h-1zM2,32h1v1h-1zM3,32h1v1h-1zM4,32h1v1h-1zM5,32h1v1h-1zM6,32h1v1h-1zM8,32h1v1h-1zM9,32h1v1h-1zM10,32h1v1h-1zM11,32h1v1h-1zM13,32h1v1h-1zM16,32h1v1h-1zM17,32h1v1h-1zM19,32h1v1h-1zM20,32h1v1h-1zM21,32h1v1h-1zM22,32h1v1h-1zM23,32h1v1h-1zM24,32h1v1h-1zM27,32h1v1h-1zM29,32h1v1h-1zM30,32h1v1h-1zM32,32h1v1h-1z"/></svg>
+  <div>
+    <h2>GiroCode</h2>
+    <div>Mit dem Smartphone scannen und bezahlen.</div>
+    <dl>
+      <dt>Empfänger</dt><dd>Stadtwerke Lindenau GmbH</dd>
+      <dt>IBAN</dt><dd class="mono iban-print">DE89 3704 0044 0532 0130 00</dd>
+      <dt>BIC</dt><dd class="mono">COBADEFFXXX</dd>
+      <dt>Betrag</dt><dd><b>184,37 EUR</b></dd>
+      <dt>Verwendungszweck</dt><dd>RE-2026-04417 KD 300512</dd>
+    </dl>
+  </div>
+</section>
+<div class="epc">Inhalt des Codes (EPC069-12, Version 002):
+<pre class="mono">BCD
+002
+1
+SCT
+COBADEFFXXX
+Stadtwerke Lindenau GmbH
+DE89370400440532013000
+EUR184.37
+
+
+RE-2026-04417 KD 300512</pre></div>
+<div class="cut"><span>✂ hier abtrennen</span></div>
+<div class="receipt">
+  <div><span>Rechnungsnummer</span><b>RE-2026-04417</b></div>
+  <div><span>Kundennummer</span><b>300512</b></div>
+  <div><span>Betrag</span><b>184,37 EUR</b></div>
+  <div><span>Fällig am</span><b>16.11.2026</b></div>
+</div>
+</body>
+</html>

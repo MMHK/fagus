@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ledger.accounts — Ledger 2.4.1 documentation</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+@page { size: A4; margin: 15mm 14mm; }
+/* basic.css (in the style of Sphinx 8) */
+div.clearer { clear: both; }
+div.section::after { display: block; content: ''; clear: left; }
+div.related { width: 100%; font-size: 90%; }
+div.related ul { margin: 0; padding: 0 0 0 10px; list-style: none; }
+div.related li { display: inline; }
+div.related li.right { float: right; margin-right: 5px; }
+div.sphinxsidebarwrapper { padding: 10px 5px 0 10px; }
+div.sphinxsidebar { float: left; width: 230px; margin-left: -100%; font-size: 90%; word-wrap: break-word; overflow-wrap: break-word; }
+img { border: 0; max-width: 100%; }
+a.headerlink { visibility: hidden; }
+h1:hover > a.headerlink, h2:hover > a.headerlink, dt:hover > a.headerlink { visibility: visible; }
+div.body p.caption { text-align: inherit; }
+div.body td { text-align: left; }
+.first { margin-top: 0 !important; }
+p.rubric { margin-top: 30px; font-weight: bold; }
+img.align-center, figure.align-center, .figure.align-center, object.align-center { display: block; margin-left: auto; margin-right: auto; }
+.align-center { text-align: center; }
+.align-right { text-align: right; }
+.align-default { text-align: center; }
+div.sidebar, aside.sidebar { margin: 0 0 0.5em 1em; border: 1px solid #ddb; padding: 7px; background-color: #ffe; width: 40%; float: right; clear: right; overflow-x: auto; }
+p.sidebar-title { font-weight: bold; }
+nav.contents, aside.topic, div.topic { border: 1px solid #ccc; padding: 7px; margin: 10px 0 10px 0; }
+p.topic-title { font-size: 1.1em; font-weight: bold; margin-top: 10px; }
+div.admonition { margin-top: 10px; margin-bottom: 10px; padding: 7px; }
+div.admonition dt { font-weight: bold; }
+p.admonition-title { margin: 0px 10px 5px 0px; font-weight: bold; }
+div.body p.centered { text-align: center; margin-top: 25px; }
+div.sidebar > :last-child, aside.sidebar > :last-child, nav.contents > :last-child, aside.topic > :last-child, div.topic > :last-child, div.admonition > :last-child { margin-bottom: 0; }
+div.sidebar::after, aside.sidebar::after, nav.contents::after, aside.topic::after, div.topic::after, div.admonition::after, blockquote::after { display: block; content: ''; clear: both; }
+table.docutils { margin-top: 10px; margin-bottom: 10px; border: 0; border-collapse: collapse; }
+table.align-center { margin-left: auto; margin-right: auto; }
+table.align-default { margin-left: auto; margin-right: auto; }
+table caption span.caption-number { font-style: italic; }
+table caption span.caption-text { }
+table.docutils td, table.docutils th { padding: 1px 8px 1px 5px; border-top: 0; border-left: 0; border-right: 0; border-bottom: 1px solid #aaa; }
+th > :first-child, td > :first-child { margin-top: 0px; }
+th > :last-child, td > :last-child { margin-bottom: 0px; }
+th { text-align: left; padding-right: 5px; }
+table.citation { border-left: solid 1px gray; margin-left: 1px; }
+figure { margin: 0.5em; padding: 0.5em; }
+figure p.caption { padding: 0.3em; }
+figure p.caption span.caption-number { font-style: italic; }
+table.field-list td, table.field-list th { border: 0 !important; }
+.field-list ul { margin: 0; padding-left: 1em; }
+.field-list p { margin: 0; }
+.field-name { -moz-hyphens: manual; -ms-hyphens: manual; -webkit-hyphens: manual; hyphens: manual; }
+table.hlist { margin: 1em 0; }
+table.hlist td { vertical-align: top; }
+dl.footnote > dt, dl.citation > dt, aside.footnote > .label, aside.citation > .label { float: left; margin-right: 0.5em; }
+dl.footnote > dd, dl.citation > dd { margin-bottom: 0em; }
+aside.footnote > span, div.citation > span { float: left; }
+aside.footnote > span:last-of-type, div.citation > span:last-of-type { padding-right: 0.5em; }
+aside.footnote > p { margin-left: 2em; }
+aside.footnote > p:last-of-type { margin-bottom: 0em; }
+aside.footnote > p:last-of-type:after { content: ""; clear: both; }
+dl.field-list { display: grid; grid-template-columns: fit-content(30%) auto; }
+dl.field-list > dt { font-weight: bold; word-break: break-word; padding-left: 0.5em; padding-right: 5px; }
+dl.field-list > dd { padding-left: 0.5em; margin-top: 0em; margin-left: 0em; margin-bottom: 0em; }
+dl { margin-bottom: 15px; }
+dd > :first-child { margin-top: 0px; }
+dd ul, dd table { margin-bottom: 10px; }
+dd { margin-top: 3px; margin-bottom: 10px; margin-left: 30px; }
+.sig dd { margin-top: 0px; margin-bottom: 0px; }
+.sig dl { margin-top: 0px; margin-bottom: 0px; }
+dl > dd:last-child, dl > dd:last-child > :last-child { margin-bottom: 0; }
+dt:target, span.highlighted { background-color: #fbe54e; }
+.versionmodified { font-style: italic; }
+.system-message { background-color: #fda; padding: 5px; border: 3px solid red; }
+.guilabel, .menuselection { font-family: sans-serif; }
+.accelerator { text-decoration: underline; }
+.classifier { font-style: oblique; }
+.classifier:before { font-style: normal; margin: 0 0.5em; content: ":"; display: inline-block; }
+abbr, acronym { border-bottom: dotted 1px; cursor: help; }
+.sig { font-family: 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace; }
+.sig-name, code.descname { background-color: transparent; font-weight: bold; }
+.sig-name { font-size: 1.1em; }
+code.descname { font-size: 1.2em; }
+.sig-prename, code.descclassname { background-color: transparent; }
+.optional { font-size: 1.3em; }
+.sig-paren { font-size: larger; }
+.sig-param.n { font-style: italic; }
+.sig-inline.c-texpr, .sig-inline.cpp-texpr { font-family: unset; }
+.sig.c .k, .sig.c .kt, .sig.cpp .k, .sig.cpp .kt { color: #0033B3; }
+dl.py.method > dt, dl.py.class > dt, dl.py.function > dt, dl.py.attribute > dt { }
+pre { overflow: auto; overflow-y: hidden; }
+pre, div[class*="highlight-"] { clear: both; }
+span.pre { -moz-hyphens: none; -ms-hyphens: none; -webkit-hyphens: none; hyphens: none; white-space: nowrap; }
+div[class*="highlight-"] { margin: 1em 0; }
+td.linenos pre { border: 0; background-color: transparent; color: #aaa; }
+table.highlighttable { display: block; }
+table.highlighttable tbody { display: block; }
+table.highlighttable tr { display: flex; }
+table.highlighttable td { margin: 0; padding: 0; }
+table.highlighttable td.linenos { padding-right: 0.5em; }
+table.highlighttable td.code { flex: 1; overflow: hidden; }
+.highlight .hll { display: block; }
+div.highlight pre, table.highlighttable pre { margin: 0; }
+div.code-block-caption + div { margin-top: 0; }
+div.code-block-caption { margin-top: 1em; padding: 2px 5px; font-size: small; }
+div.code-block-caption code { background-color: transparent; }
+table.highlighttable td.linenos, span.linenos, div.highlight span.gp { user-select: none; -webkit-user-select: text; }
+div.code-block-caption span.caption-number { padding: 0.1em 0.3em; font-style: italic; }
+div.literal-block-wrapper { margin: 1em 0; }
+code.xref, a code { background-color: transparent; font-weight: bold; }
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code { background-color: transparent; }
+.viewcode-link { float: right; }
+.viewcode-back { float: right; font-family: sans-serif; }
+div.viewcode-block:target { margin: -1px -10px; padding: 0 10px; }
+img.math { vertical-align: middle; }
+span.eqno { float: right; }
+@media print {
+  div.document, div.documentwrapper, div.bodywrapper { margin: 0 !important; width: 100%; }
+  div.sphinxsidebar, div.related, div.footer, #top-link { display: none; }
+}
+/* the theme, in the style of alabaster */
+body { font-family: Inter, Georgia, serif; font-size: 13.5px; background-color: #fff; color: #000; margin: 0; padding: 0; }
+div.document { width: 940px; margin: 30px auto 0 auto; }
+div.documentwrapper { float: left; width: 100%; }
+div.bodywrapper { margin: 0 0 0 220px; }
+div.body { background-color: #fff; color: #3E4349; padding: 0 30px 0 30px; }
+div.body > .section { text-align: left; }
+div.footer { width: 940px; margin: 20px auto 30px auto; font-size: 14px; color: #888; text-align: right; }
+a { color: #004B6B; text-decoration: underline; }
+div.body h1, div.body h2, div.body h3, div.body h4 { font-family: Inter, Georgia, serif; font-weight: normal; margin: 30px 0px 10px 0px; padding: 0; }
+div.body h1 { margin-top: 0; padding-top: 0; font-size: 240%; }
+div.body h2 { font-size: 180%; }
+div.body h3 { font-size: 150%; }
+div.body h4 { font-size: 130%; }
+div.body p, div.body dd, div.body li { line-height: 1.4em; }
+div.admonition { margin: 20px 0px; padding: 10px 30px; background-color: #EEE; border: 1px solid #CCC; }
+div.admonition p.admonition-title { font-family: Inter, Georgia, serif; font-weight: normal; font-size: 18px; margin: 0 0 10px 0; padding: 0; line-height: 1; }
+div.admonition p.last { margin-bottom: 0; }
+div.note { background-color: #EEE; border: 1px solid #CCC; }
+div.seealso { background-color: #EEE; border: 1px solid #CCC; }
+div.warning { background-color: #FCC; border: 1px solid #FAA; }
+div.danger { background-color: #FCC; border: 1px solid #FAA; -moz-box-shadow: 2px 2px 4px #D52C2C; -webkit-box-shadow: 2px 2px 4px #D52C2C; box-shadow: 2px 2px 4px #D52C2C; }
+div.versionchanged, div.versionadded, div.deprecated { }
+p.admonition-title:after { content: ":"; }
+pre, tt, code { font-family: 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace; font-size: 0.9em; }
+.hll { background-color: #FFC; margin: 0 -12px; padding: 0 12px; display: block; }
+img.screenshot { -moz-box-shadow: 2px 2px 4px #EEE; -webkit-box-shadow: 2px 2px 4px #EEE; box-shadow: 2px 2px 4px #EEE; }
+table.docutils { border: 1px solid #888; -moz-box-shadow: 2px 2px 4px #EEE; -webkit-box-shadow: 2px 2px 4px #EEE; box-shadow: 2px 2px 4px #EEE; }
+table.docutils td, table.docutils th { border: 1px solid #888; padding: 0.25em 0.7em; }
+table.field-list, table.footnote { border: none; -moz-box-shadow: none; -webkit-box-shadow: none; box-shadow: none; }
+table.field-list th { padding: 0 0.8em 0 0; }
+table.field-list td { padding: 0; }
+table.field-list p { margin-bottom: 0.8em; }
+.field-name { hyphens: manual; }
+.field-list p { margin-bottom: 0.8em; }
+table.footnote td.label { width: .1px; padding: 0.3em 0 0.3em 0.5em; }
+table.footnote td { padding: 0.3em 0.5em; }
+dl { margin-left: 0; margin-right: 0; margin-top: 0; padding: 0; }
+dl dd { margin-left: 30px; }
+blockquote { margin: 0 0 0 30px; padding: 0; }
+ul, ol { margin: 10px 0 10px 30px; padding: 0; }
+pre { background: unset; padding: 7px 30px; margin: 15px 0px; line-height: 1.3em; }
+div.viewcode-block:target { background: #ffd; }
+dl pre, blockquote pre, li pre { margin-left: 0; padding-left: 30px; }
+tt, code { background-color: #ecf0f3; color: #222; }
+tt.xref, code.xref, a tt { background-color: #FBFBFB; border-bottom: 1px solid #fff; }
+a.reference { text-decoration: none; border-bottom: 1px dotted #004B6B; }
+a.reference:hover { border-bottom: 1px solid #6D4100; }
+a.footnote-reference { text-decoration: none; font-size: 0.7em; vertical-align: top; border-bottom: 1px dotted #004B6B; }
+div.highlight { background-color: #f8f8f8; }
+dl.py > dt, dl.class > dt { }
+dt:target, .highlight { background: #FAF3E8; }
+/* pygments, default style */
+.highlight .c1 { color: #8f5902; font-style: italic }
+.highlight .k { color: #004461; font-weight: bold }
+.highlight .kn { color: #004461; font-weight: bold }
+.highlight .nn { color: #000 }
+.highlight .s2, .highlight .s1 { color: #4e9a06 }
+.highlight .mi { color: #990000 }
+.highlight .o { color: #582800 }
+.highlight .p { color: #000000; font-weight: bold }
+.highlight .nb { color: #004461 }
+.highlight .gp { color: #745334 }
+.highlight .go { color: #888888 }
+.highlight .nd { color: #888888 }
+.highlight .nf { color: #000000 }
+.highlight .bp { color: #3465a4 }
+</style>
+</head><body>
+<div class="related" role="navigation" aria-label="Related">
+  <h3>Navigation</h3>
+  <ul>
+    <li class="right" style="margin-right: 10px"><a href="../genindex.html" title="General Index" accesskey="I">index</a></li>
+    <li class="right"><a href="ledger.journal.html" title="ledger.journal" accesskey="N">next</a> |</li>
+    <li class="nav-item nav-item-0"><a href="../index.html">Ledger 2.4.1 documentation</a> &#187;</li>
+  </ul>
+</div>
+<div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<section id="module-ledger.accounts">
+<span id="ledger-accounts"></span><h1><a class="reference internal" href="#module-ledger.accounts" title="ledger.accounts"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ledger.accounts</span></code></a> &#8212; Charts of accounts<a class="headerlink" href="#module-ledger.accounts" title="Link to this heading">&#182;</a></h1>
+<aside class="sidebar">
+<p class="sidebar-title">Since 2.0</p>
+<p>The module replaced <code class="docutils literal notranslate"><span class="pre">ledger.chart</span></code>. Imports of the old name still work but emit a <a class="reference internal" href="#"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a>.</p>
+</aside>
+<p>This module reads and validates charts of accounts such as SKR&#160;03 and SKR&#160;04, maps account numbers to tax keys and builds the trial balance from a <a class="reference internal" href="ledger.journal.html#ledger.journal.Journal" title="ledger.journal.Journal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Journal</span></code></a>. Every account has a number of four to eight digits<a class="footnote-reference brackets" href="#f1" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, a name and a <em>type</em> that decides on which side of the balance sheet it ends up.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#loading-a-chart" id="id5">Loading a chart</a></p></li>
+<li><p><a class="reference internal" href="#api" id="id6">API</a></p></li>
+<li><p><a class="reference internal" href="#account-types" id="id7">Account types</a></p></li>
+</ul>
+</nav>
+<section id="loading-a-chart">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Loading a chart</a><a class="headerlink" href="#loading-a-chart" title="Link to this heading">&#182;</a></h2>
+<p>A chart is a CSV file with one account per line. Load it with <a class="reference internal" href="#ledger.accounts.Chart.from_csv" title="ledger.accounts.Chart.from_csv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Chart.from_csv()</span></code></a>; press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">C</kbd> to stop a long import in the interactive shell:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ledger.accounts</span> <span class="kn">import</span> <span class="n">Chart</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chart</span> <span class="o">=</span> <span class="n">Chart</span><span class="o">.</span><span class="n">from_csv</span><span class="p">(</span><span class="s2">"skr04.csv"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"cp1252"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chart</span><span class="p">[</span><span class="mi">1200</span><span class="p">]</span>
+<span class="go">Account(number=1200, name='Bank', type=&lt;AccountType.ASSET: 1&gt;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">chart</span><span class="p">)</span>
+<span class="go">1271</span>
+</pre></div>
+</div>
+<p>Files exported by the accounting software of the tax adviser use semicolons and a header row; pass their dialect:</p>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-number">Listing 1 </span><span class="caption-text">import_datev.py</span><a class="headerlink" href="#id8" title="Link to this code">&#182;</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">ledger.accounts</span> <span class="kn">import</span> <span class="n">Chart</span><span class="p">,</span> <span class="n">AccountType</span>
+
+<span class="hll"><span class="k">class</span> <span class="nc">Datev</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">excel</span><span class="p">):</span>
+</span><span class="hll">    <span class="n">delimiter</span> <span class="o">=</span> <span class="s2">";"</span>
+</span>
+<span class="n">chart</span> <span class="o">=</span> <span class="n">Chart</span><span class="o">.</span><span class="n">from_csv</span><span class="p">(</span><span class="s2">"Kontenrahmen.csv"</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="n">Datev</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="n">chart</span><span class="o">.</span><span class="n">of_type</span><span class="p">(</span><span class="n">AccountType</span><span class="o">.</span><span class="n">EXPENSE</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">account</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</pre></div></td></tr></table></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Numbers with leading zeros are kept as strings in the CSV but stored as integers; <code class="docutils literal notranslate"><span class="pre">0480</span></code> and <code class="docutils literal notranslate"><span class="pre">480</span></code> are the same account.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Charts from before 2018 use the old tax keys (<code class="docutils literal notranslate"><span class="pre">BU</span> <span class="pre">9</span></code> for 19&#160;%). Convert them with <span class="guilabel">Tools</span> &#8250; <span class="menuselection">Migrate</span> first.</p>
+</div>
+</section>
+<section id="api">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">API</a><a class="headerlink" href="#api" title="Link to this heading">&#182;</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ledger.accounts.Chart">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ledger.accounts.</span></span><span class="sig-name descname"><span class="pre">Chart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accounts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ledger.accounts.Account" title="ledger.accounts.Account"><span class="pre">Account</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ledger/accounts.html#Chart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ledger.accounts.Chart" title="Link to this definition">&#182;</a></dt>
+<dd><p>An ordered, immutable collection of accounts, indexed by number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>accounts</strong> &#8211; The accounts, in any order. They are sorted by number.</p></li>
+<li><p><strong>name</strong> &#8211; A label for reports, for example <code class="docutils literal notranslate"><span class="pre">"SKR</span> <span class="pre">04"</span></code>.</p></li>
+<li><p><strong>strict</strong> &#8211; Whether two accounts with the same number raise <a class="reference internal" href="#ledger.accounts.DuplicateAccount" title="ledger.accounts.DuplicateAccount"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DuplicateAccount</span></code></a> instead of the later one replacing the earlier one.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ledger.accounts.DuplicateAccount" title="ledger.accounts.DuplicateAccount"><strong>DuplicateAccount</strong></a> &#8211; if <em>strict</em> and a number repeats.</p></dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p></dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 2.0.</span></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ledger.accounts.Chart.from_csv">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'excel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ledger.accounts.Chart.from_csv" title="Link to this definition">&#182;</a></dt>
+<dd><p>Read a chart from a CSV file whose columns are <em>number</em>, <em>name</em> and <em>type</em>, in that order. Extra columns are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.13)"><em>os.PathLike</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) &#8211; The file.</p></li>
+<li><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) &#8211; How many lines to skip at the start.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The chart, with <em>name</em> set to the file's stem.</p></dd>
+</dl>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 2.3: </span>The <em>encoding</em> <code class="docutils literal notranslate"><span class="pre">'latin-1'</span></code> is no longer guessed; pass it.</p>
+</div>
+</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ledger.accounts.Chart.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#ledger.accounts.Chart.name" title="Link to this definition">&#182;</a></dt>
+<dd><p>The label given when the chart was made.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="ledger.accounts.DuplicateAccount">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ledger.accounts.</span></span><span class="sig-name descname"><span class="pre">DuplicateAccount</span></span><a class="headerlink" href="#ledger.accounts.DuplicateAccount" title="Link to this definition">&#182;</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<p>Raised when a chart in strict mode gets two accounts with the same number.</p>
+</dd></dl>
+</section>
+<section id="account-types">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Account types</a><a class="headerlink" href="#account-types" title="Link to this heading">&#182;</a></h2>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text">Types and their sides</span><a class="headerlink" href="#id9" title="Link to this table">&#182;</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Side</p></th>
+<th class="head"><p>Typical accounts (SKR&#160;04)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ASSET</span></code></p></td>
+<td><p>debit</p></td>
+<td><p>0000&#8211;1999: fixed assets, receivables, bank accounts and the cash book</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LIABILITY</span></code></p></td>
+<td><p>credit</p></td>
+<td><p>3000&#8211;3999: provisions, payables, VAT payable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EQUITY</span></code></p></td>
+<td><p>credit</p></td>
+<td><p>2000&#8211;2999: subscribed capital, reserves, private withdrawals</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INCOME</span></code></p></td>
+<td><p>credit</p></td>
+<td><p>4000&#8211;4999</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EXPENSE</span></code></p></td>
+<td><p>debit</p></td>
+<td><p>5000&#8211;7999: materials, staff, rent, depreciation</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Footnotes</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="f1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>SKR&#160;04 uses four digits; charts with subaccounts for debtors and creditors use five to eight. Numbers are compared as integers, so <code class="docutils literal notranslate"><span class="pre">10000</span></code> sorts after <code class="docutils literal notranslate"><span class="pre">9999</span></code>.</p>
+</aside>
+</aside>
+</section>
+</section>
+<div class="clearer"></div>
+</div>
+</div>
+</div>
+<div class="sphinxsidebar" role="navigation" aria-label="Main">
+<div class="sphinxsidebarwrapper"><h1 class="logo"><a href="../index.html">Ledger</a></h1></div>
+</div>
+<div class="clearer"></div>
+</div>
+<div class="footer">&#169;2025, Ledger contributors. | Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a> &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a></div>
+</body>
+</html>

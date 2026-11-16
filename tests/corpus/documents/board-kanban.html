@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sprint 42 board</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 10mm; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font: 12px/1.35 Inter, sans-serif; color: #172b4d; }
+.top { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.top h1 { font-size: 18px; margin: 0; }
+.top .meta { color: #626f86; }
+.avatars { margin-left: auto; display: flex; }
+.avatars span { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 700; }
+.board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: start; }
+.col { background: #f1f2f4; border-radius: 10px; padding: 8px; }
+.col h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin: 2px 4px 8px; display: flex; justify-content: space-between; color: #44546f; }
+.col h2 .count { background: #dcdfe4; border-radius: 10px; padding: 0 7px; font-weight: 400; }
+.col h2 .wip { color: #c9372c; }
+.card { background: #fff; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; box-shadow: 0 1px 1px #091e4240, 0 0 1px #091e424f; break-inside: avoid; }
+.card .labels { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+.card .labels i { height: 8px; width: 40px; border-radius: 4px; display: block; }
+.card .title { font-weight: 400; margin: 0 0 6px; }
+.card .foot { display: flex; align-items: center; gap: 8px; color: #626f86; font-size: 11px; }
+.card .foot .who { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 9px; font-weight: 700; }
+.card .key { font-weight: 700; color: #44546f; }
+.prio { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; }
+.prio.high { border-bottom: 8px solid #e2483d; }
+.prio.low { border-top: 8px solid #6a9a23; }
+.card.blocked { border-left: 3px solid #e2483d; }
+.card img.cover { display: block; width: calc(100% + 20px); margin: -8px -10px 8px; height: 60px; object-fit: cover; border-radius: 8px 8px 0 0; background: linear-gradient(135deg, #579dff, #9f8fef); }
+.check { display: inline-flex; align-items: center; gap: 3px; }
+.check.done { background: #1f845a; color: #fff; border-radius: 3px; padding: 0 4px; }
+.progress { height: 4px; background: #dcdfe4; border-radius: 2px; margin: 4px 0 6px; overflow: hidden; }
+.progress b { display: block; height: 100%; background: #22a06b; }
+.add { color: #44546f; padding: 4px; }
+</style>
+</head>
+<body>
+<div class="top"><h1>Sprint 42 — Checkout revamp</h1><span class="meta">3 Nov – 14 Nov 2026 · 34 story points</span>
+<div class="avatars"><span style="background:#0c66e4">AL</span><span style="background:#e56910">GH</span><span style="background:#1f845a">KJ</span><span style="background:#ae2e24">+3</span></div></div>
+<div class="board">
+<section class="col"><h2>To do <span class="count">4</span></h2>
+  <article class="card"><div class="labels"><i style="background:#4bce97"></i><i style="background:#f5cd47"></i></div><p class="title">Add Apple Pay to the payment step</p><div class="foot"><span class="prio high"></span><span class="key">CHK-412</span><span>5 pts</span><span class="who" style="background:#0c66e4">AL</span></div></article>
+  <article class="card"><p class="title">Validate VAT numbers of EU business customers before the order is placed</p><div class="foot"><span class="prio low"></span><span class="key">CHK-415</span><span>3 pts</span><span class="who" style="background:#e56910">GH</span></div></article>
+  <article class="card"><div class="labels"><i style="background:#9f8fef"></i></div><p class="title">Copy review for German translation</p><div class="foot"><span class="key">CHK-419</span><span>1 pt</span></div></article>
+  <article class="card"><p class="title">Remove legacy coupon field</p><div class="foot"><span class="key">CHK-420</span><span>1 pt</span><span class="who" style="background:#1f845a">KJ</span></div></article>
+  <div class="add">+ Add a card</div>
+</section>
+<section class="col"><h2>In progress <span class="count wip">3 / 3</span></h2>
+  <article class="card"><div class="cover" style="height:56px;margin:-8px -10px 8px;border-radius:8px 8px 0 0;background:linear-gradient(135deg,#579dff,#9f8fef)"></div><p class="title">Redesign the order summary sidebar</p><div class="progress"><b style="width:60%"></b></div><div class="foot"><span class="check">☑ 3/5</span><span class="key">CHK-401</span><span class="who" style="background:#0c66e4">AL</span></div></article>
+  <article class="card blocked"><div class="labels"><i style="background:#f87168"></i></div><p class="title">Address autocomplete times out for Swiss postcodes</p><div class="foot"><span class="prio high"></span><span class="key">CHK-405</span><span>⚠ blocked</span><span class="who" style="background:#ae2e24">MS</span></div></article>
+  <article class="card"><p class="title">Track funnel drop-off per step in analytics</p><div class="progress"><b style="width:25%"></b></div><div class="foot"><span class="key">CHK-408</span><span>2 pts</span><span class="who" style="background:#e56910">GH</span></div></article>
+</section>
+<section class="col"><h2>Review <span class="count">2</span></h2>
+  <article class="card"><div class="labels"><i style="background:#4bce97"></i></div><p class="title">Show delivery estimate next to each shipping method</p><div class="foot"><span class="check done">☑ 4/4</span><span class="key">CHK-398</span><span class="who" style="background:#1f845a">KJ</span></div></article>
+  <article class="card"><p class="title">Persist cart for signed-out users (30 days)</p><div class="foot"><span class="key">CHK-399</span><span>3 pts</span><span class="who" style="background:#0c66e4">AL</span></div></article>
+</section>
+<section class="col"><h2>Done <span class="count">5</span></h2>
+  <article class="card"><p class="title"><s>Upgrade payment SDK to v5</s></p><div class="foot"><span class="key">CHK-380</span><span>✓ 2 Nov</span></div></article>
+  <article class="card"><p class="title"><s>Fix rounding of totals in CHF</s></p><div class="foot"><span class="key">CHK-384</span><span>✓ 3 Nov</span></div></article>
+  <article class="card"><p class="title"><s>Accessible error messages for card fields</s></p><div class="foot"><span class="key">CHK-386</span><span>✓ 5 Nov</span></div></article>
+  <article class="card"><p class="title"><s>Lazy-load the payment iframe</s></p><div class="foot"><span class="key">CHK-390</span><span>✓ 6 Nov</span></div></article>
+  <article class="card"><p class="title"><s>Guest checkout e-mail confirmation</s></p><div class="foot"><span class="key">CHK-392</span><span>✓ 7 Nov</span></div></article>
+</section>
+</div>
+</body>
+</html>

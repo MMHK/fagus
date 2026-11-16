@@ -1,0 +1,31 @@
+[package]
+name = "fagus-cli"
+description = "Command line interface for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rayon = { workspace = true, optional = true }
+
+[features]
+default = ["parallel"]
+# Writes the PDF on a pool of threads (see the feature of fagus-pdf).
+parallel = ["fagus/parallel", "dep:rayon"]
+
+[[bin]]
+name = "fagus"
+path = "src/main.rs"

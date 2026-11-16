@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Laborbefund 26-118734</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 14mm 14mm 18mm;
+  @bottom-left { content: "Befund 26-118734 · Weber, Katharina · *14.03.1979"; font: 6.5pt Inter, sans-serif; color: #666; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 6.5pt Inter, sans-serif; color: #666; } }
+:root { --high: #b42318; --low: #175cd3; --ok: #067647; --line: #d0d5dd; }
+html { font: 8.5pt/1.35 Inter, sans-serif; color: #101828; }
+body { margin: 0; }
+.letterhead { display: grid; grid-template-columns: 1fr auto; align-items: end; border-bottom: 2pt solid #0e7490; padding-bottom: 2mm; }
+.letterhead .lab { font-size: 15pt; font-weight: 700; color: #0e7490; }
+.letterhead .lab small { display: block; font-size: 7.5pt; font-weight: 400; color: #475467; }
+.letterhead .accr { font-size: 7pt; text-align: right; color: #475467; }
+.meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm 6mm; margin: 4mm 0; padding: 2.5mm 3mm; background: #f0f9ff; border-radius: 1.5mm; }
+.meta div span { display: block; font-size: 6.5pt; text-transform: uppercase; letter-spacing: .05em; color: #475467; }
+.meta div b { font-size: 9pt; }
+h2 { font-size: 9.5pt; margin: 5mm 0 1.5mm; padding-bottom: 1mm; border-bottom: .75pt solid #0e7490; color: #0e7490; break-after: avoid; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 7pt; font-weight: 400; color: #475467; padding: 0 1.5mm 1mm; }
+td { padding: 1.1mm 1.5mm; border-bottom: .4pt solid var(--line); vertical-align: middle; }
+td.val, th.val { text-align: right; width: 16mm; font-variant-numeric: tabular-nums; }
+td.unit { width: 16mm; color: #475467; }
+td.ref { width: 26mm; color: #475467; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.flag { width: 6mm; text-align: center; font-weight: 700; }
+td.bar { width: 34mm; }
+tr.high td.val, tr.high td.flag { color: var(--high); font-weight: 700; }
+tr.low td.val, tr.low td.flag { color: var(--low); font-weight: 700; }
+tr.high td.flag::before { content: "H"; }
+tr.low td.flag::before { content: "L"; }
+tr.high td.flag::after, tr.low td.flag::after { content: "\2009!"; font-size: 6pt; vertical-align: super; }
+.range { position: relative; height: 2.2mm; background: linear-gradient(to right, #fee4e2 0 20%, #dcfae6 20% 80%, #fee4e2 80%); border-radius: 1.1mm; }
+.range i { position: absolute; top: -0.6mm; width: 1.2mm; height: 3.4mm; margin-left: -0.6mm; border-radius: .6mm; background: #101828; }
+tr.high .range i { background: var(--high); }
+tr.low .range i { background: var(--low); }
+.prev { font-size: 7pt; color: #667085; }
+.comment { margin-top: 4mm; padding: 2.5mm 3mm; border: .75pt solid var(--line); border-left: 1.2mm solid #f79009; border-radius: 1mm; break-inside: avoid; }
+.comment p { margin: 0 0 1.5mm; }
+.comment p:last-child { margin: 0; }
+.legend { margin-top: 3mm; font-size: 7pt; color: #475467; display: flex; gap: 6mm; }
+.legend b.h { color: var(--high); } .legend b.l { color: var(--low); }
+.release { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8mm; break-inside: avoid; }
+.release .signature { border-top: .75pt solid #101828; width: 60mm; padding-top: 1mm; font-size: 7.5pt; }
+.release .stamp { font-size: 7pt; color: #067647; border: 1pt solid #067647; border-radius: 1mm; padding: 1mm 2mm; transform: rotate(-4deg); }
+</style>
+</head>
+<body>
+<div class="letterhead">
+  <div class="lab">MVZ Labor Saaletal<small>Fachärzte für Laboratoriumsmedizin · Am Klinikum 4 · 06120 Halle (Saale)</small></div>
+  <div class="accr">Akkreditiert nach DIN EN ISO 15189<br>D-ML-13421-01-00</div>
+</div>
+
+<div class="meta">
+  <div><span>Patientin</span><b>Weber, Katharina</b></div>
+  <div><span>Geburtsdatum</span><b>14.03.1979</b></div>
+  <div><span>Befundnummer</span><b>26-118734</b></div>
+  <div><span>Einsender</span><b>Praxis Dr. Lehmann</b></div>
+  <div><span>Probenentnahme</span><b>05.11.2026, 07:42</b></div>
+  <div><span>Befundstatus</span><b>Endbefund</b></div>
+</div>
+
+<h2>Kleines Blutbild</h2>
+<table>
+  <thead><tr><th>Untersuchung</th><th class="val">Ergebnis</th><th></th><th>Einheit</th><th>Referenzbereich</th><th></th><th>Vorwert 08/2026</th></tr></thead>
+  <tbody>
+    <tr><td>Leukozyten</td><td class="val">7,8</td><td class="flag"></td><td class="unit">/nl</td><td class="ref">3,9 – 10,2</td><td class="bar"><div class="range"><i style="left: 51%"></i></div></td><td class="prev">6,9</td></tr>
+    <tr class="low"><td>Erythrozyten</td><td class="val">3,71</td><td class="flag"></td><td class="unit">/pl</td><td class="ref">3,92 – 5,08</td><td class="bar"><div class="range"><i style="left: 12%"></i></div></td><td class="prev">3,95</td></tr>
+    <tr class="low"><td>Hämoglobin</td><td class="val">10,9</td><td class="flag"></td><td class="unit">g/dl</td><td class="ref">11,9 – 14,6</td><td class="bar"><div class="range"><i style="left: 7%"></i></div></td><td class="prev">12,1</td></tr>
+    <tr><td>Hämatokrit</td><td class="val">36</td><td class="flag"></td><td class="unit">%</td><td class="ref">35 – 44</td><td class="bar"><div class="range"><i style="left: 26%"></i></div></td><td class="prev">37</td></tr>
+    <tr class="low"><td>MCV</td><td class="val">77</td><td class="flag"></td><td class="unit">fl</td><td class="ref">82 – 98</td><td class="bar"><div class="range"><i style="left: 4%"></i></div></td><td class="prev">80</td></tr>
+    <tr><td>Thrombozyten</td><td class="val">312</td><td class="flag"></td><td class="unit">/nl</td><td class="ref">176 – 391</td><td class="bar"><div class="range"><i style="left: 59%"></i></div></td><td class="prev">298</td></tr>
+  </tbody>
+</table>
+
+<h2>Eisenstoffwechsel</h2>
+<table>
+  <thead><tr><th>Untersuchung</th><th class="val">Ergebnis</th><th></th><th>Einheit</th><th>Referenzbereich</th><th></th><th>Vorwert 08/2026</th></tr></thead>
+  <tbody>
+    <tr class="low"><td>Ferritin</td><td class="val">9</td><td class="flag"></td><td class="unit">µg/l</td><td class="ref">13 – 150</td><td class="bar"><div class="range"><i style="left: 3%"></i></div></td><td class="prev">14</td></tr>
+    <tr class="high"><td>Transferrin</td><td class="val">3,9</td><td class="flag"></td><td class="unit">g/l</td><td class="ref">2,0 – 3,6</td><td class="bar"><div class="range"><i style="left: 88%"></i></div></td><td class="prev">3,4</td></tr>
+    <tr class="low"><td>Transferrinsättigung</td><td class="val">11</td><td class="flag"></td><td class="unit">%</td><td class="ref">16 – 45</td><td class="bar"><div class="range"><i style="left: 9%"></i></div></td><td class="prev">17</td></tr>
+  </tbody>
+</table>
+
+<h2>Klinische Chemie</h2>
+<table>
+  <thead><tr><th>Untersuchung</th><th class="val">Ergebnis</th><th></th><th>Einheit</th><th>Referenzbereich</th><th></th><th>Vorwert 08/2026</th></tr></thead>
+  <tbody>
+    <tr><td>Kreatinin</td><td class="val">0,82</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">0,50 – 0,90</td><td class="bar"><div class="range"><i style="left: 72%"></i></div></td><td class="prev">0,79</td></tr>
+    <tr><td>eGFR (CKD-EPI)</td><td class="val">87</td><td class="flag"></td><td class="unit">ml/min</td><td class="ref">&gt; 60</td><td class="bar"><div class="range"><i style="left: 64%"></i></div></td><td class="prev">90</td></tr>
+    <tr><td>GPT (ALT)</td><td class="val">21</td><td class="flag"></td><td class="unit">U/l</td><td class="ref">&lt; 35</td><td class="bar"><div class="range"><i style="left: 50%"></i></div></td><td class="prev">24</td></tr>
+    <tr class="high"><td>TSH basal</td><td class="val">4,61</td><td class="flag"></td><td class="unit">mU/l</td><td class="ref">0,27 – 4,20</td><td class="bar"><div class="range"><i style="left: 83%"></i></div></td><td class="prev">3,98</td></tr>
+    <tr><td>CRP</td><td class="val">&lt; 0,5</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">&lt; 0,5</td><td class="bar"><div class="range"><i style="left: 22%"></i></div></td><td class="prev">&lt; 0,5</td></tr>
+  </tbody>
+</table>
+
+<div class="legend"><span><b class="h">H</b> über dem Referenzbereich</span><span><b class="l">L</b> unter dem Referenzbereich</span><span><i>Vorwert</i>: letzter Befund dieser Patientin</span></div>
+
+<div class="comment">
+  <p><b>Beurteilung:</b> Mikrozytäre Anämie bei erniedrigtem Ferritin und erniedrigter
+  Transferrinsättigung, vereinbar mit einem Eisenmangel. Gegenüber dem Vorbefund weiter
+  abfallende Werte.</p>
+  <p>TSH grenzwertig erhöht; eine Kontrolle mit fT3 und fT4 in sechs bis acht Wochen wird empfohlen.</p>
+</div>
+
+<div class="release">
+  <div class="signature">Dr. med. Anke Brückner, Fachärztin für Laboratoriumsmedizin</div>
+  <div class="stamp">Technisch und medizinisch validiert · 05.11.2026, 14:10</div>
+</div>
+</body>
+</html>

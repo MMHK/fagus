@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Exposé Lindenallee 14, Leipzig</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 0; }
+@page body { margin: 18mm 16mm 20mm;
+  @bottom-left { content: "Lindenallee 14 · 04159 Leipzig"; font: 7.5pt Inter, sans-serif; color: #6b7280; }
+  @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 7.5pt Inter, sans-serif; color: #6b7280; } }
+html { font: 9.5pt/1.5 Inter, sans-serif; color: #1f2937; }
+body { margin: 0; }
+.cover { height: 297mm; position: relative; break-after: page; background: #14261d; color: #fff; }
+.cover .hero { width: 100%; height: 190mm; object-fit: cover; object-position: 50% 30%; display: block; }
+.cover .hero-fade { position: absolute; left: 0; right: 0; top: 120mm; height: 70mm; background: linear-gradient(to bottom, rgb(20 38 29 / 0), #14261d); }
+.cover .title { position: absolute; left: 16mm; right: 16mm; top: 165mm; }
+.cover .kicker { text-transform: uppercase; letter-spacing: .25em; font-size: 8pt; color: #a7d3b8; }
+.cover h1 { font-size: 30pt; line-height: 1.1; margin: 3mm 0 4mm; letter-spacing: -.02em; }
+.cover .facts { display: flex; gap: 10mm; margin-top: 10mm; border-top: .5pt solid rgb(255 255 255 / .3); padding-top: 5mm; }
+.cover .facts div { font-size: 7.5pt; color: #a7d3b8; text-transform: uppercase; letter-spacing: .1em; }
+.cover .facts b { display: block; font-size: 16pt; color: #fff; letter-spacing: 0; text-transform: none; }
+.cover .agent { position: absolute; left: 16mm; bottom: 14mm; display: flex; gap: 4mm; align-items: center; font-size: 8pt; }
+.cover .agent img { width: 14mm; height: 14mm; border-radius: 50%; object-fit: cover; border: 1.5pt solid #a7d3b8; }
+.content { page: body; }
+h2 { font-size: 13pt; margin: 0 0 3mm; color: #14261d; display: flex; align-items: baseline; gap: 3mm; }
+h2 small { font-size: 8pt; color: #6b7280; font-weight: 400; }
+.gallery { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: auto auto; gap: 2.5mm; margin-bottom: 7mm; }
+.gallery figure { margin: 0; position: relative; overflow: hidden; border-radius: 1.5mm; background: #e5e7eb; }
+.gallery figure:first-child { grid-row: span 2; }
+.gallery img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.gallery figure:first-child img { aspect-ratio: 4 / 3.3; }
+.gallery figure:not(:first-child) img { aspect-ratio: 1; }
+.gallery figure:nth-child(3) img { object-position: right bottom; }
+.gallery figure:nth-child(4) img { object-fit: contain; background: #f3f4f6; }
+.gallery figure:nth-child(5) img { object-fit: none; object-position: 20% 40%; }
+.gallery figcaption { position: absolute; left: 0; bottom: 0; right: 0; padding: 1mm 2mm; font-size: 7pt; color: #fff; background: rgb(0 0 0 / .45); }
+.split { display: grid; grid-template-columns: 1fr 62mm; gap: 8mm; }
+.keyfacts { border-collapse: collapse; width: 100%; font-size: 8.5pt; }
+.keyfacts th { text-align: left; font-weight: 400; color: #6b7280; padding: 1.2mm 0; border-bottom: .5pt solid #e5e7eb; width: 45%; }
+.keyfacts td { padding: 1.2mm 0; border-bottom: .5pt solid #e5e7eb; font-weight: 700; font-variant-numeric: tabular-nums; }
+.price { background: #ecf5ef; border-radius: 2mm; padding: 4mm; margin-bottom: 4mm; }
+.price .big { font-size: 18pt; font-weight: 700; color: #14261d; }
+.price small { display: block; color: #4b5563; }
+.energy { margin-top: 4mm; }
+.energy .scale { display: flex; height: 6mm; border-radius: 1mm; overflow: hidden; font-size: 6.5pt; font-weight: 700; color: #fff; }
+.energy .scale span { flex: 1; display: grid; place-items: center; }
+.energy .marker { position: relative; height: 5mm; }
+.energy .marker i { position: absolute; left: 31%; top: 0; transform: translateX(-50%); width: 0; height: 0; border: 1.6mm solid transparent; border-top: 2.4mm solid #111827; }
+.energy .marker b { position: absolute; left: 31%; top: 2.6mm; transform: translateX(-50%); font-size: 7pt; white-space: nowrap; }
+p { margin: 0 0 2.5mm; text-align: justify; hyphens: auto; }
+.plan { break-before: page; }
+.plan-wrap { display: grid; grid-template-columns: 1fr 50mm; gap: 6mm; align-items: start; }
+.plan svg { width: 100%; height: auto; aspect-ratio: 14 / 10; border: .5pt solid #d1d5db; background: #fff; }
+.rooms { border-collapse: collapse; width: 100%; font-size: 8pt; }
+.rooms td { padding: 1mm 0; border-bottom: .5pt dotted #9ca3af; }
+.rooms td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.rooms tr:last-child td { border-bottom: 1pt solid #14261d; font-weight: 700; }
+.map { margin-top: 7mm; height: 62mm; position: relative; border-radius: 2mm; overflow: hidden;
+  background:
+    linear-gradient(28deg, transparent 47%, #fde68a 47.2%, #fde68a 49%, transparent 49.2%),
+    linear-gradient(-62deg, transparent 58%, #fff 58.2%, #fff 59.6%, transparent 59.8%),
+    radial-gradient(ellipse 40mm 20mm at 78% 72%, #bfdbfe 98%, transparent 100%),
+    repeating-linear-gradient(0deg, #eef2f0 0 9.5mm, #fff 9.5mm 10mm),
+    repeating-linear-gradient(90deg, #e5ece8 0 13.5mm, #fff 13.5mm 14mm); }
+.map .park { position: absolute; left: 8%; top: 12%; width: 26%; height: 34%; background: #c7e5cf; border-radius: 3mm 8mm 4mm 10mm; }
+.map .pin { position: absolute; left: 47%; top: 38%; width: 7mm; height: 7mm; background: #b91c1c; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 0 0 1.2mm rgb(185 28 28 / .2); }
+.map .pin::after { content: ""; position: absolute; inset: 2.2mm; border-radius: 50%; background: #fff; }
+.map .label { position: absolute; left: 51%; top: 30%; background: #fff; padding: .8mm 2mm; font-size: 7pt; font-weight: 700; border-radius: 1mm; box-shadow: 0 .5mm 1.5mm rgb(0 0 0 / .2); }
+.map .scale-bar { position: absolute; right: 4mm; bottom: 3mm; font-size: 6.5pt; color: #374151; border: .75pt solid #374151; border-top: 0; width: 20mm; height: 1.5mm; text-align: center; line-height: 4.5mm; }
+.distances { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm 6mm; margin-top: 4mm; font-size: 8pt; }
+.distances div { display: flex; justify-content: space-between; border-bottom: .5pt solid #e5e7eb; padding-bottom: .6mm; }
+.disclaimer { font-size: 7pt; color: #6b7280; margin-top: 8mm; columns: 2; column-gap: 6mm; }
+</style></head><body>
+<section class="cover">
+  <img class="hero" src="../images/photo.jpg" alt="Hausansicht">
+  <div class="hero-fade"></div>
+  <div class="title">
+    <div class="kicker">Exklusiv · Provisionsfrei für Käufer</div>
+    <h1>Lichtdurchflutete Altbauwohnung mit Südbalkon in Gohlis</h1>
+    <div>Lindenallee 14, 2. OG links · 04159 Leipzig</div>
+    <div class="facts">
+      <div>Kaufpreis<b>489.000 €</b></div>
+      <div>Wohnfläche<b>112,4 m²</b></div>
+      <div>Zimmer<b>4</b></div>
+      <div>Baujahr<b>1903</b></div>
+    </div>
+  </div>
+  <div class="agent"><img src="../images/photo.jpg" alt=""><div><b>Johanna Brehm</b><br>Immobilienberaterin · 0341 02290 4410 · j.brehm@sachsenwohnen.example</div></div>
+</section>
+<main class="content">
+<h2>Impressionen <small>5 von 23 Fotos</small></h2>
+<div class="gallery">
+  <figure><img src="../images/photo.jpg" alt=""><figcaption>Wohnzimmer mit Stuck und Flügeltüren</figcaption></figure>
+  <figure><img src="../images/photo.jpg" alt=""><figcaption>Küche</figcaption></figure>
+  <figure><img src="../images/photo.jpg" alt=""><figcaption>Bad</figcaption></figure>
+  <figure><img src="../images/photo.jpg" alt=""><figcaption>Balkon</figcaption></figure>
+  <figure><img src="../images/photo.jpg" alt=""><figcaption>Treppenhaus</figcaption></figure>
+</div>
+<div class="split">
+  <div>
+    <h2>Objektbeschreibung</h2>
+    <p>Die angebotene Vierzimmerwohnung befindet sich im zweiten Obergeschoss eines liebevoll sanierten Gründerzeithauses in einer der begehrtesten Lagen des Leipziger Nordens. Hohe Decken von 3,45 Metern, originaler Stuck, Dielenböden aus Kiefer und doppelflüglige Kassettentüren verleihen den Räumen einen großzügigen, eleganten Charakter.</p>
+    <p>Herzstück ist das Wohnzimmer mit angrenzendem Erker, von dem aus Sie auf den ruhigen, begrünten Innenhof blicken. Die 2021 eingebaute Küche mit Geräten von Siemens und Quarzarbeitsplatte bleibt in der Wohnung. Das Tageslichtbad wurde vollständig erneuert und bietet eine bodengleiche Dusche sowie eine freistehende Badewanne.</p>
+    <p>Der Südbalkon mit rund 7 m² lädt zum Verweilen ein. Zur Wohnung gehören ein Kellerabteil von 9 m² sowie ein Tiefgaragenstellplatz, der für 24.000 € zusätzlich erworben werden kann.</p>
+    <h2 style="margin-top:5mm">Ausstattung</h2>
+    <p>Gas-Zentralheizung (Brennwert, 2019) · Kunststofffenster mit Isolierverglasung, straßenseitig Kastenfenster · Gegensprechanlage mit Video · Glasfaseranschluss · Fahrradraum und Kinderwagenabstellraum im Erdgeschoss.</p>
+  </div>
+  <aside>
+    <div class="price"><div class="big">489.000 €</div><small>zzgl. Grunderwerbsteuer 5,5 %, Notar und Grundbuch ca. 2 %</small></div>
+    <table class="keyfacts">
+      <tr><th>Wohnfläche</th><td>ca. 112,4 m²</td></tr>
+      <tr><th>Zimmer</th><td>4</td></tr>
+      <tr><th>Etage</th><td>2 von 4</td></tr>
+      <tr><th>Hausgeld</th><td>386 € / Monat</td></tr>
+      <tr><th>Rücklage</th><td>48.300 €</td></tr>
+      <tr><th>Bezugsfrei ab</th><td>01.07.2027</td></tr>
+      <tr><th>Denkmalschutz</th><td>Ja</td></tr>
+    </table>
+    <div class="energy"><b style="font-size:8pt">Energieausweis</b> <span style="font-size:7pt;color:#6b7280">Verbrauch, gültig bis 2032</span>
+      <div class="marker"><i></i></div>
+      <div class="scale"><span style="background:#047857">A+</span><span style="background:#059669">A</span><span style="background:#16a34a">B</span><span style="background:#65a30d">C</span><span style="background:#ca8a04">D</span><span style="background:#d97706">E</span><span style="background:#ea580c">F</span><span style="background:#dc2626">G</span><span style="background:#991b1b">H</span></div>
+      <div class="marker"><b>98 kWh/(m²·a) · Gas</b></div>
+    </div>
+  </aside>
+</div>
+
+<section class="plan">
+<h2>Grundriss <small>2. Obergeschoss, nicht maßstäblich</small></h2>
+<div class="plan-wrap">
+<svg viewBox="0 0 700 500" font-family="Inter" font-size="13">
+  <defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#9ca3af" stroke-width="2"/></pattern></defs>
+  <rect x="20" y="20" width="660" height="400" fill="none" stroke="#111827" stroke-width="10"/>
+  <path d="M260 20 V200 M260 260 V420 M20 220 H180 M220 220 H400 M400 20 V120 M400 170 V420 M520 220 H680 M520 220 V420" stroke="#111827" stroke-width="5" fill="none"/>
+  <rect x="400" y="420" width="200" height="60" fill="url(#hatch)" stroke="#111827" stroke-width="3"/>
+  <path d="M180 220 A40 40 0 0 1 220 180" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <path d="M400 120 A50 50 0 0 1 450 170" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <g fill="#14261d" text-anchor="middle">
+    <text x="140" y="115" font-weight="700">Wohnen</text><text x="140" y="133" fill="#6b7280">34,8 m²</text>
+    <text x="330" y="115" font-weight="700">Essen</text><text x="330" y="133" fill="#6b7280">18,2 m²</text>
+    <text x="540" y="115" font-weight="700">Schlafen</text><text x="540" y="133" fill="#6b7280">19,6 m²</text>
+    <text x="140" y="325" font-weight="700">Kind</text><text x="140" y="343" fill="#6b7280">14,1 m²</text>
+    <text x="330" y="325" font-weight="700">Küche</text><text x="330" y="343" fill="#6b7280">11,3 m²</text>
+    <text x="460" y="325" font-weight="700">Flur</text><text x="460" y="343" fill="#6b7280">8,9 m²</text>
+    <text x="600" y="325" font-weight="700">Bad</text><text x="600" y="343" fill="#6b7280">7,3 m²</text>
+    <text x="500" y="456" font-weight="700">Balkon</text>
+  </g>
+  <g stroke="#2563eb" stroke-width="1" fill="#2563eb" font-size="11">
+    <line x1="20" y1="8" x2="260" y2="8"/><line x1="20" y1="3" x2="20" y2="13"/><line x1="260" y1="3" x2="260" y2="13"/>
+    <text x="140" y="6" text-anchor="middle" stroke="none">5,24 m</text>
+  </g>
+  <g transform="translate(640 470)"><circle r="18" fill="none" stroke="#111827"/><path d="M0 -15 L6 6 L0 2 L-6 6 Z" fill="#111827"/><text y="-21" text-anchor="middle" font-size="11" font-weight="700">N</text></g>
+</svg>
+<table class="rooms">
+  <tr><td>Wohnen</td><td>34,8 m²</td></tr>
+  <tr><td>Essen</td><td>18,2 m²</td></tr>
+  <tr><td>Schlafen</td><td>19,6 m²</td></tr>
+  <tr><td>Kind</td><td>14,1 m²</td></tr>
+  <tr><td>Küche</td><td>11,3 m²</td></tr>
+  <tr><td>Flur</td><td>8,9 m²</td></tr>
+  <tr><td>Bad</td><td>7,3 m²</td></tr>
+  <tr><td>Balkon (½)</td><td>3,5 m²</td></tr>
+  <tr><td>Gesamt</td><td>117,7 m²</td></tr>
+</table>
+</div>
+<h2 style="margin-top:7mm">Lage</h2>
+<p>Gohlis-Süd gehört zu den gefragtesten Wohnvierteln Leipzigs. Das Rosental und der Zoo sind zu Fuß in zehn Minuten erreichbar, die Straßenbahnlinie 4 bringt Sie in zwölf Minuten in die Innenstadt.</p>
+<div class="map"><div class="park"></div><div class="pin"></div><div class="label">Lindenallee 14</div><div class="scale-bar">200 m</div></div>
+<div class="distances">
+  <div><span>Straßenbahn</span><b>180 m</b></div><div><span>Grundschule</span><b>450 m</b></div><div><span>Supermarkt</span><b>300 m</b></div>
+  <div><span>Hauptbahnhof</span><b>2,9 km</b></div><div><span>Rosental</span><b>650 m</b></div><div><span>Flughafen</span><b>16 km</b></div>
+</div>
+<div class="disclaimer">Alle Angaben beruhen auf Informationen des Eigentümers und erfolgen ohne Gewähr. Irrtum und Zwischenverkauf vorbehalten. Die Grundrissdarstellung ist nicht maßstäblich; maßgeblich ist allein die Teilungserklärung. Die Wohnflächenangaben wurden nach der Wohnflächenverordnung ermittelt. Bei Abschluss eines Kaufvertrages ist für den Käufer keine Provision zu zahlen. Der Energieausweis liegt bei der Besichtigung vor.</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Summen- und Saldenliste 01–10/2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 14mm 12mm 16mm;
+  @top-left { content: "Grünwald & Partner Steuerberatung · Mandant 10442"; font: 8px Inter, sans-serif; color: #667; }
+  @top-right { content: "Summen- und Saldenliste Oktober 2026"; font: 8px Inter, sans-serif; color: #667; }
+  @bottom-right { content: "Blatt " counter(page) " / " counter(pages); font: 8px Inter, sans-serif; color: #667; }
+}
+:root { --line: #d5d9e0; --head: #f2f4f7; --sticky-shadow: 0 1px 0 var(--line); }
+* { box-sizing: border-box; }
+body { margin: 0; font: 9px/1.35 Inter, sans-serif; color: #1d232d; }
+.app-bar { position: sticky; top: 0; z-index: 10; display: flex; gap: 12px; align-items: center; padding: 6px 0; background: #fff; border-bottom: 1px solid var(--line); }
+.app-bar h1 { font-size: 15px; margin: 0; flex: 1; }
+.app-bar .filters { display: flex; gap: 6px; }
+.chip { border: 1px solid var(--line); border-radius: 10px; padding: 1px 7px; font-size: 8px; background: var(--head); }
+.meta { display: grid; grid-template-columns: repeat(4, max-content); gap: 2px 18px; margin: 8px 0 10px; color: #4a5260; }
+.meta b { color: #1d232d; font-weight: 700; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media screen { .table-responsive { max-height: 70vh; overflow-y: auto; } }
+table.sus { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+table.sus thead th { position: sticky; top: 0; z-index: 3; background: var(--head); box-shadow: var(--sticky-shadow); text-align: right; font-weight: 700; padding: 4px 6px; border-bottom: 1px solid #9aa3b2; white-space: nowrap; }
+table.sus thead tr:first-child th { top: 0; }
+table.sus thead tr:nth-child(2) th { top: 21px; font-weight: 400; color: #4a5260; font-size: 8px; }
+table.sus thead th:nth-child(-n+2) { text-align: left; }
+table.sus thead th.span { text-align: center; border-bottom: 1px solid var(--line); }
+table.sus tbody th[scope=row] { position: sticky; left: 0; z-index: 2; background: #fff; text-align: left; font-weight: 400; color: #4a5260; padding: 2px 6px; width: 44px; }
+table.sus td { padding: 2px 6px; text-align: right; border-bottom: 1px solid #eef0f3; white-space: nowrap; }
+table.sus td.name { text-align: left; white-space: normal; width: 34%; }
+table.sus td.neg { color: #b42318; }
+table.sus td.neg::before { content: "−"; }
+table.sus td.sh { text-align: center; color: #4a5260; width: 24px; }
+table.sus td.pct { color: #4a5260; width: 40px; }
+table.sus tr.group-head th { position: sticky; top: 38px; z-index: 1; background: #e8ecf3; text-align: left; padding: 4px 6px; font-size: 9.5px; border-top: 1px solid var(--line); }
+table.sus tr.subtotal td { font-weight: 700; border-top: 1px solid #9aa3b2; border-bottom: 2px solid #9aa3b2; background: #fafbfc; }
+table.sus tr.subtotal th { background: #fafbfc; }
+table.sus tbody.group { break-inside: auto; }
+table.sus tr { break-inside: avoid; }
+table.sus tfoot td { position: sticky; bottom: 0; background: #1d232d; color: #fff; font-weight: 700; padding: 4px 6px; }
+table.sus tfoot td:first-child { text-align: left; }
+.summary-bar { position: sticky; bottom: 0; display: flex; justify-content: space-between; margin-top: 10px; padding: 6px 8px; background: #f7f8fa; border: 1px solid var(--line); border-radius: 4px; }
+.summary-bar span b { font-variant-numeric: tabular-nums; }
+.legend { margin-top: 8px; color: #4a5260; font-size: 8px; columns: 2; column-gap: 24px; }
+.legend p { margin: 0 0 3px; break-inside: avoid; }
+@media print {
+  .app-bar .filters button { display: none; }
+  table.sus thead { display: table-header-group; }
+  table.sus tfoot { display: table-footer-group; }
+}
+</style>
+</head>
+<body>
+<header class="app-bar">
+  <h1>Summen- und Saldenliste</h1>
+  <div class="filters"><span class="chip">Zeitraum 01.01.–31.10.2026</span><span class="chip">Kontenrahmen SKR 03</span><span class="chip">alle Konten mit Bewegung</span><button type="button">Exportieren</button></div>
+</header>
+<div class="meta">
+  <span>Mandant <b>10442 Feinkost Lindqvist GmbH</b></span><span>Wirtschaftsjahr <b>2026</b></span><span>Stand <b>06.11.2026 09:14</b></span><span>Währung <b>EUR</b></span>
+  <span>Berater <b>12008 Grünwald &amp; Partner</b></span><span>Buchungsperiode <b>10/2026</b></span><span>Festgeschrieben bis <b>30.09.2026</b></span><span>Version <b>3</b></span>
+</div>
+<div class="table-responsive">
+<table class="sus">
+  <thead>
+    <tr><th rowspan="2">Konto</th><th rowspan="2">Bezeichnung</th><th>EB-Wert</th><th colspan="2" class="span">Verkehrszahlen 01–10/2026</th><th>Saldo</th><th rowspan="2">S/H</th><th rowspan="2">‰</th></tr>
+    <tr><th>01.01.2026</th><th>Soll</th><th>Haben</th><th>31.10.2026</th></tr>
+  </thead>
+  <tfoot><tr><td colspan="2">Summe aller Konten</td><td>184.211,07</td><td>2.913.448,91</td><td>2.913.448,91</td><td>184.211,07</td><td></td><td></td></tr></tfoot>
+<tbody class="group"><tr class="group-head"><th colspan="8" scope="rowgroup">Anlagevermögen</th></tr>
+<tr><th scope="row">0200</th><td class="name">Technische Anlagen und Maschinen</td><td class="neg">43.378,47</td><td>109.144,82</td><td>96.240,56</td><td class="neg">30.474,21</td><td class="sh">H</td><td class="pct">3.0</td></tr>
+<tr><th scope="row">0400</th><td class="name">Betriebsausstattung</td><td>27.361,75</td><td>17.659,19</td><td>27.019,55</td><td>18.001,39</td><td class="sh">S</td><td class="pct">1.8</td></tr>
+<tr><th scope="row">0420</th><td class="name">Büroeinrichtung</td><td class="neg">66.561,66</td><td>–</td><td>89.363,06</td><td class="neg">155.924,72</td><td class="sh">H</td><td class="pct">15.6</td></tr>
+<tr><th scope="row">0480</th><td class="name">Geringwertige Wirtschaftsgüter</td><td class="neg">67.266,60</td><td>73.008,26</td><td>1.731,89</td><td>4.009,77</td><td class="sh">S</td><td class="pct">0.4</td></tr>
+<tr class="subtotal"><th scope="row"></th><td class="name">Summe Anlagevermögen</td><td class=neg>149.844,97</td><td>199.812,26</td><td>214.355,06</td><td class=neg>164.387,77</td><td class="sh"></td><td class="pct"></td></tr></tbody>
+<tbody class="group"><tr class="group-head"><th colspan="8" scope="rowgroup">Finanz- und Privatkonten</th></tr>
+<tr><th scope="row">1000</th><td class="name">Kasse</td><td>–</td><td>99.163,84</td><td>89.370,02</td><td>9.793,82</td><td class="sh">S</td><td class="pct">1.0</td></tr>
+<tr><th scope="row">1200</th><td class="name">Bank Sparkasse</td><td>–</td><td>42.688,46</td><td>28.083,34</td><td>14.605,12</td><td class="sh">S</td><td class="pct">1.5</td></tr>
+<tr><th scope="row">1210</th><td class="name">Bank Volksbank</td><td>–</td><td>80.487,40</td><td>106.635,53</td><td class="neg">26.148,13</td><td class="sh">H</td><td class="pct">2.6</td></tr>
+<tr><th scope="row">1360</th><td class="name">Geldtransit</td><td>–</td><td>98.357,24</td><td>95.791,04</td><td>2.566,20</td><td class="sh">S</td><td class="pct">0.3</td></tr>
+<tr><th scope="row">1400</th><td class="name">Forderungen aus Lieferungen und Leistungen</td><td>34.366,08</td><td>73.342,66</td><td>118.458,54</td><td class="neg">10.749,80</td><td class="sh">H</td><td class="pct">1.1</td></tr>
+<tr><th scope="row">1576</th><td class="name">Abziehbare Vorsteuer 19 %</td><td>41.210,83</td><td>21.196,05</td><td>24.315,20</td><td>38.091,68</td><td class="sh">S</td><td class="pct">3.8</td></tr>
+<tr><th scope="row">1571</th><td class="name">Abziehbare Vorsteuer 7 %</td><td>–</td><td>31.411,47</td><td>33.616,40</td><td class="neg">2.204,93</td><td class="sh">H</td><td class="pct">0.2</td></tr>
+<tr class="subtotal"><th scope="row"></th><td class="name">Summe Finanz- und Privatkonten</td><td>75.576,91</td><td>446.647,12</td><td>496.270,05</td><td>25.953,97</td><td class="sh"></td><td class="pct"></td></tr></tbody>
+<tbody class="group"><tr class="group-head"><th colspan="8" scope="rowgroup">Verbindlichkeiten</th></tr>
+<tr><th scope="row">1600</th><td class="name">Verbindlichkeiten aus Lieferungen und Leistungen</td><td>13.896,45</td><td>–</td><td>28.281,40</td><td class="neg">14.384,95</td><td class="sh">H</td><td class="pct">1.4</td></tr>
+<tr><th scope="row">1740</th><td class="name">Verbindlichkeiten aus Lohn und Gehalt</td><td>–</td><td>51.645,70</td><td>75.490,31</td><td class="neg">23.844,61</td><td class="sh">H</td><td class="pct">2.4</td></tr>
+<tr><th scope="row">1741</th><td class="name">Verbindlichkeiten Lohn- und Kirchensteuer</td><td>–</td><td>–</td><td>5.185,02</td><td class="neg">5.185,02</td><td class="sh">H</td><td class="pct">0.5</td></tr>
+<tr><th scope="row">1776</th><td class="name">Umsatzsteuer 19 %</td><td>–</td><td>76.686,66</td><td>19.170,81</td><td>57.515,86</td><td class="sh">S</td><td class="pct">5.8</td></tr>
+<tr><th scope="row">1771</th><td class="name">Umsatzsteuer 7 %</td><td>–</td><td>24.367,00</td><td>102.438,51</td><td class="neg">78.071,51</td><td class="sh">H</td><td class="pct">7.8</td></tr>
+<tr><th scope="row">1780</th><td class="name">Umsatzsteuer-Vorauszahlungen</td><td>–</td><td>108.172,71</td><td>84.468,08</td><td>23.704,63</td><td class="sh">S</td><td class="pct">2.4</td></tr>
+<tr class="subtotal"><th scope="row"></th><td class="name">Summe Verbindlichkeiten</td><td>13.896,45</td><td>260.872,07</td><td>315.034,13</td><td class=neg>40.265,61</td><td class="sh"></td><td class="pct"></td></tr></tbody>
+<tbody class="group"><tr class="group-head"><th colspan="8" scope="rowgroup">Betriebliche Aufwendungen</th></tr>
+<tr><th scope="row">3400</th><td class="name">Wareneingang 19 % Vorsteuer</td><td class="neg">657,96</td><td>–</td><td>84.215,40</td><td class="neg">84.873,36</td><td class="sh">H</td><td class="pct">8.5</td></tr>
+<tr><th scope="row">4100</th><td class="name">Löhne</td><td>14.944,54</td><td>–</td><td>35.439,01</td><td class="neg">20.494,47</td><td class="sh">H</td><td class="pct">2.0</td></tr>
+<tr><th scope="row">4120</th><td class="name">Gehälter</td><td>–</td><td>108.074,15</td><td>20.079,40</td><td>87.994,75</td><td class="sh">S</td><td class="pct">8.8</td></tr>
+<tr><th scope="row">4130</th><td class="name">Gesetzliche soziale Aufwendungen</td><td>17.120,21</td><td>83.418,91</td><td>116.532,80</td><td class="neg">15.993,68</td><td class="sh">H</td><td class="pct">1.6</td></tr>
+<tr><th scope="row">4210</th><td class="name">Miete</td><td>26.116,55</td><td>–</td><td>119.749,65</td><td class="neg">93.633,10</td><td class="sh">H</td><td class="pct">9.4</td></tr>
+<tr><th scope="row">4240</th><td class="name">Gas, Strom, Wasser</td><td>–</td><td>67.805,02</td><td>83.880,95</td><td class="neg">16.075,93</td><td class="sh">H</td><td class="pct">1.6</td></tr>
+<tr><th scope="row">4360</th><td class="name">Versicherungen</td><td>–</td><td>685,92</td><td>40.170,33</td><td class="neg">39.484,42</td><td class="sh">H</td><td class="pct">3.9</td></tr>
+<tr><th scope="row">4500</th><td class="name">Fahrzeugkosten</td><td>84.561,72</td><td>98.921,27</td><td>26.766,35</td><td>156.716,64</td><td class="sh">S</td><td class="pct">15.7</td></tr>
+<tr><th scope="row">4600</th><td class="name">Werbekosten</td><td>–</td><td>60.165,20</td><td>109.248,19</td><td class="neg">49.082,99</td><td class="sh">H</td><td class="pct">4.9</td></tr>
+<tr><th scope="row">4650</th><td class="name">Bewirtungskosten</td><td class="neg">43.503,32</td><td>98.902,92</td><td>25.820,58</td><td>29.579,02</td><td class="sh">S</td><td class="pct">3.0</td></tr>
+<tr><th scope="row">4806</th><td class="name">Wartungskosten für Hard- und Software</td><td>–</td><td>71.050,86</td><td>51.346,61</td><td>19.704,25</td><td class="sh">S</td><td class="pct">2.0</td></tr>
+<tr><th scope="row">4830</th><td class="name">Abschreibungen auf Sachanlagen</td><td>–</td><td>47.716,15</td><td>10.410,84</td><td>37.305,31</td><td class="sh">S</td><td class="pct">3.7</td></tr>
+<tr><th scope="row">4910</th><td class="name">Porto</td><td>–</td><td>78.400,83</td><td>36.765,55</td><td>41.635,29</td><td class="sh">S</td><td class="pct">4.2</td></tr>
+<tr><th scope="row">4920</th><td class="name">Telefon</td><td>–</td><td>39.943,95</td><td>34.732,27</td><td>5.211,68</td><td class="sh">S</td><td class="pct">0.5</td></tr>
+<tr><th scope="row">4930</th><td class="name">Bürobedarf</td><td>–</td><td>13.432,14</td><td>98.820,47</td><td class="neg">85.388,33</td><td class="sh">H</td><td class="pct">8.5</td></tr>
+<tr><th scope="row">4950</th><td class="name">Rechts- und Beratungskosten</td><td>–</td><td>–</td><td>41.711,45</td><td class="neg">41.711,45</td><td class="sh">H</td><td class="pct">4.2</td></tr>
+<tr><th scope="row">4955</th><td class="name">Buchführungskosten</td><td class="neg">1.637,75</td><td>–</td><td>118.782,39</td><td class="neg">120.420,13</td><td class="sh">H</td><td class="pct">12.0</td></tr>
+<tr><th scope="row">4970</th><td class="name">Nebenkosten des Geldverkehrs</td><td>–</td><td>–</td><td>5.900,81</td><td class="neg">5.900,81</td><td class="sh">H</td><td class="pct">0.6</td></tr>
+<tr class="subtotal"><th scope="row"></th><td class="name">Summe Betriebliche Aufwendungen</td><td>96.944,00</td><td>768.517,32</td><td>1.060.373,06</td><td class=neg>194.911,74</td><td class="sh"></td><td class="pct"></td></tr></tbody>
+<tbody class="group"><tr class="group-head"><th colspan="8" scope="rowgroup">Erlöse</th></tr>
+<tr><th scope="row">8400</th><td class="name">Erlöse 19 % USt</td><td>69.696,14</td><td>15.076,30</td><td>592,66</td><td>84.179,78</td><td class="sh">S</td><td class="pct">8.4</td></tr>
+<tr><th scope="row">8300</th><td class="name">Erlöse 7 % USt</td><td>–</td><td>–</td><td>111.825,40</td><td class="neg">111.825,40</td><td class="sh">H</td><td class="pct">11.2</td></tr>
+<tr><th scope="row">8125</th><td class="name">Steuerfreie innergemeinschaftliche Lieferungen</td><td>–</td><td>5.634,09</td><td>28.536,08</td><td class="neg">22.901,99</td><td class="sh">H</td><td class="pct">2.3</td></tr>
+<tr><th scope="row">8736</th><td class="name">Gewährte Skonti 19 % USt</td><td>–</td><td>–</td><td>47.170,26</td><td class="neg">47.170,26</td><td class="sh">H</td><td class="pct">4.7</td></tr>
+<tr><th scope="row">8200</th><td class="name">Erlöse</td><td>–</td><td>13.844,36</td><td>16.459,39</td><td class="neg">2.615,03</td><td class="sh">H</td><td class="pct">0.3</td></tr>
+<tr class="subtotal"><th scope="row"></th><td class="name">Summe Erlöse</td><td>69.696,14</td><td>34.554,75</td><td>204.583,80</td><td class=neg>100.332,91</td><td class="sh"></td><td class="pct"></td></tr></tbody>
+</table>
+</div>
+<div class="summary-bar"><span>Konten mit Bewegung: <b>40</b></span><span>Soll = Haben: <b>2.913.448,91 €</b></span><span>Differenz: <b>0,00 €</b></span></div>
+<div class="legend">
+  <p><b>EB-Wert</b> – Eröffnungsbilanzwert zum Beginn des Wirtschaftsjahres aus dem Vortrag.</p>
+  <p><b>Verkehrszahlen</b> – Summe der Buchungen im Soll und im Haben des Zeitraums.</p>
+  <p><b>Saldo</b> – EB-Wert zuzüglich Soll abzüglich Haben; negative Werte sind Habensalden.</p>
+  <p><b>‰</b> – Anteil des Saldos an der Bilanzsumme in Promille.</p>
+  <p>Beim Drucken stehen die am Bildschirm fixierten Kopfzeilen, Kontennummern und Gruppenzeilen an ihrer Stelle im Fluss; der Tabellenkopf wiederholt sich auf jedem Blatt.</p>
+</div>
+</body>
+</html>

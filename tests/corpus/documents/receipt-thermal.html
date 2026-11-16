@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Kassenbon</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+
+@page { size: 80mm 200mm; margin: 4mm 3mm 5mm 3mm; }
+html { font: 9pt/1.3 Inter, sans-serif; color: #000; }
+body { margin: 0; }
+h1 { font-size: 13pt; text-align: center; margin: 0 0 1mm; letter-spacing: .05em; }
+.c { text-align: center; }
+.small { font-size: 7.5pt; }
+hr { border: 0; border-top: 1px dashed #000; margin: 2mm 0; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: .4mm 0; vertical-align: top; }
+td.q { width: 8mm; }
+td.p { text-align: right; white-space: nowrap; width: 16mm; }
+tr.sum td { font-weight: 700; font-size: 11pt; padding-top: 1.5mm; border-top: 2px solid #000; }
+.bars { display: flex; height: 12mm; --m: calc(74mm / var(--n)); margin: 2mm 0 1mm; }
+.bars b { background: #000; } .bars i { }
+.barcode { display: block; width: 100%; height: 12mm; }
+</style></head><body>
+<h1>BÄCKEREI SONNENKORN</h1>
+<p class="c small" style="margin:0">Lindenstraße 12 · 50674 Köln<br>Tel. 0221 4710 567 · USt-IdNr. DE123456789</p>
+<hr>
+<table>
+<tr><td class="q">2×</td><td>Roggenmischbrot 750 g</td><td class="p">7,80 €</td></tr>
+<tr><td class="q">4×</td><td>Laugenbrezel</td><td class="p">3,60 €</td></tr>
+<tr><td class="q">1×</td><td>Käsekuchen (Stück) mit Streuseln und Puderzucker</td><td class="p">3,20 €</td></tr>
+<tr><td class="q">3×</td><td>Croissant Butter</td><td class="p">4,35 €</td></tr>
+<tr><td class="q">1×</td><td>Cappuccino groß, Hafermilch</td><td class="p">3,90 €</td></tr>
+<tr><td class="q">1×</td><td>Pfand Mehrwegbecher</td><td class="p">1,00 €</td></tr>
+<tr class="sum"><td></td><td>SUMME</td><td class="p">23,85 €</td></tr>
+</table>
+<table class="small" style="margin-top:2mm">
+<tr><td>Gegeben BAR</td><td class="p">30,00 €</td></tr>
+<tr><td>Rückgeld</td><td class="p">6,15 €</td></tr>
+<tr><td>MwSt. 7 % auf 19,95 €</td><td class="p">1,31 €</td></tr>
+<tr><td>MwSt. 19 % auf 3,90 €</td><td class="p">0,62 €</td></tr>
+</table>
+<hr>
+<p class="small" style="margin:0">Bon 4711-0042 · Kasse 2 · Bediener: Anna<br>06.11.2026 07:42:13<br>TSE-Signatur: 3f9a…c21e · Seriennr. 8d1f02</p>
+<svg class="barcode" viewBox="0 0 165 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" width="2" height="60"/><rect x="13" width="1" height="60"/><rect x="16" width="1" height="60"/><rect x="21" width="2" height="60"/><rect x="26" width="1" height="60"/><rect x="28" width="3" height="60"/><rect x="32" width="2" height="60"/><rect x="36" width="1" height="60"/><rect x="39" width="3" height="60"/><rect x="43" width="3" height="60"/><rect x="47" width="2" height="60"/><rect x="50" width="3" height="60"/><rect x="54" width="1" height="60"/><rect x="57" width="3" height="60"/><rect x="62" width="2" height="60"/><rect x="65" width="1" height="60"/><rect x="68" width="3" height="60"/><rect x="73" width="2" height="60"/><rect x="76" width="1" height="60"/><rect x="79" width="2" height="60"/><rect x="82" width="3" height="60"/><rect x="87" width="1" height="60"/><rect x="90" width="3" height="60"/><rect x="94" width="2" height="60"/><rect x="98" width="1" height="60"/><rect x="101" width="3" height="60"/><rect x="105" width="2" height="60"/><rect x="109" width="2" height="60"/><rect x="113" width="1" height="60"/><rect x="116" width="3" height="60"/><rect x="120" width="2" height="60"/><rect x="124" width="3" height="60"/><rect x="129" width="1" height="60"/><rect x="131" width="1" height="60"/><rect x="133" width="1" height="60"/><rect x="138" width="2" height="60"/><rect x="142" width="2" height="60"/><rect x="147" width="3" height="60"/><rect x="151" width="1" height="60"/><rect x="153" width="2" height="60"/></svg>
+<div class="bars" style="--n:165"><b style="width:calc(2 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(4 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(3 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(4 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(2 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b><i style="width:calc(3 * var(--m))"></i><b style="width:calc(3 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(1 * var(--m))"></b><i style="width:calc(1 * var(--m))"></i><b style="width:calc(2 * var(--m))"></b></div>
+<p class="c" style="margin:2mm 0 0;font-weight:700">Vielen Dank für Ihren Einkauf!</p>
+</body></html>

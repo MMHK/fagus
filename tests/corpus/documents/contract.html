@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Rahmenvertrag</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 25mm 22mm 28mm 25mm;
+  @top-center { content: "Rahmenvertrag über IT-Dienstleistungen – Entwurf vom 05.11.2026"; font: 8pt Inter; color: #666; }
+  @bottom-left { content: "Paraphe AG: ______   AN: ______"; font: 8pt Inter; color: #666; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 8pt Inter; color: #666; } }
+@page :first { @top-center { content: none; } }
+body { font-family: Inter, sans-serif; font-size: 10pt; line-height: 1.5; margin: 0; counter-reset: clause; color: #111; }
+h1 { text-align: center; font-size: 16pt; margin: 0 0 2mm; letter-spacing: .02em; }
+.subtitle { text-align: center; margin-bottom: 10mm; color: #444; }
+.parties { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6mm; align-items: center; margin-bottom: 10mm; }
+.parties .and { font-style: italic; color: #666; }
+.party { border: 0.75pt solid #999; padding: 3mm 4mm; min-height: 28mm; }
+.party .role { font-size: 8pt; text-transform: uppercase; letter-spacing: .08em; color: #666; margin-top: 2mm; }
+.preamble { font-style: italic; margin-bottom: 8mm; }
+h2 { font-size: 10.5pt; font-weight: 700; margin: 6mm 0 2mm; break-after: avoid; counter-increment: clause; }
+h2::before { content: "§ " counter(clause) "  "; white-space: pre; }
+.clause ol { margin: 0; padding-left: 9mm; counter-reset: sub; list-style: none; }
+.clause li { counter-increment: sub; position: relative; margin-bottom: 1.5mm; text-align: justify; hyphens: auto; orphans: 2; widows: 2; }
+.clause li::before { content: "(" counter(sub) ")"; position: absolute; left: -9mm; }
+.signatures { display: flex; gap: 15mm; margin-top: 18mm; break-inside: avoid; }
+.signatures > div { flex: 1; }
+.line { border-top: 0.75pt solid #111; margin-top: 18mm; padding-top: 1mm; font-size: 8.5pt; }
+.annex { break-before: page; }
+.annex h3 { font-size: 12pt; margin: 0 0 4mm; }
+.annex table { width: 100%; border-collapse: collapse; }
+.annex td, .annex th { border: 0.75pt solid #999; padding: 2mm 3mm; text-align: left; }
+.annex th { background: #eee; }
+</style></head><body>
+<h1>RAHMENVERTRAG</h1><div class="subtitle">über die Erbringung von IT-Dienstleistungen</div>
+<div class="parties"><div class="party"><b>Rheinland Logistik GmbH</b><br>Hafenstraße 22, 50668 Köln<br>vertreten durch Frau Sabine Krüger<div class="role">– Auftraggeber –</div></div><div class="and">und</div><div class="party"><b>Codewerk Schulte &amp; Partner mbB</b><br>Kaiserstraße 9, 53113 Bonn<br>vertreten durch Herrn Jörg Schulte<div class="role">– Auftragnehmer –</div></div></div>
+<p class="preamble">Präambel: Der Auftraggeber betreibt ein bundesweites Netz von Umschlaglagern und beabsichtigt, seine Lagerverwaltung schrittweise zu modernisieren. Der Auftragnehmer ist auf die Entwicklung individueller Logistiksoftware spezialisiert. Vor diesem Hintergrund vereinbaren die Parteien Folgendes:</p>
+<section class="clause"><h2>Vertragsgegenstand</h2><ol><li>Der Auftragnehmer erbringt für den Auftraggeber Leistungen der Softwareentwicklung, des Betriebs und der Wartung der in Anlage 1 beschriebenen Anwendung („Vertragssoftware“).</li><li>Art und Umfang der einzelnen Leistungen ergeben sich aus der Leistungsbeschreibung (Anlage 1) und den jeweils schriftlich vereinbarten Einzelaufträgen. Bei Widersprüchen gehen die Regelungen dieses Vertrags den Anlagen vor.</li></ol></section>
+<section class="clause"><h2>Leistungserbringung</h2><ol><li>Der Auftragnehmer erbringt die Leistungen nach dem bei Vertragsschluss aktuellen Stand der Technik. Er ist in der Wahl von Ort und Zeit der Leistungserbringung frei, soweit nicht betriebliche Belange des Auftraggebers eine Abstimmung erfordern.</li><li>Der Auftragnehmer darf Unterauftragnehmer nur mit vorheriger Zustimmung des Auftraggebers in Textform einsetzen. Die Zustimmung darf nicht unbillig verweigert werden.</li><li>Der Auftraggeber benennt einen Ansprechpartner, der befugt ist, verbindliche Entscheidungen zu treffen oder kurzfristig herbeizuführen.</li></ol></section>
+<section class="clause"><h2>Vergütung und Zahlung</h2><ol><li>Die Leistungen werden nach Aufwand zu den in Anlage 2 genannten Stundensätzen vergütet. Reisezeiten gelten zu 50 % als Arbeitszeit.</li><li>Der Auftragnehmer rechnet monatlich nachträglich ab. Rechnungen sind innerhalb von 30 Tagen nach Zugang ohne Abzug zur Zahlung fällig.</li><li>Alle Beträge verstehen sich zuzüglich der jeweils geltenden gesetzlichen Umsatzsteuer.</li></ol></section>
+<section class="clause"><h2>Mitwirkungspflichten</h2><ol><li>Der Auftraggeber stellt dem Auftragnehmer rechtzeitig alle für die Leistungserbringung erforderlichen Informationen, Zugänge und Testdaten zur Verfügung.</li><li>Verzögerungen, die auf eine unterbliebene oder verspätete Mitwirkung zurückzuführen sind, verlängern vereinbarte Termine angemessen.</li></ol></section>
+<section class="clause"><h2>Abnahme</h2><ol><li>Werkleistungen sind nach Fertigstellung abzunehmen. Der Auftraggeber prüft die Leistung innerhalb von 14 Tagen und erklärt die Abnahme oder teilt die festgestellten Mängel in Textform mit.</li><li>Unwesentliche Mängel berechtigen nicht zur Verweigerung der Abnahme. Die Abnahme gilt als erklärt, wenn der Auftraggeber die Leistung produktiv nutzt.</li></ol></section>
+<section class="clause"><h2>Nutzungsrechte</h2><ol><li>Der Auftragnehmer räumt dem Auftraggeber an den individuell für ihn erstellten Arbeitsergebnissen mit vollständiger Zahlung das ausschließliche, zeitlich und räumlich unbeschränkte Nutzungsrecht ein.</li><li>Rechte an vorbestehender Software und an Open-Source-Komponenten bleiben unberührt; insoweit gelten die jeweiligen Lizenzbedingungen.</li></ol></section>
+<section class="clause"><h2>Gewährleistung und Haftung</h2><ol><li>Für Mängel von Werkleistungen gelten die gesetzlichen Vorschriften mit der Maßgabe, dass die Verjährungsfrist zwölf Monate ab Abnahme beträgt.</li><li>Der Auftragnehmer haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.</li><li>Bei leicht fahrlässiger Verletzung wesentlicher Vertragspflichten ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt, höchstens jedoch auf 250.000 Euro je Schadensfall.</li></ol></section>
+<section class="clause"><h2>Vertraulichkeit und Datenschutz</h2><ol><li>Die Parteien behandeln alle ihnen im Rahmen dieses Vertrags bekannt gewordenen Geschäftsgeheimnisse der jeweils anderen Partei vertraulich. Diese Pflicht besteht über das Vertragsende hinaus fünf Jahre fort.</li><li>Soweit der Auftragnehmer personenbezogene Daten im Auftrag verarbeitet, schließen die Parteien den als Anlage 3 beigefügten Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.</li></ol></section>
+<section class="clause"><h2>Laufzeit und Kündigung</h2><ol><li>Der Vertrag beginnt am 1. Januar 2027 und läuft auf unbestimmte Zeit. Er kann von jeder Partei mit einer Frist von drei Monaten zum Ende eines Kalendervierteljahres gekündigt werden.</li><li>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Kündigungen bedürfen der Textform.</li></ol></section>
+<section class="clause"><h2>Schlussbestimmungen</h2><ol><li>Änderungen und Ergänzungen dieses Vertrags bedürfen der Textform. Dies gilt auch für die Aufhebung dieses Formerfordernisses.</li><li>Sollte eine Bestimmung dieses Vertrags unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.</li><li>Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist, soweit zulässig, Köln.</li></ol></section>
+<div class="signatures"><div><div>Köln, den ____________</div><div class="line">Rheinland Logistik GmbH<br>Sabine Krüger, Geschäftsführerin</div></div><div><div>Bonn, den ____________</div><div class="line">Codewerk Schulte &amp; Partner mbB<br>Jörg Schulte, Partner</div></div></div>
+<section class="annex"><h3>Anlage 2 – Stundensätze</h3><table><thead><tr><th>Rolle</th><th>Stundensatz netto</th><th>Bemerkung</th></tr></thead><tbody>
+<tr><td>Senior Software Engineer</td><td>128,00 €</td><td>ab 8 Jahren Berufserfahrung</td></tr>
+<tr><td>Software Engineer</td><td>105,00 €</td><td></td></tr>
+<tr><td>DevOps Engineer</td><td>115,00 €</td><td>inkl. Rufbereitschaft werktags</td></tr>
+<tr><td>Projektleitung</td><td>135,00 €</td><td>nach Aufwand, max. 10 % der Projektstunden</td></tr>
+</tbody></table></section>
+</body></html>

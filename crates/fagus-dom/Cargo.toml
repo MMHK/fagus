@@ -1,0 +1,20 @@
+[package]
+name = "fagus-dom"
+description = "Arena DOM and HTML parsing for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+html5ever.workspace = true
+markup5ever.workspace = true
+rustc-hash.workspace = true
+xml5ever.workspace = true

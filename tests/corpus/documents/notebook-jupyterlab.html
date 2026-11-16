@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sales-analysis</title>
+<style type="text/css">
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 12mm; }
+/* What nbconvert's lab template inlines: JupyterLab's variables, the cell layout and Pygments */
+:root {
+  --jp-border-width: 1px;
+  --jp-border-color0: #616161; --jp-border-color1: #bdbdbd; --jp-border-color2: #e0e0e0;
+  --jp-ui-font-family: Inter, system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
+  --jp-content-font-family: Inter, system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
+  --jp-content-font-size0: 0.83333em; --jp-content-font-size1: 14px; --jp-content-font-size2: 1.2em;
+  --jp-content-font-size3: 1.44em; --jp-content-font-size4: 1.728em; --jp-content-font-size5: 2.0736em;
+  --jp-content-line-height: 1.6; --jp-content-heading-line-height: 1;
+  --jp-content-heading-margin-top: 1.2em; --jp-content-heading-margin-bottom: 0.8em;
+  --jp-content-heading-font-weight: 500;
+  --jp-content-font-color0: rgba(0, 0, 0, 1); --jp-content-font-color1: rgba(0, 0, 0, 0.87);
+  --jp-content-font-color2: rgba(0, 0, 0, 0.54); --jp-content-font-color3: rgba(0, 0, 0, 0.38);
+  --jp-content-link-color: #1976d2;
+  --jp-code-font-size: 13px; --jp-code-line-height: 1.3077; --jp-code-padding: 5px;
+  --jp-code-font-family-default: menlo, consolas, "DejaVu Sans Mono", monospace;
+  --jp-code-font-family: var(--jp-code-font-family-default);
+  --jp-cell-padding: 5px; --jp-cell-collapser-width: 8px;
+  --jp-cell-collapser-min-height: 20px; --jp-cell-collapser-not-active-hover-opacity: 0.6;
+  --jp-cell-editor-background: #f7f7f7; --jp-cell-editor-border-color: #cfcfcf;
+  --jp-cell-prompt-width: 64px; --jp-cell-prompt-font-family: var(--jp-code-font-family-default);
+  --jp-cell-prompt-letter-spacing: 0; --jp-cell-prompt-opacity: 1;
+  --jp-cell-prompt-not-active-opacity: 0.5; --jp-cell-prompt-not-active-font-color: #616161;
+  --jp-cell-inprompt-font-color: #307fc1; --jp-cell-outprompt-font-color: #bf5b3d;
+  --jp-notebook-padding: 10px;
+  --jp-rendermime-error-background: #fdd; --jp-rendermime-table-row-background: #f5f5f5;
+  --jp-rendermime-table-row-hover-background: rgba(3, 169, 244, 0.2);
+  --jp-mirror-editor-keyword-color: #008000; --jp-mirror-editor-atom-color: #88f;
+  --jp-mirror-editor-number-color: #080; --jp-mirror-editor-def-color: #00f;
+  --jp-mirror-editor-variable-color: #212121; --jp-mirror-editor-variable-2-color: #05a;
+  --jp-mirror-editor-variable-3-color: #085; --jp-mirror-editor-punctuation-color: #05a;
+  --jp-mirror-editor-property-color: #05a; --jp-mirror-editor-operator-color: #a2f;
+  --jp-mirror-editor-comment-color: #408080; --jp-mirror-editor-string-color: #ba2121;
+  --jp-mirror-editor-string-2-color: #708; --jp-mirror-editor-meta-color: #a2f;
+  --jp-mirror-editor-builtin-color: #008000;
+  --jp-layout-color0: white; --jp-layout-color2: #eee; --jp-layout-color3: #bdbdbd;
+  --jp-ui-font-color1: rgba(0, 0, 0, 0.87);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; padding: 0; }
+body.jp-Notebook { overflow: visible; padding: var(--jp-notebook-padding); outline: none; }
+.jp-Notebook { background: var(--jp-layout-color0); font-family: var(--jp-ui-font-family); font-size: var(--jp-content-font-size1); color: var(--jp-ui-font-color1); }
+.jp-Cell { padding: var(--jp-cell-padding); margin: 0; border: none; outline: none; background: transparent; }
+.jp-Cell-inputWrapper, .jp-Cell-outputWrapper { display: flex; flex-direction: row; padding: 0; overflow: hidden; }
+.jp-Cell-inputArea, .jp-Cell-outputArea { flex: 1 1 auto; }
+.jp-Collapser { flex: 0 0 var(--jp-cell-collapser-width); padding: 0; margin: 0; border: none; outline: none; background: transparent; border-radius: 2px; opacity: 1; }
+.jp-InputArea { display: table; table-layout: fixed; width: 100%; overflow: hidden; }
+.jp-InputArea-editor { display: table-cell; overflow: hidden; vertical-align: top;
+  border: var(--jp-border-width) solid var(--jp-cell-editor-border-color); border-radius: 0; background: var(--jp-cell-editor-background); }
+.jp-InputPrompt, .jp-OutputPrompt { display: table-cell; vertical-align: top; width: var(--jp-cell-prompt-width);
+  font-family: var(--jp-cell-prompt-font-family); font-size: var(--jp-code-font-size); border: var(--jp-border-width) solid transparent;
+  opacity: var(--jp-cell-prompt-opacity); padding: var(--jp-code-padding); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: var(--jp-code-line-height); letter-spacing: var(--jp-cell-prompt-letter-spacing); }
+.jp-InputPrompt { color: var(--jp-cell-inprompt-font-color); }
+.jp-OutputPrompt { color: var(--jp-cell-outprompt-font-color); }
+.jp-OutputArea-child { display: table; table-layout: fixed; width: 100%; overflow: hidden; }
+.jp-OutputArea-prompt { display: table-cell; vertical-align: top; }
+.jp-OutputArea-output { display: table-cell; width: 100%; height: auto; overflow: auto; user-select: text; }
+.jp-OutputArea-output pre { border: none; margin: 0; padding: 0; overflow-x: auto; overflow-y: auto; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; }
+.jp-RenderedText { text-align: left; padding-left: var(--jp-code-padding); line-height: var(--jp-code-line-height); font-family: var(--jp-code-font-family); }
+.jp-RenderedText pre, .jp-RenderedJavaScript pre, .jp-RenderedHTMLCommon pre { color: var(--jp-content-font-color1); border: none; margin: 0; padding: 0; }
+.jp-RenderedText[data-mime-type='application/vnd.jupyter.stderr'] { background: var(--jp-rendermime-error-background); padding-top: var(--jp-code-padding); }
+.jp-RenderedText pre .ansi-red-fg { color: #b22b31; }
+.jp-RenderedText pre .ansi-green-fg { color: #007427; }
+.jp-RenderedText pre .ansi-cyan-fg { color: #258f8f; }
+.jp-RenderedText pre .ansi-yellow-fg { color: #b27d12; }
+.jp-RenderedText pre .ansi-bold { font-weight: bold; }
+.jp-RenderedImage { text-align: left; padding: var(--jp-code-padding) 0 var(--jp-code-padding) var(--jp-code-padding); }
+.jp-RenderedImage img { max-width: 100%; height: auto; }
+.jp-RenderedSVG svg { max-width: 100%; height: auto; }
+.jp-OutputArea-executeResult .jp-RenderedText { padding-top: var(--jp-code-padding); }
+.jp-RenderedHTMLCommon { color: var(--jp-content-font-color1); font-family: var(--jp-content-font-family); font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height); padding-right: 20px; }
+.jp-RenderedHTMLCommon em { font-style: italic; }
+.jp-RenderedHTMLCommon h1, .jp-RenderedHTMLCommon h2, .jp-RenderedHTMLCommon h3 { line-height: var(--jp-content-heading-line-height); font-weight: var(--jp-content-heading-font-weight); font-style: normal; margin: var(--jp-content-heading-margin-top) 0 var(--jp-content-heading-margin-bottom) 0; }
+.jp-RenderedHTMLCommon h1:first-child, .jp-RenderedHTMLCommon h2:first-child { margin-top: calc(0.5 * var(--jp-content-heading-margin-top)); }
+.jp-RenderedHTMLCommon h1 { font-size: var(--jp-content-font-size5); }
+.jp-RenderedHTMLCommon h2 { font-size: var(--jp-content-font-size4); }
+.jp-RenderedHTMLCommon h3 { font-size: var(--jp-content-font-size3); }
+.jp-RenderedHTMLCommon ul:not(.list-inline), .jp-RenderedHTMLCommon ol:not(.list-inline) { padding-left: 2em; }
+.jp-RenderedHTMLCommon ul { list-style: disc; }
+.jp-RenderedHTMLCommon ul ul { list-style: square; }
+.jp-RenderedHTMLCommon ol { list-style: decimal; }
+.jp-RenderedHTMLCommon hr { color: var(--jp-border-color2); background-color: var(--jp-border-color1); margin-top: 1em; margin-bottom: 1em; }
+.jp-RenderedHTMLCommon > pre { margin: 1.5em 2em; }
+.jp-RenderedHTMLCommon pre, .jp-RenderedHTMLCommon code { border: 0; background-color: var(--jp-layout-color0); color: var(--jp-content-font-color1); font-family: var(--jp-code-font-family); font-size: inherit; line-height: var(--jp-code-line-height); padding: 0; white-space: pre-wrap; }
+.jp-RenderedHTMLCommon :not(pre) > code { background-color: var(--jp-layout-color2); padding: 1px 5px; }
+.jp-RenderedHTMLCommon table { border-collapse: collapse; border-spacing: 0; border: none; color: var(--jp-ui-font-color1); font-size: var(--jp-ui-font-size1, 12px); table-layout: fixed; margin-left: auto; margin-bottom: 1em; margin-right: auto; }
+.jp-RenderedHTMLCommon thead { border-bottom: var(--jp-border-width) solid var(--jp-border-color1); vertical-align: bottom; }
+.jp-RenderedHTMLCommon td, .jp-RenderedHTMLCommon th, .jp-RenderedHTMLCommon tr { vertical-align: middle; padding: 0.5em; line-height: normal; white-space: normal; max-width: none; border: none; }
+.jp-RenderedMarkdown.jp-RenderedHTMLCommon td, .jp-RenderedMarkdown.jp-RenderedHTMLCommon th { max-width: none; }
+:not(.jp-RenderedMarkdown).jp-RenderedHTMLCommon td, :not(.jp-RenderedMarkdown).jp-RenderedHTMLCommon th, :not(.jp-RenderedMarkdown).jp-RenderedHTMLCommon tr { text-align: right; }
+.jp-RenderedHTMLCommon th { font-weight: bold; }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd) { background: var(--jp-layout-color0); }
+.jp-RenderedHTMLCommon tbody tr:nth-child(even) { background: var(--jp-rendermime-table-row-background); }
+.jp-RenderedHTMLCommon p { text-align: left; margin: 0; margin-bottom: 1em; }
+.jp-RenderedHTMLCommon blockquote { margin: 1em 2em; padding: 0 1em; border-left: 5px solid var(--jp-border-color2); }
+.jp-RenderedHTMLCommon a { color: var(--jp-content-link-color); text-decoration: none; }
+.jp-MarkdownOutput { display: table-cell; width: 100%; margin-top: 0; margin-bottom: 0; padding-left: var(--jp-code-padding); }
+.jp-MarkdownOutput.jp-RenderedHTMLCommon { overflow: auto; }
+.jp-MarkdownCell .jp-InputPrompt { visibility: hidden; }
+.jp-mod-noOutputs .jp-OutputArea { display: none; }
+/* the cell editor as a highlighted listing */
+.jp-CodeMirrorEditor { cursor: text; }
+.cm-editor.cm-s-jupyter .highlight pre { padding: var(--jp-code-padding) 4px; margin: 0; font-family: inherit; font-size: inherit; line-height: inherit; color: inherit; }
+.jp-InputArea-editor .highlight { background: var(--jp-cell-editor-background); }
+.cm-editor { line-height: var(--jp-code-line-height); font-size: var(--jp-code-font-size); font-family: var(--jp-code-font-family); border: 0; border-radius: 0; height: auto; }
+.highlight pre { white-space: pre-wrap; word-break: break-all; }
+.highlight .hll { background-color: var(--jp-cell-editor-active-background, #ffffcc) }
+.highlight .c, .highlight .c1, .highlight .cm { color: var(--jp-mirror-editor-comment-color); font-style: italic }
+.highlight .k, .highlight .kn { color: var(--jp-mirror-editor-keyword-color); font-weight: bold }
+.highlight .o, .highlight .ow { color: var(--jp-mirror-editor-operator-color); }
+.highlight .ow { font-weight: bold }
+.highlight .p { color: var(--jp-mirror-editor-punctuation-color) }
+.highlight .s, .highlight .s1, .highlight .s2, .highlight .sa { color: var(--jp-mirror-editor-string-color) }
+.highlight .si { color: var(--jp-mirror-editor-string-2-color); font-weight: bold }
+.highlight .mi, .highlight .mf { color: var(--jp-mirror-editor-number-color) }
+.highlight .nb, .highlight .bp { color: var(--jp-mirror-editor-builtin-color) }
+.highlight .nf { color: var(--jp-mirror-editor-def-color) }
+.highlight .nn { color: var(--jp-mirror-editor-variable-2-color); font-weight: bold }
+.highlight .n { color: var(--jp-mirror-editor-variable-color) }
+.highlight .kc { color: var(--jp-mirror-editor-keyword-color); font-weight: bold }
+/* pandas' own styles for a DataFrame's repr */
+.dataframe tbody tr th:only-of-type { vertical-align: middle; }
+.dataframe tbody tr th { vertical-align: top; }
+.dataframe thead th { text-align: right; }
+@media print {
+  body { margin: 0; }
+  .jp-Cell-inputWrapper, .jp-Cell-outputWrapper { display: block; }
+  .jp-Cell { break-inside: auto; }
+  .jp-OutputArea-child { break-inside: avoid-page; }
+}
+</style>
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id-1a7c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Regional-sales,-Q1–Q3">Regional sales, Q1&#8211;Q3<a class="anchor-link" href="#Regional-sales,-Q1–Q3">&#182;</a></h1>
+<p>This notebook loads the order export of the shop, cleans the <code>net_amount</code> column and compares the three regions month by month. The figures are <strong>net of VAT</strong> and in euros; refunds are booked in the month of the refund, not of the order.</p>
+<ul>
+<li>Source: <code>exports/orders-2025-09-30.csv</code> (41&#8239;208 rows)</li>
+<li>Regions: <em>Nord</em>, <em>Süd</em> and <em>West</em><ul><li>Austria and Switzerland count as <em>Süd</em></li></ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id-2b11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">"display.precision"</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"exports"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id-3c90">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">orders</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"orders-2025-09-30.csv"</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">"booked_at"</span><span class="p">])</span>
+<span class="c1"># amounts come as "1.234,50" from the German export</span>
+<span class="n">orders</span><span class="p">[</span><span class="s2">"net_amount"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="s2">"net_amount"</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><span class="n">orders</span><span class="o">.</span><span class="n">customer_id</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> customers"</span><span class="p">)</span>
+<span class="n">orders</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>41,208 rows, 9,874 customers
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>order_id</th>
+      <th>booked_at</th>
+      <th>customer_id</th>
+      <th>region</th>
+      <th>channel</th>
+      <th>net_amount</th>
+      <th>refunded</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><th>0</th><td>A-104311</td><td>2025-01-02 08:14:09</td><td>C-20871</td><td>Nord</td><td>web</td><td>129.90</td><td>False</td></tr>
+    <tr><th>1</th><td>A-104312</td><td>2025-01-02 08:21:44</td><td>C-11408</td><td>Süd</td><td>marketplace</td><td>1234.50</td><td>False</td></tr>
+    <tr><th>2</th><td>A-104313</td><td>2025-01-02 09:02:51</td><td>C-30922</td><td>West</td><td>web</td><td>48.00</td><td>True</td></tr>
+    <tr><th>3</th><td>A-104314</td><td>2025-01-02 09:17:30</td><td>C-20871</td><td>Nord</td><td>phone</td><td>312.75</td><td>False</td></tr>
+    <tr><th>4</th><td>A-104315</td><td>2025-01-02 10:40:02</td><td>C-41870</td><td>Süd</td><td>web</td><td>87.40</td><td>False</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id-4d02">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">monthly</span> <span class="o">=</span> <span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="o">~</span><span class="n">orders</span><span class="o">.</span><span class="n">refunded</span><span class="p">]</span>
+           <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">orders</span><span class="o">.</span><span class="n">booked_at</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">to_period</span><span class="p">(</span><span class="s2">"M"</span><span class="p">),</span> <span class="s2">"region"</span><span class="p">])[</span><span class="s2">"net_amount"</span><span class="p">]</span>
+           <span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s2">"count"</span><span class="p">,</span> <span class="s2">"sum"</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">])</span>
+           <span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s2">"region"</span><span class="p">))</span>
+<span class="n">monthly</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type { vertical-align: middle; }
+    .dataframe tbody tr th { vertical-align: top; }
+    .dataframe thead tr th { text-align: left; }
+    .dataframe thead tr:last-of-type th { text-align: right; }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr><th></th><th colspan="3" halign="left">count</th><th colspan="3" halign="left">sum</th><th colspan="3" halign="left">mean</th></tr>
+    <tr><th>region</th><th>Nord</th><th>Süd</th><th>West</th><th>Nord</th><th>Süd</th><th>West</th><th>Nord</th><th>Süd</th><th>West</th></tr>
+    <tr><th>booked_at</th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+  </thead>
+  <tbody>
+    <tr><th>2025-01</th><td>1402</td><td>1688</td><td>1130</td><td>188412.30</td><td>241907.85</td><td>129880.10</td><td>134.39</td><td>143.31</td><td>114.94</td></tr>
+    <tr><th>2025-02</th><td>1377</td><td>1590</td><td>1104</td><td>179020.45</td><td>230113.40</td><td>131402.65</td><td>130.01</td><td>144.73</td><td>119.02</td></tr>
+    <tr><th>2025-03</th><td>1521</td><td>1755</td><td>1219</td><td>203377.90</td><td>262871.05</td><td>140228.30</td><td>133.71</td><td>149.78</td><td>115.04</td></tr>
+    <tr><th>2025-04</th><td>1488</td><td>1702</td><td>1260</td><td>196233.60</td><td>251540.70</td><td>148119.95</td><td>131.88</td><td>147.79</td><td>117.56</td></tr>
+    <tr><th>2025-05</th><td>1610</td><td>1811</td><td>1302</td><td>221048.15</td><td>270650.20</td><td>153877.40</td><td>137.30</td><td>149.45</td><td>118.18</td></tr>
+    <tr><th>2025-06</th><td>1573</td><td>1749</td><td>1288</td><td>214902.80</td><td>259032.95</td><td>150400.70</td><td>136.62</td><td>148.10</td><td>116.77</td></tr>
+    <tr><th>2025-07</th><td>1499</td><td>1690</td><td>1241</td><td>198722.05</td><td>245118.30</td><td>142001.15</td><td>132.57</td><td>145.04</td><td>114.42</td></tr>
+    <tr><th>2025-08</th><td>1302</td><td>1544</td><td>1107</td><td>170881.60</td><td>220406.75</td><td>127303.80</td><td>131.24</td><td>142.75</td><td>115.00</td></tr>
+    <tr><th>2025-09</th><td>1544</td><td>1802</td><td>1290</td><td>210377.25</td><td>266919.10</td><td>151708.55</td><td>136.25</td><td>148.12</td><td>117.60</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id-5e33">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Nord"</span><span class="p">,</span> <span class="s2">"Süd"</span><span class="p">,</span> <span class="s2">"West"</span><span class="p">]:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">daily</span><span class="p">[</span><span class="n">region</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="mf">1e4</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">region</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/tmp/ipykernel_3812/2214871093.py:3: <span class="ansi-red-fg">FutureWarning</span>: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill all NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  ax.plot(daily[region].rolling(7).mean() / 1e4, label=region)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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" />
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id-6f48">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Share-of-revenue">Share of revenue<a class="anchor-link" href="#Share-of-revenue">&#182;</a></h2>
+<p><em>Süd</em> keeps the largest share in every month. The dip in August is the summer break of the B2B customers; it is as deep as last year's:</p>
+<table>
+<thead>
+<tr><th style="text-align:left">Region</th><th style="text-align:right">Share Q1</th><th style="text-align:right">Share Q3</th><th style="text-align:center">Trend</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:left">Nord</td><td style="text-align:right">33.9 %</td><td style="text-align:right">33.6 %</td><td style="text-align:center">&#8594;</td></tr>
+<tr><td style="text-align:left">Süd</td><td style="text-align:right">43.4 %</td><td style="text-align:right">42.4 %</td><td style="text-align:center">&#8600;</td></tr>
+<tr><td style="text-align:left">West</td><td style="text-align:right">22.7 %</td><td style="text-align:right">24.0 %</td><td style="text-align:center">&#8599;</td></tr>
+</tbody>
+</table>
+<blockquote><p>Note: the West figures include the new store in Köln from June on.</p></blockquote>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id-7a19">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">share</span> <span class="o">=</span> <span class="n">monthly</span><span class="p">[</span><span class="s2">"sum"</span><span class="p">]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">monthly</span><span class="p">[</span><span class="s2">"sum"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">share</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">"2025-10"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyError</span>                                  Traceback (most recent call last)
+File <span class="ansi-green-fg">/opt/conda/lib/python3.12/site-packages/pandas/core/indexes/period.py:543</span>, in <span class="ansi-cyan-fg">PeriodIndex.get_loc</span><span class="ansi-blue-fg">(self, key)</span>
+<span class="ansi-green-fg">    542</span> <span class="ansi-bold" style="color: rgb(0,135,0)">try</span>:
+<span class="ansi-green-fg">--&gt; 543</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> Index<span style="color: rgb(98,98,98)">.</span>get_loc(<span style="color: rgb(0,135,0)">self</span>, key)
+<span class="ansi-green-fg">    544</span> <span class="ansi-bold" style="color: rgb(0,135,0)">except</span> <span class="ansi-bold" style="color: rgb(215,95,95)">KeyError</span> <span class="ansi-bold" style="color: rgb(0,135,0)">as</span> err:
+
+<span class="ansi-red-fg">KeyError</span>: Period('2025-10', 'M')
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id-8b2c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">))</span>
+<span class="n">share</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">stacked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="o">%</span><span class="k">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"svg"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedSVG jp-OutputArea-output" data-mime-type="image/svg+xml" tabindex="0">
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="340.2pt" height="168.12pt" viewBox="0 0 340.2 168.12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:creator><cc:Agent><dc:title>Matplotlib v3.9.2, https://matplotlib.org/</dc:title></cc:Agent></dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 168.12 L 340.2 168.12 L 340.2 0 L 0 0 z" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 36.2 140.4 L 333 140.4 L 333 7.2 L 36.2 7.2 z" style="fill: #ffffff"/>
+   </g>
+   <g clip-path="url(#p8a1c2f)">
+    <path d="M 39.5 140.4 L 59.3 140.4 L 59.3 95.24 L 39.5 95.24 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 72.5 140.4 L 92.3 140.4 L 92.3 96.0 L 72.5 96.0 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 105.5 140.4 L 125.3 140.4 L 125.3 95.6 L 105.5 95.6 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 138.5 140.4 L 158.3 140.4 L 158.3 96.6 L 138.5 96.6 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 171.5 140.4 L 191.3 140.4 L 191.3 94.9 L 171.5 94.9 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 204.5 140.4 L 224.3 140.4 L 224.3 94.7 L 204.5 94.7 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 237.5 140.4 L 257.3 140.4 L 257.3 95.5 L 237.5 95.5 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 270.5 140.4 L 290.3 140.4 L 290.3 96.1 L 270.5 96.1 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 303.5 140.4 L 323.3 140.4 L 323.3 95.6 L 303.5 95.6 z" clip-path="url(#p8a1c2f)" style="fill: #1f77b4"/>
+    <path d="M 39.5 95.24 L 59.3 95.24 L 59.3 37.4 L 39.5 37.4 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 72.5 96.0 L 92.3 96.0 L 92.3 39.2 L 72.5 39.2 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 105.5 95.6 L 125.3 95.6 L 125.3 37.0 L 105.5 37.0 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 138.5 96.6 L 158.3 96.6 L 158.3 40.4 L 138.5 40.4 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 171.5 94.9 L 191.3 94.9 L 191.3 39.5 L 171.5 39.5 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 204.5 94.7 L 224.3 94.7 L 224.3 39.3 L 204.5 39.3 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 237.5 95.5 L 257.3 95.5 L 257.3 39.7 L 237.5 39.7 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 270.5 96.1 L 290.3 96.1 L 290.3 40.8 L 270.5 40.8 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 303.5 95.6 L 323.3 95.6 L 323.3 39.6 L 303.5 39.6 z" clip-path="url(#p8a1c2f)" style="fill: #ff7f0e"/>
+    <path d="M 39.5 37.4 L 59.3 37.4 L 59.3 7.2 L 39.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 72.5 39.2 L 92.3 39.2 L 92.3 7.2 L 72.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 105.5 37.0 L 125.3 37.0 L 125.3 7.2 L 105.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 138.5 40.4 L 158.3 40.4 L 158.3 7.2 L 138.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 171.5 39.5 L 191.3 39.5 L 191.3 7.2 L 171.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 204.5 39.3 L 224.3 39.3 L 224.3 7.2 L 204.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 237.5 39.7 L 257.3 39.7 L 257.3 7.2 L 237.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 270.5 40.8 L 290.3 40.8 L 290.3 7.2 L 270.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+    <path d="M 303.5 39.6 L 323.3 39.6 L 323.3 7.2 L 303.5 7.2 z" clip-path="url(#p8a1c2f)" style="fill: #2ca02c"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m5e1b0" d="M 0 0 L 0 3.5" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g><use xlink:href="#m5e1b0" x="49.4" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+     </g>
+     <g id="text_1"><text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: middle" x="49.4" y="152">Jan</text></g>
+    </g>
+    <g id="xtick_2"><g><use xlink:href="#m5e1b0" x="115.4" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+     <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: middle" x="115.4" y="152">Mar</text></g>
+    <g id="xtick_3"><g><use xlink:href="#m5e1b0" x="181.4" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+     <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: middle" x="181.4" y="152">May</text></g>
+    <g id="xtick_4"><g><use xlink:href="#m5e1b0" x="247.4" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+     <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: middle" x="247.4" y="152">Jul</text></g>
+    <g id="xtick_5"><g><use xlink:href="#m5e1b0" x="313.4" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+     <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: middle" x="313.4" y="152">Sep</text></g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <defs><path id="m9c2d71" d="M 0 0 L -3.5 0" style="stroke: #000000; stroke-width: 0.8"/></defs>
+    <g><use xlink:href="#m9c2d71" x="36.2" y="140.4" style="stroke: #000000; stroke-width: 0.8"/></g>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: end" x="31" y="143.2">0.0</text>
+    <g><use xlink:href="#m9c2d71" x="36.2" y="73.8" style="stroke: #000000; stroke-width: 0.8"/></g>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: end" x="31" y="76.6">0.5</text>
+    <g><use xlink:href="#m9c2d71" x="36.2" y="7.2" style="stroke: #000000; stroke-width: 0.8"/></g>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; text-anchor: end" x="31" y="10">1.0</text>
+   </g>
+   <g id="patch_30"><path d="M 36.2 140.4 L 36.2 7.2" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/></g>
+   <g id="patch_31"><path d="M 333 140.4 L 333 7.2" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/></g>
+   <g id="patch_32"><path d="M 36.2 140.4 L 333 140.4" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/></g>
+   <g id="patch_33"><path d="M 36.2 7.2 L 333 7.2" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/></g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p8a1c2f"><rect x="36.2" y="7.2" width="296.8" height="133.2"/></clipPath>
+ </defs>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

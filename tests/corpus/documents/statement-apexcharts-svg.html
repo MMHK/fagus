@@ -1,0 +1,96 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Monatsbericht Oktober 2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@page { size: A4; margin: 14mm 14mm 16mm; }
+:root { --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #2563eb; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 9.5pt/1.45 Inter, sans-serif; color: var(--ink); font-feature-settings: "cv11"; }
+.screen-only { display: block; background: #fef3c7; padding: 8px; }
+@media print { .screen-only { display: none; } .card { box-shadow: none !important; } a { color: inherit; text-decoration: none; } }
+header { display: flex; align-items: baseline; gap: 12px; border-bottom: 3px solid var(--accent); padding-bottom: 6px; }
+header h1 { font-size: 18pt; margin: 0; letter-spacing: -0.01em; }
+header .period { color: var(--muted); margin-left: auto; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: 0 4px 12px rgb(0 0 0 / .08); break-inside: avoid; }
+.kpi .label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.kpi .value { font-size: 16pt; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .delta { font-size: 8pt; } .up { color: #059669; } .down { color: #dc2626; }
+.kpi .delta::before { content: "▲ "; font-size: 6pt; vertical-align: 1px; } .kpi .delta.down::before { content: "▼ "; }
+.charts { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+h2 { font-size: 10.5pt; margin: 0 0 6px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.axis { font: 7.5px Inter, sans-serif; fill: var(--muted); }
+.donut { display: flex; gap: 10px; align-items: center; }
+.donut svg { width: 110px; flex: none; }
+.donut ul { list-style: none; margin: 0; padding: 0; font-size: 7.5pt; flex: 1; }
+.donut li { display: flex; align-items: center; gap: 5px; padding: 1px 0; }
+.donut li b { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sw { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.legend { display: flex; gap: 14px; font-size: 7.5pt; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 14px; font-size: 8.5pt; }
+thead th { position: sticky; top: 0; background: #f8fafc; text-align: left; font-weight: 600; padding: 5px 8px; border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); }
+thead th:first-child { border-left: 1px solid var(--line); border-top-left-radius: 8px; } thead th:last-child { border-right: 1px solid var(--line); border-top-right-radius: 8px; }
+td { padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:nth-child(even) td { background: #f8fafc; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: #b91c1c; } .pos { color: #047857; }
+.ref { display: block; font-size: 7pt; color: var(--muted); }
+</style></head><body>
+<div class="screen-only">Diese Ansicht ist für den Druck optimiert. <a href="#">Als PDF herunterladen</a></div>
+<header><h1>Monatsbericht Geschäftskonto</h1><span>Tischlerei Brenner &amp; Söhne</span><span class="period">01.10.2026 – 31.10.2026</span></header>
+<section class="kpis">
+  <div class="card kpi"><div class="label">Endsaldo</div><div class="value">22.380,70 €</div><div class="delta up">+3.960,70 € zum Vormonat</div></div>
+  <div class="card kpi"><div class="label">Eingänge</div><div class="value">23.912,40 €</div><div class="delta down">−10,5 % zum Vormonat</div></div>
+  <div class="card kpi"><div class="label">Ausgänge</div><div class="value">17.313,00 €</div><div class="delta up">−19,5 % zum Vormonat</div></div>
+  <div class="card kpi"><div class="label">Offene Posten</div><div class="value">7</div><div class="delta down">+2 zum Vormonat</div></div>
+</section>
+<section class="charts">
+  <div class="card"><h2>Kontostand im Oktober</h2>
+    <svg viewBox="0 0 640 220" role="img" aria-label="Kontostand"><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".35"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+    <g class="grid"><line x1="56" x2="628" y1="190.00" y2="190.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="190.00" text-anchor="end" dominant-baseline="middle" class="axis">14k</text><line x1="56" x2="628" y1="161.00" y2="161.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="161.00" text-anchor="end" dominant-baseline="middle" class="axis">16k</text><line x1="56" x2="628" y1="132.00" y2="132.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="132.00" text-anchor="end" dominant-baseline="middle" class="axis">18k</text><line x1="56" x2="628" y1="103.00" y2="103.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="103.00" text-anchor="end" dominant-baseline="middle" class="axis">20k</text><line x1="56" x2="628" y1="74.00" y2="74.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="74.00" text-anchor="end" dominant-baseline="middle" class="axis">22k</text><line x1="56" x2="628" y1="45.00" y2="45.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="45.00" text-anchor="end" dominant-baseline="middle" class="axis">24k</text><line x1="56" x2="628" y1="16.00" y2="16.00" stroke="#e5e7eb" stroke-dasharray="3 3"/><text x="48" y="16.00" text-anchor="end" dominant-baseline="middle" class="axis">26k</text></g><path d="M56.00 132.06 C59.29 131.60 69.15 129.39 75.72 129.33 C82.30 129.26 88.87 132.00 95.45 131.65 C102.02 131.29 108.60 128.78 115.17 127.18 C121.75 125.59 128.32 121.08 134.90 122.09 C141.47 123.10 148.05 129.27 154.62 133.24 C161.20 137.21 167.77 145.67 174.34 145.91 C180.92 146.14 187.49 135.62 194.07 134.67 C200.64 133.72 207.22 138.23 213.79 140.20 C220.37 142.16 226.94 148.05 233.52 146.45 C240.09 144.86 246.67 133.36 253.24 130.63 C259.82 127.89 266.39 132.01 272.97 130.04 C279.54 128.08 286.11 120.83 292.69 118.83 C299.26 116.84 305.84 119.11 312.41 118.07 C318.99 117.03 325.56 112.05 332.14 112.59 C338.71 113.12 345.29 120.72 351.86 121.27 C358.44 121.82 365.01 118.82 371.59 115.91 C378.16 112.99 384.74 106.16 391.31 103.78 C397.89 101.41 404.46 103.42 411.03 101.66 C417.61 99.90 424.18 95.69 430.76 93.22 C437.33 90.74 443.91 86.00 450.48 86.79 C457.06 87.59 463.63 97.61 470.21 97.99 C476.78 98.36 483.36 91.22 489.93 89.05 C496.51 86.88 503.08 84.92 509.66 84.96 C516.23 84.99 522.80 86.53 529.38 89.27 C535.95 92.01 542.53 101.40 549.10 101.42 C555.68 101.44 562.25 91.49 568.83 89.37 C575.40 87.25 581.98 90.12 588.55 88.71 C595.13 87.30 601.70 84.29 608.28 80.92 C614.85 77.54 624.71 70.55 628.00 68.48 L628.00 190 L56.00 190 Z" fill="url(#fill)"/><path d="M56.00 132.06 C59.29 131.60 69.15 129.39 75.72 129.33 C82.30 129.26 88.87 132.00 95.45 131.65 C102.02 131.29 108.60 128.78 115.17 127.18 C121.75 125.59 128.32 121.08 134.90 122.09 C141.47 123.10 148.05 129.27 154.62 133.24 C161.20 137.21 167.77 145.67 174.34 145.91 C180.92 146.14 187.49 135.62 194.07 134.67 C200.64 133.72 207.22 138.23 213.79 140.20 C220.37 142.16 226.94 148.05 233.52 146.45 C240.09 144.86 246.67 133.36 253.24 130.63 C259.82 127.89 266.39 132.01 272.97 130.04 C279.54 128.08 286.11 120.83 292.69 118.83 C299.26 116.84 305.84 119.11 312.41 118.07 C318.99 117.03 325.56 112.05 332.14 112.59 C338.71 113.12 345.29 120.72 351.86 121.27 C358.44 121.82 365.01 118.82 371.59 115.91 C378.16 112.99 384.74 106.16 391.31 103.78 C397.89 101.41 404.46 103.42 411.03 101.66 C417.61 99.90 424.18 95.69 430.76 93.22 C437.33 90.74 443.91 86.00 450.48 86.79 C457.06 87.59 463.63 97.61 470.21 97.99 C476.78 98.36 483.36 91.22 489.93 89.05 C496.51 86.88 503.08 84.92 509.66 84.96 C516.23 84.99 522.80 86.53 529.38 89.27 C535.95 92.01 542.53 101.40 549.10 101.42 C555.68 101.44 562.25 91.49 568.83 89.37 C575.40 87.25 581.98 90.12 588.55 88.71 C595.13 87.30 601.70 84.29 608.28 80.92 C614.85 77.54 624.71 70.55 628.00 68.48" fill="none" stroke="#2563eb" stroke-width="2.25" stroke-linejoin="round"/>
+    <line x1="56" x2="628" y1="125.91" y2="125.91" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4"/><text x="628" y="120.91" text-anchor="end" class="axis" style="fill:#b45309">Anfangssaldo</text>
+    <circle cx="174.34" cy="145.91" r="3" fill="#fff" stroke="#2563eb" stroke-width="2"/><circle cx="312.41" cy="118.07" r="3" fill="#fff" stroke="#2563eb" stroke-width="2"/><circle cx="450.48" cy="86.79" r="3" fill="#fff" stroke="#2563eb" stroke-width="2"/><circle cx="588.55" cy="88.71" r="3" fill="#fff" stroke="#2563eb" stroke-width="2"/><g><text x="56.00" y="206" text-anchor="middle" class="axis">1. Okt</text><text x="134.90" y="206" text-anchor="middle" class="axis">5. Okt</text><text x="233.52" y="206" text-anchor="middle" class="axis">10. Okt</text><text x="332.14" y="206" text-anchor="middle" class="axis">15. Okt</text><text x="430.76" y="206" text-anchor="middle" class="axis">20. Okt</text><text x="529.38" y="206" text-anchor="middle" class="axis">25. Okt</text><text x="628.00" y="206" text-anchor="middle" class="axis">30. Okt</text></g></svg></div>
+  <div class="card"><h2>Ausgaben nach Kategorie</h2><div class="donut"><svg viewBox="0 0 160 160"><circle r="52" cx="80" cy="80" fill="none" stroke="#2563eb" stroke-width="22" stroke-dasharray="34.724 292.002" stroke-dashoffset="0.000" transform="rotate(-90 80 80)"/><circle r="52" cx="80" cy="80" fill="none" stroke="#7c3aed" stroke-width="22" stroke-dasharray="181.546 145.180" stroke-dashoffset="-34.724" transform="rotate(-90 80 80)"/><circle r="52" cx="80" cy="80" fill="none" stroke="#db2777" stroke-width="22" stroke-dasharray="62.465 264.260" stroke-dashoffset="-216.270" transform="rotate(-90 80 80)"/><circle r="52" cx="80" cy="80" fill="none" stroke="#f59e0b" stroke-width="22" stroke-dasharray="24.439 302.287" stroke-dashoffset="-278.735" transform="rotate(-90 80 80)"/><circle r="52" cx="80" cy="80" fill="none" stroke="#10b981" stroke-width="22" stroke-dasharray="14.342 312.383" stroke-dashoffset="-303.174" transform="rotate(-90 80 80)"/><circle r="52" cx="80" cy="80" fill="none" stroke="#64748b" stroke-width="22" stroke-dasharray="9.209 317.516" stroke-dashoffset="-317.516" transform="rotate(-90 80 80)"/><text x="80" y="76" text-anchor="middle" style="font: 600 15px Inter">17,313</text><text x="80" y="94" text-anchor="middle" class="axis" style="font-size:10px">Euro gesamt</text></svg><ul><li><span class="sw" style="background:#2563eb"></span>Miete & Nebenkosten<b>1.840 €</b></li><li><span class="sw" style="background:#7c3aed"></span>Personal<b>9.620 €</b></li><li><span class="sw" style="background:#db2777"></span>Material<b>3.310 €</b></li><li><span class="sw" style="background:#f59e0b"></span>Software & Lizenzen<b>1.295 €</b></li><li><span class="sw" style="background:#10b981"></span>Reisen<b>760 €</b></li><li><span class="sw" style="background:#64748b"></span>Sonstiges<b>488 €</b></li></ul></div></div>
+</section>
+<div class="card" style="margin-top:10px"><h2>Eingänge und Ausgänge, letzte sechs Monate (Tsd. €)</h2>
+  <div class="legend"><span><i style="background:#2563eb"></i>Eingänge</span><span><i style="background:#cbd5e1"></i>Ausgänge</span></div>
+  <svg viewBox="0 0 360 172" style="max-height: 160px"><line x1="30" x2="350" y1="150" y2="150" stroke="#eef2f7"/><text x="24" y="153" text-anchor="end" class="axis">0</text><line x1="30" x2="350" y1="100" y2="100" stroke="#eef2f7"/><text x="24" y="103" text-anchor="end" class="axis">10</text><line x1="30" x2="350" y1="50" y2="50" stroke="#eef2f7"/><text x="24" y="53" text-anchor="end" class="axis">20</text><rect x="40" y="43.0" width="18" height="107.0" rx="3" fill="#2563eb"/><rect x="60" y="60.5" width="18" height="89.5" rx="3" fill="#cbd5e1"/><text x="59" y="166" text-anchor="middle" class="axis">Mai</text><rect x="92" y="51.0" width="18" height="99.0" rx="3" fill="#2563eb"/><rect x="112" y="58.0" width="18" height="92.0" rx="3" fill="#cbd5e1"/><text x="111" y="166" text-anchor="middle" class="axis">Jun</text><rect x="144" y="29.5" width="18" height="120.5" rx="3" fill="#2563eb"/><rect x="164" y="54.0" width="18" height="96.0" rx="3" fill="#cbd5e1"/><text x="163" y="166" text-anchor="middle" class="axis">Jul</text><rect x="196" y="59.0" width="18" height="91.0" rx="3" fill="#2563eb"/><rect x="216" y="70.0" width="18" height="80.0" rx="3" fill="#cbd5e1"/><text x="215" y="166" text-anchor="middle" class="axis">Aug</text><rect x="248" y="16.5" width="18" height="133.5" rx="3" fill="#2563eb"/><rect x="268" y="42.5" width="18" height="107.5" rx="3" fill="#cbd5e1"/><text x="267" y="166" text-anchor="middle" class="axis">Sep</text><rect x="300" y="30.5" width="18" height="119.5" rx="3" fill="#2563eb"/><rect x="320" y="63.5" width="18" height="86.5" rx="3" fill="#cbd5e1"/><text x="319" y="166" text-anchor="middle" class="axis">Okt</text></svg></div>
+<table><thead><tr><th>Datum</th><th>Buchungstext</th><th class="n">Betrag €</th><th class="n">Saldo €</th></tr></thead><tbody>
+<tr><td>01.10.</td><td>Überweisung Lieferant Holz Huber<span class="ref">Ref. 8650273285</span></td><td class="n pos">+147,61</td><td class="n">18.567,61</td></tr>
+<tr><td>01.10.</td><td>Kontoführungsgebühr<span class="ref">Ref. 1815623033</span></td><td class="n pos">+143,56</td><td class="n">18.711,17</td></tr>
+<tr><td>02.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 4405809747</span></td><td class="n pos">+2.748,86</td><td class="n">21.460,03</td></tr>
+<tr><td>03.10.</td><td>Gutschrift Kunde 10311 RE-2026-0401<span class="ref">Ref. 1609005468</span></td><td class="n neg">−2.503,49</td><td class="n">18.956,54</td></tr>
+<tr><td>04.10.</td><td>Gutschrift Erstattung Finanzamt<span class="ref">Ref. 9769809255</span></td><td class="n pos">+786,33</td><td class="n">19.742,87</td></tr>
+<tr><td>05.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 3269380278</span></td><td class="n pos">+4.068,23</td><td class="n">23.811,10</td></tr>
+<tr><td>06.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 4777702799</span></td><td class="n neg">−2.759,32</td><td class="n">21.051,78</td></tr>
+<tr><td>06.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 6696386579</span></td><td class="n pos">+1.237,17</td><td class="n">22.288,95</td></tr>
+<tr><td>07.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 3229621088</span></td><td class="n pos">+1.173,10</td><td class="n">23.462,05</td></tr>
+<tr><td>08.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 9609664678</span></td><td class="n pos">+1.538,16</td><td class="n">25.000,21</td></tr>
+<tr><td>09.10.</td><td>Gutschrift Erstattung Finanzamt<span class="ref">Ref. 6489667868</span></td><td class="n neg">−2.571,08</td><td class="n">22.429,13</td></tr>
+<tr><td>10.10.</td><td>Gutschrift Kunde 10422 RE-2026-0377<span class="ref">Ref. 8334986492</span></td><td class="n pos">+4.182,66</td><td class="n">26.611,79</td></tr>
+<tr><td>11.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 7497790074</span></td><td class="n neg">−866,95</td><td class="n">25.744,84</td></tr>
+<tr><td>12.10.</td><td>Kontoführungsgebühr<span class="ref">Ref. 4291181424</span></td><td class="n neg">−2.979,84</td><td class="n">22.765,00</td></tr>
+<tr><td>12.10.</td><td>Gutschrift Kunde 10311 RE-2026-0401<span class="ref">Ref. 2660063002</span></td><td class="n neg">−237,04</td><td class="n">22.527,96</td></tr>
+<tr><td>13.10.</td><td>Gutschrift Erstattung Finanzamt<span class="ref">Ref. 1002340482</span></td><td class="n pos">+3.889,51</td><td class="n">26.417,47</td></tr>
+<tr><td>14.10.</td><td>SEPA-Lastschrift Stadtwerke<span class="ref">Ref. 7313547272</span></td><td class="n neg">−1.648,09</td><td class="n">24.769,38</td></tr>
+<tr><td>15.10.</td><td>Lastschrift Adobe Systems<span class="ref">Ref. 2802990351</span></td><td class="n pos">+4.054,66</td><td class="n">28.824,04</td></tr>
+<tr><td>16.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 6453644632</span></td><td class="n pos">+990,19</td><td class="n">29.814,23</td></tr>
+<tr><td>17.10.</td><td>Dauerauftrag Miete Büro<span class="ref">Ref. 4963600717</span></td><td class="n neg">−2.555,13</td><td class="n">27.259,10</td></tr>
+<tr><td>18.10.</td><td>Gutschrift Kunde 10422 RE-2026-0377<span class="ref">Ref. 1047051439</span></td><td class="n neg">−2.203,99</td><td class="n">25.055,11</td></tr>
+<tr><td>18.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 3402154336</span></td><td class="n pos">+240,55</td><td class="n">25.295,66</td></tr>
+<tr><td>19.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 4305071838</span></td><td class="n pos">+110,94</td><td class="n">25.406,60</td></tr>
+<tr><td>20.10.</td><td>Lastschrift Adobe Systems<span class="ref">Ref. 5795365311</span></td><td class="n neg">−97,69</td><td class="n">25.308,91</td></tr>
+<tr><td>21.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 5296989838</span></td><td class="n neg">−86,41</td><td class="n">25.222,50</td></tr>
+<tr><td>22.10.</td><td>Kontoführungsgebühr<span class="ref">Ref. 4800466732</span></td><td class="n pos">+3.196,07</td><td class="n">28.418,57</td></tr>
+<tr><td>23.10.</td><td>Lastschrift Adobe Systems<span class="ref">Ref. 3478023641</span></td><td class="n neg">−1.640,74</td><td class="n">26.777,83</td></tr>
+<tr><td>24.10.</td><td>Überweisung Gehälter Oktober<span class="ref">Ref. 6210840603</span></td><td class="n neg">−2.888,40</td><td class="n">23.889,43</td></tr>
+<tr><td>24.10.</td><td>Kontoführungsgebühr<span class="ref">Ref. 6567672464</span></td><td class="n neg">−1.288,75</td><td class="n">22.600,68</td></tr>
+<tr><td>25.10.</td><td>Gutschrift Kunde 10422 RE-2026-0377<span class="ref">Ref. 3734122106</span></td><td class="n neg">−2.656,85</td><td class="n">19.943,83</td></tr>
+<tr><td>26.10.</td><td>Dauerauftrag Miete Büro<span class="ref">Ref. 2946513985</span></td><td class="n neg">−3.085,23</td><td class="n">16.858,60</td></tr>
+<tr><td>27.10.</td><td>Gutschrift Kunde 10002 Abschlag<span class="ref">Ref. 2658274117</span></td><td class="n pos">+3.897,60</td><td class="n">20.756,20</td></tr>
+<tr><td>28.10.</td><td>Gutschrift Kunde 10311 RE-2026-0401<span class="ref">Ref. 4901650223</span></td><td class="n pos">+1.441,61</td><td class="n">22.197,81</td></tr>
+<tr><td>29.10.</td><td>Kartenzahlung Bürobedarf Müller<span class="ref">Ref. 4115530475</span></td><td class="n pos">+2.851,73</td><td class="n">25.049,54</td></tr>
+</tbody></table>
+</body></html>

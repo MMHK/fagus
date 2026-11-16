@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Osteria Lucia – Dinner menu</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: 210mm 297mm; margin: 16mm 18mm; }
+html { font: 10pt/1.4 Inter, sans-serif; color: #2b2118; }
+body { margin: 0; }
+.masthead { text-align: center; margin-bottom: 8mm; }
+.masthead .logo { width: 16mm; height: 16mm; margin: 0 auto 2mm; display: block; }
+.masthead h1 { margin: 0; font-size: 24pt; letter-spacing: .3em; text-transform: uppercase; font-weight: 400; padding-left: .3em; }
+.masthead p { margin: 1mm 0 0; font-style: italic; color: #8a6d4b; }
+.ornament { display: flex; align-items: center; gap: 3mm; color: #8a6d4b; margin: 5mm 0 4mm; }
+.ornament::before, .ornament::after { content: ""; flex: 1; height: 1.6mm; background: radial-gradient(circle, #8a6d4b .45mm, transparent .55mm) 0 50% / 2.2mm 1.6mm repeat-x; }
+.ornament h2 { margin: 0; font-size: 11pt; letter-spacing: .25em; text-transform: uppercase; }
+/* W3C-style dot leaders: a long row of dots behind the name, cut off by the price */
+ul.leaders { list-style: none; padding: 0; margin: 0; overflow-x: hidden; }
+ul.leaders li { margin-bottom: 3.2mm; break-inside: avoid; }
+ul.leaders .line { display: block; overflow: hidden; }
+ul.leaders .line::before { float: left; width: 0; white-space: nowrap; color: #b39b7d;
+  content: ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "; }
+ul.leaders .name { background: #fff; padding-right: 1.2mm; font-weight: 700; }
+ul.leaders .price { float: right; background: #fff; padding-left: 1.2mm; font-variant-numeric: tabular-nums; position: relative; }
+ul.leaders .desc { display: block; font-size: 8.5pt; color: #6b5a48; margin-top: .4mm; padding-right: 18mm; }
+.al { display: inline-flex; gap: .7mm; vertical-align: 1px; margin-left: 1.2mm; }
+.al i { font-style: normal; display: inline-block; width: 3.6mm; height: 3.6mm; line-height: 3.6mm; border-radius: 50%; font-size: 5.5pt; font-weight: 700; text-align: center; color: #fff; background: var(--c); }
+.al svg { width: 3.6mm; height: 3.6mm; vertical-align: top; }
+.v { --c: #4d7c0f; } .g { --c: #b45309; } .n { --c: #7c2d12; } .l { --c: #1d4ed8; } .f { --c: #0e7490; } .e { --c: #ca8a04; } .s { --c: #9f1239; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10mm; }
+.chef { display: flex; gap: 5mm; align-items: center; background: #f6efe6; border-radius: 2mm; padding: 4mm 5mm; margin: 4mm 0 2mm; break-inside: avoid; }
+.chef img { width: 22mm; height: 22mm; border-radius: 50%; object-fit: cover; flex: none; shape-outside: circle(); }
+.chef blockquote { margin: 0; font-style: italic; }
+.chef cite { display: block; font-style: normal; font-size: 8pt; color: #8a6d4b; margin-top: 1mm; }
+.legend { margin-top: 6mm; padding-top: 3mm; border-top: .5pt solid #d6c6b0; display: grid; grid-template-columns: repeat(4, auto); gap: 1.5mm 6mm; font-size: 7.5pt; color: #6b5a48; justify-content: start; }
+.legend .al { margin: 0 1mm 0 0; }
+.wine { break-before: page; }
+table.wines { width: 100%; border-collapse: collapse; font-size: 9pt; }
+table.wines caption { text-align: left; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; font-size: 8.5pt; color: #8a6d4b; padding: 4mm 0 1.5mm; }
+table.wines th { text-align: right; font-weight: 400; font-size: 7.5pt; color: #8a6d4b; border-bottom: .5pt solid #d6c6b0; padding-bottom: 1mm; }
+table.wines th:first-child { text-align: left; }
+table.wines td { padding: 1.4mm 0; border-bottom: .5pt dotted #d6c6b0; vertical-align: baseline; }
+table.wines td + td { text-align: right; width: 18mm; font-variant-numeric: tabular-nums; }
+table.wines td small { display: block; color: #6b5a48; font-size: 7.5pt; }
+.note { font-size: 7.5pt; color: #6b5a48; margin-top: 6mm; text-align: center; }
+</style></head><body>
+<header class="masthead">
+  <svg class="logo" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#8a6d4b" stroke-width="1.5"/><path d="M20 8 C14 16 14 24 20 32 C26 24 26 16 20 8 Z" fill="#8a6d4b"/><path d="M20 12 V30" stroke="#f6efe6" stroke-width="1"/></svg>
+  <h1>Osteria Lucia</h1>
+  <p>Cucina toscana · Dinner from 6 pm</p>
+</header>
+<div class="ornament"><h2>Antipasti</h2></div>
+<div class="two">
+<ul class="leaders">
+  <li><span class="line"><span class="name">Burrata pugliese</span><span class="price">14.50</span></span><span class="desc">heirloom tomatoes, basil oil, sourdough crumbs <span class="al"><i class="l">L</i><i class="g">G</i><i class="v">V</i></span></span></li>
+  <li><span class="line"><span class="name">Vitello tonnato</span><span class="price">16.00</span></span><span class="desc">rosé veal, tuna and caper sauce, crispy capers <span class="al"><i class="f">F</i><i class="e">E</i></span></span></li>
+  <li><span class="line"><span class="name">Carpaccio di manzo</span><span class="price">17.50</span></span><span class="desc">aged beef, rocket, Parmigiano Reggiano 24 months, lemon <span class="al"><i class="l">L</i></span></span></li>
+</ul>
+<ul class="leaders">
+  <li><span class="line"><span class="name">Fritto misto di verdure</span><span class="price">11.00</span></span><span class="desc">seasonal vegetables in a light beer batter, saffron aioli <span class="al"><i class="g">G</i><i class="e">E</i><i class="v">V</i></span></span></li>
+  <li><span class="line"><span class="name">Polpo alla griglia</span><span class="price">18.50</span></span><span class="desc">grilled octopus, smoked potato cream, olive crumble <span class="al"><i class="s">S</i></span></span></li>
+  <li><span class="line"><span class="name">Zuppa del giorno</span><span class="price">8.50</span></span><span class="desc">ask your server <span class="al"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#6b5a48"/><text x="5" y="7.2" text-anchor="middle" font-size="6" font-family="Inter" font-weight="700" fill="#fff">?</text></svg></span></span></li>
+</ul>
+</div>
+<div class="ornament"><h2>Primi</h2></div>
+<div class="two">
+<ul class="leaders">
+  <li><span class="line"><span class="name">Pici cacio e pepe</span><span class="price">15.00</span></span><span class="desc">hand-rolled Sienese pasta, pecorino romano, Tellicherry pepper <span class="al"><i class="g">G</i><i class="l">L</i><i class="v">V</i></span></span></li>
+  <li><span class="line"><span class="name">Pappardelle al ragù di cinghiale</span><span class="price">19.50</span></span><span class="desc">wild boar braised in Chianti for eight hours <span class="al"><i class="g">G</i><i class="e">E</i></span></span></li>
+</ul>
+<ul class="leaders">
+  <li><span class="line"><span class="name">Risotto ai funghi porcini</span><span class="price">21.00</span></span><span class="desc">Carnaroli rice, porcini, thyme butter <span class="al"><i class="l">L</i><i class="v">V</i></span></span></li>
+  <li><span class="line"><span class="name">Ravioli di ricotta e spinaci</span><span class="price">16.50</span></span><span class="desc">sage brown butter, toasted hazelnuts <span class="al"><i class="g">G</i><i class="l">L</i><i class="e">E</i><i class="n">N</i></span></span></li>
+</ul>
+</div>
+<div class="ornament"><h2>Secondi</h2></div>
+<div class="two">
+<ul class="leaders">
+  <li><span class="line"><span class="name">Bistecca alla fiorentina</span><span class="price">9.80 / 100 g</span></span><span class="desc">Chianina T-bone for two, from 1 kg, rosemary potatoes</span></li>
+  <li><span class="line"><span class="name">Branzino al forno</span><span class="price">28.00</span></span><span class="desc">whole sea bass, fennel, blood orange, Taggiasca olives <span class="al"><i class="f">F</i></span></span></li>
+</ul>
+<ul class="leaders">
+  <li><span class="line"><span class="name">Saltimbocca alla romana</span><span class="price">24.50</span></span><span class="desc">veal, prosciutto, sage, white wine jus, spinach <span class="al"><i class="l">L</i></span></span></li>
+  <li><span class="line"><span class="name">Melanzane alla parmigiana</span><span class="price">18.00</span></span><span class="desc">layered aubergine, tomato, mozzarella <span class="al"><i class="l">L</i><i class="v">V</i></span></span></li>
+</ul>
+</div>
+<div class="chef"><img src="../images/photo.jpg" alt=""><blockquote>“Our pasta is made every morning with eggs from Podere Montalto and flour milled in the Mugello valley.”<cite>Lucia Bertolini, chef and owner</cite></blockquote></div>
+<div class="legend">
+  <span><span class="al"><i class="v">V</i></span>vegetarian</span>
+  <span><span class="al"><i class="g">G</i></span>contains gluten</span>
+  <span><span class="al"><i class="l">L</i></span>contains lactose</span>
+  <span><span class="al"><i class="n">N</i></span>contains tree nuts</span>
+  <span><span class="al"><i class="e">E</i></span>contains egg</span>
+  <span><span class="al"><i class="f">F</i></span>contains fish</span>
+  <span><span class="al"><i class="s">S</i></span>contains molluscs</span>
+  <span>Prices in EUR incl. VAT</span>
+</div>
+<section class="wine">
+<div class="ornament"><h2>Vini</h2></div>
+<table class="wines">
+  <caption>Rossi</caption>
+  <thead><tr><th>Wine</th><th>0.1 l</th><th>Bottle</th></tr></thead>
+  <tr><td>Chianti Classico DOCG 2021<small>Castello di Ama · Sangiovese, Merlot</small></td><td>7.50</td><td>42.00</td></tr>
+  <tr><td>Brunello di Montalcino DOCG 2018<small>Biondi-Santi · Sangiovese Grosso</small></td><td>–</td><td>148.00</td></tr>
+  <tr><td>Rosso di Montepulciano DOC 2022<small>Poliziano · Prugnolo Gentile</small></td><td>6.50</td><td>36.00</td></tr>
+  <tr><td>Bolgheri Rosso DOC 2021<small>Guado al Tasso · Cabernet, Merlot, Syrah</small></td><td>9.00</td><td>54.00</td></tr>
+</table>
+<table class="wines">
+  <caption>Bianchi</caption>
+  <thead><tr><th>Wine</th><th>0.1 l</th><th>Bottle</th></tr></thead>
+  <tr><td>Vernaccia di San Gimignano DOCG 2023<small>Panizzi</small></td><td>6.00</td><td>32.00</td></tr>
+  <tr><td>Vermentino Toscana IGT 2023<small>Fattoria Sardi</small></td><td>6.50</td><td>34.00</td></tr>
+</table>
+<p class="note">Please tell us about allergies and intolerances; our staff will be glad to advise you.<br>Corkage 25.00 per bottle · Service is not included</p>
+</section>
+</body></html>

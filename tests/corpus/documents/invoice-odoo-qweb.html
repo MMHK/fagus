@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de-DE" data-report-margin-top="40" data-report-header-spacing="35">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1">
+<title>INV/2026/00412</title>
+<style>
+@font-face { font-family: Lato; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Lato; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Lato; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+</style>
+<link rel="stylesheet" href="vendor/bootstrap-5.3.3.min.css">
+<style>
+/* The markup is the HTML view of an Odoo 17 invoice report as Odoo renders it (QWeb output with
+   Odoo's class names). The rules below are not Odoo's: they are written for this test, in a
+   colour of its own, and give those classes the look of a standard report layout. */
+@page { size: 210mm 297mm; margin: 11mm 8mm 13mm; }
+body { --accent: #1d5c6e; --rule: #23292d; color: #1e2428; font: 0.8rem/1.5 Lato, sans-serif; }
+
+/* header, addresses, title */
+.o_standard_header .o_company_tagline { font-size: 0.95rem; letter-spacing: 0.01em; }
+.mb4 { margin-bottom: 0.25rem !important; }
+.o_partner_vat { padding-top: 0.3rem; }
+.article h2 { margin-bottom: 0.6rem; font-size: 1.45rem; color: var(--accent); }
+#informations strong { color: var(--accent); }
+
+/* invoice lines: accent headings, sections on a grey band, notes indented in italics */
+.o_main_table { margin-bottom: 1.1rem; }
+.o_main_table > thead > tr > th { color: var(--accent); border-bottom: 1.5px solid var(--rule); }
+.bg-200 { background-color: #edf0f2 !important; }
+.o_main_table > tbody > .o_line_section > td { border-top: 1px solid #d3d9dd; }
+.o_main_table > tbody > .o_line_note > td { padding-left: 1.2rem !important; color: #3a4247; font-style: italic; }
+.o_attribute { display: block; color: #687178; font-size: 0.72rem; }
+
+/* totals: rules above the subtotal, the total and the amount due */
+#total tr.border-black > td { border-top: 1px solid var(--rule); }
+#total tr.o_total > td { border-bottom: 1px solid var(--rule); color: var(--accent); }
+
+/* payment block and footer of inline items with a separator after each but the last */
+.o_qrcode { width: 132px; height: 132px; }
+.o_standard_footer { margin-top: 1.8rem; font-size: 0.72rem; }
+.o_standard_footer .list-inline { margin-bottom: 0.2rem; }
+.o_standard_footer .list-inline-item:not(:last-child)::after { content: "\00B7"; margin-left: 0.45rem; color: #737b82; }
+</style>
+</head>
+<body class="container">
+<main>
+<div class="header o_company_1_layout">
+  <div class="o_standard_header">
+    <div class="row">
+      <div class="col-3 mb4"><img src="../images/logo.png" style="max-height: 45px;" alt="Logo"></div>
+      <div class="col-9 text-end o_company_tagline" style="margin-top:22px;" name="moto">Präzisionsteile aus Ostwestfalen</div>
+    </div>
+    <div class="row zero_min_height"><div class="col-12"><div style="border-bottom: 1px solid black;"></div></div></div>
+    <div class="row">
+      <div class="col-6" name="company_address">
+        <ul class="list-unstyled mb-0">
+          <li><strong>Kleine-Höfer Zerspanung GmbH</strong></li>
+          <li>Industriestraße 41</li>
+          <li>33100 Paderborn</li>
+          <li>Deutschland</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="article o_report_layout_standard o_company_1_layout o_table_standard" data-oe-model="account.move" data-oe-id="412" data-oe-lang="de_DE">
+  <div class="pt-5">
+    <div class="address row">
+      <div class="col-6" name="address_not_same_as_shipping">
+        <strong>Lieferadresse:</strong>
+        <address class="mb-0" itemscope itemtype="http://schema.org/Organization">
+          <div><span itemprop="name">Bergmann Antriebstechnik AG</span></div>
+          <div itemprop="address">Werk 2, Tor 4<br>Hafenstraße 12<br>47119 Duisburg<br>Deutschland</div>
+        </address>
+      </div>
+      <div class="col-5 offset-1" name="address_same_as_shipping">
+        <address class="mb-0">
+          <div><span>Bergmann Antriebstechnik AG</span></div>
+          <div>Kreditorenbuchhaltung<br>Postfach 10 04 51<br>47004 Duisburg<br>Deutschland</div>
+        </address>
+        <div class="o_partner_vat">USt-IdNr.: DE 811 432 907</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page mt-4">
+    <h2>
+      <span>Rechnung</span>
+      <span>INV/2026/00412</span>
+    </h2>
+
+    <div id="informations" class="row mt-4 mb-4">
+      <div class="col-auto col-3 mw-100 mb-2" name="invoice_date"><strong>Rechnungsdatum:</strong><br><span>06.11.2026</span></div>
+      <div class="col-auto col-3 mw-100 mb-2" name="due_date"><strong>Fälligkeitsdatum:</strong><br><span>06.12.2026</span></div>
+      <div class="col-auto col-3 mw-100 mb-2" name="delivery_date"><strong>Lieferdatum:</strong><br><span>04.11.2026</span></div>
+      <div class="col-auto col-3 mw-100 mb-2" name="origin"><strong>Herkunft:</strong><br><span>S00871 / WH/OUT/01984</span></div>
+      <div class="col-auto col-3 mw-100 mb-2" name="customer_code"><strong>Kundenreferenz:</strong><br><span>BA-PO-2026-55312-Rahmenvertrag</span></div>
+    </div>
+
+    <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
+      <thead>
+        <tr>
+          <th name="th_description" class="text-start"><span>Beschreibung</span></th>
+          <th name="th_quantity" class="text-end"><span>Menge</span></th>
+          <th name="th_priceunit" class="text-end d-md-table-cell"><span>Einzelpreis</span></th>
+          <th name="th_discount" class="text-end d-md-table-cell"><span>Rabatt %</span></th>
+          <th name="th_taxes" class="text-start d-md-table-cell"><span>Steuern</span></th>
+          <th name="th_subtotal" class="text-end"><span>Betrag</span></th>
+        </tr>
+      </thead>
+      <tbody class="invoice_tbody">
+        <tr class="bg-200 fw-bold o_line_section"><td colspan="99"><span>Los 1 – Wellen und Bolzen</span></td></tr>
+        <tr class="">
+          <td name="account_invoice_line_name"><span>[WZ-4410] Antriebswelle Ø 40 h6, 42CrMo4 vergütet</span><span class="o_attribute">Zeichnung 4410-03 Rev. C, Länge 612 mm</span></td>
+          <td class="text-end"><span>24,00</span> <span>Stück</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">186,40</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">5,00</span></td>
+          <td class="text-start d-md-table-cell"><span id="line_tax_ids">19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">4.249,92&nbsp;€</span></td>
+        </tr>
+        <tr>
+          <td name="account_invoice_line_name"><span>[WZ-4412] Passbolzen Ø 16 m6 mit Querbohrung</span></td>
+          <td class="text-end"><span>240,00</span> <span>Stück</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">7,85</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap"></span></td>
+          <td class="text-start d-md-table-cell"><span>19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">1.884,00&nbsp;€</span></td>
+        </tr>
+        <tr class="o_line_note"><td colspan="99"><span>Die Passbolzen wurden nach Abstimmung mit Herrn Özdemir vom 28.10. in zwei Teillieferungen versandt.</span></td></tr>
+        <tr class="is-subtotal text-end"><td colspan="99"><strong class="mr16">Zwischensumme</strong> <span>6.133,92&nbsp;€</span></td></tr>
+        <tr class="bg-200 fw-bold o_line_section"><td colspan="99"><span>Los 2 – Gehäuseteile</span></td></tr>
+        <tr>
+          <td name="account_invoice_line_name"><span>[GH-2207] Lagerdeckel AlMgSi1, eloxiert schwarz</span><span class="o_attribute">Variante: Ø 120 mm, 6 × M8</span></td>
+          <td class="text-end"><span>60,00</span> <span>Stück</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">42,10</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">3,00</span></td>
+          <td class="text-start d-md-table-cell"><span>19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">2.450,22&nbsp;€</span></td>
+        </tr>
+        <tr>
+          <td name="account_invoice_line_name"><span>[GH-2210] Flanschplatte 200 × 200 × 25, S355J2 gestrahlt und grundiert</span></td>
+          <td class="text-end"><span>12,00</span> <span>Stück</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">118,00</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap"></span></td>
+          <td class="text-start d-md-table-cell"><span>19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">1.416,00&nbsp;€</span></td>
+        </tr>
+        <tr>
+          <td name="account_invoice_line_name"><span>Rüstkosten Sonderspannmittel (einmalig)</span></td>
+          <td class="text-end"><span>1,00</span> <span>Pauschal</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">380,00</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap"></span></td>
+          <td class="text-start d-md-table-cell"><span>19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">380,00&nbsp;€</span></td>
+        </tr>
+        <tr class="is-subtotal text-end"><td colspan="99"><strong class="mr16">Zwischensumme</strong> <span>4.246,22&nbsp;€</span></td></tr>
+        <tr>
+          <td name="account_invoice_line_name"><span>Fracht Spedition Kühne (2 Paletten, Teillieferung)</span></td>
+          <td class="text-end"><span>2,00</span> <span>Einheiten</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap">64,50</span></td>
+          <td class="text-end d-md-table-cell"><span class="text-nowrap"></span></td>
+          <td class="text-start d-md-table-cell"><span>19%</span></td>
+          <td class="text-end o_price_total"><span class="text-nowrap">129,00&nbsp;€</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clearfix mb-4">
+      <div id="total" class="row">
+        <div class="col-6 ms-auto">
+          <table class="table table-sm table-borderless" style="page-break-inside: avoid;">
+            <tr class="border-black o_subtotal"><td><strong>Zwischensumme</strong></td><td class="text-end"><span>10.509,14&nbsp;€</span></td></tr>
+            <tr><td><span class="text-nowrap">USt. 19%</span> <span class="text-muted small">auf 10.509,14&nbsp;€</span></td><td class="text-end o_price_total"><span class="text-nowrap">1.996,74&nbsp;€</span></td></tr>
+            <tr class="border-black o_total"><td><strong>Gesamt</strong></td><td class="text-end"><strong><span class="text-nowrap">12.505,88&nbsp;€</span></strong></td></tr>
+            <tr><td><i class="oe_form_field text-end oe_payment_label">Bezahlt am 08.11.2026</i></td><td class="text-end"><span>2.000,00&nbsp;€</span></td></tr>
+            <tr class="border-black"><td><strong>Fälliger Betrag</strong></td><td class="text-end"><span>10.505,88&nbsp;€</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-8">
+        <p class="o_payment_communication" name="payment_communication">
+          Bitte verwenden Sie die folgende Mitteilung für Ihre Zahlung: <b><span>INV/2026/00412</span></b><br>
+          an <strong>DE89 3705 0198 0012 3456 78</strong> (Sparkasse Paderborn-Detmold-Höxter)
+        </p>
+        <p name="payment_term"><span>Zahlungsbedingungen: 30 Tage netto, 2 % Skonto bei Zahlung innerhalb von 10 Tagen</span></p>
+        <div name="comment"><p class="mb-0">Steuerfreie Lieferungen sind nicht enthalten. Es gelten unsere Allgemeinen Liefer- und Zahlungsbedingungen in der Fassung vom 01.01.2026.</p></div>
+        <p name="incoterm" class="mt-2"><strong>Incoterm: </strong>FCA – Free Carrier, Paderborn</p>
+      </div>
+      <div class="col-4 text-end" id="qrcode">
+        <p class="mb-1"><strong class="text-center">Mit EPC-QR-Code bezahlen</strong></p>
+        <svg class="o_qrcode" viewBox="0 0 29 29" shape-rendering="crispEdges"><rect width="29" height="29" fill="#fff"/><path fill="#000" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM22 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 22h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM8 0h1v1H8zm2 0h2v1h-2zm4 0h1v2h-1zm3 0h1v1h-1zm2 1h2v1h-2zM9 2h1v2H9zm3 0h1v1h-1zm4 1h2v1h-2zm4 0h1v2h-1zM8 4h2v1H8zm5 0h2v2h-2zm4 1h1v2h-1zM8 6h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zM0 8h2v1H0zm3 0h3v1H3zm5 0h1v2H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h3v1h-3zm5 0h2v1h-2zm3 0h1v2h-1zM1 10h2v1H1zm5 0h1v2H6zm4 0h3v1h-3zm5 0h1v3h-1zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h1v1h-1zM0 12h1v2H0zm2 0h3v1H2zm6 0h2v2H8zm4 0h1v1h-1zm5 0h2v1h-2zm4 0h3v1h-3zm5 0h2v1h-2zM3 14h1v2H3zm7 0h1v1h-1zm3 0h2v1h-2zm5 0h1v2h-1zm3 0h2v1h-2zm4 0h1v2h-1zM0 16h2v1H0zm5 0h3v1H5zm6 0h1v1h-1zm3 0h2v2h-2zm6 0h1v1h-1zm3 0h1v1h-1zM1 18h1v2H1zm3 0h2v1H4zm5 0h3v1H9zm8 0h2v1h-2zm4 0h3v1h-3zm5 0h2v1h-2zM8 20h1v2H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h1v3h-1zm3 0h3v1h-3zm5 0h1v2h-1zM10 22h2v1h-2zm4 0h1v2h-1zm6 0h2v2h-2zm4 0h1v1h-1zm3 0h1v1h-1zM8 24h3v1H8zm5 0h1v1h-1zm3 0h1v2h-1zm6 0h3v1h-3zm5 0h1v2h-1zM9 26h1v2H9zm2 0h2v1h-2zm6 0h3v1h-3zm4 0h1v1h-1zm3 0h2v1h-2zM8 28h2v1H8zm4 0h3v1h-3zm5 0h1v1h-1zm3 0h3v1h-3zm5 0h1v1h-1z"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer o_standard_footer o_company_1_layout">
+  <div class="text-center" style="border-top: 1px solid black;">
+    <ul class="list-inline mb4 mt-1">
+      <li class="list-inline-item d-inline">+49 5251 088 41 0</li>
+      <li class="list-inline-item d-inline">buchhaltung@kleine-hoefer.example</li>
+      <li class="list-inline-item d-inline">www.kleine-hoefer.example</li>
+      <li class="list-inline-item d-inline">USt-IdNr.: DE 129 004 517</li>
+    </ul>
+    <div name="financial_infos"><span>Amtsgericht Paderborn HRB 4471 · Geschäftsführung: Ingrid Kleine-Höfer, Dr. Malte Rüsing</span></div>
+    <div class="text-muted">Seite: <span class="page">1</span> / <span class="topage">1</span></div>
+  </div>
+</div>
+</main>
+</body>
+</html>

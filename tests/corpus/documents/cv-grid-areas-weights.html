@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sam Sample — Product Designer</title>
+<style>
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 500; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: letter; margin: 0.55in 0.6in; }
+@page :first { margin-top: 0.4in; }
+:root { --ink: #111827; --muted: #6b7280; --accent: #7c3aed; --line: #e5e7eb; }
+html { font: 9.5pt/1.5 "Geist", sans-serif; color: var(--ink); }
+body { margin: 0; }
+.page { display: grid; grid-template-columns: 1.9fr 1fr; grid-template-areas: "head head" "main side"; column-gap: 0.35in; }
+header { grid-area: head; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 2pt solid var(--ink); padding-bottom: 8pt; margin-bottom: 12pt; }
+header h1 { margin: 0; font-size: 30pt; font-weight: 700; letter-spacing: -0.035em; line-height: 0.95; }
+header h1 span { display: block; font-weight: 400; font-size: 12pt; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-top: 6pt; }
+header address { font-style: normal; text-align: right; font-size: 8.5pt; color: var(--muted); line-height: 1.6; }
+header address svg { width: 8pt; height: 8pt; vertical-align: -1pt; margin-right: 3pt; fill: var(--accent); }
+main { grid-area: main; }
+aside { grid-area: side; }
+h2 { font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); margin: 0 0 6pt; padding-top: 10pt; border-top: 0.5pt solid var(--line); break-after: avoid; }
+main h2:first-child, aside h2:first-child { border-top: none; padding-top: 0; }
+.lead { font-size: 11pt; line-height: 1.45; font-weight: 500; margin: 0 0 12pt; }
+.role { margin-bottom: 10pt; break-inside: avoid; }
+.role .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8pt; }
+.role h3 { margin: 0; font-size: 10.5pt; font-weight: 600; }
+.role h3 small { font-weight: 400; color: var(--muted); font-size: 9.5pt; }
+.role time { font-size: 8pt; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.role p { margin: 2pt 0 0; }
+.role ul { margin: 3pt 0 0; padding: 0; list-style: none; }
+.role li { padding-left: 10pt; position: relative; margin-bottom: 1.5pt; }
+.role li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 4pt; height: 1pt; background: var(--accent); }
+.metric { font-weight: 600; color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 3pt 4pt; margin-bottom: 10pt; }
+.chips span { font-size: 8pt; font-weight: 500; padding: 1.5pt 6pt; border-radius: 3pt; background: #f3f0ff; color: #4c1d95; }
+.meter { display: grid; grid-template-columns: 1fr auto; row-gap: 2pt; font-size: 8.5pt; margin-bottom: 6pt; }
+.meter .track { grid-column: 1 / -1; height: 3pt; background: var(--line); border-radius: 2pt; }
+.meter .track i { display: block; height: 100%; border-radius: 2pt; background: var(--ink); }
+.edu b { font-weight: 600; display: block; }
+.edu { margin-bottom: 6pt; font-size: 8.5pt; color: var(--muted); }
+blockquote { margin: 8pt 0 0; padding: 6pt 8pt; border-left: 2pt solid var(--accent); background: #faf9ff; font-style: italic; font-size: 8.5pt; }
+blockquote footer { font-style: normal; font-weight: 500; margin-top: 3pt; color: var(--muted); }
+.caps { font-variant: small-caps; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+<h1>Sam Sample<span>Product Designer</span></h1>
+<address>
+<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>sam@sample.example<br>
+<svg viewBox="0 0 10 10"><rect width="10" height="10" rx="2"/></svg>+44 20 7946 0000<br>
+<svg viewBox="0 0 10 10"><path d="M5 0l5 10H0z"/></svg>London, United Kingdom
+</address>
+</header>
+<main>
+<h2>Profile</h2>
+<p class="lead">Designer of business software for twelve years. I turn complicated workflows—invoicing, payroll, tax filing—into interfaces that accountants and first-time founders can both use without a manual.</p>
+<h2>Experience</h2>
+<div class="role"><div class="top"><h3>Lead Product Designer <small>· Ledgerly</small></h3><time>2021 — Present</time></div>
+<ul><li>Redesigned the invoice editor; time to first invoice fell from 9 to <span class="metric">3 minutes</span>.</li><li>Built the design system “Quill”: 140 components, tokens shared by web, iOS and PDF templates.</li><li>Hired and mentored a team of four designers and one UX writer.</li></ul></div>
+<div class="role"><div class="top"><h3>Senior UX Designer <small>· Paystack-like Ltd.</small></h3><time>2017 — 2021</time></div>
+<ul><li>Led research with 60 small businesses; the new onboarding raised activation by <span class="metric">22&nbsp;%</span>.</li><li>Designed printable payslips and year-end statements used by 400,000 employees.</li><li>Introduced accessibility reviews; all flows meet WCAG&nbsp;2.1&nbsp;AA.</li></ul></div>
+<div class="role"><div class="top"><h3>Interaction Designer <small>· Studio North</small></h3><time>2014 — 2017</time></div>
+<p>Agency work for banks, insurers and two public-sector clients, from paper forms to their first online versions.</p></div>
+<div class="role"><div class="top"><h3>Junior Designer <small>· Printworks Co.</small></h3><time>2012 — 2014</time></div>
+<p>Typesetting of annual reports and catalogues; learned why widows and orphans matter.</p></div>
+<blockquote>“Sam has a rare talent for making forms feel like conversations.”<footer>— Head of Product, Ledgerly</footer></blockquote>
+</main>
+<aside>
+<h2>Skills</h2>
+<div class="chips"><span>Product strategy</span><span>Design systems</span><span>Prototyping</span><span>User research</span><span>Accessibility</span><span>Print design</span><span>Figma</span><span>HTML &amp; CSS</span></div>
+<h2>Proficiency</h2>
+<div class="meter"><span>Interaction design</span><span>Expert</span><div class="track"><i style="width:95%"></i></div></div>
+<div class="meter"><span>Visual design</span><span>Advanced</span><div class="track"><i style="width:80%"></i></div></div>
+<div class="meter"><span>Front-end code</span><span>Good</span><div class="track"><i style="width:60%"></i></div></div>
+<div class="meter"><span>Motion</span><span>Basic</span><div class="track"><i style="width:35%"></i></div></div>
+<h2>Education</h2>
+<div class="edu"><b>MA Interaction Design</b>Royal College of Art, 2012</div>
+<div class="edu"><b>BA Graphic Communication</b>University of Reading, 2010</div>
+<h2>Languages</h2>
+<div class="edu"><b>English</b>native</div>
+<div class="edu"><b>German</b>fluent (C1)</div>
+<div class="edu"><b>Portuguese</b>conversational</div>
+<h2>Elsewhere</h2>
+<div class="edu"><span class="caps">Speaker</span> at Design Systems London 2024 and Config 2023.</div>
+</aside>
+</div>
+</body>
+</html>

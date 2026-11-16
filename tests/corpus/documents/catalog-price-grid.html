@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Preiskatalog Werkzeug 2027</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; font-style: normal; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; font-style: normal; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+@page { size: A4; margin: 14mm 12mm 16mm;
+  @bottom-center { content: "Preiskatalog 2027 · Seite " counter(page) " / " counter(pages); font: 7pt Inter, sans-serif; color: #555; } }
+html { font: 8pt/1.35 Inter, sans-serif; color: #1b1b1b; }
+body { margin: 0; }
+header.top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2pt solid #f2a900; padding-bottom: 3mm; margin-bottom: 4mm; }
+header.top h1 { margin: 0; font-size: 18pt; }
+header.top img { height: 10mm; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+h2.cat { grid-column: 1 / -1; margin: 3mm 0 0; padding: 1.5mm 2mm; background: #1b1b1b; color: #f2a900; font-size: 10pt; break-after: avoid; }
+.item { border: .5pt solid #ccc; border-radius: 1.5mm; display: grid; grid-template-columns: 22mm 1fr; gap: 2mm; padding: 2mm; break-inside: avoid; }
+.item img { width: 22mm; height: 22mm; object-fit: cover; border-radius: 1mm; background: #f4f4f4; }
+.item h3 { font-size: 8.5pt; margin: 0 0 .5mm; }
+.item p { margin: 0; }
+.sku { color: #777; font-size: 6.5pt; }
+.desc { font-size: 7pt; margin: .5mm 0 1mm !important; }
+.price b { font-size: 10pt; }
+.price s { color: #c00; }
+.price small { color: #777; font-size: 6pt; }
+.tag { margin-left: 1.5mm; padding: 0 1.2mm; border-radius: 1mm; font-size: 6pt; vertical-align: 1pt; color: #fff; }
+.tag.new { background: #0a7d32; } .tag.eco { background: #2f6f9f; }
+</style>
+</head>
+<body>
+<header class="top"><h1>Preiskatalog Werkzeug 2027</h1><img src="../images/logo.png" alt=""></header>
+<div class="grid">
+<h2 class="cat">Hand tools</h2>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Compact saw 650</h3>
+<p class="sku">Art.-Nr. 100000 · EAN 4021084675325</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>115,75 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact glove 206</h3>
+<p class="sku">Art.-Nr. 100037 · EAN 4085034210420</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>8,29 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic screw set 898</h3>
+<p class="sku">Art.-Nr. 100074 · EAN 4082695909812</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>229,70 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Basic hammer 318</h3>
+<p class="sku">Art.-Nr. 100111 · EAN 4013350403033</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>356,32 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex box 755<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 100148 · EAN 4090749288305</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>227,97 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic saw 232</h3>
+<p class="sku">Art.-Nr. 100185 · EAN 4068720969954</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><s>545,19 €</s> <b>462,84 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Max clamp 609<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100222 · EAN 4089059936347</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>203,31 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max screw set 725</h3>
+<p class="sku">Art.-Nr. 100259 · EAN 4056646083018</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>434,21 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact tape 301</h3>
+<p class="sku">Art.-Nr. 100296 · EAN 4019124378149</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>434,44 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Max drill 430</h3>
+<p class="sku">Art.-Nr. 100333 · EAN 4031032867867</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>410,18 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro hammer 396</h3>
+<p class="sku">Art.-Nr. 100370 · EAN 4090395089676</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>142,48 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact glove 46</h3>
+<p class="sku">Art.-Nr. 100407 · EAN 4011330022775</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>265,31 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Flex tape 635</h3>
+<p class="sku">Art.-Nr. 100444 · EAN 4028311048490</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>53,68 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic box 395</h3>
+<p class="sku">Art.-Nr. 100481 · EAN 4063773304004</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>470,39 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max box 659<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100518 · EAN 4067127733085</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><s>455,40 €</s> <b>327,50 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Flex level 30</h3>
+<p class="sku">Art.-Nr. 100555 · EAN 4093221504939</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>251,10 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max level 633<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 100592 · EAN 4047396066561</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>386,18 €</s> <b>304,18 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<h2 class="cat">Power tools</h2>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max saw 315</h3>
+<p class="sku">Art.-Nr. 100629 · EAN 4094149884943</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><s>16,22 €</s> <b>12,60 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Max tape 816<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100666 · EAN 4024504793241</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>114,18 €</s> <b>86,81 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max clamp 237</h3>
+<p class="sku">Art.-Nr. 100703 · EAN 4041221741349</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>466,32 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro level 981</h3>
+<p class="sku">Art.-Nr. 100740 · EAN 4043644793348</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>91,57 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Max glove 916</h3>
+<p class="sku">Art.-Nr. 100777 · EAN 4072570808264</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>389,07 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max screw set 894</h3>
+<p class="sku">Art.-Nr. 100814 · EAN 4054146217106</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>135,35 €</s> <b>109,56 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex tape 540</h3>
+<p class="sku">Art.-Nr. 100851 · EAN 4071294227739</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>387,39 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Flex hammer 952<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100888 · EAN 4028954831569</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>305,14 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact box 582<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100925 · EAN 4015248839761</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>4,23 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max clamp 359<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 100962 · EAN 4043886021127</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>401,94 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Basic hammer 45</h3>
+<p class="sku">Art.-Nr. 100999 · EAN 4081698919623</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>412,11 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro hammer 502<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101036 · EAN 4026085933569</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>430,56 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex hammer 971<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101073 · EAN 4095526047825</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>256,33 €</s> <b>242,52 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Flex hammer 370<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101110 · EAN 4036718146203</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>165,17 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic tape 953</h3>
+<p class="sku">Art.-Nr. 101147 · EAN 4013954604468</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>257,56 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max glove 285</h3>
+<p class="sku">Art.-Nr. 101184 · EAN 4081374149197</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>302,47 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro screw set 57</h3>
+<p class="sku">Art.-Nr. 101221 · EAN 4014830232916</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>204,19 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<h2 class="cat">Fasteners</h2>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact saw 333<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101258 · EAN 4053624161749</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>302,49 €</s> <b>232,78 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max level 281<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101295 · EAN 4067246658313</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>169,92 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Compact screw set 53</h3>
+<p class="sku">Art.-Nr. 101332 · EAN 4071732744236</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><s>82,09 €</s> <b>63,00 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact box 64</h3>
+<p class="sku">Art.-Nr. 101369 · EAN 4097498878257</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>312,83 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex hammer 260<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 101406 · EAN 4083953534413</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>365,30 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Basic hammer 968<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 101443 · EAN 4058642930884</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><s>400,72 €</s> <b>334,29 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro clamp 821<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 101480 · EAN 4088676885985</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>380,06 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex screw set 251</h3>
+<p class="sku">Art.-Nr. 101517 · EAN 4064865217994</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>51,30 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Basic hammer 359<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 101554 · EAN 4010520908551</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>254,00 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact tape 827</h3>
+<p class="sku">Art.-Nr. 101591 · EAN 4014676296724</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>323,95 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact drill 966</h3>
+<p class="sku">Art.-Nr. 101628 · EAN 4016671456836</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>246,41 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Basic screw set 671</h3>
+<p class="sku">Art.-Nr. 101665 · EAN 4071203138283</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>156,99 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max box 971</h3>
+<p class="sku">Art.-Nr. 101702 · EAN 4084518904424</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>336,65 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex screw set 435</h3>
+<p class="sku">Art.-Nr. 101739 · EAN 4090276538426</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>463,90 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Basic box 928<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 101776 · EAN 4030991889652</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>324,10 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex screw set 149<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101813 · EAN 4028035340069</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>47,82 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max box 619<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101850 · EAN 4090975764930</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>248,47 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<h2 class="cat">Safety</h2>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro tape 500</h3>
+<p class="sku">Art.-Nr. 101887 · EAN 4064993176966</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>472,23 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex screw set 438</h3>
+<p class="sku">Art.-Nr. 101924 · EAN 4038342491950</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>84,33 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro saw 748<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 101961 · EAN 4065609326497</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>279,49 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Basic tape 257</h3>
+<p class="sku">Art.-Nr. 101998 · EAN 4039593064884</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><s>255,21 €</s> <b>225,41 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max screw set 895</h3>
+<p class="sku">Art.-Nr. 102035 · EAN 4053143041792</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>67,72 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro drill 280</h3>
+<p class="sku">Art.-Nr. 102072 · EAN 4015548081516</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>204,34 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro hammer 352</h3>
+<p class="sku">Art.-Nr. 102109 · EAN 4067258226047</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>218,23 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex screw set 567<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102146 · EAN 4024254195836</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><s>293,95 €</s> <b>234,26 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact tape 109<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102183 · EAN 4060254134248</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>38,44 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Pro level 698</h3>
+<p class="sku">Art.-Nr. 102220 · EAN 4085445598847</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>364,00 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro tape 704</h3>
+<p class="sku">Art.-Nr. 102257 · EAN 4090435692144</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>56,16 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic level 921</h3>
+<p class="sku">Art.-Nr. 102294 · EAN 4099850640912</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>310,71 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Max box 578</h3>
+<p class="sku">Art.-Nr. 102331 · EAN 4097190268352</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>60,86 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro drill 743</h3>
+<p class="sku">Art.-Nr. 102368 · EAN 4085392697007</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>220,78 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max box 64</h3>
+<p class="sku">Art.-Nr. 102405 · EAN 4030927400745</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>355,55 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Max level 977<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 102442 · EAN 4071861869357</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>230,82 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic tape 614</h3>
+<p class="sku">Art.-Nr. 102479 · EAN 4087793388743</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>475,98 €</s> <b>388,78 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<h2 class="cat">Measuring</h2>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic screw set 890<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102516 · EAN 4083846114829</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><s>108,05 €</s> <b>90,36 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Max hammer 872</h3>
+<p class="sku">Art.-Nr. 102553 · EAN 4073579072878</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>112,95 €</s> <b>83,42 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact tape 658<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 102590 · EAN 4051691001541</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>455,78 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic saw 187</h3>
+<p class="sku">Art.-Nr. 102627 · EAN 4098148361265</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>20,89 €</s> <b>16,42 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Pro clamp 958</h3>
+<p class="sku">Art.-Nr. 102664 · EAN 4024792821911</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>97,08 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic saw 821</h3>
+<p class="sku">Art.-Nr. 102701 · EAN 4091985493704</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>137,39 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro saw 561<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 102738 · EAN 4054408401907</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>14,20 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro hammer 743</h3>
+<p class="sku">Art.-Nr. 102775 · EAN 4057219457109</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>418,10 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic saw 333<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102812 · EAN 4066017976663</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>447,37 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex saw 726<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102849 · EAN 4083306436594</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>406,03 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Flex saw 785</h3>
+<p class="sku">Art.-Nr. 102886 · EAN 4064508666727</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>101,61 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max level 468</h3>
+<p class="sku">Art.-Nr. 102923 · EAN 4059518100240</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>88,32 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max level 156</h3>
+<p class="sku">Art.-Nr. 102960 · EAN 4073803476366</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><b>194,06 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Compact screw set 661<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 102997 · EAN 4027297906236</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>105,82 €</s> <b>95,35 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro hammer 422</h3>
+<p class="sku">Art.-Nr. 103034 · EAN 4054873917173</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><b>292,95 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex hammer 416</h3>
+<p class="sku">Art.-Nr. 103071 · EAN 4012118454149</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>17,70 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Basic level 647</h3>
+<p class="sku">Art.-Nr. 103108 · EAN 4057743498423</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>117,47 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<h2 class="cat">Storage</h2>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max saw 818</h3>
+<p class="sku">Art.-Nr. 103145 · EAN 4075715353921</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>286,13 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max drill 68</h3>
+<p class="sku">Art.-Nr. 103182 · EAN 4068765454667</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>315,60 €</s> <b>270,22 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro screw set 525</h3>
+<p class="sku">Art.-Nr. 103219 · EAN 4074581730986</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><s>302,38 €</s> <b>285,10 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Basic saw 358</h3>
+<p class="sku">Art.-Nr. 103256 · EAN 4077875896593</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>92,39 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex drill 980<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 103293 · EAN 4032735123912</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>522,07 €</s> <b>451,36 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Compact box 188</h3>
+<p class="sku">Art.-Nr. 103330 · EAN 4087041620464</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>56,81 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex glove 465<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 103367 · EAN 4059308865933</p>
+<p class="desc">Supplied in a sturdy plastic case with foam inlay.</p>
+<p class="price"><b>443,43 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Flex saw 53<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 103404 · EAN 4032135786544</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>394,41 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Max glove 625</h3>
+<p class="sku">Art.-Nr. 103441 · EAN 4017053967649</p>
+<p class="desc">Pack of 100, zinc plated, DIN 7981.</p>
+<p class="price"><s>510,78 €</s> <b>395,30 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Max hammer 83</h3>
+<p class="sku">Art.-Nr. 103478 · EAN 4062376445590</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>418,94 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro glove 256<span class="tag new">New</span></h3>
+<p class="sku">Art.-Nr. 103515 · EAN 4017250735251</p>
+<p class="desc">With ergonomic two-component grip and hanging hole.</p>
+<p class="price"><b>163,79 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.svg" alt="">
+<div class="body"><h3>Basic tape 223</h3>
+<p class="sku">Art.-Nr. 103552 · EAN 4081135182925</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>626,49 €</s> <b>449,14 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Compact glove 488</h3>
+<p class="sku">Art.-Nr. 103589 · EAN 4092367206881</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>243,36 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/photo.jpg" alt="">
+<div class="body"><h3>Pro drill 214<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 103626 · EAN 4019685302814</p>
+<p class="desc">Hardened steel, chrome-vanadium finish.</p>
+<p class="price"><b>21,75 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+<article class="item">
+<img src="../images/logo.png" alt="">
+<div class="body"><h3>Pro saw 789<span class="tag eco">Eco</span></h3>
+<p class="sku">Art.-Nr. 103663 · EAN 4060248877214</p>
+<p class="desc">Suitable for indoor and outdoor use, IP54.</p>
+<p class="price"><s>300,74 €</s> <b>224,38 €</b> <small>zzgl. MwSt.</small></p></div>
+</article>
+</div>
+</body>
+</html>

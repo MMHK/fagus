@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ใบเสร็จรับเงิน / ใบกำกับภาษี</title>
+<style>
+@page { size: A5; margin: 12mm; }
+html { font: 9.5pt/1.6 Thonburi, Tahoma, sans-serif; color: #1d2433; }
+body { margin: 0; }
+.head { display: grid; grid-template-columns: 1fr auto; gap: 4mm; border-bottom: 1.2pt solid #0f5132; padding-bottom: 2mm; }
+.head h1 { font-size: 14pt; margin: 0; color: #0f5132; line-height: 1.3; }
+.head .orig { border: 1pt solid #0f5132; color: #0f5132; padding: 1mm 3mm; font-weight: 700; align-self: start; border-radius: 1mm; }
+.shop { font-size: 8.5pt; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 3mm 0; font-size: 8.5pt; }
+.parties div { background: #f1f7f4; padding: 2mm 3mm; border-radius: 1.5mm; }
+.parties b { color: #0f5132; }
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+th { background: #0f5132; color: #fff; font-weight: 700; padding: 1mm 1.5mm; text-align: left; }
+td { padding: 1mm 1.5mm; border-bottom: .5pt solid #cfdcd5; vertical-align: top; }
+.n { text-align: right; white-space: nowrap; }
+tfoot td { border: 0; padding: .6mm 1.5mm; }
+tfoot tr.grand td { font-weight: 700; font-size: 10pt; border-top: 1pt solid #0f5132; }
+.words { margin-top: 2mm; background: #f1f7f4; padding: 1.5mm 3mm; text-align: center; font-weight: 700; }
+.terms { font-size: 8pt; text-align: justify; margin: 3mm 0 0; }
+.sign { display: flex; justify-content: space-between; margin-top: 10mm; font-size: 8pt; text-align: center; }
+.sign div { width: 45mm; border-top: .6pt dotted #1d2433; padding-top: 1mm; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>ใบเสร็จรับเงิน / ใบกำกับภาษี</h1>
+    <div class="shop">บริษัท ร้านกาแฟบ้านสวน จำกัด (สำนักงานใหญ่)<br>
+    เลขที่ 88/12 ถนนนิมมานเหมินท์ ตำบลสุเทพ อำเภอเมืองเชียงใหม่ จังหวัดเชียงใหม่ 50200<br>
+    เลขประจำตัวผู้เสียภาษี 0505561001234 · โทร 053-055-012</div>
+  </div>
+  <div class="orig">ต้นฉบับ</div>
+</div>
+<div class="parties">
+  <div><b>ลูกค้า</b><br>คุณสมศรี ใจดี<br>123 หมู่ 4 ตำบลแม่เหียะ อำเภอเมืองเชียงใหม่ 50100</div>
+  <div><b>เลขที่</b> RC-2569/00731<br><b>วันที่</b> 7 พฤศจิกายน 2569<br><b>ชำระโดย</b> พร้อมเพย์ (QR)</div>
+</div>
+<table>
+  <thead><tr><th>รายการ</th><th class="n">จำนวน</th><th class="n">ราคาต่อหน่วย</th><th class="n">จำนวนเงิน</th></tr></thead>
+  <tbody>
+    <tr><td>เมล็ดกาแฟคั่วกลาง ดอยช้าง 500 กรัม</td><td class="n">2</td><td class="n">420.00</td><td class="n">840.00</td></tr>
+    <tr><td>กาแฟดริปแบบซอง (กล่อง 10 ซอง)</td><td class="n">3</td><td class="n">180.00</td><td class="n">540.00</td></tr>
+    <tr><td>แก้วเซรามิกทำมือ ลายช้าง สีเขียวมรกต</td><td class="n">1</td><td class="n">350.00</td><td class="n">350.00</td></tr>
+    <tr><td>ค่าจัดส่งพัสดุด่วนภายในจังหวัดเชียงใหม่</td><td class="n">1</td><td class="n">60.00</td><td class="n">60.00</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td colspan="3" class="n">รวมเป็นเงิน</td><td class="n">1,790.00</td></tr>
+    <tr><td colspan="3" class="n">มูลค่าสินค้าก่อนภาษี</td><td class="n">1,672.90</td></tr>
+    <tr><td colspan="3" class="n">ภาษีมูลค่าเพิ่ม 7%</td><td class="n">117.10</td></tr>
+    <tr class="grand"><td colspan="3" class="n">ยอดชำระทั้งสิ้น</td><td class="n">1,790.00</td></tr>
+  </tfoot>
+</table>
+<div class="words">(หนึ่งพันเจ็ดร้อยเก้าสิบบาทถ้วน)</div>
+<p class="terms">สินค้าที่ซื้อแล้วสามารถเปลี่ยนได้ภายในเจ็ดวันนับจากวันที่ได้รับสินค้า โดยต้องอยู่ในสภาพเดิมและมีใบเสร็จรับเงินฉบับนี้แนบมาด้วยทุกครั้ง หากมีข้อสงสัยเกี่ยวกับการสั่งซื้อหรือการจัดส่ง กรุณาติดต่อฝ่ายบริการลูกค้าในวันจันทร์ถึงวันศุกร์ เวลาแปดนาฬิกาครึ่งถึงสิบเจ็ดนาฬิกา ขอบคุณที่อุดหนุนกาแฟจากเกษตรกรภาคเหนือของไทย</p>
+<div class="sign"><div>ผู้รับเงิน</div><div>ผู้มีอำนาจลงนาม</div></div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Kontoauszug 11/2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 15mm 15mm 18mm 20mm;
+  @bottom-left { content: "Sparkasse Musterstadt · BIC SPMUDE33XXX"; font: 6.5pt Inter, sans-serif; color: #888; }
+  @bottom-right { content: "Blatt " counter(page) " von " counter(pages); font: 6.5pt Inter, sans-serif; color: #888; } }
+html { font: 8.5pt/1.35 Inter, sans-serif; color: #111; }
+body { margin: 0; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6mm; }
+.bank { font: 700 14pt Inter, sans-serif; color: #e2001a; }
+.bank small { display: block; font: 400 7.5pt Inter, sans-serif; color: #555; }
+.ref { text-align: right; font-size: 8pt; }
+.ref b { font-size: 11pt; display: block; }
+.owner { margin-bottom: 5mm; }
+.info { display: grid; grid-template-columns: repeat(4, 1fr); border: .4pt solid #999; margin-bottom: 4mm; }
+.info div { padding: 1.5mm 2mm; border-right: .4pt solid #999; }
+.info div:last-child { border-right: 0; }
+.info span { display: block; font-size: 6.5pt; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+.num { font-variant-numeric: tabular-nums; }
+.lining { font-variant-numeric: tabular-nums lining-nums slashed-zero; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 7pt; text-transform: uppercase; letter-spacing: .04em; color: #444; text-align: left; border-bottom: .8pt solid #111; padding: 1mm 1.5mm; }
+th.amt, td.amt { text-align: right; white-space: nowrap; width: 24mm; }
+tbody td { padding: 1.4mm 1.5mm; border-bottom: .3pt solid #ccc; vertical-align: top; }
+td.date { white-space: nowrap; width: 15mm; }
+td.text b { display: block; font-weight: 700; }
+td.text small { color: #555; display: block; overflow-wrap: anywhere; }
+td.neg { color: #b00020; }
+tr.saldo td { font-weight: 700; background: #f3f3f3; border-bottom: .8pt solid #111; }
+.sum { margin-left: auto; width: 80mm; margin-top: 4mm; border-collapse: collapse; }
+.sum td { padding: 1mm 1.5mm; }
+.sum tr:last-child td { border-top: .8pt solid #111; font-weight: 700; font-size: 10pt; }
+.hint { margin-top: 6mm; font-size: 7pt; color: #555; text-align: justify; hyphens: auto; }
+.prop { font-variant-numeric: proportional-nums; }
+</style></head><body>
+<div class="head">
+  <div class="bank">Sparkasse Musterstadt<small>Marktplatz 1 · 12345 Musterstadt · Telefon 0123 456-0</small></div>
+  <div class="ref"><b>Kontoauszug</b>Nr. 11 / 2026<br>vom 30.11.2026</div>
+</div>
+<div class="owner">Herrn<br>Dr. Konstantin Albers<br>Lindenallee 18<br>12345 Musterstadt</div>
+<div class="info">
+  <div><span>Konto</span>Girokonto Privat</div>
+  <div><span>IBAN</span><span class="lining" style="display:inline;font-size:8.5pt;text-transform:none;color:#111;letter-spacing:0">DE02 1005 0000 0024 2903 01</span></div>
+  <div><span>Zeitraum</span>01.11. – 30.11.2026</div>
+  <div><span>Dispositionskredit</span><span class="num" style="display:inline;font-size:8.5pt;text-transform:none;color:#111;letter-spacing:0">3.000,00 EUR</span></div>
+</div>
+<table>
+<thead><tr><th>Buchung</th><th>Valuta</th><th>Vorgang</th><th class="amt">Soll EUR</th><th class="amt">Haben EUR</th></tr></thead>
+<tbody>
+<tr class="saldo"><td class="date num">31.10.</td><td></td><td>Alter Kontostand</td><td></td><td class="amt num">4.118,27</td></tr>
+<tr><td class="date num">02.11.</td><td class="date num">02.11.</td><td class="text"><b>Lastschrift · Stadtwerke Musterstadt GmbH</b><small>Abschlag Strom/Gas 11/2026 Vertragskonto 400118823</small></td><td class="amt num neg">142,00</td><td></td></tr>
+<tr><td class="date num">03.11.</td><td class="date num">03.11.</td><td class="text"><b>Gutschrift · Ingenieurbüro Hartmann & Co. KG</b><small>Gehalt November 2026 Personalnummer 1187</small></td><td></td><td class="amt num">3.870,55</td></tr>
+<tr><td class="date num">05.11.</td><td class="date num">05.11.</td><td class="text"><b>Kartenzahlung · REWE Markt GmbH</b><small>Musterstadt Kartenzahlung girocard 2026-11-03T18:42</small></td><td class="amt num neg">63,18</td><td></td></tr>
+<tr><td class="date num">05.11.</td><td class="date num">05.11.</td><td class="text"><b>Dauerauftrag · Hausverwaltung Kessler</b><small>Miete Lindenallee 18 Whg. 4 inkl. NK</small></td><td class="amt num neg">1.180,00</td><td></td></tr>
+<tr><td class="date num">05.11.</td><td class="date num">05.11.</td><td class="text"><b>Lastschrift · Allianz Versicherungs-AG</b><small>Kfz-Versicherung MS-KA 118 Beitrag 11/2026</small></td><td class="amt num neg">48,36</td><td></td></tr>
+<tr><td class="date num">05.11.</td><td class="date num">05.11.</td><td class="text"><b>Überweisung · Dr. Mira Albers</b><small>Anteil Urlaub Ostsee Mai</small></td><td></td><td class="amt num">450,00</td></tr>
+<tr><td class="date num">06.11.</td><td class="date num">06.11.</td><td class="text"><b>Kartenzahlung · Aral Station 2271</b><small>Musterstadt Kartenzahlung girocard</small></td><td class="amt num neg">71,04</td><td></td></tr>
+<tr><td class="date num">06.11.</td><td class="date num">06.11.</td><td class="text"><b>Lastschrift · Telekom Deutschland GmbH</b><small>Kundennummer 5518 2201 Rechnung 11/2026</small></td><td class="amt num neg">39,95</td><td></td></tr>
+<tr><td class="date num">07.11.</td><td class="date num">07.11.</td><td class="text"><b>Gutschrift · Finanzamt Musterstadt</b><small>Einkommensteuer 2025 Erstattung StNr 123/456/78901</small></td><td></td><td class="amt num">1.211,00</td></tr>
+<tr><td class="date num">07.11.</td><td class="date num">07.11.</td><td class="text"><b>Kartenzahlung · Buchhandlung am Markt</b><small>Musterstadt</small></td><td class="amt num neg">27,80</td><td></td></tr>
+<tr><td class="date num">07.11.</td><td class="date num">07.11.</td><td class="text"><b>Überweisung · Sportverein Musterstadt 1911 e.V.</b><small>Mitgliedsbeitrag 2027 Familie Albers</small></td><td class="amt num neg">216,00</td><td></td></tr>
+<tr><td class="date num">09.11.</td><td class="date num">09.11.</td><td class="text"><b>Lastschrift · PayPal (Europe) S.a r.l. et Cie, S.C.A.</b><small>1040318823771 PP.8821.PP . Online-Shop, Ihr Einkauf bei Online-Shop</small></td><td class="amt num neg">89,99</td><td></td></tr>
+<tr><td class="date num">11.11.</td><td class="date num">11.11.</td><td class="text"><b>Bargeldauszahlung · Geldautomat Sparkasse</b><small>Marktplatz 1 2026-11-21T10:05</small></td><td class="amt num neg">200,00</td><td></td></tr>
+<tr><td class="date num">11.11.</td><td class="date num">11.11.</td><td class="text"><b>Kartenzahlung · Apotheke am Rathaus</b><small>Musterstadt</small></td><td class="amt num neg">18,45</td><td></td></tr>
+<tr><td class="date num">12.11.</td><td class="date num">12.11.</td><td class="text"><b>Gutschrift · Kessler Hausverwaltung</b><small>Rückerstattung Nebenkosten 2025</small></td><td></td><td class="amt num">111,11</td></tr>
+<tr><td class="date num">12.11.</td><td class="date num">12.11.</td><td class="text"><b>Lastschrift · Rundfunk ARD, ZDF, DRadio</b><small>Beitragsnummer 123456789 Zeitraum 10/2026 - 12/2026</small></td><td class="amt num neg">55,08</td><td></td></tr>
+<tr><td class="date num">14.11.</td><td class="date num">14.11.</td><td class="text"><b>Dauerauftrag · Dr. Konstantin Albers</b><small>Sparplan Tagesgeld DE89 3704 0044 0532 0130 00</small></td><td class="amt num neg">500,00</td><td></td></tr>
+<tr><td class="date num">14.11.</td><td class="date num">14.11.</td><td class="text"><b>Kartenzahlung · Edeka Neukauf</b><small>Musterstadt Kartenzahlung girocard</small></td><td class="amt num neg">104,72</td><td></td></tr>
+<tr><td class="date num">14.11.</td><td class="date num">14.11.</td><td class="text"><b>Entgelt · Sparkasse Musterstadt</b><small>Kontoführung 11/2026</small></td><td class="amt num neg">7,90</td><td></td></tr>
+<tr class="saldo"><td class="date num">30.11.</td><td></td><td>Neuer Kontostand</td><td></td><td class="amt num">6.996,46</td></tr>
+</tbody></table>
+<table class="sum">
+<tr><td>Summe Soll</td><td class="amt num">2.764,47</td></tr>
+<tr><td>Summe Haben</td><td class="amt num">5.642,66</td></tr>
+<tr><td>Neuer Kontostand</td><td class="amt num">6.996,46</td></tr>
+</table>
+<p class="hint">Bitte prüfen Sie diesen Kontoauszug. Einwendungen gegen Rechnungsabschlüsse müssen innerhalb von sechs Wochen nach Zugang erhoben werden. Gutschriften sind unter dem Vorbehalt des Eingangs gebucht. Der Kontostand berücksichtigt nicht die Wertstellung. Vergleich der Ziffernformen: <span class="num">1.111,11 · 0.987,65</span> (tabellarisch) und <span class="prop">1.111,11 · 0.987,65</span> (proportional).</p>
+</body></html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Invoice 0042</title>
+<style>
+@font-face { font-family: "Plain Sans"; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Plain Sans"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+:root { --accent: #2f7d5b; --accent-light: #8cc2a8; --hairline: #e1e6e3; --soft-text: #56605b; --text-size: 12.5px; }
+@page { size: A4; margin: 0; }
+body { margin: 0; color: #1e2522; font-family: "Plain Sans", sans-serif; font-size: var(--text-size); -webkit-print-color-adjust: exact; print-color-adjust: exact; zoom: 80%; }
+p { margin: 0; }
+
+/* A thin bar fixed to the top of every page. */
+.top-rule { position: fixed; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+
+.masthead { display: grid; grid-template-columns: 3fr 2fr 2fr; column-gap: 1.5rem; padding: 2.75rem 3.25rem 2.25rem; }
+.brand-mark { max-width: 62%; height: 60px; object-fit: contain; object-position: left center; }
+.masthead-col { display: flex; flex-direction: column; line-height: 1.6; }
+.masthead-col > :empty { display: none; }
+.masthead-col.firm > :first-child { color: var(--accent); font-weight: 700; }
+
+.parties { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.25rem 3.25rem; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+.caption { margin-bottom: .45rem; color: var(--accent); font-size: .85em; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.recipient { display: flex; flex-direction: column; line-height: 1.6; }
+.recipient > :first-child { font-weight: 700; }
+.facts { border-collapse: collapse; }
+.facts th { padding: .15rem 2.25rem .15rem 0; color: var(--soft-text); font-weight: 400; text-align: left; }
+.facts td { padding: .15rem 0; }
+.facts .due > * { color: var(--accent); font-weight: 700; }
+
+.lines-wrap { padding: 1.75rem 3.25rem; }
+.lines { width: 100%; table-layout: fixed; overflow-wrap: break-word; border-collapse: collapse; }
+.lines th { padding: .9rem .9rem .9rem 0; border-bottom: 2px solid var(--accent); font-size: .95rem; font-weight: 700; text-align: left; }
+.lines td { padding: .9rem .9rem .9rem 0; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+.lines td:first-child { color: var(--accent); font-weight: 700; }
+.lines th:last-child, .lines td:last-child { padding-right: 0; text-align: right; }
+.lines .c-desc { width: 35%; }
+
+.closing { display: grid; grid-template-columns: 1fr 1fr; column-gap: 4.5rem; padding: 0 3.25rem 2rem; break-inside: avoid; }
+.remark-title { margin-bottom: .45rem; color: var(--accent); font-weight: 700; }
+.remark { line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.sums { display: grid; grid-template-columns: 1fr auto; column-gap: 2rem; row-gap: .45rem; margin: 0; align-self: start; text-align: right; }
+.sums dd { margin: 0; white-space: nowrap; }
+.sums .due { margin-top: .35rem; padding-top: .9rem; border-top: 1px solid var(--accent-light); color: var(--accent); font-size: 1.15rem; font-weight: 700; }
+
+.colophon { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 1.25rem; margin: 2.5rem 3.25rem 0; padding-top: 1rem; border-top: 3px solid var(--accent); color: var(--soft-text); font-size: .82rem; line-height: 1.5; break-inside: avoid; }
+.colophon .imprint { text-align: right; }
+</style></head><body>
+<div class="top-rule"></div>
+<div class="masthead">
+  <div><svg class="brand-mark" viewBox="0 0 220 64" role="img" aria-label="Logo"><rect width="64" height="64" rx="14" fill="#2f7d5b"/><path d="M18 46V18h8l12 17V18h8v28h-8L26 29v17z" fill="#fff"/><text x="76" y="42" font-family="Plain Sans" font-weight="700" font-size="26" fill="#1e2522">Nordwerk</text></svg></div>
+  <div class="masthead-col firm"><p>Nordwerk Digital GmbH</p><p>nordwerk.example</p><p>+49 40 66969 110</p><p>hallo@nordwerk.example</p><p></p><p>VAT DE 287 004 118</p></div>
+  <div class="masthead-col"><p>Große Elbstraße 145</p><p>22767 Hamburg</p><p>Germany</p></div>
+</div>
+<div class="parties">
+  <div><p class="caption">Bill to</p><div class="recipient"><p>Brightwater Coffee Roasters Ltd</p><p>Unit 4, Canal Wharf</p><p>Leeds LS11 5PS</p><p>United Kingdom</p><p>accounts@brightwater.example</p></div></div>
+  <table class="facts">
+    <tr><th>Invoice Number</th><td>0042</td></tr>
+    <tr><th>PO Number</th><td>BW-PO-7781</td></tr>
+    <tr><th>Invoice Date</th><td>13/Nov/2026</td></tr>
+    <tr><th>Due Date</th><td>13/Dec/2026</td></tr>
+    <tr class="due"><th>Balance Due</th><td>£14,862.00</td></tr>
+  </table>
+</div>
+<div class="lines-wrap">
+<table class="lines">
+  <thead><tr><th>Item</th><th class="c-desc">Description</th><th>Unit Cost</th><th>Quantity</th><th>Discount</th><th>Line Total</th></tr></thead>
+  <tbody>
+    <tr><td>Shopify theme</td><td>Custom Online Store 2.0 theme with sections for subscriptions, bundles and the wholesale portal</td><td>£6,800.00</td><td>1</td><td>10%</td><td>£6,120.00</td></tr>
+    <tr><td>Integrations</td><td>Recharge subscriptions, Klaviyo flows, ShipStation; webhook relay on Cloudflare Workers (https://relay.brightwater.example/hooks/shopify/orders-create)</td><td>£950.00</td><td>6</td><td></td><td>£5,700.00</td></tr>
+    <tr><td>Photography</td><td>Product shots, 24 SKUs on white and 8 lifestyle images, retouched</td><td>£42.00</td><td>32</td><td></td><td>£1,344.00</td></tr>
+    <tr><td>Support</td><td>Launch support retainer, November 2026</td><td>£1,698.00</td><td>1</td><td></td><td>£1,698.00</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="closing">
+  <div><p class="remark-title">Notes</p><div class="remark">Thank you for your business!
+Payment by bank transfer to GB33 BUKB 2020 1555 5555 55 (Barclays, Leeds), quoting the invoice number.
+
+Late payments incur interest under the Late Payment of Commercial Debts (Interest) Act 1998.</div></div>
+  <dl class="sums">
+    <dt>Subtotal</dt><dd>£15,542.00</dd>
+    <dt>Discount</dt><dd>−£680.00</dd>
+    <dt>VAT (reverse charge)</dt><dd>£0.00</dd>
+    <dt>Paid to date</dt><dd>£0.00</dd>
+    <dt class="due">Balance Due</dt><dd class="due">£14,862.00</dd>
+  </dl>
+</div>
+<div class="colophon"><div><b>Terms</b><br>Net 30. Reverse charge: customer to account for VAT to HMRC.</div><div><b>Bank</b><br>Barclays Bank UK PLC<br>Sort code 20-20-15</div><div class="imprint"><b>Nordwerk Digital GmbH</b><br>Amtsgericht Hamburg HRB 158 220<br>Geschäftsführer: L. Petersen</div></div>
+</body></html>

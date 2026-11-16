@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Backgrounds</title>
+<style>
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@page { size: A4; margin: 10mm; }
+body { margin: 0; font: 7pt Inter, sans-serif; color: #111; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; }
+.case > div { height: 28mm; border: 1px solid #999; }
+.case p { margin: 1mm 0 0; }
+.l1 { background: linear-gradient(#e11d48, #2563eb); }
+.l2 { background: linear-gradient(45deg, #e11d48, #2563eb); }
+.l3 { background: linear-gradient(to top right, #e11d48, #fde047, #2563eb); }
+.l4 { background: linear-gradient(to right, #e11d48 20%, #2563eb 20% 40%, #16a34a 60%); }
+.l5 { background: linear-gradient(to right, #e11d48, 25%, #2563eb); }
+.l6 { background: linear-gradient(to right, #2563eb, transparent); }
+.l7 { background: linear-gradient(to right in oklch longer hue, #e11d48, #2563eb); }
+.l8 { background: linear-gradient(to right in oklab, #000, #fff), white; }
+.r1 { background: radial-gradient(#fde047, #e11d48); }
+.r2 { background: radial-gradient(circle at 30% 40%, #fde047, #e11d48 60%, #2563eb); }
+.r3 { background: radial-gradient(closest-side, #16a34a, transparent); }
+.r4 { background: radial-gradient(40px 20px at right 20px bottom 10px, #2563eb, #fde047); }
+.c1 { background: conic-gradient(#e11d48, #fde047, #16a34a, #2563eb, #e11d48); }
+.c2 { background: conic-gradient(from 90deg at 30% 50%, #2563eb 0 25%, #fde047 0 50%, #e11d48 0); }
+.p1 { background: repeating-linear-gradient(45deg, #2563eb 0 6px, #bfdbfe 6px 12px); }
+.p2 { background: repeating-radial-gradient(circle, #e11d48 0 5px, #fecdd3 5px 10px); }
+.p3 { background: repeating-conic-gradient(#111 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.m1 { background: linear-gradient(to right, rgb(255 255 255 / 0), white), linear-gradient(#16a34a, #2563eb); }
+.m2 { background: radial-gradient(circle, #e11d48 30%, transparent 31%) 0 0 / 20px 20px, #fde047; }
+.m3 { background: linear-gradient(#2563eb, #2563eb) center / 50% 50% no-repeat, #e5e7eb; }
+.k1 { border: 6px dashed #111 !important; padding: 4mm; background: linear-gradient(#16a34a, #2563eb) content-box, #fde047 padding-box; }
+.k2 { border-radius: 8mm; background: linear-gradient(135deg, #e11d48, #2563eb); }
+</style></head>
+<body>
+<div class="grid">
+<div class="case"><div class="l1"></div><p>linear default</p></div>
+<div class="case"><div class="l2"></div><p>45deg</p></div>
+<div class="case"><div class="l3"></div><p>to top right</p></div>
+<div class="case"><div class="l4"></div><p>hard stops, two positions</p></div>
+<div class="case"><div class="l5"></div><p>hint at 25%</p></div>
+<div class="case"><div class="l6"></div><p>to transparent</p></div>
+<div class="case"><div class="l7"></div><p>in oklch longer hue</p></div>
+<div class="case"><div class="l8"></div><p>in oklab black to white</p></div>
+<div class="case"><div class="r1"></div><p>radial default</p></div>
+<div class="case"><div class="r2"></div><p>circle at 30% 40%</p></div>
+<div class="case"><div class="r3"></div><p>closest-side</p></div>
+<div class="case"><div class="r4"></div><p>40px 20px at right bottom</p></div>
+<div class="case"><div class="c1"></div><p>conic</p></div>
+<div class="case"><div class="c2"></div><p>conic from 90deg at 30% 50%</p></div>
+<div class="case"><div class="p1"></div><p>repeating linear</p></div>
+<div class="case"><div class="p2"></div><p>repeating radial</p></div>
+<div class="case"><div class="p3"></div><p>repeating conic, 16px tiles</p></div>
+<div class="case"><div class="m1"></div><p>two layers</p></div>
+<div class="case"><div class="m2"></div><p>dots, 20px tiles</p></div>
+<div class="case"><div class="m3"></div><p>centered, half size, no-repeat</p></div>
+<div class="case"><div class="k1"></div><p>content-box and padding-box</p></div>
+<div class="case"><div class="k2"></div><p>rounded corners</p></div>
+</div>
+</body></html>

@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Rechnung RE-2026-0042 (60 Positionen)</title>
+<style>
+  /* Quittio's default template in standard CSS: running elements instead of htmlpageheader,
+     margin boxes instead of {PAGENO}/{nbpg}, positions relative to the page area. */
+  @font-face { font-family: Geist; src: url(fonts/Geist-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-Medium.ttf); font-weight: 500; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-SemiBold.ttf); font-weight: 600; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-Bold.ttf); font-weight: 700; }
+
+  :root { --primary: #2741d9; --text: #15171c; --muted: #5f6470; --rule: #e6e8ec; }
+
+  /* Following pages start below their header; the first page with the letterhead. */
+  @page {
+    size: A4;
+    margin: 40mm 19mm 37mm 20mm;
+    @top-center { content: element(running); vertical-align: top; padding-top: 14.6mm; }
+    @bottom-center { content: element(footer); vertical-align: bottom; padding-bottom: 5.5mm; }
+  }
+  @page :first {
+    margin-top: 15mm;
+    @top-center { content: none; }
+  }
+
+  body { margin: 0; font-family: Geist, sans-serif; font-size: 9.75pt; color: var(--text); line-height: 1.45; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { vertical-align: top; padding: 0; line-height: 1.5; }
+  .muted { color: var(--muted); }
+  .right { text-align: right; }
+  .company { font-size: 16.5pt; font-weight: 700; color: var(--primary); line-height: 1.2; }
+
+  /* Letterhead down to the address field (DIN 5008 form B: 45 mm from the top). */
+  .letterhead { height: 30mm; }
+
+  /* The address field sits on the page, whatever the letterhead height: 45 mm from the top edge,
+     20 mm from the left edge, so 30 mm below and 0 mm right of the page area of the first page. */
+  .address { position: absolute; top: 30mm; left: 0; width: 85mm; height: 45mm; }
+  .sender-line { font-size: 9pt; color: var(--muted); border-bottom: 0.26mm solid #cdd0d6; padding-bottom: 1.2mm; line-height: 1.3; }
+  .address-lines { font-size: 10.5pt; line-height: 1.5; padding-top: 2.2mm; }
+
+  /* Fold and punch marks at the left edge of the sheet. */
+  .mark { position: absolute; left: -20mm; width: 4.2mm; border-top: 0.26mm solid #cdd0d6; }
+
+  .head { display: flex; }
+  .head .address-space { width: 108.6mm; height: 41.8mm; flex: none; }
+  .head .meta { flex: 1; }
+  .meta td { font-size: 9.4pt; padding-bottom: 0.75mm; line-height: 1.5; }
+  .meta td.label { color: var(--muted); padding-right: 4mm; }
+  .meta td.value { text-align: right; }
+
+  h1 { font-size: 13.5pt; color: var(--primary); font-weight: 600; margin: 0 0 5mm 0; line-height: 1.5; }
+
+  .lines th { font-size: 9pt; color: var(--muted); font-weight: 500; text-align: left; padding: 0 0 2mm 0; border-bottom: 0.26mm solid var(--text); }
+  .lines td { padding: 2.2mm 0 2.6mm 0; border-bottom: 0.26mm solid var(--rule); }
+  .lines .num { text-align: right; white-space: nowrap; }
+  .lines td.position, .lines td.quiet { color: var(--muted); }
+  .lines .name { font-weight: 500; }
+  .description { color: var(--muted); font-size: 9pt; }
+
+  /* Carry-over rows where the line table breaks, a Fagus extension: the running total comes from
+     the rows' data-carry-over, the page numbers from the page counters. */
+  .lines tbody tr { string-set: carry-over attr(data-carry-over); }
+  .lines .carry { -fagus-repeat: at-break; }
+  .lines .carry td { border-bottom: 0; padding-top: 3.6mm; }
+  .lines .carry-in td { border-bottom: 0.26mm solid var(--rule); padding-top: 2.2mm; }
+  .lines td.carry-amount { font-weight: 500; }
+  .lines .carry .amount::after { content: string(carry-over); }
+  .lines .continued-on::after { content: "Fortsetzung auf Seite " counter(-fagus-next-page); }
+  .lines .carried-from::after { content: "Übertrag von Seite " counter(-fagus-previous-page); }
+  @supports not (-fagus-repeat: at-break) { .lines .carry { display: none; } }
+
+  .totals { width: 74.2mm; margin-left: auto; margin-top: 3.1mm; break-inside: avoid; }
+  .totals td { padding: 0.47mm 0; }
+  .totals tr.gap td { height: 2.2mm; padding: 0; line-height: 1; }
+  .totals td.label { color: var(--muted); }
+  .totals .grand td { border-top: 0.26mm solid var(--text); padding-top: 3.1mm; vertical-align: bottom; line-height: 1.2; }
+  .totals td.grand-label { font-size: 10.5pt; font-weight: 600; }
+  .totals .grand td.amount { font-size: 12.75pt; font-weight: 700; color: var(--primary); }
+
+  .section { margin-top: 8.3mm; break-inside: avoid; }
+  .section-title { font-size: 9pt; color: var(--primary); font-weight: 600; }
+  .payment td { font-size: 9.4pt; }
+  .payment td.terms { width: 77mm; padding-right: 6mm; }
+  .payment td.qr { width: 17mm; text-align: center; padding-left: 4mm; }
+  .payment td.section-title { font-size: 9pt; padding-bottom: 0.7mm; }
+  .qr-caption { font-size: 7.9pt; color: var(--muted); text-align: center; }
+
+  /* Running header of the following pages and the footer of every page. */
+  .running { position: running(running); display: flex; justify-content: space-between; }
+  .running-title { font-size: 11.25pt; font-weight: 700; color: var(--primary); }
+  .running-meta { font-size: 9pt; color: var(--muted); }
+  .footer { position: running(footer); }
+  .footer-columns { display: flex; border-top: 0.26mm solid var(--rule); }
+  .footer-columns div { width: 43.8mm; font-size: 7.9pt; color: var(--muted); padding: 3.4mm 3mm 0 0; line-height: 1.5; box-sizing: border-box; }
+  .footer-columns div:last-child { width: 39.6mm; }
+  .page-number { font-size: 7.9pt; color: var(--muted); text-align: center; padding-top: 6.9mm; }
+  .page-number::after { content: "Seite " counter(page) " von " counter(pages); }
+</style>
+</head>
+<body>
+
+<div class="running">
+  <div class="company">Muster GmbH</div>
+  <div class="right">
+    <div class="running-title">Rechnung RE-2026-0042</div>
+    <div class="running-meta">Kunde AG · Kundennummer K-10001</div>
+    <div class="running-meta">Rechnungsdatum 03.10.2026</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-columns">
+    <div>Muster GmbH<br>Hauptstraße 1<br>12345 Musterstadt</div>
+    <div>+49 123 456789<br>rechnung@muster.example</div>
+    <div>HRB 12345<br>Amtsgericht Musterstadt<br>Geschäftsführer: Max Muster</div>
+    <div>USt-IdNr. DE123456789<br>St.-Nr. 12/345/67890</div>
+  </div>
+  <div class="page-number"></div>
+</div>
+
+<div class="mark" style="top: 90mm;"></div>
+<div class="mark" style="top: 133.5mm; width: 6.3mm;"></div>
+<div class="mark" style="top: 195mm;"></div>
+
+<div class="address">
+  <div class="sender-line">Muster GmbH · Hauptstraße 1 · 12345 Musterstadt</div>
+  <div class="address-lines">Kunde AG<br>Bahnhofstraße 5<br>54321 Beispielstadt</div>
+</div>
+
+<div class="letterhead"><div class="company">Muster GmbH</div></div>
+
+<div class="head">
+  <div class="address-space"></div>
+  <table class="meta">
+    <tr><td class="label">Rechnungsnummer</td><td class="value">RE-2026-0042</td></tr>
+    <tr><td class="label">Rechnungsdatum</td><td class="value">03.10.2026</td></tr>
+    <tr><td class="label">Leistungsdatum</td><td class="value">30.09.2026</td></tr>
+    <tr><td class="label">Kundennummer</td><td class="value">K-10001</td></tr>
+    <tr><td class="label">Ihre Referenz</td><td class="value">PO-4711</td></tr>
+    <tr><td class="label">Ihre USt-IdNr.</td><td class="value">DE987654321</td></tr>
+  </table>
+</div>
+
+<h1>Rechnung</h1>
+
+<table class="lines">
+  <thead><tr>
+    <th style="width: 11.1mm;">Pos.</th>
+    <th style="width: 65.9mm;">Beschreibung</th>
+    <th class="num" style="width: 24mm;">Menge</th>
+    <th class="num" style="width: 27mm;">Einzelpreis</th>
+    <th class="num" style="width: 14mm;">USt.</th>
+    <th class="num" style="width: 29mm;">Betrag</th>
+  </tr>
+  <tr class="carry carry-in"><td></td><td colspan="4" class="quiet carried-from"></td><td class="num quiet amount"></td></tr></thead>
+  <tfoot><tr class="carry carry-out"><td colspan="2" class="quiet continued-on"></td><td colspan="3" class="quiet" style="padding-left: 5.8mm;">Übertrag</td><td class="num carry-amount amount"></td></tr></tfoot>
+  <tbody>
+    <tr data-carry-over="8,26 €">
+      <td class="position">1</td>
+      <td><div class="name">Artikel 001</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">4,13 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">8,26 €</td>
+    </tr>
+    <tr data-carry-over="24,04 €">
+      <td class="position">2</td>
+      <td><div class="name">Artikel 002</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">5,26 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">15,78 €</td>
+    </tr>
+    <tr data-carry-over="49,60 €">
+      <td class="position">3</td>
+      <td><div class="name">Artikel 003</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">6,39 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">25,56 €</td>
+    </tr>
+    <tr data-carry-over="87,20 €">
+      <td class="position">4</td>
+      <td><div class="name">Artikel 004</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">7,52 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">37,60 €</td>
+    </tr>
+    <tr data-carry-over="139,10 €">
+      <td class="position">5</td>
+      <td><div class="name">Artikel 005</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">8,65 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">51,90 €</td>
+    </tr>
+    <tr data-carry-over="207,56 €">
+      <td class="position">6</td>
+      <td><div class="name">Artikel 006</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">9,78 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">68,46 €</td>
+    </tr>
+    <tr data-carry-over="218,47 €">
+      <td class="position">7</td>
+      <td><div class="name">Artikel 007</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">10,91 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">10,91 €</td>
+    </tr>
+    <tr data-carry-over="240,55 €">
+      <td class="position">8</td>
+      <td><div class="name">Artikel 008</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">11,04 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">22,08 €</td>
+    </tr>
+    <tr data-carry-over="277,06 €">
+      <td class="position">9</td>
+      <td><div class="name">Artikel 009</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">12,17 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">36,51 €</td>
+    </tr>
+    <tr data-carry-over="330,26 €">
+      <td class="position">10</td>
+      <td><div class="name">Artikel 010</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">13,30 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">53,20 €</td>
+    </tr>
+    <tr data-carry-over="402,41 €">
+      <td class="position">11</td>
+      <td><div class="name">Artikel 011</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">14,43 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">72,15 €</td>
+    </tr>
+    <tr data-carry-over="495,77 €">
+      <td class="position">12</td>
+      <td><div class="name">Artikel 012</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">15,56 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">93,36 €</td>
+    </tr>
+    <tr data-carry-over="612,60 €">
+      <td class="position">13</td>
+      <td><div class="name">Artikel 013</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">16,69 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">116,83 €</td>
+    </tr>
+    <tr data-carry-over="630,42 €">
+      <td class="position">14</td>
+      <td><div class="name">Artikel 014</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">17,82 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">17,82 €</td>
+    </tr>
+    <tr data-carry-over="668,32 €">
+      <td class="position">15</td>
+      <td><div class="name">Artikel 015</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">18,95 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">37,90 €</td>
+    </tr>
+    <tr data-carry-over="725,56 €">
+      <td class="position">16</td>
+      <td><div class="name">Artikel 016</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">19,08 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">57,24 €</td>
+    </tr>
+    <tr data-carry-over="806,40 €">
+      <td class="position">17</td>
+      <td><div class="name">Artikel 017</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">20,21 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">80,84 €</td>
+    </tr>
+    <tr data-carry-over="913,10 €">
+      <td class="position">18</td>
+      <td><div class="name">Artikel 018</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">21,34 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">106,70 €</td>
+    </tr>
+    <tr data-carry-over="1.047,92 €">
+      <td class="position">19</td>
+      <td><div class="name">Artikel 019</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">22,47 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">134,82 €</td>
+    </tr>
+    <tr data-carry-over="1.213,12 €">
+      <td class="position">20</td>
+      <td><div class="name">Artikel 020</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">23,60 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">165,20 €</td>
+    </tr>
+    <tr data-carry-over="1.237,85 €">
+      <td class="position">21</td>
+      <td><div class="name">Artikel 021</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">24,73 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">24,73 €</td>
+    </tr>
+    <tr data-carry-over="1.289,57 €">
+      <td class="position">22</td>
+      <td><div class="name">Artikel 022</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">25,86 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">51,72 €</td>
+    </tr>
+    <tr data-carry-over="1.370,54 €">
+      <td class="position">23</td>
+      <td><div class="name">Artikel 023</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">26,99 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">80,97 €</td>
+    </tr>
+    <tr data-carry-over="1.479,02 €">
+      <td class="position">24</td>
+      <td><div class="name">Artikel 024</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">27,12 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">108,48 €</td>
+    </tr>
+    <tr data-carry-over="1.620,27 €">
+      <td class="position">25</td>
+      <td><div class="name">Artikel 025</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">28,25 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">141,25 €</td>
+    </tr>
+    <tr data-carry-over="1.796,55 €">
+      <td class="position">26</td>
+      <td><div class="name">Artikel 026</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">29,38 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">176,28 €</td>
+    </tr>
+    <tr data-carry-over="2.010,12 €">
+      <td class="position">27</td>
+      <td><div class="name">Artikel 027</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">30,51 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">213,57 €</td>
+    </tr>
+    <tr data-carry-over="2.041,76 €">
+      <td class="position">28</td>
+      <td><div class="name">Artikel 028</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">31,64 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">31,64 €</td>
+    </tr>
+    <tr data-carry-over="2.107,30 €">
+      <td class="position">29</td>
+      <td><div class="name">Artikel 029</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">32,77 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">65,54 €</td>
+    </tr>
+    <tr data-carry-over="2.209,00 €">
+      <td class="position">30</td>
+      <td><div class="name">Artikel 030</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">33,90 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">101,70 €</td>
+    </tr>
+    <tr data-carry-over="2.345,12 €">
+      <td class="position">31</td>
+      <td><div class="name">Artikel 031</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">34,03 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">136,12 €</td>
+    </tr>
+    <tr data-carry-over="2.520,92 €">
+      <td class="position">32</td>
+      <td><div class="name">Artikel 032</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">35,16 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">175,80 €</td>
+    </tr>
+    <tr data-carry-over="2.738,66 €">
+      <td class="position">33</td>
+      <td><div class="name">Artikel 033</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">36,29 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">217,74 €</td>
+    </tr>
+    <tr data-carry-over="3.000,60 €">
+      <td class="position">34</td>
+      <td><div class="name">Artikel 034</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">37,42 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">261,94 €</td>
+    </tr>
+    <tr data-carry-over="3.039,15 €">
+      <td class="position">35</td>
+      <td><div class="name">Artikel 035</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">38,55 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">38,55 €</td>
+    </tr>
+    <tr data-carry-over="3.118,51 €">
+      <td class="position">36</td>
+      <td><div class="name">Artikel 036</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">39,68 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">79,36 €</td>
+    </tr>
+    <tr data-carry-over="3.240,94 €">
+      <td class="position">37</td>
+      <td><div class="name">Artikel 037</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">40,81 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">122,43 €</td>
+    </tr>
+    <tr data-carry-over="3.408,70 €">
+      <td class="position">38</td>
+      <td><div class="name">Artikel 038</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">41,94 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">167,76 €</td>
+    </tr>
+    <tr data-carry-over="3.619,05 €">
+      <td class="position">39</td>
+      <td><div class="name">Artikel 039</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">42,07 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">210,35 €</td>
+    </tr>
+    <tr data-carry-over="3.878,25 €">
+      <td class="position">40</td>
+      <td><div class="name">Artikel 040</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">43,20 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">259,20 €</td>
+    </tr>
+    <tr data-carry-over="4.188,56 €">
+      <td class="position">41</td>
+      <td><div class="name">Artikel 041</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">44,33 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">310,31 €</td>
+    </tr>
+    <tr data-carry-over="4.234,02 €">
+      <td class="position">42</td>
+      <td><div class="name">Artikel 042</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">45,46 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">45,46 €</td>
+    </tr>
+    <tr data-carry-over="4.327,20 €">
+      <td class="position">43</td>
+      <td><div class="name">Artikel 043</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">46,59 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">93,18 €</td>
+    </tr>
+    <tr data-carry-over="4.470,36 €">
+      <td class="position">44</td>
+      <td><div class="name">Artikel 044</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">47,72 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">143,16 €</td>
+    </tr>
+    <tr data-carry-over="4.665,76 €">
+      <td class="position">45</td>
+      <td><div class="name">Artikel 045</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">48,85 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">195,40 €</td>
+    </tr>
+    <tr data-carry-over="4.915,66 €">
+      <td class="position">46</td>
+      <td><div class="name">Artikel 046</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">49,98 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">249,90 €</td>
+    </tr>
+    <tr data-carry-over="5.216,32 €">
+      <td class="position">47</td>
+      <td><div class="name">Artikel 047</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">50,11 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">300,66 €</td>
+    </tr>
+    <tr data-carry-over="5.575,00 €">
+      <td class="position">48</td>
+      <td><div class="name">Artikel 048</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">51,24 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">358,68 €</td>
+    </tr>
+    <tr data-carry-over="5.627,37 €">
+      <td class="position">49</td>
+      <td><div class="name">Artikel 049</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">52,37 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">52,37 €</td>
+    </tr>
+    <tr data-carry-over="5.734,37 €">
+      <td class="position">50</td>
+      <td><div class="name">Artikel 050</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">53,50 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">107,00 €</td>
+    </tr>
+    <tr data-carry-over="5.898,26 €">
+      <td class="position">51</td>
+      <td><div class="name">Artikel 051</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">54,63 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">163,89 €</td>
+    </tr>
+    <tr data-carry-over="6.121,30 €">
+      <td class="position">52</td>
+      <td><div class="name">Artikel 052</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">55,76 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">223,04 €</td>
+    </tr>
+    <tr data-carry-over="6.405,75 €">
+      <td class="position">53</td>
+      <td><div class="name">Artikel 053</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">56,89 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">284,45 €</td>
+    </tr>
+    <tr data-carry-over="6.747,87 €">
+      <td class="position">54</td>
+      <td><div class="name">Artikel 054</div></td>
+      <td class="num quiet">6 Stk.</td>
+      <td class="num quiet">57,02 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">342,12 €</td>
+    </tr>
+    <tr data-carry-over="7.154,92 €">
+      <td class="position">55</td>
+      <td><div class="name">Artikel 055</div></td>
+      <td class="num quiet">7 Stk.</td>
+      <td class="num quiet">58,15 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">407,05 €</td>
+    </tr>
+    <tr data-carry-over="7.214,20 €">
+      <td class="position">56</td>
+      <td><div class="name">Artikel 056</div></td>
+      <td class="num quiet">1 Stk.</td>
+      <td class="num quiet">59,28 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">59,28 €</td>
+    </tr>
+    <tr data-carry-over="7.335,02 €">
+      <td class="position">57</td>
+      <td><div class="name">Artikel 057</div></td>
+      <td class="num quiet">2 Stk.</td>
+      <td class="num quiet">60,41 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">120,82 €</td>
+    </tr>
+    <tr data-carry-over="7.519,64 €">
+      <td class="position">58</td>
+      <td><div class="name">Artikel 058</div></td>
+      <td class="num quiet">3 Stk.</td>
+      <td class="num quiet">61,54 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">184,62 €</td>
+    </tr>
+    <tr data-carry-over="7.770,32 €">
+      <td class="position">59</td>
+      <td><div class="name">Artikel 059</div></td>
+      <td class="num quiet">4 Stk.</td>
+      <td class="num quiet">62,67 €</td>
+      <td class="num quiet">19 %</td>
+      <td class="num">250,68 €</td>
+    </tr>
+    <tr data-carry-over="8.089,32 €">
+      <td class="position">60</td>
+      <td><div class="name">Artikel 060</div></td>
+      <td class="num quiet">5 Stk.</td>
+      <td class="num quiet">63,80 €</td>
+      <td class="num quiet">7 %</td>
+      <td class="num">319,00 €</td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td class="label">Nettobetrag</td><td class="right">8.089,32 €</td></tr>
+  <tr><td class="label">19 % USt. auf 5.956,20 €</td><td class="right">1.131,68 €</td></tr>
+  <tr><td class="label">7 % USt. auf 2.133,12 €</td><td class="right">149,32 €</td></tr>
+  <tr class="gap"><td></td><td></td></tr>
+  <tr class="grand"><td class="grand-label">Gesamtbetrag</td><td class="right amount">9.370,32 €</td></tr>
+</table>
+
+<div class="section">
+  <table class="payment"><tr>
+    <td class="terms">
+      <table><tr><td class="section-title">Zahlung</td></tr></table>
+      Bitte bis zum 17.10.2026 überweisen.
+    </td>
+    <td>
+      <table><tr><td class="section-title">Bankverbindung</td></tr></table>
+      DE02 1203 0000 0000 2020 51<br>
+      <span class="muted">BYLADEM1001 · Zweck: RE-2026-0042</span>
+    </td>
+    <td class="qr"><img src="girocode.png" style="width: 17mm; height: 17mm;"><div class="qr-caption">GiroCode</div></td>
+  </tr></table>
+</div>
+
+</body>
+</html>

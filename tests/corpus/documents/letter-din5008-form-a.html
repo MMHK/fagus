@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kündigung des Mietvertrags</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+/* DIN 5008 Form A: letterhead 27 mm, address field 45 mm from the top edge */
+@page { size: A4; margin: 20mm 20mm 22mm 25mm;
+  @top-right { content: "Seite " counter(page) " von " counter(pages); font: 8pt Inter, sans-serif; color: #444; vertical-align: bottom; padding-bottom: 4mm; }
+  @top-left { content: "Hausverwaltung Fleetblick · Schreiben vom 6. November 2026"; font: 8pt Inter, sans-serif; color: #444; vertical-align: bottom; padding-bottom: 4mm; }
+  @bottom-center { content: "Hausverwaltung Fleetblick GmbH · Amtsgericht Hamburg HRB 123456 · Geschäftsführung: Svenja Paulsen"; font: 6.5pt Inter, sans-serif; color: #666; }
+}
+@page :first { margin-top: 0; @top-right { content: none; } @top-left { content: none; } }
+body { margin: 0; font: 10pt/1.42 Inter, sans-serif; color: #000; }
+.first { position: relative; height: 98.46mm; margin: 0 0 0 -25mm; width: 210mm; }
+.first > * { position: absolute; }
+.fold { left: 3mm; width: 5mm; border-top: .25pt solid #000; }
+.fold.a { top: 87mm; } .fold.b { top: 192mm; } .fold.punch { top: 148.5mm; width: 7mm; }
+.logo { top: 10mm; left: 25mm; display: flex; align-items: center; gap: 3mm; }
+.logo b { display: grid; place-items: center; width: 11mm; height: 11mm; border-radius: 2mm; background: #134e4a; color: #fff; font-size: 14pt; }
+.logo span { font-size: 13pt; font-weight: 700; color: #134e4a; line-height: 1.1; }
+.logo small { display: block; font-size: 7.5pt; font-weight: 400; color: #555; }
+.window { top: 27mm; left: 25mm; width: 85mm; height: 45mm; }
+.return { height: 5mm; font-size: 7pt; line-height: 1; padding-top: 2.5mm; border-bottom: .25pt solid #000; width: max-content; }
+.note { height: 12.7mm; font-size: 8pt; padding-top: 1mm; }
+.recipient { height: 27.3mm; line-height: 1.25; }
+.info { top: 32mm; left: 125mm; width: 75mm; font-size: 8pt; line-height: 1.35; }
+.info dl { display: grid; grid-template-columns: 26mm 1fr; margin: 0; }
+.info dt { color: #444; }
+.info dd { margin: 0; }
+.info .date { margin-top: 3mm; }
+h1 { font-size: 10pt; font-weight: 700; margin: 0 0 8mm; }
+p { margin: 0 0 4.23mm; text-align: left; hyphens: manual; orphans: 2; widows: 2; }
+ol { margin: 0 0 4.23mm; padding-left: 6mm; }
+ol li { margin-bottom: 1.5mm; }
+table { border-collapse: collapse; margin: 0 0 4.23mm; width: 100%; font-size: 9pt; }
+td, th { border-bottom: .5pt solid #999; padding: 1mm 1.5mm; text-align: left; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+tfoot td { font-weight: 700; border-bottom: 0; border-top: 1pt solid #000; }
+.closing { break-inside: avoid; margin-top: 8mm; }
+.closing .sig { height: 14mm; }
+.enclosures { margin-top: 8mm; font-size: 9pt; break-inside: avoid; }
+.enclosures b { display: block; }
+</style>
+</head>
+<body>
+<div class="first">
+  <div class="fold a"></div><div class="fold punch"></div><div class="fold b"></div>
+  <div class="logo"><b>F</b><span>Hausverwaltung Fleetblick<small>Mietverwaltung · WEG-Verwaltung · Sondereigentum</small></span></div>
+  <div class="window">
+    <div class="return">Hausverwaltung Fleetblick GmbH · Deichstraße 21 · 20459 Hamburg</div>
+    <div class="note">Einschreiben Rückschein</div>
+    <div class="recipient">Herrn<br>Malte Johannsen<br>Frau Dr. Ayşe Johannsen-Kaya<br>Isestraße 117, 3. OG links<br>20149 Hamburg</div>
+  </div>
+  <div class="info">
+    <dl><dt>Ihr Zeichen</dt><dd>MJ/2026-10-28</dd><dt>Unser Zeichen</dt><dd>SP/IS117-3L</dd><dt>Ansprechpartnerin</dt><dd>Svenja Paulsen</dd><dt>Telefon</dt><dd>040 66969 241</dd><dt>E-Mail</dt><dd>paulsen@fleetblick.example</dd></dl>
+    <div class="date">Hamburg, 6. November 2026</div>
+  </div>
+</div>
+<h1>Bestätigung Ihrer Kündigung des Mietvertrags vom 1. April 2019 und Hinweise zur Wohnungsübergabe</h1>
+<p>Sehr geehrter Herr Johannsen, sehr geehrte Frau Dr. Johannsen-Kaya,</p>
+<p>wir bestätigen den Eingang Ihrer Kündigung vom 28. Oktober 2026, die uns am 30. Oktober 2026 zugegangen ist. Da die Kündigung bis zum dritten Werktag des Monats eingegangen ist, endet das Mietverhältnis über die Wohnung Isestraße 117, 3. Obergeschoss links, unter Einhaltung der gesetzlichen Kündigungsfrist von drei Monaten zum <b>31. Januar 2027</b>.</p>
+<p>Für die Übergabe der Wohnung schlagen wir Ihnen Freitag, den 29. Januar 2027, um 10:00 Uhr vor. Sollte Ihnen dieser Termin nicht passen, nennen Sie uns bitte bis zum 15. Januar 2027 zwei Alternativen. Zur Übergabe bringen Sie bitte alle Schlüssel mit, die Sie bei Einzug erhalten oder nachträglich angefertigt haben; laut Übergabeprotokoll vom 28. März 2019 sind dies:</p>
+<table>
+<thead><tr><th>Schlüssel</th><th>Nummer</th><th class="n">Anzahl</th></tr></thead>
+<tbody>
+<tr><td>Haus- und Wohnungstür (Schließanlage)</td><td>SA-117-31</td><td class="n">3</td></tr>
+<tr><td>Briefkasten</td><td>BK-07</td><td class="n">2</td></tr>
+<tr><td>Kellerabteil Nr. 7</td><td>K-07</td><td class="n">1</td></tr>
+<tr><td>Fahrradraum</td><td>FR-02</td><td class="n">2</td></tr>
+</tbody>
+<tfoot><tr><td colspan="2">Zusammen</td><td class="n">8</td></tr></tfoot>
+</table>
+<p>Nach § 5 Ihres Mietvertrags sind bei Auszug die Schönheitsreparaturen nur insoweit geschuldet, als die Wohnung über das Maß des vertragsgemäßen Gebrauchs hinaus abgenutzt ist. Eine Pflicht zur Renovierung nach festen Fristen besteht nicht. Wir bitten Sie jedoch, die folgenden Punkte vor der Übergabe zu erledigen:</p>
+<ol>
+<li>Entfernen Sie alle Einbauten, die Sie selbst eingebracht haben, insbesondere die Einbauküche im Wohnraum und die Deckenleuchten, sofern Sie diese nicht mit dem Nachmieter gesondert vereinbart haben.</li>
+<li>Verschließen Sie Dübellöcher fachgerecht; in gefliesten Bereichen genügt ein farblich passendes Silikon.</li>
+<li>Lassen Sie den Gasdurchlauferhitzer im Bad von einem Fachbetrieb warten und legen Sie uns die Bescheinigung vor. Die letzte Wartung erfolgte laut unseren Unterlagen im Februar 2025.</li>
+<li>Reinigen Sie die Wohnung einschließlich der Fenster, des Balkons und des Kellerabteils besenrein.</li>
+</ol>
+<p>Die Zählerstände für Strom, Gas und Wasser nehmen wir bei der Übergabe gemeinsam mit Ihnen auf. Bitte melden Sie Strom und Gas bei Ihren Versorgern selbst ab; die Abmeldung bei der Rundfunkbeitragsstelle und die Ummeldung beim Einwohnermeldeamt liegen ebenfalls bei Ihnen.</p>
+<p>Ihre Mietkaution in Höhe von 2.850,00 Euro zuzüglich der aufgelaufenen Zinsen rechnen wir nach der Übergabe ab. Wir behalten uns vor, einen angemessenen Teil bis zur Erstellung der Betriebskostenabrechnung für das Jahr 2026 einzubehalten; erfahrungsgemäß liegt diese im Juni 2027 vor. Für die Abrechnung des Jahres 2027 erhalten Sie eine anteilige Abrechnung für den Monat Januar.</p>
+<p>Wir möchten die Wohnung möglichst nahtlos weitervermieten. Wir würden uns daher freuen, wenn Sie Besichtigungen mit Mietinteressenten nach vorheriger Absprache ermöglichen. Wir kündigen jede Besichtigung mindestens drei Tage vorher an und beschränken sie auf werktags zwischen 10:00 und 19:00 Uhr sowie samstags zwischen 10:00 und 13:00 Uhr.</p>
+<p>Sollten Sie einen Nachmieter vorschlagen wollen, senden Sie uns bitte eine Selbstauskunft und die Einkommensnachweise der Interessenten. Ein Anspruch auf Annahme eines Nachmieters besteht nicht; wir prüfen jeden Vorschlag aber wohlwollend.</p>
+<p>Für die vergangenen knapp acht Jahre bedanken wir uns herzlich. Sie waren uns stets angenehme Mieter, und die Hausgemeinschaft wird Ihren Einsatz für den Innenhof vermissen.</p>
+<div class="closing">
+<p>Mit freundlichen Grüßen</p>
+<p>Hausverwaltung Fleetblick GmbH</p>
+<div class="sig"></div>
+<p>Svenja Paulsen<br>Mietverwaltung</p>
+</div>
+<div class="enclosures"><b>Anlagen</b>Übergabeprotokoll vom 28. März 2019 (Kopie)<br>Merkblatt Wohnungsübergabe<br>Formular Nachmieter-Selbstauskunft</div>
+</body>
+</html>

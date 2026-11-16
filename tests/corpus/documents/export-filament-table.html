@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="de" class="fi min-h-screen">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kunden – Export – Abo-Verwaltung</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 500 700; }
+/* the compiled panel theme of a Filament 3 admin panel (Tailwind CSS 3), the classes this page uses */
+*, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: rgba(var(--gray-200), 1); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; }
+:root {
+  --font-family: 'Inter';
+  --sidebar-width: 20rem;
+  --gray-50: 250, 250, 250; --gray-100: 244, 244, 245; --gray-200: 228, 228, 231; --gray-300: 212, 212, 216; --gray-400: 161, 161, 170; --gray-500: 113, 113, 122; --gray-600: 82, 82, 91; --gray-700: 63, 63, 70; --gray-950: 9, 9, 11;
+  --primary-50: 255, 251, 235; --primary-400: 251, 191, 36; --primary-600: 217, 119, 6; --primary-700: 180, 83, 9;
+  --danger-50: 254, 242, 242; --danger-400: 248, 113, 113; --danger-600: 220, 38, 38; --danger-700: 185, 28, 28;
+  --success-50: 240, 253, 244; --success-400: 74, 222, 128; --success-600: 22, 163, 74; --success-700: 21, 128, 61;
+  --warning-50: 255, 251, 235; --warning-400: 251, 191, 36; --warning-600: 217, 119, 6; --warning-700: 180, 83, 9;
+  --info-50: 239, 246, 255; --info-400: 96, 165, 250; --info-600: 37, 99, 235; --info-700: 29, 78, 216;
+}
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-family: var(--font-family), ui-sans-serif, system-ui, sans-serif; font-feature-settings: normal; }
+body { margin: 0; line-height: inherit; background-color: rgba(var(--gray-50), 1); color: rgba(var(--gray-950), 1); }
+h1, p { margin: 0; font-size: inherit; font-weight: inherit; }
+table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+svg { display: block; vertical-align: middle; }
+.flex { display: flex; } .grid { display: grid; } .hidden { display: none; }
+.items-center { align-items: center; } .justify-between { justify-content: space-between; }
+.gap-x-2 { column-gap: .5rem; } .gap-x-3 { column-gap: .75rem; } .gap-4 { gap: 1rem; }
+.min-w-0 { min-width: 0; } .max-w-48 { max-width: 12rem; } .w-full { width: 100%; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.whitespace-nowrap { white-space: nowrap; }
+.text-xs { font-size: .75rem; line-height: 1rem; } .text-sm { font-size: .875rem; line-height: 1.25rem; } .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+.font-medium { font-weight: 500; } .font-semibold { font-weight: 600; } .font-bold { font-weight: 700; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.text-start { text-align: start; } .text-end { text-align: end; }
+.text-gray-500 { --tw-text-opacity: 1; color: rgba(var(--gray-500), var(--tw-text-opacity)); }
+.px-3 { padding-left: .75rem; padding-right: .75rem; } .py-2 { padding-top: .5rem; padding-bottom: .5rem; } .py-3\.5 { padding-top: .875rem; padding-bottom: .875rem; }
+.tracking-tight { letter-spacing: -.025em; }
+.divide-y > :not([hidden]) ~ :not([hidden]) { --tw-divide-y-reverse: 0; border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse))); border-bottom-width: calc(1px * var(--tw-divide-y-reverse)); border-color: rgba(var(--gray-200), 1); }
+.ring-1 { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-offset-color, #fff); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color); box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
+.ring-gray-950\/5 { --tw-ring-color: rgba(var(--gray-950), 0.05); }
+.shadow-sm { --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow); }
+.rounded-xl { border-radius: .75rem; } .bg-white { --tw-bg-opacity: 1; background-color: rgb(255 255 255 / var(--tw-bg-opacity)); }
+.fi-header { margin-bottom: 1rem; }
+.fi-header-subheading { margin-top: .25rem; color: rgba(var(--gray-500), 1); font-size: .875rem; }
+.fi-breadcrumbs ol { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0 0 .5rem; padding: 0; font-size: .875rem; color: rgba(var(--gray-500), 1); }
+.fi-breadcrumbs li + li::before { content: "/"; margin-right: .5rem; color: rgba(var(--gray-400), 1); }
+.fi-ta { overflow: hidden; }
+.fi-ta-header-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; }
+.fi-ta-filter-indicators { display: flex; flex-wrap: wrap; gap: .375rem; align-items: center; padding: .5rem 1rem; background-color: rgba(var(--gray-50), 1); border-top: 1px solid rgba(var(--gray-200), 1); font-size: .875rem; }
+.fi-ta-content { position: relative; overflow-x: auto; border-top: 1px solid rgba(var(--gray-200), 1); }
+.fi-ta-table { width: 100%; table-layout: auto; text-align: start; }
+.fi-ta-table > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; border-color: rgba(var(--gray-200), 1); }
+.fi-ta-header-cell { padding: .875rem .75rem; font-size: .875rem; font-weight: 600; color: rgba(var(--gray-950), 1); text-align: start; white-space: nowrap; background-color: rgba(var(--gray-50), 1); }
+.fi-ta-header-cell-sort-icon { width: 1.25rem; height: 1.25rem; color: rgba(var(--gray-400), 1); flex-shrink: 0; }
+.fi-ta-header-cell.fi-sorted .fi-ta-header-cell-sort-icon { color: rgba(var(--gray-950), 1); }
+.fi-ta-cell { font-size: .875rem; line-height: 1.25rem; vertical-align: middle; }
+.fi-ta-row:nth-child(even) { background-color: rgba(var(--gray-50), .6); }
+.fi-ta-row:has(.fi-color-danger) { box-shadow: inset 3px 0 0 rgba(var(--danger-600), 1); }
+.fi-avatar { display: inline-grid; place-items: center; width: 2rem; height: 2rem; flex: none; border-radius: 9999px; font-size: .75rem; font-weight: 600; color: #fff; background-color: hsl(var(--hue) 55% 45%); }
+.fi-badge { display: inline-flex; align-items: center; justify-content: center; column-gap: .25rem; min-width: 1.5rem; border-radius: .375rem; padding: .25rem .5rem; font-size: .75rem; line-height: 1rem; font-weight: 500; white-space: nowrap;
+  --c-50: var(--gray-50); --c-400: var(--gray-400); --c-600: var(--gray-600); --c-700: var(--gray-700);
+  background-color: rgba(var(--c-50), 1); color: rgba(var(--c-700), 1);
+  --tw-ring-inset: inset; --tw-ring-color: rgba(var(--c-600), 0.1);
+  box-shadow: var(--tw-ring-inset) 0 0 0 1px var(--tw-ring-color); }
+.fi-badge-icon { width: 1rem; height: 1rem; flex: none; color: rgba(var(--c-400), 1); }
+.fi-color-primary { --c-50: var(--primary-50); --c-400: var(--primary-400); --c-600: var(--primary-600); --c-700: var(--primary-700); }
+.fi-color-danger { --c-50: var(--danger-50); --c-400: var(--danger-400); --c-600: var(--danger-600); --c-700: var(--danger-700); }
+.fi-color-success { --c-50: var(--success-50); --c-400: var(--success-400); --c-600: var(--success-600); --c-700: var(--success-700); }
+.fi-color-warning { --c-50: var(--warning-50); --c-400: var(--warning-400); --c-600: var(--warning-600); --c-700: var(--warning-700); }
+.fi-color-info { --c-50: var(--info-50); --c-400: var(--info-400); --c-600: var(--info-600); --c-700: var(--info-700); }
+.fi-color-gray { --c-50: var(--gray-50); --c-400: var(--gray-400); --c-600: var(--gray-600); --c-700: var(--gray-700); }
+.fi-ta-summary-row td { font-weight: 600; background-color: rgba(var(--gray-50), 1); border-top: 2px solid rgba(var(--gray-300), 1); }
+.fi-pagination { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; border-top: 1px solid rgba(var(--gray-200), 1); font-size: .875rem; color: rgba(var(--gray-500), 1); }
+.fi-sidebar, .fi-topbar, .fi-ta-header-toolbar .fi-ta-search { display: none; }
+@media print {
+  @page { size: A4 landscape; margin: 10mm 10mm 12mm; @bottom-right { content: counter(page) " / " counter(pages); font: 8px Inter, sans-serif; color: #71717a; } }
+  body { background: #fff; }
+  .fi-main { padding: 0; }
+  .fi-ta-content { overflow: visible; }
+  .fi-ta-table thead { display: table-header-group; }
+  .fi-ta-row { break-inside: avoid; }
+  .fi-pagination { display: none; }
+  .ring-1, .shadow-sm { box-shadow: none; }
+  .fi-ta { border: 1px solid rgba(var(--gray-200), 1); }
+}
+</style>
+</head>
+<body class="fi-body fi-panel-admin">
+<aside class="fi-sidebar">Navigation</aside>
+<div class="fi-topbar">Suche</div>
+<main class="fi-main">
+  <header class="fi-header">
+    <nav class="fi-breadcrumbs"><ol><li>Abonnements</li><li>Kunden</li><li>Liste</li></ol></nav>
+    <div class="flex justify-between items-center">
+      <h1 class="fi-header-heading text-2xl font-bold tracking-tight">Kunden</h1>
+      <p class="text-sm text-gray-500 tabular-nums">Export vom 06.11.2026, 08:42 · 46 Datensätze</p>
+    </div>
+    <p class="fi-header-subheading">Alle Kunden mit laufendem oder beendetem Abonnement, sortiert nach Kundennummer.</p>
+  </header>
+  <div class="fi-ta rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5">
+    <div class="fi-ta-header-toolbar"><div class="text-sm font-semibold">Filter</div><div class="fi-ta-search">Suchen</div></div>
+    <div class="fi-ta-filter-indicators"><span class="text-gray-500">Aktive Filter</span><span class="fi-badge fi-color-primary">Tarif: alle</span><span class="fi-badge fi-color-primary">Angelegt: 2023–2026</span></div>
+    <div class="fi-ta-content">
+      <table class="fi-ta-table divide-y">
+        <thead><tr>
+          <th class="fi-ta-header-cell fi-sorted"><span class="flex items-center gap-x-1">Nr.<svg class="fi-ta-header-cell-sort-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a.75.75 0 01.75.75v6.638l1.96-2.158a.75.75 0 111.08 1.04l-3.25 3.5a.75.75 0 01-1.08 0l-3.25-3.5a.75.75 0 111.08-1.04l1.96 2.158V5.75A.75.75 0 0110 5z" clip-rule="evenodd"/></svg></span></th>
+          <th class="fi-ta-header-cell">Kunde</th>
+          <th class="fi-ta-header-cell">Tarif</th>
+          <th class="fi-ta-header-cell">Status</th>
+          <th class="fi-ta-header-cell text-end">Plätze</th>
+          <th class="fi-ta-header-cell text-end">MRR</th>
+          <th class="fi-ta-header-cell">Ort</th>
+          <th class="fi-ta-header-cell">Seit</th>
+        </tr></thead>
+        <tbody class="divide-y">
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1000</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:0">KE</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Engel Immobilien</div><div class="text-gray-500 text-xs truncate max-w-48">katharina.engel@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">94</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">29 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Freiburg im Breisgau</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">19.01.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1001</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:37">CH</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Hoffmann Consulting</div><div class="text-gray-500 text-xs truncate max-w-48">clara.hoffmann@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">58</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Berlin</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">21.11.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1002</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:74">RE</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Engel Consulting e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">rosa.engel@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">144</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">58 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">27.11.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1003</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:111">DR</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Richter Physiotherapie e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">david.richter@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">175</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">297 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">18.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1004</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:148">JH</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Hoffmann Physiotherapie UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">jonas.hoffmann@mail.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">148</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">99 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">10.09.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1005</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:185">TC</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Cakir Software e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">tuelay.cakir@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">39</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">98 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">16.07.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1006</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:222">WL</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Lorenz Gartenbau</div><div class="text-gray-500 text-xs truncate max-w-48">wiebke.lorenz@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">216</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">1.299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Halle (Saale)</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">03.05.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1007</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:259">VO</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Oswald Consulting</div><div class="text-gray-500 text-xs truncate max-w-48">vera.oswald@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">119</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">12.03.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1008</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:296">EY</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Yilmaz Gartenbau AG</div><div class="text-gray-500 text-xs truncate max-w-48">elif.yilmaz@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">43</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">1.299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Freiburg im Breisgau</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">15.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1009</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:333">LV</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Vogt Medien AG</div><div class="text-gray-500 text-xs truncate max-w-48">leon.vogt@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>Pausiert</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">46</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">49 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">05.04.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1010</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:10">JA</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Albrecht Immobilien UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">jonas.albrecht@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">33</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">598 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Freiburg im Breisgau</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">23.09.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1011</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:47">MM</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Möller Software</div><div class="text-gray-500 text-xs truncate max-w-48">mila.moeller@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">49</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">499 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Halle (Saale)</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">03.04.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1012</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:84">BD</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Dietrich Gartenbau GmbH</div><div class="text-gray-500 text-xs truncate max-w-48">ben.dietrich@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">158</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">58 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">01.02.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1013</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:121">TL</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Lorenz Software</div><div class="text-gray-500 text-xs truncate max-w-48">tuelay.lorenz@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">123</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">3.897 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">16.05.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1014</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:158">PW</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Weber Bau UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">paul.weber@mail.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">38</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">198 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">23.09.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1015</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:195">QL</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Lorenz Consulting AG</div><div class="text-gray-500 text-xs truncate max-w-48">quirin.lorenz@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">163</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">198 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Köln</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">08.10.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1016</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:232">QP</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Petersen Software UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">quirin.petersen@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">121</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">09.04.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1017</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:269">CH</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Hoffmann Software UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">clara.hoffmann@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">53</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">198 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Hamburg</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">16.10.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1018</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:306">VD</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Dietrich Immobilien UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">vera.dietrich@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">228</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">297 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Mülheim an der Ruhr</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">06.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1019</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:343">MY</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Yilmaz Physiotherapie e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">mila.yilmaz@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">8</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">49 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">05.10.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1020</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:20">ER</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Richter Consulting GmbH & Co. KG</div><div class="text-gray-500 text-xs truncate max-w-48">elif.richter@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">112</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">29 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">28.04.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1021</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:57">QH</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Hoffmann Medien e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">quirin.hoffmann@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">16</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">499 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">24.06.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1022</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:94">EQ</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Quast Bau AG</div><div class="text-gray-500 text-xs truncate max-w-48">elif.quast@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Gekündigt</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">199</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">49 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">26.03.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1023</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:131">BK</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Kühn Physiotherapie e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">ben.kuehn@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">64</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">29 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">07.05.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1024</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:168">AZ</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Zimmermann Gartenbau UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">anna.zimmermann@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">116</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">198 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">17.09.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1025</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:205">GO</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Oswald Consulting</div><div class="text-gray-500 text-xs truncate max-w-48">greta.oswald@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">81</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">1.497 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">03.11.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1026</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:242">ZD</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Dietrich Physiotherapie AG</div><div class="text-gray-500 text-xs truncate max-w-48">zoe.dietrich@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>Pausiert</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">65</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">München</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">05.08.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1027</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:279">VH</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Hoffmann Software UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">vera.hoffmann@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">108</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">998 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Berlin</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">07.06.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1028</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:316">KR</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Richter Consulting</div><div class="text-gray-500 text-xs truncate max-w-48">katharina.richter@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning">Trial</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">85</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Hamburg</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">17.10.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1029</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:353">CI</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Ivanova Physiotherapie GmbH</div><div class="text-gray-500 text-xs truncate max-w-48">clara.ivanova@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">194</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">98 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Dresden</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">05.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1030</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:30">CI</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Ivanova Bau GmbH & Co. KG</div><div class="text-gray-500 text-xs truncate max-w-48">clara.ivanova@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">230</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">147 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Halle (Saale)</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">03.05.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1031</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:67">HC</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Cakir Consulting</div><div class="text-gray-500 text-xs truncate max-w-48">hannes.cakir@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Gekündigt</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">87</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">1.299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Hamburg</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">18.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1032</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:104">FI</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Ivanova Medien e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">finn.ivanova@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">136</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">298 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">25.04.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1033</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:141">LA</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Albrecht Immobilien UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">leon.albrecht@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">132</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Mülheim an der Ruhr</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">16.04.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1034</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:178">RM</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Möller Logistik GmbH & Co. KG</div><div class="text-gray-500 text-xs truncate max-w-48">rosa.moeller@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">51</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">198 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">München</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">27.12.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1035</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:215">AC</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Cakir Gartenbau UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">anna.cakir@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">171</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Berlin</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">27.07.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1036</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:252">OF</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Fuchs Gartenbau</div><div class="text-gray-500 text-xs truncate max-w-48">olga.fuchs@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">94</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Köln</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">11.09.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1037</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:289">LF</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Fuchs Logistik e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">leon.fuchs@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">72</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">87 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Hamburg</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">17.11.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1038</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:326">IC</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Cakir Medien e. V.</div><div class="text-gray-500 text-xs truncate max-w-48">ida.cakir@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">6</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Halle (Saale)</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">10.05.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1039</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:3">MZ</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Zimmermann Immobilien UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">mila.zimmermann@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">73</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">1.299 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">24.10.2024</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1040</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:40">EQ</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Quast Physiotherapie AG</div><div class="text-gray-500 text-xs truncate max-w-48">elif.quast@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Gekündigt</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">8</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">99 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">02.03.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1041</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:77">BU</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Ulbrich Bau UG (haftungsbeschränkt)</div><div class="text-gray-500 text-xs truncate max-w-48">ben.ulbrich@example.com</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">68</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">297 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Mülheim an der Ruhr</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">01.08.2023</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1042</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:114">IC</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Cakir Physiotherapie</div><div class="text-gray-500 text-xs truncate max-w-48">ida.cakir@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-primary">Enterprise</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">190</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">99 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Leipzig</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">21.08.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1043</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:151">YB</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Brandt Physiotherapie</div><div class="text-gray-500 text-xs truncate max-w-48">yasmin.brandt@firma.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-info">Business</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-success"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Aktiv</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">66</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">98 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Berlin</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">21.12.2025</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1044</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:188">PI</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Ivanova Bau AG</div><div class="text-gray-500 text-xs truncate max-w-48">paul.ivanova@verein.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-danger"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>Überfällig</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">182</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">2.598 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Frankfurt am Main</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">17.05.2026</td>
+</tr>
+<tr class="fi-ta-row">
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums">1045</td>
+<td class="fi-ta-cell px-3 py-2"><div class="flex items-center gap-x-2"><span class="fi-avatar" style="--hue:225">GJ</span><div class="min-w-0"><div class="font-medium truncate max-w-48">Jäger Consulting AG</div><div class="text-gray-500 text-xs truncate max-w-48">greta.jaeger@mail.example</div></div></div></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-gray">Starter</span></td>
+<td class="fi-ta-cell px-3 py-2"><span class="fi-badge fi-color-warning"><svg class="fi-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>Pausiert</span></td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">118</td>
+<td class="fi-ta-cell px-3 py-2 text-end tabular-nums">0 €</td>
+<td class="fi-ta-cell px-3 py-2 whitespace-nowrap">Köln</td>
+<td class="fi-ta-cell px-3 py-2 text-gray-500 tabular-nums whitespace-nowrap">03.09.2026</td>
+</tr>
+        </tbody>
+        <tfoot><tr class="fi-ta-summary-row"><td class="px-3 py-2" colspan="4">Summe (46 Kunden)</td><td class="px-3 py-2 text-end tabular-nums">5.417</td><td class="px-3 py-2 text-end tabular-nums">16.892 €</td><td class="px-3 py-2" colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+    <nav class="fi-pagination"><span>Zeige 1 bis 46 von 46 Ergebnissen</span><span>Pro Seite: 50</span></nav>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <style>.st { fill: none; stroke: #0b6e4f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }</style>
+  </defs>
+  <symbol id="phone" viewBox="0 0 24 24"><path class="st" d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="mail" viewBox="0 0 24 24"><rect class="st" x="3" y="5" width="18" height="14" rx="2"/><path class="st" d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path class="st" d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle class="st" cx="12" cy="9.5" r="2.5"/></symbol>
+  <view id="v-phone" viewBox="0 0 24 24"/>
+  <g id="g-mail"><use href="#mail" width="24" height="24"/></g>
+</svg>

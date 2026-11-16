@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Diploma – Summer school of landscape photography 2026</title>
+<style>
+@font-face { font-family: "Inter Display"; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff"); font-weight: 100 900; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4 landscape; margin: 0; }
+@page letter { size: A4 landscape; margin: 18mm 22mm; }
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html { font: 11pt/1.45 Inter, sans-serif; color: #fff; background: #f4efe4 url(../images/pattern.png) 0 0 / 12mm repeat; }
+body { margin: 0; }
+.diploma { position: relative; width: 297mm; height: 210mm; overflow: hidden; break-after: page;
+  background-image: linear-gradient(90deg, rgba(10, 22, 30, .88) 0%, rgba(10, 22, 30, .72) 46%, rgba(10, 22, 30, 0) 75%), url(../images/photo.jpg);
+  background-size: auto, cover; background-position: 0 0, 70% 40%; background-repeat: no-repeat; }
+.diploma .inner { position: absolute; left: 22mm; top: 24mm; width: 150mm; }
+.eyebrow { font: 600 9pt "Inter Display", sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #f2c46d; }
+h1 { font: 800 44pt/1.02 "Inter Display", sans-serif; margin: 6mm 0 8mm; letter-spacing: -.01em; }
+.awarded { font-style: italic; color: rgba(255, 255, 255, .8); margin: 0; }
+.name { font: 300 30pt/1.15 "Inter Display", sans-serif; margin: 2mm 0 6mm; padding-bottom: 3mm; border-bottom: .4mm solid #f2c46d; display: inline-block; }
+.text { color: rgba(255, 255, 255, .88); max-width: 132mm; }
+.foot { position: absolute; left: 22mm; right: 22mm; bottom: 18mm; display: flex; gap: 14mm; align-items: flex-end; }
+.foot .sig { flex: 0 0 55mm; border-top: .3mm solid rgba(255, 255, 255, .7); padding-top: 1.5mm; font-size: 8.5pt; color: rgba(255, 255, 255, .8); }
+.foot .no { margin-left: auto; font-size: 8pt; color: rgba(255, 255, 255, .7); text-align: right; }
+.badge { position: absolute; right: 20mm; top: 18mm; width: 30mm; height: 30mm; border-radius: 50%; border: .6mm solid #f2c46d;
+  display: grid; place-items: center; text-align: center; font: 700 7pt/1.3 Inter, sans-serif; letter-spacing: .15em; text-transform: uppercase;
+  background: rgba(10, 22, 30, .55); backdrop-filter: blur(2px); }
+.badge b { display: block; font: 800 15pt/1 "Inter Display", sans-serif; letter-spacing: 0; color: #f2c46d; }
+.letter { page: letter; color: #222; }
+.letter h2 { font: 700 15pt "Inter Display", sans-serif; margin: 0 0 4mm; color: #0a161e; }
+.letter .cols { columns: 2; column-gap: 12mm; text-align: justify; hyphens: auto; }
+.letter table { border-collapse: collapse; width: 100%; margin-top: 6mm; font-size: 9.5pt; background: rgba(255, 255, 255, .85); }
+.letter th, .letter td { border-bottom: .3mm solid #c9bfa8; padding: 1.5mm 2mm; text-align: left; }
+.letter td.n { text-align: right; }
+</style>
+</head>
+<body>
+<section class="diploma">
+  <div class="badge"><div><b>120</b>hours</div></div>
+  <div class="inner">
+    <div class="eyebrow">Nordlicht Academy / Summer school 2026</div>
+    <h1>Diploma in Landscape Photography</h1>
+    <p class="awarded">This is to certify that</p>
+    <div class="name">Ingrid Solveig Haugen</div>
+    <p class="text">has taken part in the summer school from 6 to 31 July 2026 on the Lofoten islands and completed all
+    modules with distinction: light and weather, composition, long exposures, printing and the final exhibition.</p>
+  </div>
+  <div class="foot">
+    <div class="sig">Kari Nordmann, director of studies</div>
+    <div class="sig">Per Aasen, tutor</div>
+    <div class="no">Diploma no. NA-2026-0187<br>Svolvær, 31 July 2026</div>
+  </div>
+</section>
+
+<section class="letter">
+  <h2>Modules and assessment</h2>
+  <div class="cols">
+    <p>The summer school combines field work with critiques in the studio. Each participant keeps a daily log of
+    the conditions, the equipment and the decisions behind each picture; the tutors comment on it every evening.
+    The assessment considers the portfolio of twelve prints, the log and a short presentation at the exhibition.</p>
+    <p>Grades run from 1 (excellent) to 5 (not passed). A distinction is awarded where the average is 1.5 or better
+    and no module is graded worse than 2. The diploma is recognised by the Norwegian association of nature
+    photographers as part of its professional training.</p>
+  </div>
+  <table>
+    <thead><tr><th>Module</th><th>Hours</th><th>Tutor</th><th class="n">Grade</th></tr></thead>
+    <tbody>
+      <tr><td>Light and weather in the Arctic summer</td><td>24</td><td>K. Nordmann</td><td class="n">1.0</td></tr>
+      <tr><td>Composition in open landscapes</td><td>20</td><td>P. Aasen</td><td class="n">1.3</td></tr>
+      <tr><td>Long exposures and filters</td><td>24</td><td>P. Aasen</td><td class="n">1.7</td></tr>
+      <tr><td>Fine art printing</td><td>28</td><td>L. Berg</td><td class="n">1.0</td></tr>
+      <tr><td>Exhibition and presentation</td><td>24</td><td>K. Nordmann</td><td class="n">1.3</td></tr>
+    </tbody>
+  </table>
+</section>
+</body>
+</html>

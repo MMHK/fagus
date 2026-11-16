@@ -1,0 +1,7 @@
+/vendor/
+/node_modules/
+/out/
+/docs/
+/composer.lock
+/package-lock.json
+/__pycache__/

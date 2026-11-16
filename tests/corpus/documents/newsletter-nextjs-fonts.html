@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" class="__variable_d65c78 __variable_a1b2c3"><head><meta charset="utf-8"><title>Release notes — October 2026</title>
+<style>
+/* next/font/google: Inter, subset latin only (latin-ext was not requested), with the metric-adjusted local fallback it generates */
+@font-face { font-family: '__Inter_d65c78'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url(../../webfonts/Inter-Variable-Latin.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: '__Inter_Fallback_d65c78'; src: local("Arial"); ascent-override: 90.49%; descent-override: 22.56%; line-gap-override: 0.00%; size-adjust: 107.06%; }
+.__className_d65c78 { font-family: '__Inter_d65c78', '__Inter_Fallback_d65c78'; font-style: normal }
+.__variable_d65c78 { --font-inter: '__Inter_d65c78', '__Inter_Fallback_d65c78' }
+/* next/font/local: a brand face with only a regular style, and a mono font from the system */
+@font-face { font-family: '__Brand_a1b2c3'; src: url(../../fonts/Inter-Regular.ttf) format('truetype'); font-weight: 400; font-style: normal; font-display: optional; }
+@font-face { font-family: '__Mono_a1b2c3'; src: local("Menlo Regular"), local("Menlo-Regular"), local("Consolas"); font-display: block; }
+.__variable_a1b2c3 { --font-brand: '__Brand_a1b2c3', ui-sans-serif; --font-mono: '__Mono_a1b2c3', ui-monospace, monospace }
+
+@page { size: letter; margin: 0.6in 0.7in 0.7in; @bottom-left { content: "Acme Cloud · Release notes"; font: 8pt var(--font-inter); color: #6b7280 } @bottom-right { content: counter(page) " / " counter(pages); font: 8pt var(--font-inter); color: #6b7280 } }
+body { margin: 0; font-family: var(--font-inter); font-size: 10pt; line-height: 1.6; color: #111827; font-feature-settings: "cv11", "ss01" }
+.kicker { font-family: var(--font-brand); text-transform: uppercase; letter-spacing: 0.12em; font-size: 8pt; color: #7c3aed; font-weight: 700 }
+h1 { font-size: 26pt; line-height: 1.1; margin: 1mm 0 2mm; font-weight: 800; letter-spacing: -0.02em; font-variation-settings: "opsz" 32 }
+.lede { font-size: 12pt; color: #374151; font-weight: 300 }
+h2 { font-size: 13pt; margin: 7mm 0 2mm; font-weight: 650; display: flex; gap: 2mm; align-items: baseline }
+h2 .v { font-family: var(--font-mono); font-size: 9pt; color: #7c3aed; background: #f5f3ff; padding: 0 1.5mm; border-radius: 1mm; font-weight: 400 }
+.brand-b { font-family: var(--font-brand); font-weight: 700 }
+.brand-i { font-family: var(--font-brand); font-style: italic }
+.no-synth { font-family: var(--font-brand); font-weight: 700; font-style: italic; font-synthesis: none }
+.weight-only { font-family: var(--font-brand); font-weight: 700; font-style: italic; font-synthesis: weight }
+code { font-family: var(--font-mono); font-size: 0.88em; background: #f3f4f6; padding: 0 1mm; border-radius: 0.8mm }
+pre { font-family: var(--font-mono); font-size: 8.5pt; line-height: 1.5; background: #0f172a; color: #e2e8f0; padding: 3mm 4mm; border-radius: 2mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: pre-wrap }
+table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 2mm }
+th, td { text-align: left; padding: 1.2mm 2mm; border-bottom: 0.5pt solid #e5e7eb }
+th { font-weight: 600; color: #4b5563 }
+td.n { text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "zero" }
+.smcp { font-variant-caps: small-caps; letter-spacing: 0.03em }
+.noliga { font-feature-settings: "liga" 0, "calt" 0 }
+.nokern { font-kerning: none }
+.wght { display: flex; gap: 3mm; font-size: 11pt }
+.wght span:nth-child(1) { font-weight: 100 } .wght span:nth-child(2) { font-weight: 250 } .wght span:nth-child(3) { font-weight: 400 }
+.wght span:nth-child(4) { font-weight: 550 } .wght span:nth-child(5) { font-weight: 720 } .wght span:nth-child(6) { font-weight: 900 }
+.opsz-off { font-optical-sizing: none; font-size: 20pt; font-weight: 700 }
+.opsz-auto { font-optical-sizing: auto; font-size: 20pt; font-weight: 700 }
+.greek { color: #4b5563 }
+</style></head>
+<body class="__className_d65c78">
+<div class="kicker">Product update · October 2026</div>
+<h1>Faster deploys, regional failover and a new CLI</h1>
+<p class="lede">Twelve changes shipped this month across the dashboard, the API and the command line — including office hours in Kraków, Brno and Zürich.</p>
+
+<h2>Regional failover <span class="v">v4.12.0</span></h2>
+<p>Projects can now fail over between regions automatically. When health checks in <code>eu-central-1</code> fail three times in a row, traffic moves to <code>eu-west-2</code> within 30 seconds. Configure it per environment:</p>
+<pre>$ acme failover enable --primary eu-central-1 --secondary eu-west-2 \
+    --threshold 3 --interval 10s
+✓ Failover enabled for production (Δ 0.4 ms p50 latency)</pre>
+
+<h2>Usage this month <span class="v">billing</span></h2>
+<table>
+  <tr><th>Resource</th><th>Region</th><th style="text-align:right">Units</th><th style="text-align:right">Cost (USD)</th></tr>
+  <tr><td>Compute hours</td><td>Frankfurt</td><td class="n">10,080</td><td class="n">1,108.80</td></tr>
+  <tr><td>Bandwidth (GB)</td><td>Dublin</td><td class="n">4,410</td><td class="n">352.80</td></tr>
+  <tr><td>Object storage (TB-month)</td><td>Zürich</td><td class="n">1.00</td><td class="n">23.00</td></tr>
+  <tr><td>Build minutes</td><td>Global</td><td class="n">18,000</td><td class="n">90.00</td></tr>
+</table>
+
+<h2>Typography in the dashboard <span class="v">design</span></h2>
+<p>The dashboard now uses Inter's variable axes: <span class="wght"><span>Thin</span><span>Light 250</span><span>Regular</span><span>Medium 550</span><span>Bold 720</span><span>Black</span></span></p>
+<p><span class="opsz-off">Display 20pt, optical size off</span><br><span class="opsz-auto">Display 20pt, optical size auto</span></p>
+<p>Labels use <span class="smcp">Small Caps for Units and Abbreviations</span>; ligatures are <span class="noliga">off in identifiers like office_fi_ffl</span> but on in prose such as “office affiliate”. Kerning: <span class="nokern">AVATAR Yo Te</span> versus AVATAR Yo Te.</p>
+<p>The brand face has only a regular style: <span class="brand-b">bold is synthesized</span>, <span class="brand-i">italic is slanted</span>, <span class="weight-only">bold but upright with font-synthesis: weight</span> and <span class="no-synth">neither with font-synthesis: none</span>.</p>
+
+<h2>Community <span class="v">events</span></h2>
+<p>Office hours: Kraków (Łódź team) on 12 November, Brno on 19 November, Zürich on 26 November. Our Athens meetup is titled <span class="greek" lang="el">«Υποδομή χωρίς διακοπές»</span> — Greek letters come from the fallback face, whose metrics next/font adjusted to Inter's. Thanks to Željko, Ondřej and Małgorzata for their contributions™.</p>
+</body></html>

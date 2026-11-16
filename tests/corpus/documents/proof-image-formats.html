@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Image proof sheet</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+@page { size: A4; margin: 15mm; @top-right { content: "Proof " counter(page); font: 8pt Inter } }
+body { margin: 0; font: 9pt/1.4 Inter, sans-serif; }
+h1 { font-size: 16pt; margin: 0 0 3mm; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid #ccc; padding: 2mm; text-align: left; vertical-align: middle; }
+td img { display: block; width: 70mm; height: 18mm; object-fit: contain; object-position: left; }
+.orient { display: flex; gap: 4mm; margin-top: 4mm; }
+.orient figure { margin: 0; width: 34mm; }
+.orient img { width: 34mm; height: 26mm; object-fit: contain; background: #eef2f5; display: block; }
+.orient figcaption { font-size: 7.5pt; color: #555; }
+.none img { image-orientation: none; }
+</style></head><body>
+<h1>Image proof – gamma, CMYK, formats and orientation</h1>
+<table>
+<tr><th>Variant</th><th>Image</th><th>Notes</th></tr>
+<tr><td>PNG, no colour chunks</td><td><img src="../images/media/band.png" alt=""></td><td>reference</td></tr>
+<tr><td>PNG gAMA 1.0</td><td><img src="../images/media/band-gamma10.png" alt=""></td><td>linear light, brighter</td></tr>
+<tr><td>PNG gAMA 1/2.2</td><td><img src="../images/media/band-gamma22.png" alt=""></td><td>drawn as stored</td></tr>
+<tr><td>JPEG CMYK without profile</td><td><img src="../images/media/cmyk.jpg" alt=""></td><td>inverted Adobe CMYK</td></tr>
+<tr><td>JPEG baseline</td><td><img src="../images/photo.jpg" alt=""></td><td>RGB</td></tr>
+<tr><td>WebP lossy</td><td><img src="../images/media/thumb2.webp" alt=""></td><td>VP8</td></tr>
+<tr><td>GIF, animated</td><td><img src="../images/media/anim.gif" alt=""></td><td>first frame</td></tr>
+<tr><td>Background with gAMA</td><td><div style="height:18mm;background:url(../images/media/band-gamma10.png) 0 0 / 70mm 18mm no-repeat"></div></td><td>CSS background</td></tr>
+</table>
+<div class="orient">
+  <figure><img src="../images/media/orient3.jpg" alt=""><figcaption>EXIF 3</figcaption></figure>
+  <figure><img src="../images/media/orient6.jpg" alt=""><figcaption>EXIF 6</figcaption></figure>
+  <figure><img src="../images/media/orient8.jpg" alt=""><figcaption>EXIF 8</figcaption></figure>
+</div>
+<div class="orient none">
+  <figure><img src="../images/media/orient3.jpg" alt=""><figcaption>EXIF 3, as stored</figcaption></figure>
+  <figure><img src="../images/media/orient6.jpg" alt=""><figcaption>EXIF 6, as stored</figcaption></figure>
+  <figure><img src="../images/media/orient8.jpg" alt=""><figcaption>EXIF 8, as stored</figcaption></figure>
+</div>
+</body></html>

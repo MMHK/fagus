@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reisekostenabrechnung RK-2026-0871</title>
+<link rel="stylesheet" href="vendor/pure-3.0.0.min.css">
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 14mm 15mm; @bottom-right { content: "RK-2026-0871 · " counter(page) "/" counter(pages); font: 7pt Inter, sans-serif; color: #888; } }
+html, button, input, select, textarea, .pure-g [class*=pure-u] { font-family: Inter, sans-serif; }
+body { font-size: 9pt; color: #333; }
+.box { padding: 0 1.2em 0 0; box-sizing: border-box; }
+.box:last-child { padding-right: 0; }
+h1 { font-size: 17pt; margin: 0 0 .2em; }
+h2 { font-size: 10.5pt; margin: 1.6em 0 .6em; border-bottom: 2px solid #1f8dd6; padding-bottom: .2em; }
+.muted { color: #888; }
+.pure-form label { font-size: 7.5pt; color: #777; text-transform: uppercase; letter-spacing: .04em; }
+.pure-form input[type=text], .pure-form input[type=date] { font-size: 9pt; padding: .35em .5em; }
+.pure-table { width: 100%; font-size: 8.5pt; }
+.pure-table td.r, .pure-table th.r { text-align: right; white-space: nowrap; }
+.pure-table tfoot td { font-weight: 700; background: #f2f2f2; border-top: 1px solid #cbcbcb; }
+.pure-button { font-size: 8pt; }
+.badge { display: inline-block; padding: .1em .5em; border-radius: 3px; font-size: 7.5pt; color: #fff; background: #1cb841; }
+.badge.warn { background: #df7514; }
+.signs .pure-u-1-3 > div { border-top: 1px solid #555; margin: 14mm 1em 0 0; padding-top: .3em; font-size: 7.5pt; color: #666; }
+</style>
+</head>
+<body>
+<div class="pure-g">
+  <div class="pure-u-2-3 box">
+    <h1>Reisekostenabrechnung</h1>
+    <div class="muted">Nr. RK-2026-0871 · eingereicht am 09.11.2026 · <span class="badge">sachlich geprüft</span> <span class="badge warn">Freigabe offen</span></div>
+  </div>
+  <div class="pure-u-1-3 box" style="text-align:right">
+    <strong>Landesamt für Vermessung</strong><br><span class="muted">Referat Z 3 · Reisekostenstelle</span>
+  </div>
+</div>
+
+<h2>Angaben zur Reise</h2>
+<form class="pure-form pure-form-stacked">
+  <fieldset>
+    <div class="pure-g">
+      <div class="pure-u-1-3 box"><label for="n">Name, Vorname</label><input id="n" type="text" class="pure-input-1" value="Brockmann, Silke" readonly></div>
+      <div class="pure-u-1-3 box"><label for="p">Personalnummer</label><input id="p" type="text" class="pure-input-1" value="0047 1182" readonly></div>
+      <div class="pure-u-1-3 box"><label for="o">Organisationseinheit</label><input id="o" type="text" class="pure-input-1" value="Abt. 4 – Geodätischer Raumbezug" readonly></div>
+      <div class="pure-u-1-2 box"><label for="z">Reiseziel</label><input id="z" type="text" class="pure-input-1" value="Bundesamt für Kartographie, Frankfurt am Main" readonly></div>
+      <div class="pure-u-1-4 box"><label for="b">Beginn</label><input id="b" type="text" class="pure-input-1" value="27.10.2026, 06:10" readonly></div>
+      <div class="pure-u-1-4 box"><label for="e">Ende</label><input id="e" type="text" class="pure-input-1" value="29.10.2026, 21:35" readonly></div>
+      <div class="pure-u-1 box"><label for="a">Anlass</label><input id="a" type="text" class="pure-input-1" value="Fachtagung „Referenzstationsnetze 2027“ mit Vortrag" readonly></div>
+    </div>
+    <label for="dienstwagen" class="pure-checkbox"><input id="dienstwagen" type="checkbox"> Dienstwagen genutzt</label>
+    <label for="bahn" class="pure-checkbox"><input id="bahn" type="checkbox" checked> BahnCard 50 (dienstlich) genutzt</label>
+  </fieldset>
+</form>
+
+<h2>Fahrt- und Übernachtungskosten</h2>
+<table class="pure-table pure-table-horizontal">
+  <thead><tr><th>Datum</th><th>Art</th><th>Beleg</th><th class="r">Betrag</th><th class="r">erstattungsfähig</th></tr></thead>
+  <tbody>
+    <tr><td>27.10.2026</td><td>Bahnfahrt Hannover Hbf – Frankfurt (Main) Hbf, 2. Klasse</td><td>B1</td><td class="r">58,45 €</td><td class="r">58,45 €</td></tr>
+    <tr><td>27.10.2026</td><td>ÖPNV Tageskarte Frankfurt</td><td>B2</td><td class="r">5,90 €</td><td class="r">5,90 €</td></tr>
+    <tr><td>27.–29.10.</td><td>Hotel Mainufer, 2 Nächte inkl. Frühstück</td><td>B3</td><td class="r">278,00 €</td><td class="r">242,00 €</td></tr>
+    <tr><td>29.10.2026</td><td>Bahnfahrt Frankfurt (Main) Hbf – Hannover Hbf, 2. Klasse</td><td>B4</td><td class="r">58,45 €</td><td class="r">58,45 €</td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="3">Summe</td><td class="r">400,80 €</td><td class="r">364,80 €</td></tr></tfoot>
+</table>
+<p class="muted">Vom Hotelpreis werden 2 × 18,00 € für das Frühstück abgezogen (§ 7 Abs. 1 BRKG).</p>
+
+<h2>Tagegeld</h2>
+<table class="pure-table pure-table-bordered pure-table-striped">
+  <thead><tr><th>Tag</th><th>Abwesenheit</th><th class="r">Tagegeld</th><th class="r">Kürzung Mahlzeiten</th><th class="r">Betrag</th></tr></thead>
+  <tbody>
+    <tr><td>Di, 27.10.</td><td>Anreisetag</td><td class="r">14,00 €</td><td class="r">–</td><td class="r">14,00 €</td></tr>
+    <tr><td>Mi, 28.10.</td><td>24 Stunden</td><td class="r">28,00 €</td><td class="r">−11,20 € (Mittag)</td><td class="r">16,80 €</td></tr>
+    <tr><td>Do, 29.10.</td><td>Abreisetag</td><td class="r">14,00 €</td><td class="r">−5,60 € (Frühstück)</td><td class="r">8,40 €</td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="4">Summe Tagegeld</td><td class="r">39,20 €</td></tr></tfoot>
+</table>
+
+<div class="pure-g" style="margin-top:1.4em">
+  <div class="pure-u-3-5 box">
+    <p class="muted" style="margin:0">Die Belege B1 bis B4 liegen im Original bei. Die Erstattung erfolgt auf das für die Bezügezahlung hinterlegte Konto.</p>
+  </div>
+  <div class="pure-u-2-5 box">
+    <table class="pure-table" style="width:100%">
+      <tbody>
+        <tr><td>Fahrt und Übernachtung</td><td class="r">364,80 €</td></tr>
+        <tr><td>Tagegeld</td><td class="r">39,20 €</td></tr>
+        <tr><td>abzgl. Abschlag vom 20.10.</td><td class="r">−200,00 €</td></tr>
+      </tbody>
+      <tfoot><tr><td>Auszahlung</td><td class="r">204,00 €</td></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="pure-g signs">
+  <div class="pure-u-1-3"><div>Reisende (Datum, Unterschrift)</div></div>
+  <div class="pure-u-1-3"><div>sachlich richtig</div></div>
+  <div class="pure-u-1-3"><div>Reisekostenstelle, angewiesen</div></div>
+</div>
+<p style="margin-top:1.5em"><button class="pure-button pure-button-primary">Abrechnung herunterladen</button> <a class="pure-button" href="#">Zurück</a></p>
+</body>
+</html>

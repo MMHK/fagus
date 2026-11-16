@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Preisliste Weinhandel 2027</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 15mm 16mm 18mm; @bottom-left { content: "Preise in Euro inkl. 19 % MwSt., ab Lager Rüdesheim"; font: 7pt Inter, sans-serif; color: #777; } @bottom-right { content: counter(page); font: 8pt Inter, sans-serif; } }
+:root { --ink: #2a1f1a; --wine: #7b1e2b; }
+body { margin: 0; font: 9pt/1.35 Inter, sans-serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1.5pt solid var(--wine); padding-bottom: 2mm; margin-bottom: 4mm; }
+header h1 { margin: 0; font-size: 18pt; color: var(--wine); letter-spacing: -.01em; }
+header p { margin: 0; font-size: 8pt; text-align: right; }
+.cols { columns: 2; column-gap: 9mm; column-rule: .5pt solid #d8c9bf; }
+section { break-inside: avoid; margin-bottom: 4mm; }
+h2 { font-size: 10pt; text-transform: uppercase; letter-spacing: .08em; color: var(--wine); margin: 0 0 1.5mm; break-after: avoid; }
+/* Leaders: a dotted border that fills the space between the name and the price. */
+.item { display: flex; align-items: baseline; gap: 1.2mm; margin: .9mm 0; }
+.item .name { flex: none; max-width: 62%; }
+.item .name small { display: block; font-style: italic; color: #7a6a60; font-size: 7.5pt; }
+.item .dots { flex: 1; border-bottom: 1pt dotted #9c8a7e; transform: translateY(-.25em); min-width: 4mm; }
+.item .vol { flex: none; width: 9mm; text-align: right; color: #7a6a60; font-size: 8pt; }
+/* Decimal alignment without `text-align: "."`: integer part right-aligned, decimals left. */
+.price { flex: none; display: inline-flex; width: 17mm; }
+.price .int { flex: 1; text-align: right; }
+.price .dec { width: 2.4ch; text-align: left; }
+.item.offer .name { font-weight: 700; }
+.item.offer .price { color: var(--wine); font-weight: 700; }
+.item.offer .price::after { content: "★"; position: absolute; margin-left: 17.5mm; font-size: 7pt; color: var(--wine); }
+/* Leaders as a table with a dotted background image */
+table.cases { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+.cases td { padding: .8mm 0; vertical-align: baseline; }
+.cases td.l { background: radial-gradient(circle, #9c8a7e .5pt, transparent .7pt) left bottom 1.2mm / 3pt 3pt repeat-x; }
+.cases td.l span { background: #fff; padding-right: 1mm; }
+.cases td.n { text-align: right; width: 15mm; white-space: nowrap; }
+.cases td.n span { background: #fff; padding-left: 1mm; }
+/* Columns of figures right-aligned in ch units */
+.tiers { margin-top: 5mm; border: .5pt solid #d8c9bf; padding: 2mm 3mm; break-inside: avoid; }
+.tiers h2 { margin-bottom: 1mm; }
+.tiers dl { display: grid; grid-template-columns: 1fr repeat(3, 9ch); margin: 0; column-gap: 2mm; }
+.tiers dt { grid-column: 1; }
+.tiers dd { margin: 0; text-align: right; }
+.tiers .head { font-weight: 700; border-bottom: .5pt solid #d8c9bf; }
+.note { font-size: 7.5pt; color: #7a6a60; margin-top: 3mm; }
+sup { font-size: 65%; line-height: 0; }
+</style>
+</head>
+<body>
+<header><h1>Preisliste 2027</h1><p>Weinhandel Lorch &amp; Söhne<br>gültig ab 1. Januar 2027 · Liste Nr. 41</p></header>
+<div class="cols">
+<section><h2>Riesling</h2>
+<div class="item"><span class="name">Rüdesheimer Berg Schlossberg GG<small>2023, trocken, 13 % vol.</small></span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">48</span><span class="dec">,50</span></span></div>
+<div class="item offer"><span class="name">Lorcher Kapellenberg Kabinett<small>2024, feinherb</small></span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">11</span><span class="dec">,90</span></span></div>
+<div class="item"><span class="name">Gutsriesling trocken</span><span class="dots"></span><span class="vol">1,0</span><span class="price"><span class="int">8</span><span class="dec">,40</span></span></div>
+<div class="item"><span class="name">Rheingau Riesling Spätlese, ein Wein für lange Abende am Fluss<small>2022, edelsüß</small></span><span class="dots"></span><span class="vol">0,375</span><span class="price"><span class="int">19</span><span class="dec">,–</span></span></div>
+<div class="item"><span class="name">Riesling Sekt brut nature<sup>1</sup></span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">22</span><span class="dec">,00</span></span></div>
+</section>
+<section><h2>Spätburgunder</h2>
+<div class="item"><span class="name">Assmannshäuser Höllenberg GG<small>2021, Barrique</small></span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">64</span><span class="dec">,00</span></span></div>
+<div class="item"><span class="name">Spätburgunder Rosé</span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">9</span><span class="dec">,80</span></span></div>
+<div class="item offer"><span class="name">Spätburgunder Blanc de Noirs</span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">12</span><span class="dec">,50</span></span></div>
+<div class="item"><span class="name">Frühburgunder<small>2022, trocken, Kleinstmenge</small></span><span class="dots"></span><span class="vol">0,75</span><span class="price"><span class="int">29</span><span class="dec">,–</span></span></div>
+</section>
+<section><h2>Raritäten</h2>
+<div class="item"><span class="name">Riesling Trockenbeerenauslese 1998</span><span class="dots"></span><span class="vol">0,375</span><span class="price"><span class="int">1.240</span><span class="dec">,00</span></span></div>
+<div class="item"><span class="name">Eiswein 2012</span><span class="dots"></span><span class="vol">0,375</span><span class="price"><span class="int">185</span><span class="dec">,00</span></span></div>
+<div class="item"><span class="name">Magnum Schlossberg 2015</span><span class="dots"></span><span class="vol">1,5</span><span class="price"><span class="int">210</span><span class="dec">,00</span></span></div>
+</section>
+<section><h2>Probierpakete</h2>
+<table class="cases">
+<tr><td class="l"><span>Rheingau entdecken (6 Flaschen)</span></td><td class="n"><span>59,00</span></td></tr>
+<tr><td class="l"><span>Rot &amp; Weiß (6 Flaschen)</span></td><td class="n"><span>74,50</span></td></tr>
+<tr><td class="l"><span>Große Gewächse im Vergleich (3 Flaschen)</span></td><td class="n"><span>139,00</span></td></tr>
+<tr><td class="l"><span>Sekt-Trio</span></td><td class="n"><span>61,–</span></td></tr>
+</table>
+</section>
+<section><h2>Brände und Liköre</h2>
+<div class="item"><span class="name">Weinbergspfirsich-Likör</span><span class="dots"></span><span class="vol">0,5</span><span class="price"><span class="int">16</span><span class="dec">,90</span></span></div>
+<div class="item"><span class="name">Tresterbrand aus Riesling</span><span class="dots"></span><span class="vol">0,5</span><span class="price"><span class="int">24</span><span class="dec">,00</span></span></div>
+<div class="item"><span class="name">Weinbrand, 12 Jahre im Fass</span><span class="dots"></span><span class="vol">0,7</span><span class="price"><span class="int">39</span><span class="dec">,50</span></span></div>
+</section>
+<section><h2>Traubensaft</h2>
+<div class="item"><span class="name">Riesling-Traubensaft</span><span class="dots"></span><span class="vol">1,0</span><span class="price"><span class="int">4</span><span class="dec">,20</span></span></div>
+<div class="item"><span class="name">Roter Traubensaft</span><span class="dots"></span><span class="vol">1,0</span><span class="price"><span class="int">4</span><span class="dec">,50</span></span></div>
+</section>
+</div>
+<div class="tiers">
+<h2>Mengenrabatt</h2>
+<dl>
+<dt class="head">Bestellmenge</dt><dd class="head">Rabatt</dd><dd class="head">Versand</dd><dd class="head">Abholung</dd>
+<dt>bis 11 Flaschen</dt><dd>–</dd><dd>9,90</dd><dd>0,00</dd>
+<dt>12 bis 35 Flaschen</dt><dd>3 %</dd><dd>4,90</dd><dd>0,00</dd>
+<dt>36 bis 119 Flaschen</dt><dd>5 %</dd><dd>0,00</dd><dd>−1,50</dd>
+<dt>ab 120 Flaschen</dt><dd>8 %</dd><dd>0,00</dd><dd>−12,00</dd>
+</dl>
+</div>
+<p class="note">★ Angebot des Monats. <sup>1</sup> Traditionelle Flaschengärung, 36 Monate auf der Hefe. Alle Weine enthalten Sulfite. Preise in Euro je Flasche.</p>
+</body>
+</html>

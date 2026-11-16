@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Briefbogen Ølgaard &amp; Co</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+@page { size: A4; margin: 20mm 20mm 25mm 25mm; }
+body { font: 10pt/1.5 Inter, sans-serif; color: #222; margin: 0; }
+header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 4mm; }
+.contact { font-size: 8.5pt; color: #0b6e4f; }
+.contact div { display: flex; align-items: center; gap: 2mm; }
+.icon { width: 4mm; height: 4mm; flex: none; }
+.pin { color: #b5179e; }
+h2 { font-size: 12pt; margin: 6mm 0 2mm; }
+.row { display: flex; gap: 5mm; align-items: center; flex-wrap: wrap; }
+.row > * { flex: none; }
+.cap { font-size: 7.5pt; color: #666; }
+.box { width: 40mm; height: 20mm; border: 1px dashed #aaa; }
+.bg-svg { width: 60mm; height: 20mm; background: url(../images/media/brand.svg) left center / contain no-repeat, #fafafa; }
+.bg-frag { width: 30mm; height: 10mm; background: url("../images/media/stack.svg#green") center / contain no-repeat; border: 1px solid #ddd; }
+.sprite { width: 12mm; height: 12mm; }
+</style>
+</head>
+<body>
+<header>
+  <svg width="62mm" height="18mm" viewBox="0 0 220 64" role="img" aria-label="Ølgaard &amp; Co">
+    <defs>
+      <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b1e3f"/><stop offset="1" stop-color="#3c1642"/></linearGradient>
+      <symbol id="leaf" viewBox="0 0 20 20"><path d="M10 1C4 6 3 12 10 19 17 12 16 6 10 1z" fill="currentColor"/></symbol>
+    </defs>
+    <rect width="64" height="64" rx="14" fill="url(#hg)"/>
+    <use href="#leaf" x="12" y="12" width="40" height="40" style="color:#f6d2a8"/>
+    <text x="76" y="40" font-family="Inter" font-weight="700" font-size="28" fill="#3c1642">Ølgaard</text>
+    <text x="78" y="58" font-family="Inter" font-size="11" fill="#8b1e3f">&amp; Co · København</text>
+  </svg>
+  <div class="contact">
+    <div><svg class="icon"><use href="#i-phone"/></svg>+45 33 12 34 56</div>
+    <div><svg class="icon"><use href="#i-mail"/></svg>kontor@olgaard.example</div>
+    <div><svg class="icon pin"><use href="../images/media/sprite.svg#pin"/></svg>Strandgade 12, 1401 København</div>
+  </div>
+</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m3 7 9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<p style="margin-top:8mm">Sehr geehrte Damen und Herren,</p>
+<p>anbei die Übersicht der Logo-Varianten für die Druckerei. Die Symbole im Briefkopf sind Sprites:
+ohne viewBox nur per CSS bemessen, aus derselben Seite und aus einer Sprite-Datei. Darunter Bilder,
+die über Fragment-Bezeichner eine Ansicht oder ein Ziel einer SVG-Datei zeigen.</p>
+
+<h2>SVG als Bild</h2>
+<div class="row">
+  <div><img src="../images/media/brand.svg" style="width:60mm" alt="Marke"><div class="cap">Verlauf, Muster, Maske, Clip, Filter</div></div>
+  <div><img src="../images/media/brand.svg" class="box" style="object-fit: cover" alt=""><div class="cap">object-fit: cover</div></div>
+</div>
+
+<h2>Sprites über Fragmente</h2>
+<div class="row">
+  <div><img class="sprite" src="../images/media/sprite.svg#v-phone" alt=""><div class="cap">#view</div></div>
+  <div><img class="sprite" src="../images/media/sprite.svg#svgView(viewBox(0,0,12,12))" alt=""><div class="cap">svgView()</div></div>
+  <div><img src="../images/media/stack.svg#red" style="height:10mm" alt=""><div class="cap">:target rot</div></div>
+  <div><img src="../images/media/stack.svg#blue" style="height:10mm" alt=""><div class="cap">:target blau</div></div>
+  <div class="bg-frag"></div>
+  <div><svg class="sprite" viewBox="0 0 24 24" style="color:#c2410c"><use href="../images/media/sprite.svg#phone"/></svg><div class="cap">use extern</div></div>
+  <div><svg class="sprite"><use href="../images/media/sprite.svg#mail"/></svg><div class="cap">use extern, ohne viewBox</div></div>
+</div>
+
+<h2>Inline mit currentColor</h2>
+<div class="row" style="color:#c2410c">
+  <svg width="16mm" height="16mm" viewBox="0 0 24 24"><use href="#i-phone"/></svg>
+  <svg width="16mm" height="16mm" viewBox="0 0 24 24" style="color:#2563eb"><use href="#i-mail"/></svg>
+  <svg width="30mm" height="16mm" viewBox="0 0 60 32" style="border:1px solid #ddd">
+    <use href="#leaf" width="32" height="32" style="color:#0891b2"/>
+    <use href="#leaf" x="28" width="32" height="32" style="color:#db2777" opacity=".7"/>
+  </svg>
+  <svg width="30mm" height="16mm" viewBox="0 0 60 32" preserveAspectRatio="none" style="border:1px solid #ddd"><circle cx="30" cy="16" r="14" fill="#f59e0b"/></svg>
+  <svg width="30mm" height="16mm" viewBox="0 0 60 32" preserveAspectRatio="xMinYMax slice" style="border:1px solid #ddd"><rect width="60" height="32" fill="url(#hg)"/><circle cx="10" cy="26" r="9" fill="#fff"/></svg>
+</div>
+
+<h2>SVG als Hintergrund und Data-URL</h2>
+<div class="row">
+  <div class="bg-svg"></div>
+  <img alt="" style="width:20mm" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1 5 L4 8 L9 2' fill='none' stroke='%2316a34a' stroke-width='1.5'/%3E%3C/svg%3E">
+  <div style="width:20mm;height:10mm;background:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22%3E%3Ccircle cx=%225%22 cy=%225%22 r=%223%22 fill=%22%237c3aed%22/%3E%3C/svg%3E') 0 0 / 5mm 5mm"></div>
+</div>
+<p style="margin-top:8mm">Mit freundlichen Grüßen<br><br>Mette Ølgaard</p>
+</body>
+</html>

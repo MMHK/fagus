@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Mira Okafor" />
+  <meta name="dcterms.date" content="2026-11-02" />
+  <meta name="keywords" content="inventory, reorder point, demand uncertainty" />
+  <title>Reorder Points under Uncertain Demand</title>
+  <style>
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+    @font-face { font-family: "STIX Two Math"; src: url(../../webfonts/STIXTwoMath-Regular.woff2) format("woff2"); }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+    @page { size: A4; margin: 22mm 20mm 25mm; }
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 11pt;
+        padding: 0;
+        max-width: none;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h4, h5 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* The extensions of pandoc's template for its citations and footnotes. */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+      margin-bottom: 0.5em;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
+    /* The paper's own stylesheet (`--css paper.css`). */
+    body { font-family: Inter, sans-serif; line-height: 1.45; text-align: justify; }
+    math { font-family: "STIX Two Math", math; }
+    h1.title { font-size: 1.7em; margin-bottom: 0.3em; text-align: center; }
+    p.author, p.date { margin: 0.2em 0; text-align: center; }
+    .abstract { margin: 2em 2.5em; font-size: 0.9em; }
+    .abstract-title { font-weight: 700; text-align: center; margin-bottom: 0.3em; }
+    h2 { font-size: 1.2em; }
+    h2 .header-section-number { margin-right: 0.6em; }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Reorder Points under Uncertain Demand</h1>
+<p class="author">Mira Okafor</p>
+<p class="date">2 November 2026</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>We derive the reorder point <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi></mrow><annotation encoding="application/x-tex">s</annotation></semantics></math></span> of a continuous-review policy when the daily demand <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math></span> is normally distributed and the lead time <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span> is fixed, and compare it with the order quantity of the classic economic order model.</p>
+</div>
+</header>
+<h2 data-number="1" id="model"><span class="header-section-number">1</span> Model</h2>
+<p>Let the demand per day have the mean <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math></span> and the standard deviation <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span>. Over a lead time of <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span> days the demand <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>L</mi></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>L</mi></munderover><msub><mi>d</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">D_L = \sum_{i=1}^L d_i</annotation></semantics></math></span> has the mean <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>L</mi></msub><mo>=</mo><mi>L</mi><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu_L = L\mu</annotation></semantics></math></span> and the variance <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>L</mi><mn>2</mn></msubsup><mo>=</mo><mi>L</mi><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\sigma_L^2 = L\sigma^2</annotation></semantics></math></span>. The reorder point covers this demand with the service level <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span>:</p>
+<p><span class="math display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>s</mi><mo>=</mo><msub><mi>μ</mi><mi>L</mi></msub><mo>+</mo><msub><mi>z</mi><mi>α</mi></msub><mo>⋅</mo><msqrt><mrow><mi>L</mi><msup><mi>σ</mi><mn>2</mn></msup></mrow></msqrt><mo>,</mo><mspace width="2em"></mspace><mi>Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>α</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><msqrt><mrow><mn>2</mn><mi>π</mi></mrow></msqrt></mfrac><msubsup><mo>∫</mo><mrow><mo>−</mo><mi>∞</mi></mrow><msub><mi>z</mi><mi>α</mi></msub></msubsup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>t</mi><mn>2</mn></msup><mi>/</mi><mn>2</mn></mrow></msup><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi><mo>=</mo><mi>α</mi><mi>.</mi></mrow></mrow><annotation encoding="application/x-tex">s = \mu_L + z_\alpha \cdot \sqrt{L\sigma^2}, \qquad \Phi(z_\alpha) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{z_\alpha} e^{-t^2/2}\,dt = \alpha.</annotation></semantics></math></span></p>
+<p>The safety stock <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>s</mi><mo>−</mo><msub><mi>μ</mi><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">S = s - \mu_L</annotation></semantics></math></span> grows with the square root of the lead time, not with the lead time itself. With the ordering cost <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span>, the holding cost <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi></mrow><annotation encoding="application/x-tex">h</annotation></semantics></math></span> and the annual demand <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math></span>, the order quantity is</p>
+<p><span class="math display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><msup><mi>Q</mi><mo>*</mo></msup><mo>=</mo><msqrt><mfrac><mrow><mn>2</mn><mi>K</mi><mi>D</mi></mrow><mi>h</mi></mfrac></msqrt><mo>,</mo><mspace width="1em"></mspace><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>Q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mi>K</mi><mi>D</mi></mrow><mi>Q</mi></mfrac><mo>+</mo><mfrac><mrow><mi>h</mi><mi>Q</mi></mrow><mn>2</mn></mfrac><mi>.</mi></mrow></mrow><annotation encoding="application/x-tex">Q^* = \sqrt{\frac{2KD}{h}}, \quad C(Q) = \frac{KD}{Q} + \frac{hQ}{2}.</annotation></semantics></math></span></p>
+<h2 data-number="2" id="derivation"><span class="header-section-number">2</span> Derivation</h2>
+<p>Setting the derivative of the cost to zero gives</p>
+<p><span class="math display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>d</mi><mi>C</mi></mrow><mrow><mi>d</mi><mi>Q</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mo>−</mo><mfrac><mrow><mi>K</mi><mi>D</mi></mrow><msup><mi>Q</mi><mn>2</mn></msup></mfrac><mo>+</mo><mfrac><mi>h</mi><mn>2</mn></mfrac></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⇔</mo><mspace width="1em"></mspace><msup><mi>Q</mi><mn>2</mn></msup><mo>=</mo><mfrac><mrow><mn>2</mn><mi>K</mi><mi>D</mi></mrow><mi>h</mi></mfrac><mi>.</mi></mtd></mtr></mtable></mrow><annotation encoding="application/x-tex">\begin{aligned} \frac{dC}{dQ} &amp;= -\frac{KD}{Q^2} + \frac{h}{2} \\ &amp;= 0 \iff Q^2 = \frac{2KD}{h}. \end{aligned}</annotation></semantics></math></span></p>
+<p>For two products with correlated demand the covariance matrix of the lead time demand is <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Σ</mi><mo>=</mo><mi>L</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>σ</mi><mn>1</mn><mn>2</mn></msubsup></mtd><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><msub><mi>σ</mi><mn>1</mn></msub><msub><mi>σ</mi><mn>2</mn></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><msub><mi>σ</mi><mn>1</mn></msub><msub><mi>σ</mi><mn>2</mn></msub></mtd><mtd columnalign="center" style="text-align: center"><msubsup><mi>σ</mi><mn>2</mn><mn>2</mn></msubsup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Sigma = L\begin{pmatrix} \sigma_1^2 &amp; \rho\sigma_1\sigma_2 \\ \rho\sigma_1\sigma_2 &amp; \sigma_2^2 \end{pmatrix}</annotation></semantics></math></span>, and the shortage per cycle is</p>
+<p><span class="math display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>B</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">if </mtext><mi>s</mi><mo>≥</mo><msub><mi>D</mi><mi>L</mi></msub><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><msub><mi>σ</mi><mi>L</mi></msub><mspace width="0.167em"></mspace><mi>G</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>α</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise, with </mtext><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>z</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>Φ</mi><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable></mrow></mrow></mrow><annotation encoding="application/x-tex">E[B] = \begin{cases} 0, &amp; \text{if } s \ge D_L, \\ \sigma_L\,G(z_\alpha), &amp; \text{otherwise} \end{cases}</annotation></semantics></math></span></p>
+<p>With <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>α</mi></msub><mo>=</mo><mn>1.645</mn></mrow><annotation encoding="application/x-tex">z_\alpha = 1.645</annotation></semantics></math></span> for <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>95</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\alpha = 95\%</annotation></semantics></math></span>, a lead time of <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">L = 9</annotation></semantics></math></span> days and <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">\sigma = 12</annotation></semantics></math></span> units, the safety stock is <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.645</mn><mo>⋅</mo><mn>12</mn><msqrt><mn>9</mn></msqrt><mo>≈</mo><mn>59</mn></mrow><annotation encoding="application/x-tex">1.645 \cdot 12\sqrt{9} \approx 59</annotation></semantics></math></span> units, which the binomial bound <span class="math inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>n</mi><mi>k</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>p</mi><mi>k</mi></msup><msup><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>n</mi><mo>−</mo><mi>k</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\binom{n}{k}p^k(1-p)^{n-k}</annotation></semantics></math></span> confirms for small batches. The limit of the relative error is</p>
+<p><span class="math display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><munder><mo>lim</mo><mrow><mi>L</mi><mo>→</mo><mi>∞</mi></mrow></munder><mfrac><mrow><mo stretchy="true" form="prefix">|</mo><mover><mi>s</mi><mo accent="true">̂</mo></mover><mo>−</mo><mi>s</mi><mo stretchy="true" form="postfix">|</mo></mrow><mi>s</mi></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mover><mi>s</mi><mo accent="true">̂</mo></mover><mo>=</mo><mover><mi>d</mi><mo accent="true">¯</mo></mover><mi>L</mi><mo>+</mo><msub><mi>z</mi><mi>α</mi></msub><msqrt><mi>L</mi></msqrt><mspace width="0.167em"></mspace><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mi>.</mi></mrow></mrow><annotation encoding="application/x-tex">\lim_{L\to\infty} \frac{|\hat s - s|}{s} = 0, \quad \hat s = \bar d L + z_\alpha \sqrt{L}\,\hat\sigma.</annotation></semantics></math></span></p>
+</body>
+</html>

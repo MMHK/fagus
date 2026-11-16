@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="VitePress v1.6.3">
+<title>Webhooks | Ledgerly API</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 15mm 16mm 18mm; }
+:root {
+  --vp-c-brand-1: #3451b2; --vp-c-brand-2: #3a5ccc; --vp-c-brand-soft: rgba(100, 108, 255, .14);
+  --vp-c-text-1: rgba(60, 60, 67); --vp-c-text-2: rgba(60, 60, 67, .78); --vp-c-text-3: rgba(60, 60, 67, .56);
+  --vp-c-divider: #e2e2e3; --vp-c-gutter: #e2e2e3; --vp-c-bg: #fff; --vp-c-bg-soft: #f6f6f7; --vp-c-bg-alt: #f6f6f7;
+  --vp-c-tip-1: #3451b2; --vp-c-tip-soft: rgba(100, 108, 255, .14);
+  --vp-c-warning-1: #915930; --vp-c-warning-soft: rgba(234, 179, 8, .14);
+  --vp-c-danger-1: #b8272c; --vp-c-danger-soft: rgba(244, 63, 94, .14);
+  --vp-c-success-1: #18794e; --vp-c-success-soft: rgba(16, 185, 129, .14);
+  --vp-font-family-base: Inter, ui-sans-serif, system-ui, sans-serif;
+  --vp-font-family-mono: ui-monospace, "Menlo", "Monaco", "Consolas", monospace;
+  --vp-code-font-size: .875em; --vp-code-color: var(--vp-c-brand-1); --vp-code-bg: rgba(142, 150, 170, .14);
+  --vp-code-block-color: rgba(60, 60, 67); --vp-code-block-bg: #f6f6f7; --vp-code-line-height: 1.7; --vp-code-line-number-color: rgba(60, 60, 67, .56);
+  --vp-code-line-highlight-color: rgba(142, 150, 170, .14);
+  --vp-custom-block-font-size: 14px; --vp-custom-block-code-font-size: 13px;
+}
+*, ::before, ::after { box-sizing: border-box; }
+html { line-height: 1.4; font-size: 16px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; width: 100%; min-width: 320px; font-family: var(--vp-font-family-base); font-size: 16px; font-weight: 400; color: var(--vp-c-text-1); background: var(--vp-c-bg); font-synthesis: style; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+@media print { body { font-size: 13px; } .VPNav, .VPSidebar, .VPDocFooter .edit-info, .copy, .VPLocalNav { display: none !important; } }
+h1, h2, h3, p, ol, ul, pre, table { margin: 0; }
+ul, ol { list-style: none; padding: 0; }
+.vp-doc h1, .vp-doc h2, .vp-doc h3 { position: relative; font-weight: 600; outline: none; }
+.vp-doc h1 { letter-spacing: -.02em; line-height: 40px; font-size: 28px; }
+.vp-doc h2 { margin: 48px 0 16px; border-top: 1px solid var(--vp-c-divider); padding-top: 24px; letter-spacing: -.02em; line-height: 32px; font-size: 24px; }
+.vp-doc h3 { margin: 32px 0 0; letter-spacing: -.01em; line-height: 28px; font-size: 20px; }
+.vp-doc p, .vp-doc summary { margin: 16px 0; }
+.vp-doc p { line-height: 28px; }
+.vp-doc a { font-weight: 500; color: var(--vp-c-brand-1); text-decoration: underline; text-underline-offset: 2px; }
+.vp-doc ul, .vp-doc ol { padding-left: 1.25rem; margin: 16px 0; }
+.vp-doc ul { list-style: disc; }
+.vp-doc ol { list-style: decimal; }
+.vp-doc li + li { margin-top: 8px; }
+.vp-doc table { display: block; border-collapse: collapse; margin: 20px 0; overflow-x: auto; }
+.vp-doc tr { background-color: var(--vp-c-bg); border-top: 1px solid var(--vp-c-divider); }
+.vp-doc tr:nth-child(2n) { background-color: var(--vp-c-bg-soft); }
+.vp-doc th, .vp-doc td { border: 1px solid var(--vp-c-divider); padding: 8px 16px; }
+.vp-doc th { text-align: left; font-size: 14px; font-weight: 600; color: var(--vp-c-text-2); background-color: var(--vp-c-bg-soft); }
+.vp-doc td { font-size: 14px; }
+.vp-doc :not(pre, h1, h2, h3, h4, h5, h6) > code { font-size: var(--vp-code-font-size); color: var(--vp-code-color); }
+.vp-doc :not(pre) > code { border-radius: 4px; padding: 3px 6px; background-color: var(--vp-code-bg); transition: color .25s, background-color .5s; }
+.vp-doc h2 > code, .vp-doc h3 > code { font-size: .9em; }
+.vp-doc .header-anchor { position: absolute; top: 0; left: 0; margin-left: -.87em; font-weight: 500; opacity: 0; text-decoration: none; }
+.VPBadge { display: inline-block; margin-left: 2px; border: 1px solid transparent; border-radius: 12px; padding: 0 10px; line-height: 22px; font-size: 12px; font-weight: 500; transform: translateY(-2px); }
+.vp-doc h1 > .VPBadge { margin-top: 4px; vertical-align: top; }
+.VPBadge.tip { border-color: transparent; color: var(--vp-c-tip-1); background-color: var(--vp-c-tip-soft); }
+.VPBadge.warning { border-color: transparent; color: var(--vp-c-warning-1); background-color: var(--vp-c-warning-soft); }
+.custom-block { border: 1px solid transparent; border-radius: 8px; padding: 16px 16px 8px; line-height: 24px; font-size: var(--vp-custom-block-font-size); color: var(--vp-c-text-2); }
+.custom-block.info { border-color: transparent; color: var(--vp-c-text-1); background-color: rgba(142, 150, 170, .14); }
+.custom-block.tip { border-color: transparent; color: var(--vp-c-text-1); background-color: var(--vp-c-tip-soft); }
+.custom-block.warning { border-color: transparent; color: var(--vp-c-text-1); background-color: var(--vp-c-warning-soft); }
+.custom-block.danger { border-color: transparent; color: var(--vp-c-text-1); background-color: var(--vp-c-danger-soft); }
+.custom-block.details { border-color: transparent; color: var(--vp-c-text-1); background-color: rgba(142, 150, 170, .14); }
+.custom-block a { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.custom-block .custom-block-title { font-weight: 600; }
+.custom-block p + p { margin: 8px 0; }
+.custom-block.details summary { margin: 0 0 8px; font-weight: 700; cursor: pointer; }
+.custom-block.details summary + p { margin: 8px 0; }
+.custom-block code { font-size: var(--vp-custom-block-code-font-size); }
+.custom-block p { margin: 8px 0; line-height: 24px; }
+.custom-block p:first-child { margin: 0; }
+.vp-doc div[class*='language-'], .vp-block { position: relative; margin: 16px -24px; background-color: var(--vp-code-block-bg); overflow-x: auto; transition: background-color .5s; }
+@media (min-width: 640px) { .vp-doc div[class*='language-'], .vp-block { border-radius: 8px; margin: 16px 0; } }
+@media print { .vp-doc div[class*='language-'] { border-radius: 8px; margin: 16px 0; } }
+.vp-doc [class*='language-'] pre, .vp-doc [class*='language-'] code { direction: ltr; text-align: left; white-space: pre; word-spacing: normal; word-break: normal; word-wrap: normal; tab-size: 4; hyphens: none; }
+.vp-doc [class*='language-'] pre { position: relative; z-index: 1; margin: 0; padding: 20px 0; background: transparent; overflow-x: auto; }
+.vp-doc [class*='language-'] code { display: block; padding: 0 24px; width: fit-content; min-width: 100%; line-height: var(--vp-code-line-height); font-size: var(--vp-code-font-size); color: var(--vp-code-block-color); transition: color .5s; font-family: var(--vp-font-family-mono); }
+.vp-doc [class*='language-'] code .highlighted { background-color: var(--vp-code-line-highlight-color); transition: background-color .5s; margin: 0 -24px; padding: 0 24px; width: calc(100% + 2 * 24px); display: inline-block; }
+.vp-doc [class*='language-'] code .diff.add { background-color: rgba(16, 185, 129, .14); margin: 0 -24px; padding: 0 24px; width: calc(100% + 2 * 24px); display: inline-block; }
+.vp-doc [class*='language-'] code .diff.add::before { content: '+'; color: #18794e; position: absolute; left: 10px; }
+.vp-doc [class*='language-'] code .diff.remove { background-color: rgba(244, 63, 94, .14); opacity: .7; margin: 0 -24px; padding: 0 24px; width: calc(100% + 2 * 24px); display: inline-block; }
+.vp-doc [class*='language-'] code .diff.remove::before { content: '-'; color: #b8272c; position: absolute; left: 10px; }
+.vp-doc div[class*='language-'].line-numbers-mode { padding-left: 32px; }
+.vp-doc .line-numbers-wrapper { position: absolute; top: 0; bottom: 0; left: 0; z-index: 3; border-right: 1px solid var(--vp-code-block-divider-color, #e2e2e3); padding-top: 20px; width: 32px; text-align: center; font-family: var(--vp-font-family-mono); line-height: var(--vp-code-line-height); font-size: var(--vp-code-font-size); color: var(--vp-code-line-number-color); transition: border-color .5s, color .5s; }
+.vp-doc [class*='language-'] > span.lang { position: absolute; top: 2px; right: 8px; z-index: 2; font-size: 12px; font-weight: 500; color: var(--vp-c-text-3); transition: color .4s, opacity .4s; }
+.vp-code-group { margin-top: 16px; }
+.vp-code-group .tabs { position: relative; display: flex; margin-right: -24px; margin-left: -24px; padding: 0 12px; background-color: var(--vp-code-tab-bg, #f6f6f7); overflow-x: auto; overflow-y: hidden; box-shadow: inset 0 -1px #e2e2e3; }
+@media print { .vp-code-group .tabs { margin-right: 0; margin-left: 0; border-radius: 8px 8px 0 0; } }
+.vp-code-group .tabs input { position: fixed; opacity: 0; pointer-events: none; }
+.vp-code-group .tabs label { position: relative; display: inline-block; border-bottom: 1px solid transparent; padding: 0 12px; line-height: 48px; font-size: 14px; font-weight: 500; color: var(--vp-c-text-2); white-space: nowrap; cursor: pointer; }
+.vp-code-group .tabs label::after { position: absolute; right: 8px; bottom: -1px; left: 8px; z-index: 1; height: 2px; border-radius: 2px; content: ''; background-color: transparent; }
+.vp-code-group input:checked + label { color: var(--vp-c-text-1); }
+.vp-code-group input:checked + label::after { background-color: var(--vp-c-brand-1); }
+.vp-code-group div[class*='language-'], .vp-block { display: none; margin-top: 0 !important; border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
+.vp-code-group div[class*='language-'].active, .vp-block.active { display: block; }
+.token-k { color: #d73a49; } .token-s { color: #032f62; } .token-f { color: #6f42c1; } .token-c { color: #6a737d; font-style: italic; } .token-n { color: #005cc5; }
+.VPDoc { padding: 0; }
+.VPDocFooter { margin-top: 64px; }
+.prev-next { border-top: 1px solid var(--vp-c-divider); padding-top: 24px; display: grid; grid-row-gap: 8px; grid-template-columns: repeat(2, 1fr); grid-column-gap: 16px; }
+.pager-link { display: block; border: 1px solid var(--vp-c-divider); border-radius: 8px; padding: 11px 16px 13px; width: 100%; height: 100%; text-decoration: none; }
+.pager-link.next { margin-left: auto; text-align: right; }
+.desc { display: block; line-height: 20px; font-size: 12px; font-weight: 500; color: var(--vp-c-text-2); }
+.title { display: block; line-height: 20px; font-size: 14px; font-weight: 500; color: var(--vp-c-brand-1); }
+</style>
+</head>
+<body>
+<div id="app"><div class="Layout">
+<header class="VPNav">Ledgerly API</header>
+<aside class="VPSidebar">Guide · Reference</aside>
+<div class="VPDoc"><div class="content"><main class="main">
+<div class="vp-doc _guide_webhooks">
+<h1 id="webhooks" tabindex="-1">Webhooks <span class="VPBadge tip">v2</span> <a class="header-anchor" href="#webhooks">​</a></h1>
+<p>Ledgerly sends an HTTP <code>POST</code> request to your endpoint whenever something happens in an account you are subscribed to: an invoice is paid, a transfer settles, a dispute opens. Each request carries one event as JSON and a signature in the <code>Ledgerly-Signature</code> header.</p>
+<div class="tip custom-block"><p class="custom-block-title">TIP</p><p>Use the CLI to forward events to <code>localhost</code> while you develop: <code>ledgerly listen --forward-to localhost:3000/webhooks</code>.</p></div>
+<h2 id="registering-an-endpoint" tabindex="-1">Registering an endpoint <a class="header-anchor" href="#registering-an-endpoint">​</a></h2>
+<p>Endpoints are registered per account. You can register up to 16 endpoints, each with its own list of event types:</p>
+<div class="language-ts vp-adaptive-theme line-numbers-mode"><button title="Copy Code" class="copy"></button><span class="lang">ts</span><pre class="shiki shiki-themes github-light github-dark vp-code"><code><span class="line"><span class="token-k">import</span><span> { Ledgerly } </span><span class="token-k">from</span><span> </span><span class="token-s">'@ledgerly/node'</span></span>
+<span class="line"></span>
+<span class="line"><span class="token-k">const</span><span> ledgerly </span><span class="token-k">=</span><span> </span><span class="token-k">new</span><span> </span><span class="token-f">Ledgerly</span><span>(process.env.</span><span class="token-n">LEDGERLY_KEY</span><span>)</span></span>
+<span class="line"></span>
+<span class="line highlighted"><span class="token-k">const</span><span> endpoint </span><span class="token-k">=</span><span> </span><span class="token-k">await</span><span> ledgerly.webhookEndpoints.</span><span class="token-f">create</span><span>({</span></span>
+<span class="line highlighted"><span>  url: </span><span class="token-s">'https://shop.example/webhooks/ledgerly'</span><span>,</span></span>
+<span class="line"><span>  events: [</span><span class="token-s">'invoice.paid'</span><span>, </span><span class="token-s">'transfer.settled'</span><span>],</span></span>
+<span class="line diff remove"><span>  apiVersion: </span><span class="token-s">'2025-01-15'</span><span>,</span></span>
+<span class="line diff add"><span>  apiVersion: </span><span class="token-s">'2026-09-01'</span><span>,</span></span>
+<span class="line"><span>})</span></span>
+<span class="line"></span>
+<span class="line"><span>console.</span><span class="token-f">log</span><span>(endpoint.secret) </span><span class="token-c">// whsec_… keep it out of your repository</span></span></code></pre><div class="line-numbers-wrapper" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br></div></div>
+<div class="warning custom-block"><p class="custom-block-title">WARNING</p><p>The secret is shown only once. If you lose it, roll it with <code>webhookEndpoints.rollSecret()</code>; the old secret keeps working for 24 hours.</p></div>
+<h2 id="verifying-signatures" tabindex="-1">Verifying signatures <a class="header-anchor" href="#verifying-signatures">​</a></h2>
+<p>The signature header holds a timestamp and one or more HMAC-SHA256 signatures of <code>{timestamp}.{body}</code>. Reject requests whose timestamp is more than five minutes old.</p>
+<div class="vp-code-group vp-adaptive-theme"><div class="tabs"><input type="radio" name="group-1" id="tab-1" checked><label data-title="Node" for="tab-1">Node</label><input type="radio" name="group-1" id="tab-2"><label data-title="PHP" for="tab-2">PHP</label><input type="radio" name="group-1" id="tab-3"><label data-title="Go" for="tab-3">Go</label></div><div class="blocks">
+<div class="language-js vp-adaptive-theme active"><span class="lang">js</span><pre class="shiki vp-code"><code><span class="line"><span class="token-k">const</span><span> event </span><span class="token-k">=</span><span> ledgerly.webhooks.</span><span class="token-f">constructEvent</span><span>(</span></span>
+<span class="line"><span>  req.rawBody, req.headers[</span><span class="token-s">'ledgerly-signature'</span><span>], secret,</span></span>
+<span class="line"><span>)</span></span></code></pre></div>
+<div class="language-php vp-adaptive-theme"><span class="lang">php</span><pre class="shiki vp-code"><code><span class="line"><span>$event = \Ledgerly\Webhook::constructEvent($payload, $header, $secret);</span></span></code></pre></div>
+<div class="language-go vp-adaptive-theme"><span class="lang">go</span><pre class="shiki vp-code"><code><span class="line"><span>event, err := webhook.ConstructEvent(payload, header, secret)</span></span></code></pre></div>
+</div></div>
+<h3 id="retries" tabindex="-1">Retries and ordering <span class="VPBadge warning">changed in v2</span> <a class="header-anchor" href="#retries">​</a></h3>
+<p>Answer with any <code>2xx</code> status within 10 seconds. Otherwise Ledgerly retries with exponential back-off for up to three days:</p>
+<table tabindex="0"><thead><tr><th>Attempt</th><th>Delay after the previous one</th><th>Total time since the event</th></tr></thead><tbody>
+<tr><td>1</td><td>immediately</td><td>0 s</td></tr>
+<tr><td>2</td><td>1 minute</td><td>1 min</td></tr>
+<tr><td>3</td><td>10 minutes</td><td>11 min</td></tr>
+<tr><td>4</td><td>1 hour</td><td>1 h 11 min</td></tr>
+<tr><td>5 – 12</td><td>6 hours each</td><td>up to 3 days</td></tr>
+</tbody></table>
+<p>Events are not guaranteed to arrive in order. Use the <code>created</code> timestamp and the object’s <code>version</code> field to discard stale updates.</p>
+<details class="details custom-block" open><summary>Which events are sent?</summary><ul><li><code>invoice.created</code>, <code>invoice.paid</code>, <code>invoice.voided</code></li><li><code>transfer.created</code>, <code>transfer.settled</code>, <code>transfer.failed</code></li><li><code>dispute.opened</code>, <code>dispute.closed</code></li></ul></details>
+<div class="danger custom-block"><p class="custom-block-title">DANGER</p><p>Never trust the payload alone for money movements. Fetch the object from the API before you ship goods or release funds.</p></div>
+</div>
+<footer class="VPDocFooter"><div class="edit-info">Edit this page</div><nav class="prev-next"><div class="pager"><a class="pager-link prev" href="#"><span class="desc">Previous page</span><span class="title">Idempotency</span></a></div><div class="pager"><a class="pager-link next" href="#"><span class="desc">Next page</span><span class="title">Errors</span></a></div></nav></footer>
+</main></div></div>
+</div></div>
+</body>
+</html>

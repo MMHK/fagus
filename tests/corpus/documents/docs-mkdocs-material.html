@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
+<title>Deploying the import service - Fagus Docs</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 16mm 15mm 18mm; }
+:root {
+  --md-text-font-family: Inter, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  --md-code-font-family: SFMono-Regular, Consolas, Menlo, monospace;
+  --md-default-fg-color: rgba(0, 0, 0, .87); --md-default-fg-color--light: rgba(0, 0, 0, .54);
+  --md-default-fg-color--lighter: rgba(0, 0, 0, .32); --md-default-fg-color--lightest: rgba(0, 0, 0, .07);
+  --md-primary-fg-color: #4051b5; --md-accent-fg-color: #526cfe;
+  --md-code-fg-color: #36464e; --md-code-bg-color: #f5f5f5;
+  --md-code-hl-keyword-color: #3f6ec6; --md-code-hl-string-color: #1c7d4d; --md-code-hl-comment-color: var(--md-default-fg-color--light);
+  --md-code-hl-number-color: #d52a2a; --md-code-hl-name-color: var(--md-code-fg-color); --md-code-hl-constant-color: #6e59d9;
+  --md-typeset-a-color: var(--md-primary-fg-color);
+  --md-admonition-icon--note: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>');
+  --md-admonition-icon--warning: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"/></svg>');
+  --md-admonition-icon--tip: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.66 11.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33 7.26 13 4.85 13.95 3c-.95.23-1.78.75-2.49 1.32-2.59 2.08-3.61 5.75-2.39 8.9.04.1.08.2.08.33 0 .22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6 0 0 1-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78 10 4.87 12.3 5 14.47c.06.5.12 1 .29 1.5.14.6.41 1.2.71 1.73 1.08 1.73 2.95 2.97 4.96 3.22 2.14.27 4.43-.12 6.07-1.6 1.83-1.66 2.47-4.32 1.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26"/></svg>');
+  --md-admonition-icon--example: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 2v2h1v14a4 4 0 0 0 4 4 4 4 0 0 0 4-4V4h1V2zm4 14c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1m2-4c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1m1-5h-4V4h4z"/></svg>');
+  --md-details-icon: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>');
+  --md-clipboard-icon: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>');
+}
+html { font-size: 125%; -webkit-text-size-adjust: none; }
+body { margin: 0; font-family: var(--md-text-font-family); font-size: .5rem; color: var(--md-default-fg-color); -webkit-font-smoothing: antialiased; font-feature-settings: "kern", "liga"; }
+*, ::before, ::after { box-sizing: border-box; }
+/* Material for MkDocs: what remains of the page in print */
+@media print {
+  .md-header, .md-sidebar, .md-footer, .md-tabs, .md-content__button, .md-clipboard, .md-source-file { display: none; }
+  .md-typeset .tabbed-set { display: block; }
+}
+.md-grid { max-width: none; margin: 0; }
+.md-main__inner { display: flex; height: 100%; }
+.md-content { flex-grow: 1; min-width: 0; }
+.md-content__inner { margin: 0; padding-top: 0; }
+.md-typeset { font-size: .8rem; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print { .md-typeset { font-size: .68rem; } }
+.md-typeset h1 { color: var(--md-default-fg-color--light); font-size: 2em; font-weight: 300; letter-spacing: -.01em; line-height: 1.3; margin: 0 0 1.25em; }
+.md-typeset h2 { font-size: 1.5625em; font-weight: 300; letter-spacing: -.01em; line-height: 1.4; margin: 1.6em 0 .64em; }
+.md-typeset h3 { font-size: 1.25em; font-weight: 400; letter-spacing: -.01em; line-height: 1.5; margin: 1.6em 0 .8em; }
+.md-typeset p, .md-typeset ul, .md-typeset ol { margin: 1em 0; }
+.md-typeset ul, .md-typeset ol { margin-left: .625em; padding: 0; }
+.md-typeset ul li, .md-typeset ol li { margin-bottom: .5em; margin-left: 1.25em; }
+.md-typeset a { color: var(--md-typeset-a-color); text-decoration: none; word-break: break-word; }
+.md-typeset code, .md-typeset kbd, .md-typeset pre { color: var(--md-code-fg-color); direction: ltr; font-variant-ligatures: none; font-family: var(--md-code-font-family); }
+.md-typeset code { background-color: var(--md-code-bg-color); border-radius: .1rem; -webkit-box-decoration-break: clone; box-decoration-break: clone; font-size: .85em; padding: 0 .2941176471em; word-break: break-word; }
+.md-typeset pre { font-size: .85em; line-height: 1.4; position: relative; margin: 1em 0; }
+.md-typeset pre > code { box-shadow: none; display: block; margin: 0; outline-color: var(--md-accent-fg-color); overflow: auto; padding: .7720588235em 1.1764705882em; scrollbar-width: thin; touch-action: auto; word-break: normal; }
+@media print { .md-typeset pre > code { white-space: pre-wrap; } }
+.md-typeset kbd { background-color: #fafafa; border-radius: .1rem; box-shadow: 0 .1rem 0 .05rem #b8b8b8, 0 .1rem 0 #b8b8b8, 0 -.1rem .2rem #fff inset; color: var(--md-default-fg-color); display: inline-block; font-size: .75em; padding: 0 .6666666667em; vertical-align: text-top; word-break: break-word; }
+.md-typeset hr { border-bottom: .05rem solid var(--md-default-fg-color--lightest); display: flow-root; margin: 1.5em 0; border-top: 0; }
+.highlight .k, .highlight .kn, .highlight .kd { color: var(--md-code-hl-keyword-color); }
+.highlight .s, .highlight .s1, .highlight .s2 { color: var(--md-code-hl-string-color); }
+.highlight .c, .highlight .c1, .highlight .cm { color: var(--md-code-hl-comment-color); font-style: italic; }
+.highlight .m, .highlight .mi { color: var(--md-code-hl-number-color); }
+.highlight .nt, .highlight .na { color: var(--md-code-hl-keyword-color); }
+.highlight .kc, .highlight .no { color: var(--md-code-hl-constant-color); }
+.highlight .nb, .highlight .nv { color: var(--md-code-hl-name-color); }
+.highlight .hll { background-color: rgba(255, 255, 0, .5); display: block; margin: 0 -1.1764705882em; padding: 0 1.1764705882em; }
+.highlight span.filename { background-color: var(--md-code-bg-color); border-bottom: .05rem solid var(--md-default-fg-color--lightest); border-top-left-radius: .1rem; border-top-right-radius: .1rem; display: flow-root; font-size: .85em; font-weight: 700; margin-top: 1em; padding: .6617647059em 1.1764705882em; position: relative; }
+.highlight span.filename + pre { margin-top: 0; }
+.highlight span.filename + pre > code { border-top-left-radius: 0; border-top-right-radius: 0; }
+.highlighttable { display: flow-root; }
+.highlighttable tbody, .highlighttable td { display: block; padding: 0; }
+.highlighttable tr { display: flex; }
+.highlighttable pre { margin: 0; }
+.highlighttable th.filename { flex-grow: 1; padding: 0; text-align: left; }
+.highlighttable .linenos { background-color: var(--md-code-bg-color); border-bottom-left-radius: .1rem; border-top-left-radius: .1rem; font-size: .85em; padding: .7720588235em 0 .7720588235em 1.1764705882em; -webkit-user-select: none; user-select: none; }
+.highlighttable .linenodiv { box-shadow: -.05rem 0 var(--md-default-fg-color--lighter) inset; padding-right: .5882352941em; }
+.highlighttable .linenodiv pre { color: var(--md-default-fg-color--light); text-align: right; }
+.highlighttable .code { flex: 1; min-width: 0; }
+.linenodiv a { color: inherit; }
+.md-typeset .highlighttable { direction: ltr; margin: 1em 0; }
+.md-typeset .highlighttable > tbody > tr > .code > div > pre > code { border-bottom-left-radius: 0; border-top-left-radius: 0; }
+.md-typeset .highlight + .result { border: .05rem solid var(--md-code-bg-color); border-bottom-left-radius: .1rem; border-bottom-right-radius: .1rem; border-top-width: .1rem; margin-top: -1.125em; overflow: visible; padding: 0 1em; }
+.md-typeset .highlight + .result::after { clear: both; content: ""; display: block; }
+.md-typeset .admonition, .md-typeset details { background-color: #fff; border: .075rem solid #448aff; border-radius: .2rem; box-shadow: 0 .2rem .5rem rgba(0,0,0,.05), 0 0 .05rem rgba(0,0,0,.1); color: var(--md-default-fg-color); display: flow-root; font-size: .64rem; margin: 1.5625em 0; padding: 0 .6rem; page-break-inside: avoid; }
+@media print { .md-typeset .admonition, .md-typeset details { box-shadow: none; } }
+.md-typeset .admonition > *, .md-typeset details > * { box-sizing: border-box; }
+.md-typeset .admonition .admonition, .md-typeset details details { margin-bottom: 1em; margin-top: 1em; }
+.md-typeset .admonition > :last-child, .md-typeset details > :last-child { margin-bottom: .6rem; }
+.md-typeset .admonition-title, .md-typeset summary { background-color: rgba(68, 138, 255, .1); border: none; font-weight: 700; margin: 0 -.6rem; padding-bottom: .4rem; padding-left: 2rem; padding-right: .6rem; padding-top: .4rem; position: relative; }
+.md-typeset .admonition-title:last-child, .md-typeset summary:last-child { margin-bottom: 0; }
+.md-typeset .admonition-title::before, .md-typeset summary::before { background-color: #448aff; content: ""; height: 1rem; left: .6rem; -webkit-mask-image: var(--md-admonition-icon--note); mask-image: var(--md-admonition-icon--note); -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; position: absolute; top: .625em; width: 1rem; }
+.md-typeset .admonition-title code, .md-typeset summary code { box-shadow: 0 0 0 .05rem var(--md-default-fg-color--lightest); }
+.md-typeset summary { cursor: pointer; display: block; min-height: 1rem; overflow: hidden; padding-right: 1.8rem; }
+.md-typeset summary::-webkit-details-marker { display: none; }
+.md-typeset summary::after { background-color: currentcolor; content: ""; height: 1rem; -webkit-mask-image: var(--md-details-icon); mask-image: var(--md-details-icon); -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; position: absolute; right: .4rem; top: .625em; transform: rotate(0deg); width: 1rem; }
+.md-typeset details[open] > summary::after { transform: rotate(90deg); }
+.md-typeset details:not([open]) { box-shadow: none; padding-bottom: 0; }
+.md-typeset details:not([open]) > summary { border-radius: .1rem; }
+.md-typeset .admonition.warning, .md-typeset details.warning { border-color: #ff9100; }
+.md-typeset .warning > .admonition-title, .md-typeset .warning > summary { background-color: rgba(255, 145, 0, .1); }
+.md-typeset .warning > .admonition-title::before, .md-typeset .warning > summary::before { background-color: #ff9100; -webkit-mask-image: var(--md-admonition-icon--warning); mask-image: var(--md-admonition-icon--warning); }
+.md-typeset .admonition.tip, .md-typeset details.tip { border-color: #00bfa5; }
+.md-typeset .tip > .admonition-title, .md-typeset .tip > summary { background-color: rgba(0, 191, 165, .1); }
+.md-typeset .tip > .admonition-title::before, .md-typeset .tip > summary::before { background-color: #00bfa5; -webkit-mask-image: var(--md-admonition-icon--tip); mask-image: var(--md-admonition-icon--tip); }
+.md-typeset .admonition.example, .md-typeset details.example { border-color: #7c4dff; }
+.md-typeset .example > .admonition-title, .md-typeset .example > summary { background-color: rgba(124, 77, 255, .1); }
+.md-typeset .example > .admonition-title::before, .md-typeset .example > summary::before { background-color: #7c4dff; -webkit-mask-image: var(--md-admonition-icon--example); mask-image: var(--md-admonition-icon--example); }
+/* pymdownx.tabbed (alternate style) */
+.md-typeset .tabbed-set { border-radius: .1rem; display: flex; flex-flow: column wrap; margin: 1em 0; position: relative; }
+.md-typeset .tabbed-set > input { height: 0; opacity: 0; position: absolute; width: 0; }
+.md-typeset .tabbed-labels { box-shadow: 0 -.05rem var(--md-default-fg-color--lightest) inset; display: flex; max-width: 100%; overflow: auto; scrollbar-width: none; }
+@media print { .md-typeset .tabbed-labels { display: contents; } }
+.md-typeset .tabbed-labels > label { border-bottom: .1rem solid transparent; border-radius: .1rem .1rem 0 0; color: var(--md-default-fg-color--light); cursor: pointer; flex-shrink: 0; font-size: .64rem; font-weight: 700; padding: .78125em 1.25em .625em; scroll-margin-inline-start: 1rem; white-space: nowrap; width: auto; }
+@media print {
+  .md-typeset .tabbed-labels > label:first-child { order: 1; } .md-typeset .tabbed-labels > label:nth-child(2) { order: 2; } .md-typeset .tabbed-labels > label:nth-child(3) { order: 3; }
+  .md-typeset .tabbed-content { display: contents; }
+  .md-typeset .tabbed-block { display: block; }
+  .md-typeset .tabbed-block:first-child { order: 1; } .md-typeset .tabbed-block:nth-child(2) { order: 2; } .md-typeset .tabbed-block:nth-child(3) { order: 3; }
+}
+.md-typeset .tabbed-content { width: 100%; }
+.md-typeset .tabbed-block { display: none; }
+.md-typeset .tabbed-block > pre:first-child, .md-typeset .tabbed-block > .highlight:first-child > pre { margin: 0; }
+.md-typeset .tabbed-set > input:first-child:checked ~ .tabbed-labels > :first-child { color: var(--md-accent-fg-color); border-color: var(--md-accent-fg-color); }
+.md-typeset table:not([class]) { background-color: #fff; border: .05rem solid var(--md-default-fg-color--lightest); border-radius: .1rem; display: inline-block; font-size: .64rem; max-width: 100%; overflow: auto; touch-action: auto; border-spacing: 0; }
+@media print { .md-typeset table:not([class]) { display: table; } }
+.md-typeset table:not([class]) td, .md-typeset table:not([class]) th { padding: .9375em 1.25em; vertical-align: top; }
+.md-typeset table:not([class]) th { font-weight: 700; min-width: 5rem; text-align: left; }
+.md-typeset table:not([class]) td { border-top: .05rem solid var(--md-default-fg-color--lightest); }
+.md-typeset table:not([class]) tbody tr:first-child td { border-top: 0; }
+.md-typeset .task-list-item { list-style-type: none; position: relative; }
+.md-typeset .task-list-control [type=checkbox] { opacity: 0; position: absolute; z-index: -1; }
+.md-typeset .task-list-indicator::before { background-color: var(--md-default-fg-color--lightest); content: ""; height: 1.25em; left: -1.5em; -webkit-mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg>'); mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg>'); -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; position: absolute; top: .15em; width: 1.25em; }
+.md-typeset [type=checkbox]:checked + .task-list-indicator::before { background-color: #00e676; }
+.md-typeset .md-annotation__index { border-radius: 2.2ex; display: inline-block; margin-left: .4ch; vertical-align: text-bottom; background-color: var(--md-default-fg-color--lighter); color: #fff; font-size: .85em; padding: 0 .6ch; line-height: 1.6; }
+.md-path { font-size: .64rem; color: var(--md-default-fg-color--light); margin: 0 0 .6rem; }
+.md-path__list { display: flex; gap: .2rem; list-style: none; margin: 0; padding: 0; }
+.md-path__item:not(:first-child)::before { content: "›"; margin-right: .2rem; color: var(--md-default-fg-color--lighter); }
+.md-source-file__fact { font-size: .64rem; color: var(--md-default-fg-color--light); }
+</style>
+</head>
+<body dir="ltr">
+<header class="md-header"><nav>Fagus Docs</nav></header>
+<div class="md-container">
+<main class="md-main"><div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary"><nav>Getting started · Guides · Reference</nav></div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<nav class="md-path" aria-label="Navigation"><ol class="md-path__list"><li class="md-path__item"><a href="#">Guides</a></li><li class="md-path__item"><a href="#">Operations</a></li></ol></nav>
+<h1 id="deploying-the-import-service">Deploying the import service</h1>
+<p>The import service reads supplier price lists from an SFTP drop, validates them against the catalogue schema and writes the accepted rows to the <code>pricing</code> database. This guide covers a production deployment with Docker Compose on a single host. Allow about <strong>30 minutes</strong>; you need SSH access to the host and the credentials listed in <a href="#prerequisites">Prerequisites</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>From version 4.2 the service no longer polls the drop folder. It is triggered by the scheduler instead, so a host that only runs the importer needs no cron entry.</p>
+</div>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked><span class="task-list-indicator"></span></label> Docker Engine 27 or later with the Compose plugin</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked><span class="task-list-indicator"></span></label> A PostgreSQL 16 database and a role with <code>CREATE</code> on the <code>pricing</code> schema</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled><span class="task-list-indicator"></span></label> The SFTP host key of the supplier gateway (ask the integration team)</li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<p>Create the file below next to <code>compose.yaml</code>. Lines 4 to 6 are the ones that differ between staging and production:</p>
+<div class="highlight"><span class="filename">importer.env</span><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span>
+<span class="normal"><a href="#__codelineno-0-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># importer.env: read once at start-up</span>
+<span class="nv">IMPORT_DROP</span><span class="o">=</span>sftp://gateway.example.net/drop/prices
+<span class="nv">IMPORT_SCHEMA</span><span class="o">=</span>catalogue-v7.json
+<span class="hll"><span class="nv">DATABASE_URL</span><span class="o">=</span>postgres://importer@db-prod-02:5432/pricing
+</span><span class="hll"><span class="nv">IMPORT_BATCH_SIZE</span><span class="o">=</span><span class="m">5000</span>
+</span><span class="hll"><span class="nv">IMPORT_REJECT_THRESHOLD</span><span class="o">=</span><span class="m">0.02</span>
+</span><span class="nv">LOG_FORMAT</span><span class="o">=</span>json
+<span class="nv">TZ</span><span class="o">=</span>Europe/Berlin
+</code></pre></div></td></tr></table></div>
+<p>Then start the service in the way that matches your host:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Docker Compose</label><label for="__tabbed_1_2">systemd</label><label for="__tabbed_1_3">Kubernetes</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"><div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>importer.env<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>importer
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>importer
+</code></pre></div></div>
+<div class="tabbed-block"><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>importer.service
+journalctl<span class="w"> </span>-u<span class="w"> </span>importer<span class="w"> </span>-f
+</code></pre></div></div>
+<div class="tabbed-block"><div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>apply<span class="w"> </span>-k<span class="w"> </span>deploy/overlays/production
+kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/importer<span class="w"> </span>-n<span class="w"> </span>pricing
+</code></pre></div></div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Do not run two importers against one drop</p>
+<p>The importer takes no lock on the SFTP folder. Two instances read the same file twice, and the second run rejects every row as a duplicate. Scale with <code>IMPORT_BATCH_SIZE</code>, not with replicas.</p>
+</div>
+<h2 id="reject-reports">Reject reports</h2>
+<p>Rows that fail validation are written to a reject report. Each report is a CSV file with one row per rejected line and the reason in the last column:</p>
+<table>
+<thead><tr><th>Code</th><th>Meaning</th><th>Typical cause</th></tr></thead>
+<tbody>
+<tr><td><code>E101</code></td><td>Unknown article number</td><td>The supplier sent a new article before it was listed</td></tr>
+<tr><td><code>E204</code></td><td>Price below the floor</td><td>A decimal comma read as a thousands separator</td></tr>
+<tr><td><code>E305</code></td><td>Currency mismatch</td><td>Price list in CHF for a supplier set up in EUR</td></tr>
+<tr><td><code>W410</code></td><td>Price change above 30 %</td><td>Legitimate, but needs a buyer's approval</td></tr>
+</tbody>
+</table>
+<p>If more than <code>IMPORT_REJECT_THRESHOLD</code> of a file's rows are rejected, the whole file is rejected and the buyer on call gets an e-mail. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to leave the log view without stopping the service.</p>
+<details class="tip" open>
+<summary>Re-running a rejected file</summary>
+<p>Move the file from <code>drop/rejected/</code> back to <code>drop/prices/</code> after the supplier has fixed it. The importer keeps a checksum of every file it has accepted<span class="md-annotation"><span class="md-annotation__index">1</span></span>, so an unchanged file is skipped with a notice instead of being imported twice.</p>
+</details>
+<details class="example">
+<summary>Sample reject report</summary>
+<p>This content is collapsed and does not print.</p>
+</details>
+<h3 id="checksums">Checksums</h3>
+<p>The checksum is a SHA-256 over the file's bytes after the line endings have been normalised, so a file saved again on Windows is still recognised:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">import</span> <span class="nn">hashlib</span>
+
+<span class="k">def</span> <span class="nf">checksum</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="s2">"""SHA-256 of a price list with normalised line endings."""</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\r\n</span><span class="s2">"</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>  <span class="c1"># 64 hex digits, stored in import_files.checksum</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">checksum</span><span class="p">(</span><span class="s2">"sample.csv"</span><span class="p">))</span> <span class="o">==</span> <span class="mi">64</span>
+</code></pre></div></td></tr></table></div>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<p>A file of 120 000 rows is checked in about 0.4 s on the production host.</p>
+</div>
+<hr>
+<aside class="md-source-file"><span class="md-source-file__fact">Last update: 3 November 2026</span></aside>
+<p class="md-source-file__fact">1. Kept for 400 days in <code>import_files</code>.</p>
+</article>
+</div></div></main>
+<footer class="md-footer">Made with Material for MkDocs</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Invoice 2026-0815</title>
+<style>
+/* The brand font as a web font service serves it: subsets by unicode-range, the first source
+   that the browser loads, and a fallback face whose metrics are adjusted to the brand font's. */
+@font-face { font-family: "Brand Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: local("Brand Sans Regular"), url(../../webfonts/Inter-Latin.woff2?v=4) format("woff2-variations"),
+       url(../../webfonts/Inter-Latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212; }
+@font-face { font-family: "Brand Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url(../../webfonts/missing.woff2) format("woff2"), url(../../webfonts/Inter-Bold-Latin.woff) tech(incremental),
+       url(../../webfonts/Inter-Bold-Latin.woff) format("woff");
+  unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+@font-face { font-family: "Brand Fallback"; src: url(../../fonts/Inter-Regular.ttf) format("truetype");
+  size-adjust: 104%; ascent-override: 92%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: Figures; src: url(../../fonts/Inter-Regular.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: Figures; src: url(../../fonts/Inter-Bold.ttf) format("truetype"); font-weight: 700; }
+@page { size: A4; margin: 18mm 18mm 20mm; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt "Brand Sans"; color: #667 } }
+html { font: 10pt/1.5 "Brand Sans", "Brand Fallback"; color: #1b2230 }
+body { margin: 0 }
+header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2pt solid #1b2230; padding-bottom: 3mm }
+.logo { font-weight: 800; font-size: 22pt; letter-spacing: -0.02em }
+.logo span { font-weight: 400; font-style: italic }
+.meta { text-align: right; font-size: 9pt }
+.meta dt { color: #667; font-style: oblique 10deg }
+.meta dd { margin: 0 0 1mm; font: 700 10pt Figures; font-variant-numeric: tabular-nums slashed-zero }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; margin: 8mm 0 }
+.parties h2 { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.08em; color: #667; margin: 0 0 1mm; font-weight: 600 }
+.parties p { margin: 0 }
+table { width: 100%; border-collapse: collapse; margin-top: 4mm }
+th { font-size: 8pt; text-align: left; color: #667; font-weight: 700; border-bottom: 1pt solid #1b2230; padding: 1.5mm 2mm }
+td { padding: 2mm; border-bottom: 0.5pt solid #d8dbe2; vertical-align: top }
+.num { text-align: right; font-family: Figures; font-feature-settings: "tnum", "zero" }
+.desc small { display: block; color: #667; font-size: 8pt; font-feature-settings: "ss01", "cv11" }
+tfoot td { border: 0; padding: 1mm 2mm }
+tfoot tr:last-child td { font-weight: 700; font-size: 12pt; border-top: 1pt solid #1b2230; padding-top: 2mm }
+.terms { margin-top: 10mm; font-size: 8.5pt; color: #3a4152; columns: 2; column-gap: 8mm }
+.terms p { margin: 0 0 2mm }
+sup { font-size: inherit; vertical-align: baseline; font-variant-position: super; font-family: Figures }
+</style></head>
+<body>
+<header>
+  <div class="logo">Kowalski <span>&amp; Partner</span></div>
+  <dl class="meta"><dt>Invoice</dt><dd>2026-0815</dd><dt>Date</dt><dd>15.08.2026</dd><dt>Customer</dt><dd>K-10450</dd></dl>
+</header>
+<section class="parties">
+  <div><h2>From</h2><p>Kowalski &amp; Partner Sp. z o.o.<br>ul. Długa 44/3<br>00-238 Warszawa, Poland<br>NIP 526-000-12-46</p></div>
+  <div><h2>Bill to</h2><p>Łukasz Żółkiewski<br>Ostrowski Logistics Ltd.<br>12 Wharf Road<br>London N1 7GR</p></div>
+</section>
+<table>
+  <thead><tr><th>Item</th><th>Description</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
+  <tbody>
+    <tr><td class="num">1</td><td class="desc">Freight forwarding Gdańsk – Felixstowe<small>Container 40′ HC, ref. 0010-4400</small></td><td class="num">2</td><td class="num">1,180.00</td><td class="num">2,360.00</td></tr>
+    <tr><td class="num">2</td><td class="desc">Customs clearance<small>Import declaration, 1 line</small></td><td class="num">1</td><td class="num">111.11</td><td class="num">111.11</td></tr>
+    <tr><td class="num">3</td><td class="desc">Warehousing, Łódź hub<small>Pallet days 0–30</small></td><td class="num">38</td><td class="num">8.80</td><td class="num">334.40</td></tr>
+    <tr><td class="num">4</td><td class="desc">Insurance (0.08 % of goods value)<small>Policy 2026/07/1048</small></td><td class="num">1</td><td class="num">96.00</td><td class="num">96.00</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td colspan="4">Subtotal</td><td class="num">2,901.51</td></tr>
+    <tr><td colspan="4">VAT reverse charge<sup>1</sup></td><td class="num">0.00</td></tr>
+    <tr><td colspan="4">Total due (GBP)</td><td class="num">2,901.51</td></tr>
+  </tfoot>
+</table>
+<section class="terms">
+  <p>Payment is due within 30 days of the invoice date. Please quote the invoice number 2026-0815 with your payment to IBAN PL61 1090 1014 0000 0712 1981 2874.</p>
+  <p><sup>1</sup> Reverse charge: the recipient accounts for VAT under Article 196 of Directive 2006/112/EC. Our office in Łódź and Gdańsk handles all queries.</p>
+</section>
+</body></html>

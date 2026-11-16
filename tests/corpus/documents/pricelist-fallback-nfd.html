@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Export price list — Eastern Europe</title>
+<style>
+@font-face { font-family: "Brand"; src: url(../../webfonts/Inter-Latin.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "Brand"; src: url(../../webfonts/Inter-Bold-Latin.woff) format("woff"); font-weight: 700; }
+@page { size: A4; margin: 16mm 15mm; @bottom-right { content: counter(page) " / " counter(pages); font: 8pt Brand, Georgia, serif } }
+body { margin: 0; font: 9.5pt/1.5 Brand, Georgia, serif; color: #1c1917 }
+h1 { font-size: 17pt; margin: 0 0 1mm }
+.sub { color: #57534e; margin: 0 0 5mm }
+table { width: 100%; border-collapse: collapse; font-size: 9pt }
+th { text-align: left; border-bottom: 1pt solid #1c1917; padding: 1.2mm 1.5mm }
+td { border-bottom: 0.5pt solid #d6d3d1; padding: 1.2mm 1.5mm; vertical-align: top }
+td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums }
+td small { display: block; color: #78716c }
+.sans { font-family: Brand, "Helvetica Neue", Arial, sans-serif }
+.mono { font-family: Brand, Menlo, monospace }
+h2 { font-size: 11pt; margin: 6mm 0 1mm }
+.notes p { margin: 0 0 1.5mm; text-align: justify }
+</style></head>
+<body>
+<h1>Export price list 2027</h1>
+<p class="sub">Prices ex works Łódź in EUR, with local names as our distributors print them. The brand font has Latin letters only; Cyrillic, Greek and other letters come from the next family, character by character.</p>
+<table>
+<tr><th>Code</th><th>Product</th><th>Market</th><th class="n">Price</th></tr>
+<tr><td>KT-100</td><td>Kettle 1.7 l<small lang="ru">Чайник электрический 1,7 л</small></td><td>Russia ₽</td><td class="n">€ 24.90</td></tr>
+<tr><td>KT-100</td><td>Kettle 1.7 l<small lang="uk">Електричний чайник 1,7 л — ціна з ПДВ</small></td><td>Ukraine ₴</td><td class="n">€ 24.90</td></tr>
+<tr><td>TS-220</td><td>Toaster, 2 slots<small lang="bg">Тостер с две отделения</small></td><td>Bulgaria</td><td class="n">€ 31.50</td></tr>
+<tr><td>TS-220</td><td>Toaster, 2 slots<small lang="el">Φρυγανιέρα δύο θέσεων</small></td><td>Greece</td><td class="n">€ 31.50</td></tr>
+<tr><td>BL-300</td><td>Blender 600 W<small lang="sr">Блендер 600 W, Србија</small></td><td>Serbia</td><td class="n">€ 42.00</td></tr>
+<tr><td>BL-300</td><td>Blender 600 W<small lang="ro">Blender 600 W, cu vas din sticlă</small></td><td>Romania</td><td class="n">€ 42.00</td></tr>
+<tr><td>CM-410</td><td>Coffee maker<small lang="cs">Kávovar s mlýnkem, ČSN EN 60335</small></td><td>Czechia</td><td class="n">€ 89.00</td></tr>
+<tr><td>CM-410</td><td>Coffee maker<small lang="kk" class="sans">Кофе қайнатқыш, Қазақстан</small></td><td>Kazakhstan ₸</td><td class="n">€ 89.00</td></tr>
+<tr><td>CM-410</td><td>Coffee maker<small lang="hy" class="sans">Սուրճի մեքենա</small></td><td>Armenia ֏</td><td class="n">€ 89.00</td></tr>
+<tr><td>CM-410</td><td>Coffee maker<small lang="ka" class="sans">ყავის აპარატი</small></td><td>Georgia ₾</td><td class="n">€ 89.00</td></tr>
+</table>
+<h2>Names typed with combining accents</h2>
+<div class="notes">
+<p>Our CRM exports names in decomposed form (NFD): Zoë Ångström, Łukasz Wiśniewski, Ondřej Dvořák, Nguyễn Văn Thành and Ελένη Παπαδοπούλου. A base letter the brand font has and an accent it lacks are drawn by one face, as Chrome keeps a cluster together.</p>
+<p class="sans">Sans-serif fallback: Michał Żółkowski, Đặng Thị Hồng, Ιωάννης Κωνσταντίνου, Йо́сиф.</p>
+<p class="mono">Monospace fallback: SKU-Ü01 · café · Ω-12 · №7 · Ж-3</p>
+</div>
+<h2>Terms</h2>
+<div class="notes">
+<p>Prices are valid from 1 January 2027 until further notice. Delivery within the EU is DAP; outside the EU EXW Łódź. Orders below € 500 carry a handling fee of € 25. Payment terms: 30 days net, 2 % discount within 10 days. Distributors in non-EU markets (₽, ₴, ₸, ֏, ₾) invoice in their local currency at the ECB reference rate of the invoice date.</p>
+</div>
+</body></html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master Services Agreement</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 22mm 24mm 24mm;
+  @bottom-left { content: "MSA v4.2 · Confidential"; font: 7.5pt Inter, sans-serif; color: #666; }
+  @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 7.5pt Inter, sans-serif; color: #666; } }
+@page :first { @bottom-left { content: none; } }
+html { font: 9.5pt/1.5 Inter, sans-serif; color: #1a1a1a; }
+body { margin: 0; }
+h1 { font-size: 16pt; text-align: center; margin: 0 0 1mm; letter-spacing: .02em; }
+.parties { text-align: center; color: #444; margin: 0 0 6mm; }
+.recitals { border-left: 1mm solid #d4b26a; padding: 1mm 0 1mm 4mm; margin: 0 0 6mm; font-style: italic; color: #333; }
+ol.clauses, ol.clauses ol { margin: 0; padding: 0; }
+ol.clauses { counter-reset: list-item; }
+ol.clauses > li { margin: 0 0 4mm; padding-left: 10mm; break-inside: avoid-page; }
+ol.clauses > li::marker { content: counter(list-item) ".\2003"; font-weight: 700; color: #8a6a1f; }
+ol.clauses > li > h2 { display: inline; font-size: 10.5pt; }
+ol.clauses > li > h2 + p { margin-top: 1mm; }
+ol.clauses ol { padding-left: 4mm; }
+ol.clauses ol > li { padding-left: 8mm; margin: 1.2mm 0; text-align: justify; hyphens: auto; }
+ol.clauses ol > li::marker { content: counters(list-item, ".") " "; font-variant-numeric: tabular-nums; color: #555; font-size: 8.5pt; }
+ol.clauses ol ol { list-style: none; counter-reset: sub; padding-left: 0; }
+ol.clauses ol ol > li { counter-increment: sub; padding-left: 7mm; }
+ol.clauses ol ol > li::marker { content: "(" counter(sub, lower-alpha) ")"; font-style: italic; color: #1a1a1a; font-size: inherit; }
+ol.clauses ol ol ol > li::marker { content: "(" counter(sub, lower-roman) ")"; font-style: normal; }
+p { margin: 0 0 1.5mm; }
+dfn { font-style: normal; font-weight: 700; }
+dfn::before { content: "\201C"; } dfn::after { content: "\201D"; }
+sup.fn { font-size: 70%; line-height: 0; vertical-align: super; }
+sup.fn a { color: #8a6a1f; text-decoration: none; }
+.gcpm { float: footnote; font-size: 8pt; color: #555; }
+hr.notes { border: 0; border-top: .5pt solid #999; width: 40mm; margin: 6mm 0 2mm; }
+ol.footnotes { font-size: 8pt; color: #444; padding-left: 5mm; margin: 0; }
+ol.footnotes li::marker { font-weight: 700; color: #8a6a1f; }
+ol.footnotes a.back { text-decoration: none; color: #8a6a1f; }
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; margin-top: 12mm; break-inside: avoid; }
+.sign div { border-top: .5pt solid #1a1a1a; padding-top: 1mm; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+<h1>Master Services Agreement</h1>
+<p class="parties">between <b>Calder &amp; Finch Analytics Ltd</b> (the “Provider”) and <b>Brightwater Housing Association</b> (the “Customer”)</p>
+<div class="recitals">The Customer wishes to obtain data analysis services from the Provider, and the Provider has agreed to provide them on the terms of this Agreement.<sup class="fn"><a href="#fn1" id="r1">1</a></sup></div>
+
+<ol class="clauses">
+<li><h2>Definitions and interpretation</h2>
+  <ol>
+    <li>In this Agreement: <dfn>Business Day</dfn> means a day other than a Saturday, Sunday or public holiday in England; <dfn>Deliverables</dfn> means all documents, reports, data sets and software produced by the Provider for the Customer; <dfn>Services</dfn> means the services described in each Statement of Work.</li>
+    <li>Clause, schedule and paragraph headings do not affect the interpretation of this Agreement. A reference to a statute is a reference to it as amended, extended or re-enacted from time to time.<sup class="fn"><a href="#fn2" id="r2">2</a></sup></li>
+    <li>Words in the singular include the plural and vice versa; “including” and similar words do not limit the generality of the preceding words.</li>
+  </ol>
+</li>
+<li><h2>Commencement and term</h2>
+  <ol>
+    <li>This Agreement starts on 1 December 2026 and continues for an initial term of twenty-four months, after which it renews automatically for successive periods of twelve months unless either party gives notice under clause 9.</li>
+    <li>Each Statement of Work runs for the period stated in it. Where a Statement of Work outlasts this Agreement, the terms of this Agreement continue to apply to it until it ends.</li>
+  </ol>
+</li>
+<li><h2>Supply of the Services</h2>
+  <ol>
+    <li>The Provider shall:
+      <ol>
+        <li>perform the Services with reasonable skill and care and in accordance with good industry practice;</li>
+        <li>meet any performance dates stated in a Statement of Work, time not being of the essence;</li>
+        <li>comply with the Customer's reasonable security policies, in particular:
+          <ol>
+            <li>the information classification policy;</li>
+            <li>the acceptable use policy for remote access; and</li>
+            <li>the procedure for reporting incidents within 24 hours.</li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li>The Provider may replace members of its staff on reasonable notice, provided that the replacements have equivalent qualifications.<span class="gcpm">Footnotes written for paged-media engines with float: footnote stay in the text in Chrome.</span></li>
+  </ol>
+</li>
+<li><h2>Customer's obligations</h2>
+  <ol>
+    <li>The Customer shall co-operate with the Provider, provide access to its premises and systems as reasonably required, and supply in good time all information the Provider needs to perform the Services.</li>
+    <li>If the Provider's performance is prevented or delayed by an act or omission of the Customer, the Provider is not liable for any resulting costs or losses and may charge for additional time at the rates in the Statement of Work.</li>
+  </ol>
+</li>
+<li><h2>Charges and payment</h2>
+  <ol>
+    <li>The Customer shall pay the charges set out in each Statement of Work. Unless stated otherwise, charges are exclusive of VAT, which the Customer shall pay in addition at the applicable rate.<sup class="fn"><a href="#fn3" id="r3">3</a></sup></li>
+    <li>The Provider shall invoice monthly in arrears. Invoices are due thirty days after receipt; late payments bear interest at four per cent a year above the Bank of England base rate.</li>
+    <li>The Customer may withhold a disputed amount in good faith, provided that it notifies the Provider of the dispute within ten Business Days of receiving the invoice.</li>
+  </ol>
+</li>
+<li><h2>Intellectual property</h2>
+  <ol>
+    <li>The Provider assigns to the Customer all intellectual property rights in the Deliverables on payment of the relevant charges, excluding the Provider's pre-existing materials.</li>
+    <li>The Provider grants the Customer a non-exclusive, perpetual, royalty-free licence to use its pre-existing materials to the extent they are incorporated in the Deliverables.</li>
+  </ol>
+</li>
+<li><h2>Data protection</h2>
+  <ol>
+    <li>Each party shall comply with the data protection legislation. The parties agree that the Customer is the controller and the Provider the processor of the personal data described in Schedule 2.<sup class="fn"><a href="#fn4" id="r4">4</a></sup></li>
+    <li>The Provider shall process personal data only on the documented instructions of the Customer and shall ensure that its staff are bound by obligations of confidentiality.</li>
+  </ol>
+</li>
+<li><h2>Limitation of liability</h2>
+  <ol>
+    <li>Nothing in this Agreement limits liability for death or personal injury caused by negligence, for fraud or fraudulent misrepresentation, or for any other liability that cannot be limited by law.</li>
+    <li>Subject to clause 8.1, the total liability of either party in each contract year shall not exceed one hundred and twenty-five per cent of the charges paid in that year.</li>
+  </ol>
+</li>
+<li><h2>Termination</h2>
+  <ol>
+    <li>Either party may terminate this Agreement by giving at least three months' written notice to the other, to expire at the end of the initial term or of any renewal period.</li>
+    <li>Either party may terminate immediately if the other commits a material breach which is irremediable or not remedied within thirty days of notice, or becomes insolvent.</li>
+  </ol>
+</li>
+<li><h2>General</h2>
+  <ol>
+    <li>This Agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.</li>
+    <li>This Agreement constitutes the entire agreement between the parties and supersedes all previous agreements relating to its subject matter.</li>
+  </ol>
+</li>
+</ol>
+
+<div class="sign"><div>For the Provider: Eleanor Calder, Director<br>Date:</div><div>For the Customer: Rajesh Menon, Chief Executive<br>Date:</div></div>
+
+<hr class="notes">
+<ol class="footnotes">
+  <li id="fn1">The recitals do not form part of the operative provisions. <a class="back" href="#r1">↩</a></li>
+  <li id="fn2">Including the Data Protection Act 2018 and the UK GDPR as defined in it. <a class="back" href="#r2">↩</a></li>
+  <li id="fn3">At the date of this Agreement the standard rate of VAT is twenty per cent. <a class="back" href="#r3">↩</a></li>
+  <li id="fn4">Schedule 2 lists the categories of data subjects, the types of personal data and the duration of the processing. <a class="back" href="#r4">↩</a></li>
+</ol>
+</body>
+</html>

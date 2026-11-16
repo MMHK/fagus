@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Antrag auf Mitgliedschaft</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 15mm 16mm; @bottom-right { content: "Formular M-12 · Seite " counter(page); font: 7pt "Inter"; color: #666; } }
+* { box-sizing: border-box; }
+html { font: 9pt/1.4 "Inter", sans-serif; color: #111; }
+body { margin: 0; }
+h1 { font-size: 15pt; margin: 0; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1.5pt solid #111; padding-bottom: 6pt; margin-bottom: 10pt; }
+.top .ref { border: 0.75pt solid #111; padding: 3pt 6pt; font-size: 7.5pt; width: 48mm; }
+.top .ref div { display: flex; justify-content: space-between; }
+fieldset { border: 0.75pt solid #888; border-radius: 3pt; margin: 0 0 9pt; padding: 4pt 8pt 8pt; break-inside: avoid; }
+legend { font-weight: 700; padding: 0 4pt; font-size: 9.5pt; }
+.grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5pt 8pt; }
+.s2 { grid-column: span 2; } .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s6 { grid-column: span 6; }
+label.f { display: flex; flex-direction: column; font-size: 7.5pt; color: #444; gap: 1.5pt; }
+input[type=text], input[type=email], input[type=date], input[type=tel], input[type=number], select, textarea { font: 9pt "Inter"; color: #111; width: 100%; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number] { border: none; border-bottom: 0.75pt solid #111; padding: 2pt 0; background: #f7f7f2; }
+textarea { border: 0.75pt solid #111; height: 46pt; resize: none; padding: 3pt; }
+select { border: 0.75pt solid #111; padding: 2pt; background: #fff; }
+.opts { display: flex; flex-wrap: wrap; gap: 4pt 14pt; align-items: center; }
+.opts label { display: inline-flex; align-items: center; gap: 4pt; }
+input[type=checkbox], input[type=radio] { margin: 0; }
+.boxes { display: flex; gap: 0; }
+.boxes input { width: 13pt; text-align: center; border: 0.75pt solid #111; border-right: none; padding: 1pt 0; font: 9pt "Inter"; }
+.boxes input:last-child { border-right: 0.75pt solid #111; }
+.boxes .gap { width: 6pt; }
+table.fees { width: 100%; border-collapse: collapse; }
+table.fees td, table.fees th { border-bottom: 0.5pt solid #ccc; padding: 3pt 4pt; text-align: left; }
+table.fees td:last-child, table.fees th:last-child { text-align: right; }
+.small { font-size: 7.5pt; color: #555; text-align: justify; }
+.sig { display: grid; grid-template-columns: 1fr 1fr; gap: 16pt; margin-top: 18pt; }
+.sig div { border-top: 0.75pt solid #111; padding-top: 2pt; font-size: 7.5pt; }
+.office { background: #eee; }
+progress { width: 100%; height: 8pt; }
+</style>
+</head>
+<body>
+<div class="top">
+<div><h1>Antrag auf Mitgliedschaft</h1><div>Sportverein Musterstadt 1898 e.&nbsp;V. · Abteilung Rudern</div></div>
+<div class="ref"><div><span>Mitgliedsnummer</span><span>__________</span></div><div><span>Eingang</span><span>__________</span></div><div><span>Bearbeitet</span><span>__________</span></div></div>
+</div>
+<p class="small" style="margin-top:0">Bitte füllen Sie das Formular vollständig in Druckbuchstaben aus. Felder mit * sind Pflichtangaben. Den ausgefüllten Antrag senden Sie bitte an die Geschäftsstelle oder geben ihn beim Training ab.</p>
+<fieldset>
+<legend>1. Persönliche Angaben</legend>
+<div class="grid">
+<div class="s6 opts"><span>Anrede:</span><label><input type="radio" name="a" checked> Frau</label><label><input type="radio" name="a"> Herr</label><label><input type="radio" name="a"> divers</label><label><input type="radio" name="a"> keine Angabe</label></div>
+<label class="f s3">Vorname *<input type="text" value="Anna"></label>
+<label class="f s3">Nachname *<input type="text" value="Muster"></label>
+<label class="f s4">Straße und Hausnummer *<input type="text" value="Hauptstraße 12"></label>
+<label class="f s2">Geburtsdatum *<input type="date" value="1990-04-17"></label>
+<label class="f">PLZ *<input type="text" value="10115"></label>
+<label class="f s3">Ort *<input type="text" value="Berlin"></label>
+<label class="f s2">Staatsangehörigkeit<select><option>deutsch</option><option>österreichisch</option></select></label>
+<label class="f s3">E-Mail<input type="email" value="anna.muster@mail.example"></label>
+<label class="f s3">Telefon<input type="tel" placeholder="+49 …"></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>2. Mitgliedschaft</legend>
+<div class="grid">
+<div class="s6 opts"><span>Art:</span><label><input type="radio" name="m" checked> Erwachsene (ab 18)</label><label><input type="radio" name="m"> Jugendliche</label><label><input type="radio" name="m"> Familie</label><label><input type="radio" name="m"> Fördermitglied</label></div>
+<div class="s6 opts"><span>Interesse an:</span><label><input type="checkbox" checked> Breitensport</label><label><input type="checkbox"> Leistungssport</label><label><input type="checkbox" checked> Wanderfahrten</label><label><input type="checkbox"> Ergometer-Training im Winter</label><label><input type="checkbox" disabled> Rennteam (ausgebucht)</label></div>
+<label class="f s2">Eintritt zum<input type="date" value="2027-01-01"></label>
+<label class="f s2">Schwimmfähigkeit<select><option>Freischwimmer (Bronze)</option></select></label>
+<label class="f s2">Anzahl Familienmitglieder<input type="number" value="1"></label>
+<label class="f s6">Bisherige Rudererfahrung, Vereine<textarea>Drei Jahre Schulrudern am Gymnasium, danach gelegentlich Wanderfahrten auf der Havel.</textarea></label>
+</div>
+<table class="fees" style="margin-top:6pt">
+<tr><th>Beitrag</th><th>jährlich</th></tr>
+<tr><td>Aufnahmegebühr (einmalig)</td><td>50,00&nbsp;€</td></tr>
+<tr><td>Grundbeitrag Erwachsene</td><td>240,00&nbsp;€</td></tr>
+<tr><td>Abteilungsbeitrag Rudern</td><td>120,00&nbsp;€</td></tr>
+</table>
+</fieldset>
+<fieldset>
+<legend>3. SEPA-Lastschriftmandat</legend>
+<p class="small" style="margin:0 0 5pt">Ich ermächtige den Sportverein Musterstadt 1898 e.&nbsp;V., Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die vom Verein auf mein Konto gezogenen Lastschriften einzulösen. Gläubiger-ID: DE98ZZZ09999999999.</p>
+<div class="grid">
+<label class="f s6">IBAN
+<span class="boxes"><input value="D"><input value="E"><input value="8"><input value="9"><span class="gap"></span><input value="3"><input value="7"><input value="0"><input value="4"><span class="gap"></span><input value="0"><input value="0"><input value="4"><input value="4"><span class="gap"></span><input value="0"><input value="5"><input value="3"><input value="2"><span class="gap"></span><input value="0"><input value="1"><input value="3"><input value="0"><span class="gap"></span><input value="0"><input value="0"></span></label>
+<label class="f s3">Kontoinhaber<input type="text" value="Anna Muster"></label>
+<label class="f s3">Kreditinstitut<input type="text" value="Musterbank Berlin"></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>4. Einwilligungen</legend>
+<div class="opts" style="flex-direction:column; align-items:flex-start">
+<label><input type="checkbox" checked> Ich habe die Satzung und die Datenschutzhinweise gelesen und erkenne sie an. *</label>
+<label><input type="checkbox"> Fotos von Vereinsveranstaltungen, auf denen ich zu sehen bin, dürfen auf der Website veröffentlicht werden.</label>
+<label><input type="checkbox" checked> Ich möchte den Newsletter per E-Mail erhalten.</label>
+</div>
+<div class="sig"><div>Ort, Datum</div><div>Unterschrift (bei Minderjährigen: Erziehungsberechtigte)</div></div>
+</fieldset>
+<fieldset class="office">
+<legend>Vom Verein auszufüllen</legend>
+<div class="grid">
+<label class="f s2">Aufnahme beschlossen am<input type="text"></label>
+<label class="f s2">Bearbeitungsstand<progress value="0.6"></progress></label>
+<div class="s2 opts"><label><input type="checkbox" checked> Ausweis erstellt</label><label><input type="checkbox"> Schlüssel</label></div>
+</div>
+</fieldset>
+</body>
+</html>

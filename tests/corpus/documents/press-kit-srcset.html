@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Press kit – Northwind Bikes</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+@page { size: A4; margin: 16mm; }
+body { font: 10pt/1.45 Inter, sans-serif; color: #1b1b1b; margin: 0; }
+h1 { font-size: 22pt; margin: 0 0 4mm; }
+h2 { font-size: 13pt; margin: 7mm 0 2mm; }
+figure { margin: 0 0 4mm; }
+figcaption { font-size: 8pt; color: #666; }
+.row { display: flex; gap: 4mm; align-items: flex-start; }
+.row figure { flex: 1; }
+.row img { max-width: 100%; display: block; }
+@media (min-resolution: 2dppx) { .retina { background-image: url(../images/media/hero-2x.png) !important; } }
+</style>
+</head>
+<body>
+<h1>Northwind Bikes – Press kit 2027</h1>
+<p>Resolution switching with srcset and sizes, art direction with picture elements,
+image-set() and a retina media query. Chrome chooses the
+candidates as it loads the page, in a window of 756 × 469 pixels at one device pixel per pixel,
+and prints at 300 dpi.</p>
+
+<h2>Density descriptors</h2>
+<div class="row">
+  <figure><img src="../images/media/hero-1x.png" srcset="../images/media/hero-1x.png 1x, ../images/media/hero-2x.png 2x, ../images/media/hero-3x.png 3x" alt=""><figcaption>src 1x, srcset 1x/2x/3x</figcaption></figure>
+  <figure><img src="../images/media/hero-1x.png" srcset="../images/media/hero-2x.png 2x" alt=""><figcaption>src 1x, srcset 2x only</figcaption></figure>
+  <figure><img srcset="../images/media/hero-2x.png 2x, ../images/media/hero-3x.png 3x" alt=""><figcaption>no src, srcset 2x/3x</figcaption></figure>
+  <figure><img srcset="../images/media/hero-2x.png" alt=""><figcaption>srcset without descriptor</figcaption></figure>
+</div>
+
+<h2>Width descriptors and sizes</h2>
+<div class="row">
+  <figure><img src="../images/media/w320.jpg" srcset="../images/media/w320.jpg 320w, ../images/media/w640.jpg 640w, ../images/media/w1280.jpg 1280w" sizes="200px" alt=""><figcaption>sizes 200px</figcaption></figure>
+  <figure><img src="../images/media/w320.jpg" srcset="../images/media/w320.jpg 320w, ../images/media/w640.jpg 640w, ../images/media/w1280.jpg 1280w" sizes="(min-width: 2000px) 1000px, 500px" alt=""><figcaption>sizes (min-width: 2000px) 1000px, 500px</figcaption></figure>
+  <figure><img src="../images/media/w320.jpg" srcset="../images/media/w320.jpg 320w, ../images/media/w640.jpg 640w, ../images/media/w1280.jpg 1280w" alt=""><figcaption>no sizes (100vw)</figcaption></figure>
+</div>
+<div class="row">
+  <figure><img srcset="../images/media/w320.jpg 320w, ../images/media/w640.jpg 640w" sizes="160px" alt=""><figcaption>sizes 160px</figcaption></figure>
+  <figure><img srcset="../images/media/w640.jpg 640w" sizes="50vw" style="width: 40mm" alt=""><figcaption>sizes 50vw, CSS width 40mm</figcaption></figure>
+  <figure><img srcset="../images/media/w1280.jpg 1280w" sizes="calc(100px + 10vw)" alt=""><figcaption>sizes calc(100px + 10vw)</figcaption></figure>
+  <figure><img srcset="../images/media/w1280.jpg 1280w" sizes="(orientation: portrait) 60px, 90px" alt=""><figcaption>landscape window: 90px</figcaption></figure>
+</div>
+
+<h2>Art direction with picture</h2>
+<div class="row">
+  <figure><picture><source media="(max-width: 400px)" srcset="../images/media/print.png"><img src="../images/media/w320.jpg" style="width: 30mm" alt=""></picture><figcaption>media (max-width: 400px)</figcaption></figure>
+  <figure><picture><source media="screen" srcset="../images/media/hero-3x.png 3x"><img src="../images/media/w640.jpg" alt=""></picture><figcaption>media=screen</figcaption></figure>
+  <figure><picture><source type="image/heic" srcset="../images/media/print.png"><source type="image/webp; codecs=vp8" srcset="../images/media/thumb3.jpg"><img src="../images/photo.jpg" width="120" alt=""></picture><figcaption>HEIC skipped, then WebP</figcaption></figure>
+  <figure><picture><source type="image/x-unknown" srcset="../images/media/hero-3x.png"><source srcset="../images/media/w640.jpg 640w, ../images/media/w1280.jpg 1280w" sizes="160px"><img src="../images/media/hero-1x.png" alt=""></picture><figcaption>unknown type skipped, w + sizes</figcaption></figure>
+</div>
+
+<h2>Backgrounds</h2>
+<div class="row">
+  <div style="flex:1;height:30mm;background: image-set(url(../images/media/hero-1x.png) 1x, url(../images/media/hero-2x.png) 2x) no-repeat"></div>
+  <div style="flex:1;height:30mm;background: -webkit-image-set(url(../images/media/hero-2x.png) 2x, url(../images/media/hero-3x.png) 3x) no-repeat"></div>
+  <div class="retina" style="flex:1;height:30mm;background: url(../images/media/hero-1x.png) no-repeat; background-size: 160px 100px"></div>
+</div>
+</body>
+</html>

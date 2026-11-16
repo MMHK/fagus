@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!-- An invoice in the style of the default template of laraveldaily/laravel-invoices, as a Laravel
+     app hands it to dompdf: a stylesheet of its own written for this test (a small reboot and a
+     few table and utility classes inline), tables with widths in attributes, and made-up data. -->
+<html lang="en">
+    <head>
+        <title>Invoice</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <style>
+            /* dompdf's bundled family, here served by Inter */
+            @font-face { font-family: "DejaVu Sans"; font-weight: 400; src: url(../../fonts/Inter-Regular.ttf); }
+            @font-face { font-family: "DejaVu Sans"; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+        </style>
+        <style type="text/css">
+            @page { size: 210mm 297mm; margin: 0; }
+
+            /* reboot: a system font stack that the universal rule below overrides */
+            html { margin: 0; }
+            body {
+                margin: 34pt 36pt;
+                background: #fff;
+                color: #1f2328;
+                font-family: system-ui, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 10px;
+                line-height: 1.12;
+            }
+            * { font-family: "DejaVu Sans", sans-serif; }
+            p { margin: 0 0 0.9rem; }
+            img { border: 0; vertical-align: middle; }
+            table { border-collapse: collapse; }
+            th { font-weight: 700; text-align: left; }
+            /* headings of a medium weight whose <strong> goes one step bolder */
+            .title { margin: 0 0 0.4rem; font-size: 1.45rem; font-weight: 500; line-height: 1.25; }
+            strong, b { font-weight: bolder; }
+
+            /* tables */
+            .grid { width: 100%; margin-bottom: 1.1rem; }
+            .grid > * > tr > th, .grid > * > tr > td { padding: 0.7rem 0.6rem; vertical-align: top; }
+            .grid > thead > tr > th { vertical-align: bottom; border-bottom: 2px solid #e1e4e8; }
+            .grid.lines > tbody > tr > td { border-top: 1px solid #e1e4e8; }
+
+            /* utilities */
+            .gap-top { margin-top: 2.8rem; }
+            .flush { padding-left: 0 !important; padding-right: 0 !important; }
+            .flush-start { padding-left: 0 !important; }
+            .flush-end { padding-right: 0 !important; }
+            .bare { border: 0 !important; }
+            .end { text-align: right !important; }
+            .mid { text-align: center !important; }
+            .caps { text-transform: uppercase; }
+            .muted { color: #6a717c; }
+            .party-title { font-size: 1.45rem; font-weight: 400; }
+            .grand { font-size: 12.5px; font-weight: 700; }
+        </style>
+    </head>
+
+    <body>
+        <img src="../images/logo.png" alt="logo" height="100">
+
+        <table class="grid gap-top">
+            <tbody>
+                <tr>
+                    <td class="bare flush-start" width="70%">
+                        <h4 class="title caps"><strong>Invoice</strong></h4>
+                    </td>
+                    <td class="bare flush-start">
+                        <h4 class="title caps muted"><strong>Due</strong></h4>
+                        <p>Serial No. <strong>BIG.00042</strong></p>
+                        <p>Invoice date: <strong>07/11/2026</strong></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="grid">
+            <thead>
+                <tr>
+                    <th class="bare flush-start party-title" width="48.5%">Seller</th>
+                    <th class="bare" width="3%"></th>
+                    <th class="bare flush-start party-title">Buyer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="flush">
+                        <p><strong>Northwind Studio GmbH</strong></p>
+                        <p>Address: Hafenstraße 12, 20457 Hamburg</p>
+                        <p>Code: HRB 184402</p>
+                        <p>VAT code: DE318204471</p>
+                        <p>Phone: +49 40 66969 182</p>
+                        <p>SWIFT: HASPDEHHXXX</p>
+                    </td>
+                    <td class="bare"></td>
+                    <td class="flush">
+                        <p><strong>Lindqvist &amp; Partner AB</strong></p>
+                        <p>Address: Sveavägen 44, 111 34 Stockholm</p>
+                        <p>Code: 556677-1234</p>
+                        <p>VAT code: SE556677123401</p>
+                        <p>Order number: PO-2026-1187</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="grid lines">
+            <thead>
+                <tr>
+                    <th scope="col" class="bare flush-start">Description</th>
+                    <th scope="col" class="bare mid">Units</th>
+                    <th scope="col" class="bare mid">Qty</th>
+                    <th scope="col" class="bare end">Price</th>
+                    <th scope="col" class="bare end">Discount</th>
+                    <th scope="col" class="bare end">Tax</th>
+                    <th scope="col" class="bare end flush-end">Sub total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="flush-start">
+                        Brand workshop (two days)
+                        <p class="muted">Preparation, moderation and a written summary of the results for the management team.</p>
+                    </td>
+                    <td class="mid">day</td>
+                    <td class="mid">2</td>
+                    <td class="end">€1,450.00</td>
+                    <td class="end">€0.00</td>
+                    <td class="end">€551.00</td>
+                    <td class="end flush-end">€2,900.00</td>
+                </tr>
+                <tr>
+                    <td class="flush-start">Logo redesign</td>
+                    <td class="mid">piece</td>
+                    <td class="mid">1</td>
+                    <td class="end">€3,200.00</td>
+                    <td class="end">€320.00</td>
+                    <td class="end">€547.20</td>
+                    <td class="end flush-end">€2,880.00</td>
+                </tr>
+                <tr>
+                    <td class="flush-start">
+                        Stationery templates
+                        <p class="muted">Letterhead, business cards and an invoice layout as print-ready PDF and InDesign files.</p>
+                    </td>
+                    <td class="mid">set</td>
+                    <td class="mid">1</td>
+                    <td class="end">€980.00</td>
+                    <td class="end">€0.00</td>
+                    <td class="end">€186.20</td>
+                    <td class="end flush-end">€980.00</td>
+                </tr>
+                <tr>
+                    <td class="flush-start">Web font licences (desktop, 5 seats)</td>
+                    <td class="mid">licence</td>
+                    <td class="mid">5</td>
+                    <td class="end">€59.00</td>
+                    <td class="end">€0.00</td>
+                    <td class="end">€56.05</td>
+                    <td class="end flush-end">€295.00</td>
+                </tr>
+                <tr>
+                    <td class="flush-start">Hourly support after delivery</td>
+                    <td class="mid">hour</td>
+                    <td class="mid">6.5</td>
+                    <td class="end">€95.00</td>
+                    <td class="end">€0.00</td>
+                    <td class="end">€117.33</td>
+                    <td class="end flush-end">€617.50</td>
+                </tr>
+                <!-- summary rows: an empty cell across the item columns, then label and value -->
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Total discount</td>
+                    <td class="end flush-end">€320.00</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Taxable amount</td>
+                    <td class="end flush-end">€7,672.50</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Tax rate</td>
+                    <td class="end flush-end">19%</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Total taxes</td>
+                    <td class="end flush-end">€1,457.78</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Shipping</td>
+                    <td class="end flush-end">€0.00</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bare"></td>
+                    <td class="end flush-start">Total amount</td>
+                    <td class="end flush-end grand">€9,130.28</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Notes: Please quote the serial number with your payment.<br>Thank you for your business.</p>
+        <p>Amount in words: Nine thousand one hundred thirty EUR and twenty-eight CT.</p>
+        <p>Pay until: 07/12/2026</p>
+
+        <!-- dompdf runs inline PHP of this type to stamp page numbers; browsers ignore it -->
+        <script type="text/php">
+            if (isset($pdf)) {
+                $pdf->page_text(500, 812, "Page {PAGE_NUM} of {PAGE_COUNT}", null, 8, [0.4, 0.4, 0.4]);
+            }
+        </script>
+    </body>
+</html>

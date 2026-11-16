@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Engineering : Incident review 2026-10-21 – Payment webhooks delayed</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400 500; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 15mm; }
+        </style>
+        <style>
+html, body { margin: 0; padding: 0; }
+body { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif; font-size: 14px; line-height: 1.42857142857143; color: #172b4d; }
+#page { padding: 0; }
+#main { padding: 0 20px; }
+#main-header { margin-bottom: 20px; }
+#breadcrumb-section ol { list-style: none; margin: 0; padding: 0; font-size: 12px; color: #6b778c; }
+#breadcrumb-section li { display: inline; }
+#breadcrumb-section li + li::before { content: "/"; padding: 0 6px; color: #97a0af; }
+#breadcrumb-section a { color: #0052cc; text-decoration: none; }
+#title-heading { font-size: 24px; font-weight: 500; line-height: 1.25; margin: 8px 0 0; letter-spacing: -0.01em; }
+.page-metadata { font-size: 12px; color: #6b778c; margin: 0 0 20px; padding: 0; }
+.page-metadata .author { color: #172b4d; font-weight: 600; }
+#content h1 { font-size: 20px; font-weight: 500; margin: 30px 0 0; letter-spacing: -0.008em; line-height: 1.2; }
+#content h2 { font-size: 16px; font-weight: 600; margin: 24px 0 0; letter-spacing: -0.006em; line-height: 1.25; }
+#content p { margin: 10px 0 0; }
+#content p:first-child { margin-top: 0; }
+a { color: #0052cc; }
+.wiki-content ul, .wiki-content ol { margin: 10px 0 0; padding-left: 40px; }
+.wiki-content li > p { margin: 0; }
+.status-macro { display: inline-block; box-sizing: border-box; max-width: 100%; padding: 2px 4px 3px; border-radius: 3px; font-size: 11px; font-weight: 700; line-height: 1; text-transform: uppercase; vertical-align: baseline; white-space: nowrap; }
+.aui-lozenge-success { background: #e3fcef; color: #006644; }
+.aui-lozenge-error { background: #ffebe6; color: #bf2600; }
+.aui-lozenge-current { background: #deebff; color: #0747a6; }
+.aui-lozenge-complete { background: #dfe1e6; color: #42526e; }
+.confluence-information-macro { position: relative; padding: 10px 10px 10px 36px; margin: 10px 0 0; border-radius: 3px; min-height: 20px; }
+.confluence-information-macro-icon { position: absolute; left: 10px; top: 10px; width: 16px; height: 16px; border-radius: 50%; color: #fff; font: 700 11px/16px Inter, sans-serif; text-align: center; }
+.confluence-information-macro-icon::before { content: "i"; }
+.confluence-information-macro-warning { background: #ffebe6; }
+.confluence-information-macro-warning .confluence-information-macro-icon { background: #de350b; }
+.confluence-information-macro-warning .confluence-information-macro-icon::before { content: "!"; }
+.confluence-information-macro-information { background: #deebff; }
+.confluence-information-macro-information .confluence-information-macro-icon { background: #0052cc; }
+.confluence-information-macro-tip { background: #e3fcef; }
+.confluence-information-macro-tip .confluence-information-macro-icon { background: #00875a; }
+.confluence-information-macro-tip .confluence-information-macro-icon::before { content: "✓"; }
+.confluence-information-macro-body p:first-child { margin-top: 0; }
+.table-wrap { margin: 10px 0 0; overflow-x: auto; }
+table.confluenceTable { border-collapse: collapse; margin: 0; overflow-x: auto; }
+th.confluenceTh, td.confluenceTd { border: 1px solid #c1c7d0; padding: 7px 10px; vertical-align: top; text-align: left; min-width: 8px; }
+th.confluenceTh { background: #f4f5f7; font-weight: 700; color: #172b4d; }
+td.highlight-red { background: #ffebe6; }
+td.highlight-green { background: #e3fcef; }
+.code.panel { border: 1px solid #c1c7d0; border-radius: 3px; margin: 10px 0 0; background: #f4f5f7; font-size: 12px; }
+.code.panel .codeHeader { border-bottom: 1px solid #c1c7d0; padding: 5px 10px; font-weight: 600; background: #fff; }
+.code.panel pre { margin: 0; padding: 10px; white-space: pre-wrap; word-wrap: break-word; font-family: "SFMono-Medium", "SF Mono", "Segoe UI Mono", "Roboto Mono", "Ubuntu Mono", Menlo, Consolas, Courier, monospace; font-size: 12px; line-height: 20px; }
+code { font-family: "SFMono-Medium", "SF Mono", Menlo, Consolas, Courier, monospace; font-size: 0.9em; background: #f4f5f7; padding: 1px 3px; border-radius: 3px; }
+.task-list { list-style: none; padding-left: 22px !important; }
+.task-list li { position: relative; margin-top: 4px; }
+.task-list li::before { content: ""; position: absolute; left: -22px; top: 3px; width: 12px; height: 12px; border: 1px solid #97a0af; border-radius: 3px; background: #fff; }
+.task-list li.checked::before { background: #0052cc; border-color: #0052cc; }
+.task-list li.checked::after { content: ""; position: absolute; left: -18px; top: 5px; width: 3px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.task-list li.checked { text-decoration: line-through; color: #6b778c; }
+.user-mention { background: #dfe1e6; color: #172b4d; border-radius: 20px; padding: 0 5px 1px; white-space: nowrap; text-decoration: none; }
+.toc-macro ul { list-style: none; padding-left: 16px !important; margin: 4px 0 0 !important; }
+.toc-macro > ul { padding-left: 0 !important; }
+.toc-macro { border-left: 2px solid #dfe1e6; padding-left: 10px; margin-top: 10px; font-size: 13px; }
+.columnLayout { display: flex; gap: 20px; margin-top: 10px; }
+.columnLayout .cell { flex: 1 1 0; min-width: 0; }
+.columnLayout .cell.aside { flex: 0 0 33%; }
+#footer { margin-top: 30px; border-top: 1px solid #dfe1e6; padding-top: 6px; font-size: 11px; color: #6b778c; }
+@media print { #footer { display: block; } .no-print { display: none; } }
+        </style>
+    </head>
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first"><span><a href="index.html">Engineering</a></span></li>
+                            <li><span><a href="Operations_917504.html">Operations</a></span></li>
+                            <li><span><a href="Incident-reviews_917511.html">Incident reviews</a></span></li>
+                        </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                        <span id="title-text">Engineering : Incident review 2026-10-21 – Payment webhooks delayed</span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                        Created by <span class='author'> Priya Raman</span>, last modified by <span class='editor'> Tomás Ferreira</span> on Oct 24, 2026
+                    </div>
+                    <div id="main-content" class="wiki-content group">
+<div class="columnLayout two-right-sidebar" data-layout="two-right-sidebar">
+<div class="cell normal" data-type="normal"><div class="innerCell">
+<table class="confluenceTable"><colgroup><col><col></colgroup><tbody>
+<tr><th class="confluenceTh">Status</th><td class="confluenceTd"><span class="status-macro aui-lozenge aui-lozenge-complete">Resolved</span> <span class="status-macro aui-lozenge aui-lozenge-current">Review done</span></td></tr>
+<tr><th class="confluenceTh">Severity</th><td class="confluenceTd"><span class="status-macro aui-lozenge aui-lozenge-error">SEV-2</span></td></tr>
+<tr><th class="confluenceTh">Duration</th><td class="confluenceTd">2026-10-21 13:42 – 15:09 UTC (1 h 27 min)</td></tr>
+<tr><th class="confluenceTh">Owner</th><td class="confluenceTd"><a class="confluence-userlink user-mention" href="#">Priya Raman</a></td></tr>
+<tr><th class="confluenceTh">Ticket</th><td class="confluenceTd"><a href="#">INC-1184</a>, <a href="#">PAY-5521</a></td></tr>
+</tbody></table>
+</div></div>
+<div class="cell aside" data-type="aside"><div class="innerCell">
+<div class="toc-macro rbtoc1729789000000">
+<ul class="toc-indentation">
+<li><a href="#summary">Summary</a></li>
+<li><a href="#timeline">Timeline</a></li>
+<li><a href="#cause">Root cause</a>
+<ul class="toc-indentation"><li><a href="#why">Five whys</a></li></ul></li>
+<li><a href="#actions">Action items</a></li>
+</ul>
+</div>
+</div></div>
+</div>
+
+<h1 id="summary">Summary</h1>
+<p>Between 13:42 and 15:09 UTC, payment confirmations reached merchants with a delay of up to 74 minutes. No payments were lost and no customer was charged twice, but 1,836 orders stayed in the state <code>pending_confirmation</code> longer than our SLA of five minutes allows.</p>
+<div class="confluence-information-macro confluence-information-macro-warning"><span class="aui-icon aui-icon-small aui-iconfont-error confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>Merchants on the legacy plan received no retry e-mails during the incident. Customer support contacted the 42 affected merchants on October 22.</p></div></div>
+
+<h1 id="timeline">Timeline</h1>
+<div class="table-wrap"><table class="confluenceTable"><colgroup><col style="width: 90px;"><col></colgroup><tbody>
+<tr><th class="confluenceTh">Time (UTC)</th><th class="confluenceTh">Event</th></tr>
+<tr><td class="confluenceTd">13:30</td><td class="confluenceTd">Deploy of <code>webhook-dispatcher</code> v2.31.0 with the new connection pool settings.</td></tr>
+<tr><td class="confluenceTd">13:42</td><td class="confluenceTd highlight-red">Queue depth alert fires (&gt; 5,000 messages). On-call engineer <a class="confluence-userlink user-mention" href="#">Tomás Ferreira</a> acknowledges.</td></tr>
+<tr><td class="confluenceTd">14:05</td><td class="confluenceTd">Incident declared as SEV-2; status page updated.</td></tr>
+<tr><td class="confluenceTd">14:38</td><td class="confluenceTd">Pool exhaustion identified in the dispatcher logs; rollback started.</td></tr>
+<tr><td class="confluenceTd">15:09</td><td class="confluenceTd highlight-green">Queue drained; incident resolved.</td></tr>
+</tbody></table></div>
+
+<h1 id="cause">Root cause</h1>
+<p>The new release lowered <code>max_idle_connections</code> from 64 to 8 while keeping the number of worker threads. Under the afternoon peak, workers waited for connections and the retry back-off multiplied the delay:</p>
+<div class="code panel pdl conf-macro output-block" style="border-width: 1px;"><div class="codeHeader panelHeader pdl" style="border-bottom-width: 1px;"><b>dispatcher.yaml (v2.31.0)</b></div><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: yml; gutter: false; theme: Confluence" data-theme="Confluence">http:
+  max_idle_connections: 8      # was 64
+  idle_timeout: 30s
+workers: 48
+retry:
+  initial_backoff: 2s
+  multiplier: 2.0
+  max_backoff: 10m</pre>
+</div></div>
+<h2 id="why">Five whys</h2>
+<ol>
+<li>Why were webhooks delayed? Workers waited for HTTP connections.</li>
+<li>Why did they wait? The pool allowed only eight idle connections for 48 workers.</li>
+<li>Why was the pool reduced? To lower memory use after the move to smaller containers.</li>
+<li>Why was the effect not caught? The load test runs with 10 % of production traffic.</li>
+<li>Why so little? The test environment has not been resized since 2024.</li>
+</ol>
+<div class="confluence-information-macro confluence-information-macro-tip"><span class="aui-icon aui-icon-small aui-iconfont-approve confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>What went well: the alert fired within twelve minutes and the rollback took less than five.</p></div></div>
+
+<h1 id="actions">Action items</h1>
+<ul class="inline-task-list task-list" data-inline-tasks-content-id="917520">
+<li class="checked" data-inline-task-id="1">Roll back <code>webhook-dispatcher</code> to v2.30.4 <a class="confluence-userlink user-mention" href="#">Tomás Ferreira</a></li>
+<li class="checked" data-inline-task-id="2">Contact the affected merchants on the legacy plan <a class="confluence-userlink user-mention" href="#">Ana Lindqvist</a></li>
+<li data-inline-task-id="3">Size the pool from the number of workers instead of a constant <a class="confluence-userlink user-mention" href="#">Priya Raman</a> <time datetime="2026-11-15" class="date-future">15 Nov 2026</time></li>
+<li data-inline-task-id="4">Run the load test at 50 % of production traffic before each release <a class="confluence-userlink user-mention" href="#">Jonas Weber</a> <time datetime="2026-11-30" class="date-future">30 Nov 2026</time></li>
+</ul>
+<div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>This review is blameless. Please add comments on the page rather than in chat so that they stay with the record.</p></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 07, 2026 09:12</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>
+    </body>
+</html>

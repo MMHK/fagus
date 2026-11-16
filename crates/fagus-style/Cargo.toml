@@ -1,0 +1,22 @@
+[package]
+name = "fagus-style"
+description = "Cascade and computed values for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+# Parts follow Chromium (CHROMIUM-LICENSE).
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause"
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus-dom.workspace = true
+fagus-css.workspace = true
+lightningcss.workspace = true
+rustc-hash.workspace = true
+smallvec.workspace = true

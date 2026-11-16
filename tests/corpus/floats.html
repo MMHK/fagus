@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Floats</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+  @page { size: A4; margin: 16mm; }
+  body { margin: 0; font: 10pt/1.5 Inter, sans-serif; color: #1f2937; }
+  h2 { font-size: 13pt; margin: 6mm 0 2mm; color: #1d4ed8; border-bottom: 1px solid #dbeafe; padding-bottom: 1mm; }
+  h2 .number { float: right; font-size: 10pt; font-weight: 400; color: #6b7280; }
+  p { margin: 0 0 2.5mm; }
+
+  .photo { float: right; width: 42mm; height: 28mm; margin: 0 0 2mm 4mm; background: linear-gradient(135deg, #93c5fd, #1d4ed8); border-radius: 2mm; }
+  .initial { float: left; font-size: 30pt; line-height: 1; font-weight: 700; color: #1d4ed8; margin: 0 2mm 0 0; padding: 1mm 2mm; background: #eff6ff; }
+
+  .row::after { content: ""; display: block; clear: both; }
+  .col { float: left; width: 48%; background: #f9fafb; border: 1px solid #e5e7eb; padding: 2mm; box-sizing: border-box; }
+  .col + .col { float: right; }
+
+  .note { float: left; width: 30mm; height: 18mm; background: #fef3c7; border: 1px solid #f59e0b; margin-right: 3mm; }
+  .box { overflow: hidden; background: #ecfdf5; border: 1px solid #10b981; padding: 2mm; }
+  .cleared { clear: both; background: #fee2e2; padding: 1mm 2mm; }
+
+  .chips span { float: left; width: 38mm; height: 9mm; margin: 0 2mm 2mm 0; background: #e0e7ff; border: 1px solid #6366f1; box-sizing: border-box; font-size: 8pt; padding: 1mm; }
+  .chips .tall { height: 16mm; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+  td { border-bottom: 1px solid #e5e7eb; padding: 1mm 0; }
+  td .value { float: right; font-weight: 600; }
+</style>
+</head>
+<body>
+  <h2>Rechnung <span class="number">Nr. RE-2026-0042</span></h2>
+  <p><span class="photo"></span>Ein Bild, das rechts schwebt: der Text fließt links daran vorbei, und sobald das Bild endet, nutzen die Zeilen wieder die ganze Breite. So sehen Produktblätter, Angebote und Berichte aus, die mit älteren PDF-Werkzeugen gebaut wurden. Mehr Text, damit die Zeilen unter dem Bild weitergehen: Die Umsätze stiegen im dritten Quartal deutlich, getragen von neuen Kunden aus dem Handwerk.</p>
+  <p><span class="initial">D</span>ieser Absatz beginnt mit einer Initiale, die links schwebt. Die ersten Zeilen sind kürzer, danach läuft der Text wieder über die ganze Breite der Seite. Ein zweiter Satz sorgt für ein paar Zeilen mehr, damit man den Übergang sieht.</p>
+
+  <h2>Zwei Spalten</h2>
+  <div class="row">
+    <div class="col"><b>Rechnungsadresse</b><br>Muster GmbH<br>Hauptstraße 1<br>12345 Musterstadt</div>
+    <div class="col"><b>Lieferadresse</b><br>Muster GmbH, Lager<br>Industriestraße 7<br>12345 Musterstadt<br>Tor 3</div>
+  </div>
+  <p>Der Absatz nach den Spalten beginnt unter der höheren von beiden, weil die Zeile mit <code>clear: both</code> abschließt.</p>
+
+  <h2>Neuer Formatierungskontext</h2>
+  <div class="note"></div>
+  <div class="box">Diese Box hat <code>overflow: hidden</code> und weicht dem Float aus, statt unter ihn zu laufen. Ihr Hintergrund beginnt rechts neben der gelben Notiz.</div>
+  <p class="cleared">Dieser Absatz hat <code>clear: both</code> und steht unter allen Floats.</p>
+
+  <h2>Floats nebeneinander</h2>
+  <div class="chips row"><span>Eins</span><span class="tall">Zwei (höher)</span><span>Drei</span><span>Vier</span><span>Fünf</span><span>Sechs</span></div>
+
+  <h2>Tabelle mit Floats in Zellen</h2>
+  <table>
+    <tr><td>Zwischensumme<span class="value">570,00 €</span></td></tr>
+    <tr><td>Umsatzsteuer 19 %<span class="value">108,30 €</span></td></tr>
+    <tr><td><b>Gesamtbetrag</b><span class="value">678,30 €</span></td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Line Breaking for Print Engines</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: letter; margin: 0.75in 0.7in 0.85in; @bottom-center { content: counter(page); font: 8pt "Inter"; } }
+html { font: 8.6pt/1.38 "Inter", sans-serif; color: #111; counter-reset: fig tab note sec; }
+body { margin: 0; }
+.title { text-align: center; margin-bottom: 12pt; }
+.title h1 { font-size: 16pt; margin: 0 0 6pt; line-height: 1.2; }
+.authors { font-size: 9.5pt; }
+.authors sup { font-size: 6pt; }
+.affil { font-size: 7.5pt; color: #444; margin-top: 3pt; }
+.abstract { margin: 0 0.4in 12pt; font-size: 8pt; text-align: justify; }
+.abstract b { text-transform: uppercase; letter-spacing: 0.05em; }
+.body { column-count: 2; column-gap: 0.28in; text-align: justify; }
+h2 { font-size: 9.5pt; margin: 9pt 0 3pt; counter-increment: sec; counter-reset: sub; break-after: avoid; }
+h2::before { content: counter(sec) ". "; }
+h3 { font-size: 8.6pt; font-style: italic; font-weight: 400; margin: 6pt 0 2pt; counter-increment: sub; break-after: avoid; }
+h3::before { content: counter(sec) "." counter(sub) " "; font-style: normal; }
+p { margin: 0; text-indent: 1.2em; orphans: 2; widows: 2; }
+h2 + p, h3 + p, figure + p, .eq + p, table + p { text-indent: 0; }
+figure { margin: 6pt 0; break-inside: avoid; text-align: center; }
+figure.wide { column-span: all; margin: 8pt 0 10pt; }
+figure svg { display: block; margin: 0 auto; }
+figcaption { font-size: 7.5pt; text-align: left; margin-top: 3pt; counter-increment: fig; }
+figcaption::before { content: "Figure " counter(fig) ". "; font-weight: 700; }
+table { border-collapse: collapse; width: 100%; font-size: 7.5pt; margin: 6pt 0; break-inside: avoid; font-variant-numeric: tabular-nums; }
+caption { caption-side: top; text-align: left; margin-bottom: 3pt; counter-increment: tab; }
+caption::before { content: "Table " counter(tab) ". "; font-weight: 700; }
+th, td { padding: 1.5pt 4pt; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+thead th { border-top: 1pt solid #000; border-bottom: 0.5pt solid #000; }
+tbody tr:last-child td { border-bottom: 1pt solid #000; }
+.eq { display: flex; align-items: center; margin: 5pt 0; text-indent: 0; }
+.eq svg { margin: 0 auto; }
+.eq .n { width: 2em; text-align: right; }
+.math { font-style: italic; }
+sup.fn { font-size: 6pt; line-height: 0; }
+.notes { column-span: all; border-top: 0.5pt solid #000; margin-top: 10pt; padding-top: 4pt; font-size: 7.2pt; }
+.notes ol { margin: 0; padding-left: 1.6em; columns: 2; column-gap: 0.28in; }
+.notes li { margin-bottom: 2pt; break-inside: avoid; }
+.refs { font-size: 7.4pt; padding-left: 1.8em; margin: 0; }
+.refs li { margin-bottom: 2pt; text-align: left; }
+.refs li::marker { content: "[" counter(list-item) "] "; }
+code { font-size: 7.6pt; background: #f2f2f2; padding: 0 1.5pt; border-radius: 1.5pt; }
+</style>
+</head>
+<body>
+<div class="title">
+<h1>Optimal Line Breaking for Print-Oriented<br>HTML Rendering Engines</h1>
+<div class="authors">Ada Example<sup>1</sup>, Ben Sample<sup>2</sup>, Chiara Test<sup>1</sup></div>
+<div class="affil"><sup>1</sup>Institute for Document Engineering, Example University &nbsp; <sup>2</sup>Typesetting Lab, Sample Institute</div>
+</div>
+<p class="abstract"><b>Abstract.</b> Browsers break lines greedily: every line is filled with as many words as fit, and the remaining words move to the next line. Typesetting systems such as TeX instead choose break points that minimize a global measure of badness. We measure the difference between the two strategies on a corpus of 1,200 printed business documents, show that greedy breaking produces visibly loose lines in 7.4% of justified paragraphs, and describe how a print engine can offer optimal breaking without giving up compatibility with browser output.</p>
+<div class="body">
+<h2>Introduction</h2>
+<p>Many applications generate invoices, contracts and reports as HTML and convert them to PDF with a headless browser. The output then looks exactly like the browser preview, which is the main reason for this choice. Its typography, however, is limited by the line breaking algorithm of the browser, which is optimized for speed and incremental layout rather than for quality.</p>
+<p>TeX’s algorithm [1] treats a paragraph as a sequence of boxes, glue and penalties and finds the break points that minimize the sum of the squared badness of all lines. This produces evenly spaced justified text, but it is more expensive and its result can change when a word at the end of the paragraph changes.</p>
+<p>In this paper we ask how often the difference is visible in practice, and whether a print engine can use optimal breaking only where it improves the result.<sup class="fn">1</sup></p>
+<h2>Background</h2>
+<h3>Greedy breaking</h3>
+<p>Let a paragraph consist of words <span class="math">w</span><sub>1</sub>, …, <span class="math">w<sub>n</sub></span> with widths <span class="math">x<sub>i</sub></span>, and let <span class="math">s</span> be the natural width of a space. The greedy algorithm ends a line at the last word for which the line still fits into the measure <span class="math">L</span>.</p>
+<div class="eq"><span class="n"></span><svg width="150" height="34" viewBox="0 0 150 34" font-family="Inter" font-size="11"><text x="2" y="21" font-style="italic">r</text><text x="8" y="25" font-size="7">j</text><text x="16" y="21">=</text><line x1="28" y1="17" x2="146" y2="17" stroke="#000" stroke-width="0.7"/><text x="34" y="12" font-style="italic">L</text><text x="44" y="12">−</text><text x="56" y="12" font-style="italic">W</text><text x="66" y="15" font-size="7">j</text><text x="58" y="31" font-style="italic">S</text><text x="68" y="33" font-size="7">j</text></svg><span class="n">(1)</span></div>
+<p>Here <span class="math">W<sub>j</sub></span> is the natural width of line <span class="math">j</span> and <span class="math">S<sub>j</sub></span> the total stretchability of its spaces; the adjustment ratio <span class="math">r<sub>j</sub></span> says how much the spaces have to grow. Lines with <span class="math">r<sub>j</sub></span> &gt; 1 look loose.</p>
+<h3>Total-fit breaking</h3>
+<p>The total-fit algorithm minimizes the sum of demerits over all lines, where the demerits of a line grow with the cube of its adjustment ratio:</p>
+<div class="eq"><span class="n"></span><svg width="170" height="34" viewBox="0 0 170 34" font-family="Inter" font-size="11"><text x="2" y="21" font-style="italic">D</text><text x="14" y="21">=</text><text x="26" y="24" font-size="18">∑</text><text x="28" y="33" font-size="6.5" font-style="italic">j</text><text x="44" y="21">(</text><text x="50" y="21">1</text><text x="58" y="21">+</text><text x="69" y="21">100</text><text x="90" y="21">|</text><text x="94" y="21" font-style="italic">r</text><text x="100" y="24" font-size="7">j</text><text x="104" y="21">|</text><text x="108" y="14" font-size="7">3</text><text x="114" y="21">)</text><text x="119" y="14" font-size="7">2</text></svg><span class="n">(2)</span></div>
+<p>A dynamic programming pass over feasible break points finds the minimum in <span class="math">O</span>(<span class="math">n</span>·<span class="math">k</span>) time, where <span class="math">k</span> is the number of words that fit on a line.</p>
+<figure class="wide">
+<svg width="560" height="120" viewBox="0 0 560 120" font-family="Inter" font-size="8">
+<rect x="0.5" y="0.5" width="559" height="119" fill="#fafafa" stroke="#999"/>
+<g transform="translate(40 10)"><line x1="0" y1="90" x2="490" y2="90" stroke="#000"/><line x1="0" y1="0" x2="0" y2="90" stroke="#000"/>
+<text x="-6" y="93" text-anchor="end">0</text><text x="-6" y="48" text-anchor="end">0.5</text><text x="-6" y="6" text-anchor="end">1.0</text>
+<polyline fill="none" stroke="#c2410c" stroke-width="1.5" points="0,80 50,74 100,66 150,60 200,51 250,43 300,40 350,31 400,26 450,19 490,15"/>
+<polyline fill="none" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="4 2" points="0,86 50,84 100,82 150,79 200,77 250,74 300,72 350,69 400,67 450,64 490,62"/>
+<text x="495" y="17">greedy</text><text x="495" y="64">total-fit</text>
+<text x="245" y="104" text-anchor="middle">measure in em (20 … 45)</text></g>
+</svg>
+<figcaption>Share of justified lines with adjustment ratio above 1, by measure, for greedy (solid) and total-fit (dashed) breaking. Narrow columns suffer most.</figcaption>
+</figure>
+<h2>Method</h2>
+<p>We collected 1,200 documents printed by 31 applications: invoices (412), contracts and terms (288), reports (301) and letters (199). Each document was rendered with a greedy and a total-fit line breaker at the same measure, using the same fonts and hyphenation patterns.<sup class="fn">2</sup> For every justified paragraph we recorded the adjustment ratios of all lines but the last.</p>
+<table>
+<caption>Documents and justified paragraphs per category.</caption>
+<thead><tr><th>Category</th><th>Docs</th><th>Paragraphs</th><th>Lines</th></tr></thead>
+<tbody>
+<tr><td>Invoices</td><td>412</td><td>1,036</td><td>3,102</td></tr>
+<tr><td>Contracts</td><td>288</td><td>9,844</td><td>61,250</td></tr>
+<tr><td>Reports</td><td>301</td><td>7,112</td><td>40,873</td></tr>
+<tr><td>Letters</td><td>199</td><td>1,207</td><td>6,331</td></tr>
+<tr><td><b>Total</b></td><td><b>1,200</b></td><td><b>19,199</b></td><td><b>111,556</b></td></tr>
+</tbody>
+</table>
+<h2>Results</h2>
+<p>Greedy breaking produced at least one loose line (<span class="math">r</span> &gt; 1) in 7.4% of justified paragraphs; total-fit breaking reduced this share to 1.9%. The effect was strongest in contracts, whose numbered clauses are typeset in narrow columns with hanging indents.</p>
+<figure>
+<svg width="220" height="96" viewBox="0 0 220 96" font-family="Inter" font-size="7.5">
+<g transform="translate(24 6)">
+<line x1="0" y1="76" x2="190" y2="76" stroke="#000"/>
+<rect x="8" y="22" width="16" height="54" fill="#c2410c"/><rect x="26" y="62" width="16" height="14" fill="#1d4ed8"/>
+<rect x="56" y="6" width="16" height="70" fill="#c2410c"/><rect x="74" y="56" width="16" height="20" fill="#1d4ed8"/>
+<rect x="104" y="30" width="16" height="46" fill="#c2410c"/><rect x="122" y="64" width="16" height="12" fill="#1d4ed8"/>
+<rect x="152" y="44" width="16" height="32" fill="#c2410c"/><rect x="170" y="68" width="16" height="8" fill="#1d4ed8"/>
+<text x="25" y="86" text-anchor="middle">Inv.</text><text x="73" y="86" text-anchor="middle">Contr.</text><text x="121" y="86" text-anchor="middle">Rep.</text><text x="169" y="86" text-anchor="middle">Lett.</text>
+</g></svg>
+<figcaption>Paragraphs with loose lines per category (greedy left, total-fit right).</figcaption>
+</figure>
+<p>The total-fit breaker changed the number of lines in 3.1% of paragraphs. In 0.4% of documents this moved content to another page, which matters when documents must match a preview exactly.</p>
+<table>
+<caption>Mean and 95th percentile of the adjustment ratio.</caption>
+<thead><tr><th>Breaker</th><th>Mean <span class="math">r</span></th><th>P95 <span class="math">r</span></th><th>Loose</th></tr></thead>
+<tbody><tr><td>Greedy</td><td>0.31</td><td>1.12</td><td>7.4%</td></tr><tr><td>Total-fit</td><td>0.22</td><td>0.71</td><td>1.9%</td></tr><tr><td>Hybrid</td><td>0.24</td><td>0.79</td><td>2.3%</td></tr></tbody>
+</table>
+<h2>A hybrid strategy</h2>
+<p>A print engine that promises browser-identical output cannot change line breaks silently. We therefore propose a hybrid: lines are broken greedily, and only paragraphs that contain a loose line are re-broken with total-fit, under the constraint that the number of lines does not change. This keeps pagination identical while removing three quarters of the loose lines.</p>
+<p>The constraint is cheap to enforce: the dynamic programming pass only needs to track solutions with exactly the greedy line count, which bounds the search to a narrow band around the greedy break points.<sup class="fn">3</sup></p>
+<h2>Conclusion</h2>
+<p>Greedy line breaking is good enough for most printed documents, but a visible minority of justified paragraphs, especially in contracts, would benefit from optimal breaking. A constrained total-fit pass can improve them without changing pagination.</p>
+<h2>References</h2>
+<ol class="refs">
+<li>D. E. Knuth and M. F. Plass. Breaking paragraphs into lines. <i>Software: Practice and Experience</i>, 11(11):1119–1184, 1981.</li>
+<li>F. M. Liang. <i>Word Hy-phen-a-tion by Com-put-er</i>. PhD thesis, Stanford University, 1983.</li>
+<li>W3C. CSS Text Module Level 4. Working Draft, 2024.</li>
+<li>A. Example. Matching browser output in a print engine. In <i>Proc. DocEng</i>, pages 12–21, 2025.</li>
+</ol>
+<div class="notes"><ol>
+<li>Source code and data are available from the authors on request.</li>
+<li>We used the hyphenation patterns of the TeX distribution for English and German; documents in other languages were excluded.</li>
+<li>In our implementation the band is at most three break points wide, so the hybrid pass costs about 1.4 times the greedy pass.</li>
+</ol></div>
+</div>
+</body>
+</html>

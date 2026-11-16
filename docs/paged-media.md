@@ -1,0 +1,681 @@
+# Paged media
+
+Fagus takes the page size, margins, headers, footers and page breaks from the document's CSS, as a
+browser does when it prints. There are no PHP options for them: everything on this page goes into
+the stylesheet. This keeps the layout in one place and lets you check a template in Chrome's print
+preview, which shows the same result for nearly everything here. Where Fagus differs from Chrome,
+this page says so.
+
+All examples are complete documents. Render one with:
+
+```php
+use Fagus\Fagus;
+
+Fagus::html(file_get_contents('example.html'))->save('example.pdf');
+```
+
+## Set the page size and margins
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 25mm;
+  }
+  @page :first {
+    margin-top: 45mm;
+  }
+</style>
+</head>
+<body>
+  <h1>Invoice</h1>
+</body>
+</html>
+```
+
+`size` takes:
+
+- a name: `A5`, `A4`, `A3`, `B5`, `B4`, `JIS-B5`, `JIS-B4`, `letter`, `legal`, `ledger`, optionally
+  with `portrait` or `landscape` (`size: A4 landscape`);
+- one length for a square page, or two for width and height (`size: 80mm 200mm` for a receipt);
+  `calc()`, `min()`, `max()`, `clamp()`, `em` and viewport units work;
+- `auto`, the default page.
+
+Fagus parses `size` with Chrome's grammar: values Chrome does not accept keep the size that applied
+before, without a warning. `A6` is one of them, as are `80mm auto` and three lengths. For A6, write
+`size: 105mm 148mm`.
+
+**Defaults.** A page without `size` is A4. Chrome takes the paper size of the printer or of the
+system's region (Letter in the United States). A server has neither, so Fagus uses A4, so that a
+document prints the same on every machine. Write `size: letter` for US documents. A page without
+`margin` has Chrome's default margins of 28pt (about 1cm) on every side. The `body` element keeps
+its default margin of 8px inside the page area, as in a browser; most print stylesheets set
+`body { margin: 0 }`.
+
+**Details:**
+
+- Percentage margins refer to the page width for left and right and to the page height for top
+  and bottom.
+- `em` and `rem` in `@page` refer to the root element's font size.
+- As in Chrome, each side of the PDF page is rounded to whole points and then to a 1/300 inch grid:
+  A4 is 594.96 × 841.92pt.
+- `width`, `height`, their minimums and maximums, `padding` and `border` of `@page` size the page
+  box as in Chrome; `padding` and `border` lie inside the page margins.
+- `@page` and its margin boxes take only the properties Chrome allows there. `transform`, `opacity`,
+  `font-variant-*` and `font-feature-settings` are ignored.
+- Content that reaches outside the page area is cut off at the page margins. Content wider than the
+  page area makes Fagus lay the page out again on a wider area and scale it down, as Chrome's print
+  does, by at most 1.5 times.
+
+## Use different first, left and right pages
+
+`:first` matches the first page of the document. `:left` and `:right` match the pages of a
+two-sided document: a left-to-right document starts on a right page, a right-to-left one on a left
+page, as in Chrome.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { size: A5; margin: 20mm; }
+  @page :left  { margin-left: 25mm; margin-right: 15mm; }
+  @page :right { margin-left: 15mm; margin-right: 25mm; }
+  @page :left  { @bottom-left  { content: counter(page); } }
+  @page :right { @bottom-right { content: counter(page); } }
+  section { break-before: page; }
+</style>
+</head>
+<body>
+  <section>Page one is a right page.</section>
+  <section>Page two is a left page.</section>
+  <section>Page three is a right page.</section>
+</body>
+</html>
+```
+
+The more specific rule wins: a named page beats `:first` and `:blank`, which beat `:left` and
+`:right`.
+
+### Start chapters on a right page
+
+`break-before: right` (or `left`, `recto`, `verso`, and the same values of `break-after`) starts a
+new page on that side. Where the next page would be on the other side, Fagus inserts a blank page
+first, and `@page :blank` matches it:
+
+```css
+.chapter { break-before: right; }
+@page :blank {
+  @top-center { content: none; }
+  @bottom-center { content: "This page is intentionally left blank."; }
+}
+```
+
+- `recto` is a right page and `verso` a left page in a left-to-right document, the other way round
+  in a right-to-left one.
+- A blank page has no content, but it counts: `counter(page)` and `counter(pages)` include it, and
+  its margin boxes show what the `@page` rules for it say. It has the page name of the page after
+  it.
+- Where the content starts with such a break (`break-before: left` on the first element), the first
+  page is on that side, and the pages after alternate from there.
+
+This follows CSS Fragmentation and CSS Paged Media, as WeasyPrint does. Chrome treats these values
+like `page` and inserts no blank page, and it ignores `@page :blank` rules, so a template that
+relies on them prints differently in Chrome.
+
+**Not supported:** `@page :nth()`, as in Chrome. The rule is ignored and reported as a
+`css.parse-error` diagnostic.
+
+## Give sections pages of their own
+
+The `page` property puts an element on pages with a name, which `@page name` rules style. Where the
+page name changes, a new page starts.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { size: A4; margin: 20mm; }
+  @page wide { size: A4 landscape; margin: 15mm; }
+  .wide { page: wide; }
+</style>
+</head>
+<body>
+  <p>Portrait text.</p>
+  <section class="wide">
+    <table><!-- a wide table --></table>
+  </section>
+  <p>Portrait again.</p>
+</body>
+</html>
+```
+
+Named pages work with `:first`, `:left` and `:right` (`@page wide:left`). Page names keep their
+case, so `page: WordSection1` matches `@page WordSection1`, as in documents exported from Word.
+
+To print a landscape page turned onto a portrait sheet, so that all sheets of the PDF have the same
+orientation, add `page-orientation: rotate-left` (or `rotate-right`) to the named page. Links and
+bookmarks on the page turn with it.
+
+```css
+@page wide {
+  size: A4 landscape;
+  page-orientation: rotate-left;
+}
+```
+
+## Add a header and a footer
+
+The page margins hold 16 margin boxes: `@top-left-corner`, `@top-left`, `@top-center`,
+`@top-right`, `@top-right-corner`, `@right-top`, `@right-middle`, `@right-bottom`,
+`@bottom-right-corner`, `@bottom-right`, `@bottom-center`, `@bottom-left`, `@bottom-left-corner`,
+`@left-bottom`, `@left-middle` and `@left-top`. A margin box shows only when its `content` is not
+`none`.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    margin: 25mm 20mm;
+    @top-left {
+      content: "ACME Inc.";
+      font-size: 9pt;
+      color: #555;
+    }
+    @top-right {
+      content: "Annual report 2026";
+      font-size: 9pt;
+      color: #555;
+    }
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 9pt;
+      border-top: 0.5pt solid #999;
+    }
+  }
+  @page :first {
+    @top-left { content: none; }
+    @top-right { content: none; }
+  }
+  section { break-before: page; }
+</style>
+</head>
+<body>
+  <h1>Annual report 2026</h1>
+  <section><h2>Revenue</h2></section>
+  <section><h2>Outlook</h2></section>
+</body>
+</html>
+```
+
+Margin boxes are laid out as Chrome lays them out:
+
+- The boxes of an edge share its length by their content, as CSS Paged Media describes; `width`,
+  `height` and margins of a margin box are honored.
+- Text is aligned as in Chrome's user agent stylesheet: `@top-left` to the left, `@top-center` to
+  the center, `@top-right` to the right, and vertically in the middle. `text-align` and
+  `vertical-align` change it.
+- Margin boxes take padding, borders, backgrounds and images (`content: url(logo.svg)`).
+- The font of a margin box does not inherit from `body`: set it in the margin box or on `@page`.
+  The font family, size and color of `@page` are inherited by its margin boxes.
+
+**Fonts in margin boxes.** Chrome loads the faces of `@font-face` rules only while it lays out the
+document, so a face that the document's content never uses is missing in the margin boxes, and
+their text falls back to the next family. Fagus does the same. If your running head is set in an
+italic that the body text does not use, either use that face somewhere in the content or load the
+font from a font directory (see [Fonts](fonts.md#fonts-in-headers-and-footers)).
+
+## Number the pages
+
+`counter(page)` is the number of the current page, `counter(pages)` the number of pages. Both take
+a counter style:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { @bottom-right { content: counter(page); } }
+  @page front { @bottom-right { content: counter(page, lower-roman); } }
+  .preface { page: front; }
+  section { break-before: page; }
+</style>
+</head>
+<body>
+  <div class="preface">
+    <section>Preface</section>
+    <section>Contents</section>
+  </div>
+  <section>Chapter 1</section>
+</body>
+</html>
+```
+
+This prints i, ii and 3.
+
+`counter-reset`, `counter-set` and `counter-increment` of the `page` counter in `@page` rules work
+as in Chrome:
+
+- `counter-increment: page 2` counts the page as two pages, and the pages after go on from there.
+  `counter-increment: none` still counts the page as one.
+- `counter-set: page 1` sets the counter to 1 on the page, and the pages after go on from there:
+  this is the way to start the numbering again.
+- `counter-reset: page 1` sets the counter only on the pages it matches: the pages after go on from
+  the pages before, as if it had not been there. This is how Chrome does it.
+- In a margin box, these properties change the number that box shows.
+- On an element of the document, `counter-reset: page` and `counter-increment: page` do not change
+  the page numbers.
+
+`counter(pages)` is always the number of pages. `counter(page)` in the content and
+`target-counter(..., page)` show the same number as the margin boxes.
+
+Use `counter(pages)` in margin boxes and in running elements (below). In the normal flow of the
+document and in `position: fixed` boxes, the number of pages is not known while the content is laid
+out, and `counter(pages)` comes out as 0 or empty. `counter(page)` works everywhere, also in
+`::before` and `::after` of content and in repeated table headers.
+
+## Put HTML in the header and footer
+
+A margin box can show an element of the document: `position: running(name)` takes the element out
+of the flow, and `content: element(name)` places it in a margin box on every page. The element keeps
+its own styles, so it can be a flex or grid container, hold images and links, and show page numbers.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    margin: 30mm 20mm 25mm;
+    @top-center { content: element(letterhead); }
+    @bottom-center { content: element(footer); }
+  }
+  .letterhead {
+    position: running(letterhead);
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    width: 100%;
+    border-bottom: 1pt solid #1e3a8a;
+  }
+  .footer {
+    position: running(footer);
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 6mm;
+    width: 100%;
+    font-size: 7.5pt;
+    color: #555;
+  }
+  .footer .page { text-align: right; }
+  .footer .page::after { content: "Page " counter(page) " of " counter(pages); }
+  section { break-before: page; }
+</style>
+</head>
+<body>
+  <header class="letterhead">
+    <strong>ACME Inc.</strong>
+    <span>1 Main Street, Springfield</span>
+  </header>
+  <footer class="footer">
+    <div>ACME Inc. · 1 Main Street · Springfield</div>
+    <div>IBAN DE00 0000 0000 0000 0000 00</div>
+    <div class="page"></div>
+  </footer>
+
+  <h1>Letter</h1>
+  <section>Second page</section>
+</body>
+</html>
+```
+
+Place running elements at the start of the document, before the content of the first page: a
+running element shows on the page where it appears and on the pages after it. Several elements with
+the same running name can follow each other; `element(name, first)` (the default), `start`, `last`
+and `first-except` choose which one a page shows, as for `string()` below.
+
+A running element is laid out again on every page, with that page's number: a column sized by its
+content (`auto`) is as wide as "Page 10 of 12" on page 10. Chrome does not support running elements;
+it shows the element where it is in the document.
+
+## Repeat a chapter title in the header
+
+Named strings copy text from the document into the margin boxes. `string-set` on an element sets
+the string, `string()` shows it.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    @top-left { content: string(chapter); }
+    @top-right { content: string(section, last); }
+  }
+  @page :first {
+    @top-left { content: none; }
+  }
+  h2 { string-set: chapter content(); break-before: page; }
+  h3 { string-set: section content(); }
+</style>
+</head>
+<body>
+  <h1>Handbook</h1>
+  <h2>Receiving</h2>
+  <h3>Checking deliveries</h3>
+  <h3>Storing goods</h3>
+  <h2>Shipping</h2>
+  <h3>Packing</h3>
+</body>
+</html>
+```
+
+`string-set` takes strings, `content()` (the element's text; also `content(before)`,
+`content(after)`, `content(first-letter)` and `content(marker)`), `attr()` and counters. `string()`
+takes a second argument for the case that the string is set several times on a page:
+
+| Value | Shows |
+|---|---|
+| `first` (default) | the first value set on the page, else the value from the pages before |
+| `start` | the value at the top of the page |
+| `last` | the last value set on the page |
+| `first-except` | nothing on the page where the value is set, the value on the pages after |
+
+`string()` also works in the generated content of the document, such as a table footer that shows a
+subtotal per page (see [Extensions](extensions.md)).
+
+## Control page breaks
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  h1, h2, h3 { break-after: avoid; }
+  figure, blockquote, .address { break-inside: avoid; }
+  p { orphans: 3; widows: 3; }
+  .chapter { break-before: page; }
+</style>
+</head>
+<body>
+  <h1>Offer</h1>
+  <div class="address">ACME Inc.<br>1 Main Street<br>Springfield</div>
+  <section class="chapter"><h2>Scope</h2><p>…</p></section>
+  <section class="chapter"><h2>Terms and conditions</h2><p>…</p></section>
+</body>
+</html>
+```
+
+- `break-before` and `break-after`: `page` forces a break; `left`, `right`, `recto` and `verso`
+  force one to a page of that side, after a blank page where needed (see
+  [Start chapters on a right page](#start-chapters-on-a-right-page)); `avoid` and `avoid-page`
+  avoid one; `column` and `avoid-column` do the same in columns.
+- `break-inside: avoid` keeps a box on one page if it fits. A box taller than a page breaks anyway.
+- `orphans` and `widows` (2 by default) set how many lines of a paragraph stay at the bottom and the
+  top of a page.
+- The older `page-break-before`, `page-break-after` and `page-break-inside` work as aliases, and an
+  empty `<div style="page-break-after: always"></div>` breaks the page, as in browsers.
+
+**Keep headings with their text.** Headings do not stay with what follows them by themselves.
+`h1, h2, h3 { break-after: avoid; }` moves a heading that would end a page to the next page together
+with the start of its paragraph. A `break-before` of a first child and a `break-after` of a last
+child pass on to the parent, since breaks fall between siblings.
+
+Fagus breaks pages where Chrome breaks them, including inside table rows, flex and grid items,
+floats and positioned boxes, so a template that paginates well in Chrome's print preview paginates
+the same way in Fagus.
+
+## Repeat table headers on every page
+
+`<thead>` and `<tfoot>` repeat on every page a table breaks across. `tr { break-inside: avoid; }`
+keeps rows whole.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { size: A5; margin: 15mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 1mm 2mm; border-bottom: 0.5pt solid #ccc; text-align: left; }
+  .num { text-align: right; }
+  tr { break-inside: avoid; }
+</style>
+</head>
+<body>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Item</th><th class="num">Amount</th></tr>
+    </thead>
+    <tfoot>
+      <tr><td colspan="3">Prices in EUR</td></tr>
+    </tfoot>
+    <tbody>
+      <tr><td>1</td><td>Item 1</td><td class="num">7.00</td></tr>
+      <!-- … many more rows … -->
+    </tbody>
+  </table>
+</body>
+</html>
+```
+
+As in Chrome:
+
+- A header or footer group repeats only if it avoids breaks inside, which `<thead>` and `<tfoot>`
+  do by default. A `display: table-header-group` of your own needs `break-inside: avoid` to repeat.
+- Headers and footers taller than a quarter of the page do not repeat.
+- A row that does not fit breaks inside its cells unless it has `break-inside: avoid`; the rest of
+  its cells continue below the repeated header.
+- `counter-increment` and `string-set` work on rows, so `tbody tr { counter-increment: position; }`
+  numbers the positions of an invoice.
+
+To show the running total at the bottom of each page and bring it forward on the next (*Übertrag*),
+use the carry-over rows of [Extensions](extensions.md).
+
+## Break flex, grid and multi-column layouts across pages
+
+Flex containers, grids and multi-column containers break across pages like other boxes, as in
+Chrome:
+
+- Flex rows break between their lines, column flex containers inside their items.
+- Grids break between rows and inside items; items in the same row continue together.
+- Multi-column containers fill their columns, continue on the next page when the columns are full,
+  and balance the last page. `column-span: all` elements span the columns.
+- `break-before`, `break-after` and `break-inside` work on flex and grid items.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { size: A5; margin: 15mm; }
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5mm; }
+  .card { border: 0.5pt solid #999; padding: 4mm; height: 40mm; }
+</style>
+</head>
+<body>
+  <div class="cards">
+    <div class="card">1</div><div class="card">2</div>
+    <div class="card">3</div><div class="card">4</div>
+    <div class="card">5</div><div class="card">6</div>
+    <div class="card">7</div><div class="card">8</div>
+    <div class="card">9</div><div class="card">10</div>
+  </div>
+</body>
+</html>
+```
+
+The first page holds the cards 1 to 8, the second page 9 and 10.
+
+## Build a table of contents
+
+`target-counter()` shows a counter at the place a link points to, `leader()` fills the rest of the
+line. Together they make a table of contents with page numbers:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  .toc a { display: block; color: inherit; text-decoration: none; }
+  .toc a::after { content: leader(dotted) target-counter(attr(href), page); }
+  .xref::after { content: " (page " target-counter(attr(href), page) ")"; }
+  h2 { break-before: page; }
+</style>
+</head>
+<body>
+  <nav class="toc">
+    <h1>Contents</h1>
+    <a href="#installation">Installation</a>
+    <a href="#configuration">Configuration</a>
+    <a href="#upgrading">Upgrading</a>
+  </nav>
+  <h2 id="installation">Installation</h2>
+  <p>Read <a class="xref" href="#upgrading">Upgrading</a> before you update.</p>
+  <h2 id="configuration">Configuration</h2>
+  <h2 id="upgrading">Upgrading</h2>
+</body>
+</html>
+```
+
+```text
+Contents
+Installation ............................................ 2
+Configuration ........................................... 3
+Upgrading ............................................... 4
+```
+
+- `target-counter(attr(href), page)` is the page the target starts on. Other counters give their
+  value at the target, such as `target-counter(attr(href), chapter)` or `list-item`.
+  `target-counters()` gives all levels of a nested counter with a separator.
+- `target-text(attr(href))` is the target's text; `before`, `after` and `first-letter` select its
+  generated content or first letter.
+- `leader()` takes `dotted`, `solid`, `space` or a string.
+
+A document that uses these functions is laid out twice: once to find the targets and once with
+their numbers. Chrome supports neither function, so a table of contents built this way shows no
+page numbers in Chrome's print preview.
+
+The links of the table of contents are links in the PDF too. Headings also make the PDF's outline
+(bookmarks): `bookmark-level`, `bookmark-label` and `bookmark-state` change it, and
+`bookmark-level: none` leaves a heading out. See [PDF output](pdf.md).
+
+## Fill the whole page
+
+A page with `margin: 0` lets content reach the edge of the sheet. The background of `@page` covers
+the whole sheet, margins included.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { margin: 20mm; }
+  @page cover { margin: 0; background: #1d3557; }
+  body { margin: 0; }
+  .cover {
+    page: cover;
+    height: 297mm;
+    box-sizing: border-box;
+    padding: 60mm 20mm;
+    color: white;
+  }
+</style>
+</head>
+<body>
+  <div class="cover"><h1>Product catalog 2027</h1></div>
+  <h2>Introduction</h2>
+</body>
+</html>
+```
+
+- The background of the root element, or of `body` if the root has none, covers the canvas of every
+  page (the page area and the page box's padding), as in browsers.
+- The background of `@page` takes colors and images, but no gradients, as in Chrome 157. Put a
+  gradient on an element that fills the page instead.
+- A `position: fixed` element repeats on every page, placed relative to the page area, which makes
+  watermarks easy. Marks in the page margins, such as fold marks, belong in a margin box
+  (`content: url(fold-mark.svg)`), since content outside the page area is cut off.
+
+## Prepare a document for a print shop
+
+`bleed` adds room around the page for content that runs off the edge, and `marks` draws crop marks
+and registration crosses outside it. Chrome ignores both.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    size: A5;
+    margin: 15mm;
+    bleed: 3mm;
+    marks: crop cross;
+  }
+  html { background: #e8f0ff; }
+</style>
+</head>
+<body><h1>Flyer</h1></body>
+</html>
+```
+
+The PDF page grows by the bleed and the room for the marks. Its TrimBox is the A5 page, its
+BleedBox the page with the bleed, so a print shop's software knows where to cut. Without a `bleed`
+of its own, a page with `marks` gets a bleed of 6pt, as CSS Paged Media specifies.
+
+## Footnotes
+
+Fagus has no footnotes, as Chrome has none: `float: footnote` is an invalid value, and
+`footnote-display`, `footnote-policy` and `float-reference` are unknown properties. Each is
+reported as a diagnostic and ignored, so a `float: footnote` leaves an earlier `float` value in
+force. `@footnote` rules have no effect. The text of a "footnote" stays where it is in the flow.
+
+Endnotes work with links and `target-counter()`. The note references show the numbers of the list
+items they point to:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  a.note { text-decoration: none; }
+  a.note::after {
+    content: target-counter(attr(href), list-item);
+    vertical-align: super;
+    font-size: 70%;
+  }
+</style>
+</head>
+<body>
+  <p>Delivery within 14 days<a class="note" href="#n1"></a> at a flat rate<a class="note" href="#n2"></a>.</p>
+  <h2>Notes</h2>
+  <ol>
+    <li id="n1">Within Germany.</li>
+    <li id="n2">Up to 30 kg.</li>
+  </ol>
+</body>
+</html>
+```
+
+## Differences from Chrome
+
+| Topic | Chrome | Fagus |
+|---|---|---|
+| Default page size | the printer's or region's (Letter in the US) | A4 |
+| `bleed`, `marks` | ignored | supported |
+| `target-counter()`, `target-text()`, `leader()` | not supported | supported |
+| `break-before: left`, `right`, `recto`, `verso` | like `page` | a blank page where needed |
+| `@page :blank` | rule ignored | matches the inserted blank pages |
+| Running elements (`position: running()`) | not supported | supported |
+| Fonts | installed fonts of the machine | only the fonts you configure, unless system fonts are on (see [Fonts](fonts.md)) |
+| Texts of form controls | the language of Chrome's user interface | the control's `lang`, else the engine's `locale` |
+
+Everything else on this page, including the parts that are not supported, behaves as in Chrome's
+print.

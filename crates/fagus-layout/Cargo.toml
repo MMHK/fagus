@@ -1,0 +1,27 @@
+[package]
+name = "fagus-layout"
+description = "Layout and fragmentation for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+# Parts follow Chromium and Blink (CHROMIUM-LICENSE, ADOBE-SHAPES-LICENSE); data of the Unicode
+# Character Database (UNICODE-LICENSE).
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause AND Unicode-3.0"
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus-dom.workspace = true
+fagus-css.workspace = true
+fagus-style.workspace = true
+fagus-text.workspace = true
+rustc-hash.workspace = true
+smallvec.workspace = true
+unicode-bidi.workspace = true
+imagesize.workspace = true
+unicode-properties.workspace = true

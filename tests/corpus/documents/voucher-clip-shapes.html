@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Geschenkgutscheine Therme Bergquell</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@font-face { font-family: Display; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff"); font-weight: 100 900; }
+@page { size: 210mm 99mm; margin: 0; }
+html { font: 9pt/1.35 Inter, sans-serif; color: #0f172a; }
+body { margin: 0; }
+.voucher { position: relative; width: 210mm; height: 99mm; overflow: hidden; break-after: page; display: grid; grid-template-columns: 1fr 58mm; }
+.voucher:last-child { break-after: auto; }
+.art { position: relative; overflow: hidden; background: linear-gradient(120deg, var(--a), var(--b)); color: #fff; padding: 9mm 10mm; }
+.art::before { content: ""; position: absolute; right: -20mm; top: -25mm; width: 90mm; height: 90mm; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / .35), rgb(255 255 255 / 0) 70%); }
+.wave { position: absolute; left: 0; right: 0; bottom: 0; height: 30mm; background: rgb(255 255 255 / .16); clip-path: path("M0 60 C 120 0, 240 110, 400 50 S 640 20, 800 70 V 120 H 0 Z"); }
+.hex { position: absolute; width: 20mm; height: 23mm; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: conic-gradient(from 30deg, rgb(255 255 255 / .5), rgb(255 255 255 / .05), rgb(255 255 255 / .5)); }
+.kicker { font-size: 7.5pt; letter-spacing: .3em; text-transform: uppercase; opacity: .85; position: relative; }
+h1 { font: 800 30pt/1 Display, sans-serif; margin: 3mm 0 2mm; letter-spacing: -.02em; position: relative; }
+.value { position: relative; display: inline-flex; align-items: baseline; gap: 2mm; margin-top: 4mm; padding: 2mm 6mm 2mm 4mm; background: #fff; color: var(--a);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 4mm) 50%, 100% 100%, 0 100%); }
+.value b { font: 800 22pt/1 Display, sans-serif; }
+.photo { position: absolute; right: 8mm; top: 9mm; width: 34mm; height: 34mm; object-fit: cover; clip-path: circle(48% at 50% 50%); border: 1.5mm solid #fff; box-sizing: border-box; }
+.badge { position: absolute; right: 36mm; top: 38mm; width: 18mm; height: 18mm; background: #fde047; color: #713f12; display: grid; place-items: center; text-align: center; font-weight: 700; font-size: 6.5pt; line-height: 1.1;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.stub { position: relative; padding: 9mm 7mm 7mm 8mm; background:
+    radial-gradient(circle at 0 0, transparent 4mm, #fff 4.1mm) top left / 100% 50% no-repeat,
+    radial-gradient(circle at 0 100%, transparent 4mm, #fff 4.1mm) bottom left / 100% 50% no-repeat;
+  display: flex; flex-direction: column; gap: 2.5mm; }
+.stub::before { content: ""; position: absolute; left: 0; top: 5mm; bottom: 5mm; border-left: .5mm dashed #cbd5e1; }
+.stub h2 { margin: 0; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: #64748b; }
+.code { font: 700 13pt/1 Inter, sans-serif; letter-spacing: .14em; color: var(--a); padding: 2mm; border: .4mm solid var(--a); border-radius: 1.5mm; text-align: center; clip-path: inset(0 round 1.5mm); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--a) 8%, #fff) 0 1.5mm, #fff 1.5mm 3mm); }
+.stub dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .6mm 3mm; font-size: 7.5pt; }
+.stub dt { color: #64748b; } .stub dd { margin: 0; font-weight: 700; }
+.stub .qr { width: 18mm; height: 18mm; margin-top: auto; align-self: flex-end; clip-path: inset(0 round 1mm); }
+.fine { position: absolute; left: 10mm; bottom: 4mm; font-size: 6pt; color: rgb(255 255 255 / .85); max-width: 110mm; }
+</style></head><body>
+<section class="voucher" style="--a: #0e7490; --b: #6d28d9">
+  <div class="art">
+    <div class="hex" style="left: 92mm; top: 6mm"></div><div class="hex" style="left: 104mm; top: 20mm; transform: scale(.6)"></div>
+    <div class="wave"></div>
+    <div class="kicker">Geschenkgutschein</div>
+    <h1>Ein Tag Auszeit</h1>
+    <div style="position:relative;max-width:80mm">Tageskarte für Therme und Saunawelt, ein Aromaöl-Peeling und ein Glas Holunderschorle an der Poolbar.</div>
+    <div class="value"><b>89</b> Euro</div>
+    <img class="photo" src="../images/photo.jpg" alt="">
+    <div class="badge">inkl.<br>Bade-<br>mantel</div>
+    <div class="fine">Einlösbar bis 31.12.2030 · nicht gegen Bargeld tauschbar · Termine nach Verfügbarkeit</div>
+  </div>
+  <div class="stub">
+    <h2>Gutscheincode</h2>
+    <div class="code">BQ7K-24MX</div>
+    <dl><dt>Für</dt><dd>Familie Okonkwo</dd><dt>Von</dt><dd>Tante Ilse</dd><dt>Ausgestellt</dt><dd>12.12.2026</dd><dt>Wert</dt><dd>89,00 €</dd></dl>
+    <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><rect width="21" height="21" fill="#fff"/><path fill="#0f172a" d="M0 0h7v7h-7zM1 1v5h5v-5zM2 2h3v3h-3zM14 0h7v7h-7zM15 1v5h5v-5zM16 2h3v3h-3zM0 14h7v7h-7zM1 15v5h5v-5zM2 16h3v3h-3zM8 0h2v1h-2zM11 1h2v2h-2zM8 3h1v3h-1zM10 4h3v1h-3zM8 8h4v1h-4zM14 8h1v3h-1zM17 8h4v1h-4zM0 9h3v1h-3zM5 10h2v2h-2zM9 10h2v2h-2zM12 11h2v1h-2zM16 11h3v1h-3zM1 12h2v1h-2zM8 13h1v3h-1zM10 14h4v1h-4zM15 14h2v2h-2zM19 13h2v1h-2zM11 16h1v3h-1zM13 17h3v1h-3zM18 17h1v4h-1zM8 19h2v2h-2zM14 19h3v1h-3zM20 19h1v2h-1z"/></svg>
+  </div>
+</section>
+<section class="voucher" style="--a: #be123c; --b: #f59e0b">
+  <div class="art">
+    <div class="hex" style="left: 70mm; top: 50mm"></div><div class="hex" style="left: 100mm; top: 4mm; transform: rotate(30deg)"></div>
+    <div class="wave" style="transform: scaleX(-1)"></div>
+    <div class="kicker">Wertgutschein</div>
+    <h1>Wellness für zwei</h1>
+    <div style="position:relative;max-width:80mm">Frei wählbar für Massagen, Kosmetik und Eintritt. Restbeträge bleiben auf dem Gutschein erhalten.</div>
+    <div class="value"><b>150</b> Euro</div>
+    <img class="photo" src="../images/photo.jpg" alt="" style="object-position: 0 100%">
+    <div class="fine">Einlösbar bis 31.12.2030 · Wert in Teilbeträgen einlösbar</div>
+  </div>
+  <div class="stub">
+    <h2>Gutscheincode</h2>
+    <div class="code">BQ9R-71TF</div>
+    <dl><dt>Für</dt><dd>Jonas &amp; Mira</dd><dt>Von</dt><dd>Eure WG</dd><dt>Ausgestellt</dt><dd>03.01.2027</dd><dt>Wert</dt><dd>150,00 €</dd></dl>
+    <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><rect width="21" height="21" fill="#fff"/><path fill="#0f172a" d="M0 0h7v7h-7zM1 1v5h5v-5zM2 2h3v3h-3zM14 0h7v7h-7zM15 1v5h5v-5zM16 2h3v3h-3zM0 14h7v7h-7zM1 15v5h5v-5zM2 16h3v3h-3zM9 0h3v1h-3zM8 2h1v2h-1zM10 3h2v2h-2zM9 6h3v1h-3zM8 8h2v1h-2zM11 8h3v2h-3zM15 9h2v1h-2zM19 8h2v2h-2zM1 10h3v1h-3zM6 9h1v3h-1zM9 11h1v2h-1zM13 12h2v1h-2zM17 11h1v3h-1zM0 12h1v1h-1zM10 14h2v2h-2zM14 15h1v2h-1zM16 14h3v1h-3zM8 17h3v1h-3zM12 18h2v1h-2zM16 17h2v2h-2zM19 16h1v3h-1zM9 19h1v2h-1zM13 20h4v1h-4z"/></svg>
+  </div>
+</section>
+</body></html>

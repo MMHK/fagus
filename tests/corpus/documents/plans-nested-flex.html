@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hosting plans compared</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 12mm 14mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 9pt/1.4 Inter, sans-serif; color: #1e293b; }
+h1 { font-size: 17pt; margin: 0 0 1mm; }
+.lead { color: #64748b; margin: 0 0 5mm; }
+/* Cards in a row: each stretched to the tallest, each a column flex container itself */
+.plans { display: flex; gap: 5mm; }
+.plan { flex: 1; display: flex; flex-direction: column; border: 1px solid #cbd5e1; border-radius: 3mm; padding: 5mm; }
+.plan.featured { border: 2px solid #4f46e5; background: linear-gradient(#eef2ff, #fff 30%); }
+.plan header { display: flex; align-items: center; justify-content: space-between; }
+.plan h2 { font-size: 12pt; margin: 0; }
+.badge { font-size: 7pt; font-weight: 700; background: #4f46e5; color: #fff; border-radius: 99px; padding: .6mm 2.2mm; }
+.price { display: flex; align-items: baseline; gap: 1mm; margin: 3mm 0; }
+.price b { font-size: 22pt; letter-spacing: -.02em; }
+.price span { color: #64748b; }
+.plan ul { list-style: none; margin: 0; padding: 0; }
+.plan li { display: flex; align-items: flex-start; gap: 2mm; padding: 1mm 0; }
+.plan li::before { content: "✓"; color: #16a34a; font-weight: 700; flex: none; width: 3mm; }
+.plan li.no { color: #94a3b8; }
+.plan li.no::before { content: "–"; color: #94a3b8; }
+.plan footer { margin-top: auto; padding-top: 4mm; display: flex; flex-direction: column; align-items: stretch; gap: 1.5mm; }
+.plan .button { display: flex; align-items: center; justify-content: center; height: 9mm; border-radius: 2mm; background: #0f172a; color: #fff; font-weight: 700; }
+.plan.featured .button { background: #4f46e5; }
+.plan footer small { text-align: center; color: #64748b; font-size: 7.5pt; }
+/* A row whose stretched items centre their content and fill with percentage heights */
+.stats { display: flex; gap: 5mm; margin-top: 6mm; min-height: 32mm; }
+.stat { flex: 1; display: flex; align-items: center; gap: 3mm; border-radius: 3mm; background: #f1f5f9; padding: 0 4mm; }
+.stat .bar { width: 3mm; height: 70%; border-radius: 1.5mm; background: linear-gradient(#4f46e5, #a5b4fc); }
+.stat .bar.half { height: 45%; }
+.stat .text { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+.stat b { font-size: 15pt; }
+.stat span { color: #64748b; font-size: 8pt; }
+.stat.meter { flex-direction: column; align-items: stretch; justify-content: space-between; padding: 3mm 4mm; }
+.meter .track { flex: 1; display: flex; align-items: flex-end; gap: 1mm; margin-top: 2mm; }
+.meter .track i { flex: 1; background: #94a3b8; border-radius: .6mm .6mm 0 0; }
+/* A sidebar layout whose aside is stretched and pins a box to its bottom */
+.split { display: flex; gap: 5mm; margin-top: 6mm; }
+.split main { flex: 2; }
+.split aside { flex: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; border-left: 1mm solid #4f46e5; padding-left: 4mm; }
+.split aside .contact { align-self: stretch; background: #eef2ff; border-radius: 2mm; padding: 2mm 3mm; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 1.4mm 2mm; border-bottom: 1px solid #e2e8f0; text-align: left; }
+th { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+td.c { text-align: center; }
+</style>
+</head>
+<body>
+<h1>Hosting plans compared</h1>
+<p class="lead">Prices per month, billed yearly, excluding VAT. All plans run in data centres in Frankfurt and Nuremberg.</p>
+<div class="plans">
+  <section class="plan">
+    <header><h2>Starter</h2></header>
+    <div class="price"><b>€9</b><span>/ month</span></div>
+    <ul><li>1 website</li><li>10 GB SSD storage</li><li>Free TLS certificate</li><li class="no">Staging environment</li><li class="no">Daily backups</li></ul>
+    <footer><span class="button">Choose Starter</span><small>Cancel monthly</small></footer>
+  </section>
+  <section class="plan featured">
+    <header><h2>Business</h2><span class="badge">Most popular</span></header>
+    <div class="price"><b>€29</b><span>/ month</span></div>
+    <ul><li>10 websites</li><li>100 GB SSD storage</li><li>Free TLS certificates and a wildcard certificate for one domain</li><li>Staging environment</li><li>Daily backups, kept for 30 days</li><li>E-mail support within four hours on business days</li></ul>
+    <footer><span class="button">Choose Business</span><small>30 days money back</small></footer>
+  </section>
+  <section class="plan">
+    <header><h2>Agency</h2></header>
+    <div class="price"><b>€79</b><span>/ month</span></div>
+    <ul><li>Unlimited websites</li><li>400 GB SSD storage</li><li>Staging and preview environments</li><li>Hourly backups</li></ul>
+    <footer><span class="button">Talk to sales</span><small>Volume discounts from 5 seats</small></footer>
+  </section>
+</div>
+<div class="stats">
+  <div class="stat"><div class="bar"></div><div class="text"><b>99.98 %</b><span>uptime over the last 12 months</span></div></div>
+  <div class="stat"><div class="bar half"></div><div class="text"><b>182 ms</b><span>median time to first byte in Europe</span></div></div>
+  <div class="stat meter"><span>Requests per hour, last day</span><div class="track"><i style="height:30%"></i><i style="height:45%"></i><i style="height:60%"></i><i style="height:85%"></i><i style="height:100%"></i><i style="height:70%"></i><i style="height:40%"></i><i style="height:25%"></i></div></div>
+</div>
+<div class="split">
+  <main>
+    <table>
+      <thead><tr><th>Feature</th><th>Starter</th><th>Business</th><th>Agency</th></tr></thead>
+      <tbody>
+        <tr><td>PHP versions</td><td class="c">8.3</td><td class="c">8.2 – 8.4</td><td class="c">8.1 – 8.4</td></tr>
+        <tr><td>SSH and Git deployment</td><td class="c">–</td><td class="c">✓</td><td class="c">✓</td></tr>
+        <tr><td>Databases</td><td class="c">1</td><td class="c">20</td><td class="c">unlimited</td></tr>
+        <tr><td>Support</td><td class="c">community</td><td class="c">e-mail</td><td class="c">e-mail and phone</td></tr>
+      </tbody>
+    </table>
+  </main>
+  <aside>
+    <div><b>Need more?</b><br>Dedicated servers and managed Kubernetes start at €240 a month.</div>
+    <div class="contact">sales@hosting.example · +49 911 555 0100</div>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" />
+<title>churn-report</title>
+<style type="text/css">
+@font-face { font-family: "Helvetica Neue"; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Helvetica Neue"; src: url(../../fonts/Inter-Bold.ttf); font-weight: bold; }
+@font-face { font-family: "Helvetica Neue"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 14mm 12mm; }
+/* nbconvert classic template: the old flexbox helpers and the cell layout */
+html { font-size: 10px; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.42857143; color: #000; background-color: #fff; margin: 0; }
+.hbox { display: -webkit-box; -webkit-box-orient: horizontal; -webkit-box-align: stretch; display: -moz-box; -moz-box-orient: horizontal; -moz-box-align: stretch; display: box; box-orient: horizontal; box-align: stretch; display: flex; flex-direction: row; align-items: stretch; }
+.vbox { display: -webkit-box; -webkit-box-orient: vertical; -webkit-box-align: stretch; display: -moz-box; -moz-box-orient: vertical; -moz-box-align: stretch; display: box; box-orient: vertical; box-align: stretch; display: flex; flex-direction: column; align-items: stretch; }
+.box-flex1, .box-flex { -webkit-box-flex: 1; -moz-box-flex: 1; box-flex: 1; flex: 1; }
+.box-flex0 { -webkit-box-flex: 0; -moz-box-flex: 0; box-flex: 0; flex: none; width: auto; }
+div#notebook { font-size: 14px; line-height: 20px; overflow-y: hidden; overflow-x: auto; width: 100%; padding-top: 20px; margin: 0px; outline: none; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; min-height: 100%; }
+@media print { div#notebook { overflow: visible !important; } }
+.container { padding-right: 0; padding-left: 0; margin-right: auto; margin-left: auto; }
+#notebook-container { padding: 15px; background-color: #fff; min-height: 0; -webkit-box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.2); box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.2); }
+@media print { #notebook-container { width: 100%; box-shadow: none; } }
+div.cell { display: -webkit-box; -webkit-box-orient: vertical; display: flex; flex-direction: column; align-items: stretch; border-radius: 2px; box-sizing: border-box; border-width: 1px; border-style: solid; border-color: transparent; width: 100%; padding: 5px; margin: 0px; outline: none; position: relative; overflow: visible; }
+div.cell.text_cell.rendered { padding: 0px; }
+div.prompt { min-width: 14ex; padding: 0.4em; margin: 0px; font-family: monospace; text-align: right; line-height: 1.21429em; -webkit-touch-callout: none; user-select: none; cursor: default; }
+@media (max-width: 540px) { div.prompt { text-align: left; } }
+div.inner_cell { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; display: flex; flex-direction: column; align-items: stretch; -webkit-box-flex: 1; flex: 1; }
+div.input_area { border: 1px solid #cfcfcf; border-radius: 2px; background: #f7f7f7; line-height: 1.21429em; }
+div.prompt:empty { padding-top: 0; padding-bottom: 0; }
+div.unrecognized_cell { padding: 5px 5px 5px 0px; }
+div.input_prompt { color: #303F9F; border-top: 1px solid transparent; }
+div.input_area > div.highlight { margin: 0.4em; border: none; padding: 0px; background-color: transparent; }
+div.input_area > div.highlight > pre { margin: 0px; border: none; padding: 0px; background-color: transparent; }
+.output_wrapper { position: relative; display: -webkit-box; -webkit-box-orient: vertical; display: flex; flex-direction: column; align-items: stretch; z-index: 1; }
+div.output_area { padding: 0px; page-break-inside: avoid; display: -webkit-box; -webkit-box-orient: horizontal; display: flex; flex-direction: row; align-items: stretch; }
+div.output_area .rendered_html table { margin-left: 0; margin-right: 0; }
+div.output_area .rendered_html img { margin-left: 0; margin-right: 0; }
+div.output_area img, div.output_area svg { max-width: 100%; height: auto; }
+div.output_area img.unconfined, div.output_area svg.unconfined { max-width: none; }
+div.output_prompt { color: #D84315; }
+div.output_subarea { overflow-x: auto; padding: 0.4em; -webkit-box-flex: 1; flex: 1; max-width: calc(100% - 14ex); }
+div.output_scroll div.output_subarea { overflow-x: visible; }
+div.output_text { text-align: left; color: #000; line-height: 1.21429em; }
+div.output_stderr { background: #fdd; }
+div.output_area pre { margin: 0; padding: 1px 0 1px 0; border: 0; vertical-align: baseline; color: black; background-color: transparent; border-radius: 0; }
+pre { font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height: 1.42857143; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; }
+.rendered_html { color: #000; }
+.rendered_html em { font-style: italic; }
+.rendered_html strong { font-weight: bold; }
+.rendered_html :link { text-decoration: underline; }
+.rendered_html h1 { font-size: 185.7%; margin: 1.08em 0 0 0; font-weight: bold; line-height: 1.0; }
+.rendered_html h2 { font-size: 157.1%; margin: 1.27em 0 0 0; font-weight: bold; line-height: 1.0; }
+.rendered_html h1:first-child { margin-top: 0.538em; }
+.rendered_html ul:not(.list-inline), .rendered_html ol:not(.list-inline) { padding-left: 2em; }
+.rendered_html ul { list-style: disc; }
+.rendered_html * + ul { margin-top: 1em; }
+.rendered_html * + p { margin-top: 1em; }
+.rendered_html p { text-align: left; }
+.rendered_html table { margin-left: auto; margin-right: auto; border: none; border-collapse: collapse; border-spacing: 0; color: black; font-size: 12px; table-layout: fixed; }
+.rendered_html thead { border-bottom: 1px solid black; vertical-align: bottom; }
+.rendered_html tr, .rendered_html th, .rendered_html td { text-align: right; vertical-align: middle; padding: 0.5em 0.5em; line-height: normal; white-space: normal; max-width: none; border: none; }
+.rendered_html th { font-weight: bold; }
+.rendered_html tbody tr:nth-child(odd) { background: #f5f5f5; }
+.rendered_html tbody tr:hover { background: rgba(66, 165, 245, 0.2); }
+.rendered_html * + table { margin-top: 1em; }
+.rendered_html code { background-color: #eff0f1; padding: 1px 3px; font-size: 90%; font-family: Menlo, monospace; }
+div.text_cell { display: -webkit-box; -webkit-box-orient: horizontal; display: flex; flex-direction: row; align-items: stretch; }
+div.text_cell_render { outline: none; resize: none; width: inherit; border-style: none; padding: 0.5em 0.5em 0.5em 0.4em; color: #000; box-sizing: border-box; }
+.text_cell.rendered .input_area { display: none; }
+.text_cell.rendered .rendered_html { overflow-x: auto; overflow-y: hidden; }
+.text_cell .dropzone .input_area { border: 2px dashed #bababa; margin: -1px; }
+.cm-header-1 { font-size: 185.7%; }
+.highlight .hll { background-color: #ffffcc }
+.highlight { background: #f8f8f8; }
+.highlight .c1 { color: #408080; font-style: italic }
+.highlight .k { color: #008000; font-weight: bold }
+.highlight .kn { color: #008000; font-weight: bold }
+.highlight .nn { color: #0000FF; font-weight: bold }
+.highlight .o { color: #666666 }
+.highlight .p { }
+.highlight .s2, .highlight .s1 { color: #BA2121 }
+.highlight .mi, .highlight .mf { color: #666666 }
+.highlight .nb { color: #008000 }
+.highlight .n { }
+.highlight .kc { color: #008000; font-weight: bold }
+@media print { body { margin: 0; } #notebook-container { padding: 0; } }
+</style>
+</head>
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Churn-by-plan">Churn by plan<a class="anchor-link" href="#Churn-by-plan" style="display:none">&#182;</a></h1><p>Monthly churn of paying accounts, October 2025. A customer <em>churns</em> when the subscription ends without renewal; downgrades are not churn. Source: <code>billing.subscriptions</code>.</p>
+<ul>
+<li>accounts younger than 30 days are left out</li>
+<li>colours: blue is below, red above the company target of <strong>2.5&nbsp;%</strong></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">styled</span> <span class="o">=</span> <span class="p">(</span><span class="n">churn</span><span class="o">.</span><span class="n">style</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">({</span><span class="s2">"rate"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{:.1%}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"mrr_lost"</span><span class="p">:</span> <span class="s2">"€ </span><span class="si">{:,.0f}</span><span class="s2">"</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">background_gradient</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"rate"</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"coolwarm"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"mrr_lost"</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#d65f5f"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">set_caption</span><span class="p">(</span><span class="s2">"Churn, October 2025"</span><span class="p">))</span>
+<span class="n">styled</span>
+</pre></div>
+    </div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+    <div class="prompt output_prompt">Out[12]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<style type="text/css">
+#T_5c1d0 caption {
+  caption-side: top;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: left;
+  padding-bottom: 4px;
+}
+#T_5c1d0 th.col_heading {
+  text-align: center;
+}
+#T_5c1d0_row0_col2 {
+  background-color: #6788ee;
+  color: #f1f1f1;
+}
+#T_5c1d0_row1_col2 {
+  background-color: #b7cff9;
+  color: #000000;
+}
+#T_5c1d0_row2_col2 {
+  background-color: #f7b89c;
+  color: #000000;
+}
+#T_5c1d0_row3_col2 {
+  background-color: #b40426;
+  color: #f1f1f1;
+}
+#T_5c1d0_row0_col3 {
+  width: 10em;
+  background: linear-gradient(90deg, #d65f5f 18.4%, transparent 18.4%);
+}
+#T_5c1d0_row1_col3 {
+  width: 10em;
+  background: linear-gradient(90deg, #d65f5f 41.0%, transparent 41.0%);
+}
+#T_5c1d0_row2_col3 {
+  width: 10em;
+  background: linear-gradient(90deg, #d65f5f 72.6%, transparent 72.6%);
+}
+#T_5c1d0_row3_col3 {
+  width: 10em;
+  background: linear-gradient(90deg, #d65f5f 100.0%, transparent 100.0%);
+}
+</style>
+<table id="T_5c1d0">
+  <caption>Churn, October 2025</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_5c1d0_level0_col0" class="col_heading level0 col0" >accounts</th>
+      <th id="T_5c1d0_level0_col1" class="col_heading level0 col1" >churned</th>
+      <th id="T_5c1d0_level0_col2" class="col_heading level0 col2" >rate</th>
+      <th id="T_5c1d0_level0_col3" class="col_heading level0 col3" >mrr_lost</th>
+    </tr>
+    <tr>
+      <th class="index_name level0" >plan</th>
+      <th class="blank col0" >&nbsp;</th>
+      <th class="blank col1" >&nbsp;</th>
+      <th class="blank col2" >&nbsp;</th>
+      <th class="blank col3" >&nbsp;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_5c1d0_level0_row0" class="row_heading level0 row0" >Starter</th>
+      <td id="T_5c1d0_row0_col0" class="data row0 col0" >4,812</td>
+      <td id="T_5c1d0_row0_col1" class="data row0 col1" >83</td>
+      <td id="T_5c1d0_row0_col2" class="data row0 col2" >1.7%</td>
+      <td id="T_5c1d0_row0_col3" class="data row0 col3" >€ 1,577</td>
+    </tr>
+    <tr>
+      <th id="T_5c1d0_level0_row1" class="row_heading level0 row1" >Team</th>
+      <td id="T_5c1d0_row1_col0" class="data row1 col0" >2,140</td>
+      <td id="T_5c1d0_row1_col1" class="data row1 col1" >47</td>
+      <td id="T_5c1d0_row1_col2" class="data row1 col2" >2.2%</td>
+      <td id="T_5c1d0_row1_col3" class="data row1 col3" >€ 3,525</td>
+    </tr>
+    <tr>
+      <th id="T_5c1d0_level0_row2" class="row_heading level0 row2" >Business</th>
+      <td id="T_5c1d0_row2_col0" class="data row2 col0" >688</td>
+      <td id="T_5c1d0_row2_col1" class="data row2 col1" >21</td>
+      <td id="T_5c1d0_row2_col2" class="data row2 col2" >3.1%</td>
+      <td id="T_5c1d0_row2_col3" class="data row2 col3" >€ 6,237</td>
+    </tr>
+    <tr>
+      <th id="T_5c1d0_level0_row3" class="row_heading level0 row3" >Enterprise</th>
+      <td id="T_5c1d0_row3_col0" class="data row3 col0" >91</td>
+      <td id="T_5c1d0_row3_col1" class="data row3 col1" >4</td>
+      <td id="T_5c1d0_row3_col2" class="data row3 col2" >4.4%</td>
+      <td id="T_5c1d0_row3_col3" class="data row3 col3" >€ 8,590</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">churn</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+    </div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+    <div class="prompt output_prompt">Out[13]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>count    4.000000
+mean     0.028500
+std      0.011733
+min      0.017249
+25%      0.020719
+50%      0.026500
+75%      0.034281
+max      0.043956
+Name: rate, dtype: float64</pre>
+</div>
+</div>
+<div class="output_area">
+    <div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>/opt/venv/lib/python3.11/site-packages/pandas/io/formats/style.py:3949: RuntimeWarning: invalid value encountered in divide
+  normed = smin + (smax - smin) * (data - vmin) / (vmax - vmin)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

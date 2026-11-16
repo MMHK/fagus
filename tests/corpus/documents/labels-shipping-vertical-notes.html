@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Shipping labels batch 2026-11-13</title>
+<style>
+@font-face { font-family: "Liberation Sans"; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Liberation Sans"; src: url(../../fonts/Inter-Bold.ttf); font-weight: bold; }
+@page { size: 105mm 148mm; margin: 0; }
+@page rotated { size: 148mm 105mm; margin: 4mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; font: 9pt/1.2 "Liberation Sans", Arial, sans-serif; color: #000; }
+.label { width: 105mm; height: 148mm; padding: 4mm; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 2mm; break-after: page; position: relative; overflow: hidden; }
+.label:last-of-type { break-after: auto; }
+.row { display: flex; border: 0.6mm solid #000; }
+.row > div { padding: 1.5mm 2mm; }
+.row > div + div { border-left: 0.6mm solid #000; }
+.service { font-size: 26pt; font-weight: bold; line-height: 1; padding: 2mm 3mm !important; background: #000; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; align-items: center; }
+.small { font-size: 6.5pt; text-transform: uppercase; letter-spacing: .04em; }
+.from { flex: 1; font-size: 7.5pt; }
+.to { border: 0.6mm solid #000; padding: 2mm 3mm 3mm; position: relative; }
+.to .name { font-size: 13pt; font-weight: bold; }
+.to .city { font-size: 16pt; font-weight: bold; margin-top: 1mm; }
+.to .city span { display: inline-block; border: 0.5mm solid #000; padding: 0 1.5mm; margin-right: 1.5mm; }
+.side { position: absolute; right: -1mm; top: 50%; writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); font-size: 6pt; letter-spacing: .1em; }
+.routing { display: grid; grid-template-columns: 1fr 26mm; border: 0.6mm solid #000; }
+.routing .code { font-size: 34pt; font-weight: bold; text-align: center; line-height: 1.15; border-right: 0.6mm solid #000; }
+.routing svg { width: 100%; height: auto; padding: 1.5mm; display: block; }
+.barcode { text-align: center; }
+.barcode svg { width: 92mm; height: 22mm; display: block; margin: 0 auto 1mm; }
+.barcode .num { font: bold 10pt "Liberation Sans"; letter-spacing: .3em; }
+.foot { display: flex; justify-content: space-between; font-size: 6.5pt; border-top: 0.3mm dashed #000; padding-top: 1mm; }
+.hazard { position: absolute; top: 4mm; right: 4mm; width: 14mm; height: 14mm; transform: rotate(45deg) scale(.72); border: 0.8mm solid #c00; background: repeating-linear-gradient(-45deg, #fff 0 1.2mm, #fdd 1.2mm 2.4mm); }
+.customs { page: rotated; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; border: 0.4mm solid #000; font-size: 7pt; }
+.customs > div { border: 0.2mm solid #000; padding: 1mm; min-height: 7mm; }
+.customs .h { font-weight: bold; background: #eee; }
+.customs .wide { grid-column: 1 / -1; }
+</style></head><body>
+<section class="label">
+  <div class="row"><div class="service">EXP</div><div class="from"><div class="small">From</div>Nordlicht Kaffee GmbH<br>Speicherstadt 3 · 20457 Hamburg · DE</div><div style="text-align:center"><div class="small">Weight</div><b style="font-size:12pt">2.4</b> kg</div></div>
+  <div class="row"><div style="flex:1"><div class="small">Shipment</div>1Z 4A7 W91 03 8813 2274</div><div><div class="small">Pieces</div><b>1 / 2</b></div><div><div class="small">Date</div>13 NOV 2026</div></div>
+  <div class="to">
+    <div class="small">Ship to</div>
+    <div class="name">Café Ålborg Hygge ApS</div>
+    <div>Att. Mette Søndergaard-Kristiansen</div>
+    <div>Østerbrogade 128, st. th.</div>
+    <div class="city"><span>DK</span>2100 KØBENHAVN Ø</div>
+    <div>+45 33 12 77 40</div>
+    <div class="side">REF ORDER 88213 · PO 2026-417</div>
+  </div>
+  <div class="routing"><div class="code">DK 210 9-27</div><svg viewBox="0 0 25 25" shape-rendering="crispEdges"><path d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2zM18 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 18h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM9 1h2v1H9zm3 1h1v3h-1zm2-2h2v2h-2zM9 4h2v2H9zm5 2h2v1h-2zM8 8h3v1H8zm4 1h2v2h-2zm3-1h1v3h-1zm2 0h3v1h-3zm4 1h2v2h-2zm2-1h1v1h-1zM0 10h2v1H0zm3-1h2v2H3zm3 2h2v1H6zm3 1h2v2H9zm4 1h3v1h-3zm4-1h2v3h-2zm3 1h3v1h-3zM1 13h3v1H1zm5 1h1v3H6zm3 2h3v1H9zm4 1h1v3h-1zm2-1h3v2h-3zm4 2h2v1h-2zm3 1h3v1h-3zM9 19h2v2H9zm3 2h3v1h-3zm4-2h1v4h-1zm2 1h3v1h-3zm4-1h2v3h-2zM9 23h4v1H9zm5 1h4v1h-4zm6-1h1v2h-1z"/></svg></div>
+  <div class="barcode"><svg viewBox="0 0 230 50" preserveAspectRatio="none" shape-rendering="crispEdges"><path d="M10 0h2v50h-2zM13 0h1v50h-1zM16 0h3v50h-3zM21 0h1v50h-1zM24 0h2v50h-2zM28 0h1v50h-1zM31 0h3v50h-3zM35 0h1v50h-1zM38 0h2v50h-2zM42 0h4v50h-4zM47 0h1v50h-1zM50 0h2v50h-2zM54 0h1v50h-1zM57 0h3v50h-3zM62 0h1v50h-1zM65 0h2v50h-2zM69 0h1v50h-1zM72 0h1v50h-1zM75 0h3v50h-3zM80 0h2v50h-2zM84 0h1v50h-1zM87 0h4v50h-4zM92 0h1v50h-1zM95 0h2v50h-2zM99 0h1v50h-1zM102 0h3v50h-3zM107 0h1v50h-1zM110 0h2v50h-2zM113 0h1v50h-1zM116 0h3v50h-3zM121 0h1v50h-1zM124 0h2v50h-2zM128 0h4v50h-4zM133 0h1v50h-1zM136 0h2v50h-2zM140 0h1v50h-1zM143 0h3v50h-3zM148 0h1v50h-1zM151 0h2v50h-2zM155 0h1v50h-1zM158 0h3v50h-3zM163 0h1v50h-1zM166 0h2v50h-2zM170 0h4v50h-4zM175 0h1v50h-1zM178 0h2v50h-2zM182 0h1v50h-1zM185 0h3v50h-3zM190 0h1v50h-1zM193 0h2v50h-2zM197 0h1v50h-1zM200 0h3v50h-3zM205 0h1v50h-1zM208 0h2v50h-2zM212 0h1v50h-1zM215 0h3v50h-3zM219 0h2v50h-2z"/></svg><div class="num">1Z4A7W910388132274</div></div>
+  <div class="foot"><span>BILLING P/P · DUTIES DDP</span><span>Label 1 of 3 · v2.17</span></div>
+</section>
+<section class="label">
+  <div class="hazard"></div>
+  <div class="row"><div class="service">STD</div><div class="from"><div class="small">From</div>Nordlicht Kaffee GmbH<br>Speicherstadt 3 · 20457 Hamburg · DE</div><div style="text-align:center"><div class="small">Weight</div><b style="font-size:12pt">11.0</b> kg</div></div>
+  <div class="row"><div style="flex:1"><div class="small">Shipment</div>1Z 4A7 W91 03 8813 2281</div><div><div class="small">Pieces</div><b>2 / 2</b></div><div><div class="small">Date</div>13 NOV 2026</div></div>
+  <div class="to">
+    <div class="small">Ship to</div>
+    <div class="name">Kaffeerösterei Brühwerk e.K.</div>
+    <div>Wareneingang Tor 4</div>
+    <div>Industriestraße 7–9</div>
+    <div class="city"><span>AT</span>5020 SALZBURG</div>
+    <div>+43 662 087 11 90</div>
+    <div class="side">REF ORDER 88214 · LITHIUM UN3481</div>
+  </div>
+  <div class="routing"><div class="code">AT 502 1-04</div><svg viewBox="0 0 25 25" shape-rendering="crispEdges"><path d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2zM18 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 18h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM10 1h1v3h-1zm2 0h3v1h-3zM9 5h3v1H9zm4 0h1v2h-1zM8 9h1v2H8zm2 0h4v1h-4zm6 1h2v2h-2zm3-2h3v1h-3zM1 9h3v1H1zm4 2h2v1H5zm5 2h3v1h-3zm4 0h1v4h-1zm2 1h4v1h-4zm5-2h2v2h-2zM2 14h2v2H2zm4 1h2v1H6zm4 2h2v2h-2zm7 1h3v1h-3zm4 1h1v3h-1zM9 21h3v1H9zm4 1h2v3h-2zm3-2h2v1h-2zm2 3h3v1h-3z"/></svg></div>
+  <div class="barcode"><svg viewBox="0 0 230 50" preserveAspectRatio="none" shape-rendering="crispEdges"><path d="M10 0h2v50h-2zM14 0h1v50h-1zM17 0h3v50h-3zM22 0h1v50h-1zM25 0h2v50h-2zM29 0h1v50h-1zM32 0h3v50h-3zM36 0h1v50h-1zM39 0h2v50h-2zM43 0h4v50h-4zM48 0h1v50h-1zM51 0h2v50h-2zM55 0h1v50h-1zM58 0h3v50h-3zM63 0h1v50h-1zM66 0h2v50h-2zM70 0h1v50h-1zM73 0h1v50h-1zM76 0h3v50h-3zM81 0h2v50h-2zM85 0h1v50h-1zM88 0h4v50h-4zM93 0h1v50h-1zM96 0h2v50h-2zM100 0h1v50h-1zM103 0h3v50h-3zM108 0h1v50h-1zM111 0h2v50h-2zM114 0h1v50h-1zM117 0h3v50h-3zM122 0h1v50h-1zM125 0h2v50h-2zM129 0h4v50h-4zM134 0h1v50h-1zM137 0h2v50h-2zM141 0h1v50h-1zM144 0h3v50h-3zM149 0h1v50h-1zM152 0h2v50h-2zM156 0h1v50h-1zM159 0h3v50h-3zM164 0h1v50h-1zM167 0h2v50h-2zM171 0h4v50h-4zM176 0h1v50h-1zM179 0h2v50h-2zM183 0h1v50h-1zM186 0h3v50h-3zM191 0h1v50h-1zM194 0h2v50h-2zM198 0h1v50h-1zM201 0h3v50h-3zM206 0h1v50h-1zM209 0h2v50h-2zM213 0h1v50h-1zM216 0h3v50h-3zM220 0h2v50h-2z"/></svg><div class="num">1Z4A7W910388132281</div></div>
+  <div class="foot"><span>BILLING P/P · DUTIES DAP</span><span>Label 2 of 3 · v2.17</span></div>
+</section>
+<section class="customs">
+  <div class="h wide">CN 23 — Customs declaration (commercial items) · Shipment 1Z 4A7 W91 03 8813 2274</div>
+  <div class="h">Description of contents</div><div class="h">Qty</div><div class="h">Net weight</div><div class="h">Value</div>
+  <div>Roasted coffee beans, not decaffeinated (HS 0901.21)</div><div>6</div><div>1.500 kg</div><div>€ 89.40</div>
+  <div>Coffee grinder, manual, ceramic burr (HS 8210.00)</div><div>1</div><div>0.620 kg</div><div>€ 54.00</div>
+  <div>Paper filters, pack of 100 (HS 4823.20)</div><div>2</div><div>0.180 kg</div><div>€ 7.80</div>
+  <div class="wide">I certify that the particulars given in this declaration are correct and that this item does not contain any dangerous article prohibited by legislation or by postal or customs regulations. Signature of sender: ______________________ Date: 13.11.2026</div>
+</section>
+</body></html>

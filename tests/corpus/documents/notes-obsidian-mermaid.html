@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Release process</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 15mm; }
+/* Written for this test. The markup is what Obsidian's "Export to PDF" produces; the rules,
+   custom properties and values below are our own. Callout icons: Lucide (https://lucide.dev),
+   ISC License, Copyright (c) 2026 Lucide Icons and Contributors. */
+body {
+  --sans: Inter, ui-sans-serif, -apple-system, sans-serif; --mono: Menlo, ui-monospace, monospace;
+  --ink: #26282b; --ink-soft: #5f6368; --ink-faint: #a3a7ad; --rule: #dfe1e4; --paper-tint: #f7f8f9;
+  /* tones as bare r, g, b so that rules can pick their own alpha */
+  --violet: 112, 86, 224; --red: 214, 58, 72; --amber: 222, 125, 20; --teal: 18, 168, 160;
+  --blue: 32, 110, 205; --grey: 150, 152, 156;
+  --accent: rgb(var(--violet));
+  margin: 0; font-family: var(--sans); font-size: 16px; line-height: 1.5; color: var(--ink); background: #fff;
+}
+.markdown-preview-view { font-size: 13px; }
+.inline-title { margin-bottom: 0.5em; font-size: 1.75em; font-weight: 700; line-height: 1.25; }
+.markdown-rendered h2, .markdown-rendered h3 { margin: 1.6em 0 0.7em; font-weight: 600; line-height: 1.25; }
+.markdown-rendered h2 { font-size: 1.5em; }
+.markdown-rendered h3 { font-size: 1.3em; }
+.markdown-rendered p, .markdown-rendered ul, .markdown-rendered table { margin-block: 1em; }
+.markdown-rendered strong { font-weight: 600; }
+.markdown-rendered mark { background: rgba(255, 214, 10, 0.45); color: inherit; }
+
+/* links, tags, footnotes */
+a.internal-link { color: var(--accent); text-decoration: underline; }
+a.internal-link.is-unresolved { opacity: 0.5; }
+a.tag { padding: 0.2em 0.6em; font-size: 0.85em; line-height: 1; color: var(--accent); text-decoration: none;
+  background: rgba(var(--violet), 0.08); border: 1px solid rgba(var(--violet), 0.16); border-radius: 1em; }
+.footnote-link { font-size: 0.75em; line-height: 0; vertical-align: super; }
+.footnotes { font-size: 0.85em; color: var(--ink-soft); }
+
+/* code */
+.markdown-rendered code { padding: 0.1em 0.3em; font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); border-radius: 3px; }
+.markdown-rendered pre { padding: 12px 16px; white-space: pre-wrap; background: var(--paper-tint); border-radius: 4px; }
+.markdown-rendered pre code { padding: 0; background: none; }
+.copy-code-button { display: none; }
+.token.parameter { color: rgb(var(--blue)); }
+.token.number { color: rgb(var(--violet)); }
+.token.operator { color: var(--ink-soft); }
+.token.comment { color: var(--ink-faint); font-style: italic; }
+
+/* lists; a checkbox is drawn by its own box and border, its tick is a mask */
+.markdown-rendered ul { padding-inline-start: 2em; }
+.markdown-rendered li { margin-block: 0.1em; }
+.markdown-rendered ul > li::marker { color: var(--ink-faint); }
+.task-list-item { list-style: none; }
+.task-list-item-checkbox { -webkit-appearance: none; appearance: none; position: relative; top: -0.1em; width: 14px; height: 14px;
+  margin: 0 7px 0 -21px; vertical-align: middle; border: 1px solid var(--ink-faint); border-radius: 3px; }
+.task-list-item-checkbox:checked { background-color: var(--accent); border-color: var(--accent); }
+.task-list-item-checkbox:checked::after { content: ""; position: absolute; inset: 0; background-color: #fff;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' stroke='black' stroke-width='2.2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100%; }
+li.is-checked { color: var(--ink-soft); text-decoration: line-through; }
+
+/* callouts: one tone per type, tinted at a tenth and multiplied onto the page */
+.callout { --tone: var(--blue); overflow: hidden; margin: 1em 0; padding: 10px 14px 10px 20px; border-radius: 5px;
+  background-color: rgba(var(--tone), .1); mix-blend-mode: multiply; }
+.callout[data-callout="warning"] { --tone: var(--amber); }
+.callout[data-callout="tip"] { --tone: var(--teal); }
+.callout[data-callout="bug"] { --tone: var(--red); }
+.callout[data-callout="quote"] { --tone: var(--grey); }
+.callout-content .callout { mix-blend-mode: normal; }
+.callout-title { display: flex; align-items: center; gap: 5px; font-weight: 600; line-height: 1.3; color: rgb(var(--tone)); }
+.callout-icon { display: flex; flex: none; }
+.callout-icon .svg-icon { width: 15px; height: 15px; }
+.callout-content > :first-child { margin-top: 0.5em; }
+.callout-content > :last-child { margin-bottom: 0; }
+
+.mermaid { margin: 1em 0; text-align: center; }
+.mermaid svg { max-width: 100%; height: auto; }
+.markdown-rendered table { border-collapse: collapse; }
+.markdown-rendered th, .markdown-rendered td { padding: 4px 10px; border: 1px solid var(--rule); }
+.markdown-rendered th { font-weight: 600; }
+.markdown-rendered blockquote { margin-inline: 0; padding-inline-start: 20px; border-inline-start: 3px solid var(--accent); }
+.markdown-rendered hr { margin: 1.8em 0; border: 0; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body class="theme-light print">
+<div class="print">
+<div class="markdown-preview-view markdown-rendered">
+<div class="mod-header"><div class="inline-title">Release process</div></div>
+<div><p>Tags: <a href="#release" class="tag" target="_blank" rel="noopener nofollow">#release</a> <a href="#checklist" class="tag" target="_blank" rel="noopener nofollow">#checklist</a> · Owner: [[Team Platform]] · Last reviewed <mark>2025-11-04</mark></p></div>
+<div><p>We release from <code>main</code> every second Tuesday. Hotfixes go through the same steps but skip the staging soak. See also <a data-href="Incident handbook" href="Incident handbook.md" class="internal-link" target="_blank" rel="noopener nofollow">Incident handbook</a> and <a data-href="Old release wiki" href="Old release wiki" class="internal-link is-unresolved" target="_blank" rel="noopener nofollow">Old release wiki</a>.</p></div>
+<div><div data-callout-metadata="" data-callout-fold="" data-callout="warning" class="callout"><div class="callout-title" dir="auto"><div class="callout-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></div><div class="callout-title-inner">Freeze</div></div><div class="callout-content">
+<p dir="auto">No releases between <strong>20 December</strong> and <strong>6 January</strong>. Exceptions need two approvals in <code>#release-train</code>.</p>
+</div></div></div>
+<div><h2 data-heading="Flow">Flow</h2></div>
+<div class="mermaid"><svg aria-roledescription="flowchart-v2" role="graphics-document document" viewBox="-8 -8 560.0 172.0" style="max-width: 560.0px;" class="flowchart" xmlns="http://www.w3.org/2000/svg" width="100%" id="mermaid-1730991231"><style>#mermaid-1730991231{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}#mermaid-1730991231 .edge-thickness-normal{stroke-width:1px;}#mermaid-1730991231 .marker{fill:#333333;stroke:#333333;}#mermaid-1730991231 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-1730991231 .node rect,#mermaid-1730991231 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-1730991231 .flowchart-link{stroke:#333333;fill:none;}#mermaid-1730991231 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-1730991231 .edgeLabel p{background-color:rgba(232,232,232, 0.8);margin:0;}#mermaid-1730991231 .label foreignObject{overflow:visible;}#mermaid-1730991231 .node .label{text-align:center;}#mermaid-1730991231 .nodeLabel p{margin:0;}#mermaid-1730991231 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker orient="auto" markerHeight="8" markerWidth="8" markerUnits="userSpaceOnUse" refY="5" refX="5" viewBox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1730991231_flowchart-v2-pointEnd"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 0 L 10 5 L 0 10 z"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-1730991231_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_A_B_0" d="M110,39L134,39L158,39"></path><path marker-end="url(#mermaid-1730991231_flowchart-v2-pointEnd)" class="edge-thickness-normal edge-pattern-solid flowchart-link" id="L_B_C_0" d="M270,39L310,39L346,39"></path><path marker-end="url(#mermaid-1730991231_flowchart-v2-pointEnd)" class="edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_D_0" d="M412,64L412,96L412,118"></path><path marker-end="url(#mermaid-1730991231_flowchart-v2-pointEnd)" class="edge-thickness-normal edge-pattern-solid flowchart-link" id="L_D_B_0" d="M350,140L214,140L214,70"></path></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(310, 39)"><g class="label" transform="translate(-24, -12)"><foreignObject height="24" width="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>green</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(282, 140)"><g class="label" transform="translate(-20, -12)"><foreignObject height="24" width="40"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>fixes</p></span></div></foreignObject></g></g></g><g class="nodes"><g transform="translate(55, 39)" id="flowchart-A-0" class="node default"><rect height="54" width="110" y="-27" x="-55" style="" class="basic label-container"></rect><g transform="translate(-25, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="50"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Freeze</p></span></div></foreignObject></g></g><g transform="translate(214, 39)" id="flowchart-B-1" class="node default"><rect height="54" width="112" y="-27" x="-56" style="" class="basic label-container"></rect><g transform="translate(-36, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>CI on tag</p></span></div></foreignObject></g></g><g transform="translate(412, 39)" id="flowchart-C-3" class="node default"><polygon points="66,0 132,-25 66,-50 0,-25" class="label-container" transform="translate(-66,25)"></polygon><g transform="translate(-41, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="82"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Soak 24 h?</p></span></div></foreignObject></g></g><g transform="translate(412, 140)" id="flowchart-D-5" class="node default"><rect height="44" width="124" y="-22" x="-62" style="fill:#ffe0e0 !important;stroke:#c00 !important" class="basic label-container"></rect><g transform="translate(-46, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="92"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Roll back</p></span></div></foreignObject></g></g></g></g></g></svg></div>
+<div><h2 data-heading="Checklist">Checklist</h2></div>
+<div><ul class="contains-task-list">
+<li data-line="0" data-task="x" class="task-list-item is-checked" dir="auto"><input data-line="0" type="checkbox" class="task-list-item-checkbox" checked="">Changelog has an entry under <em>Unreleased</em></li>
+<li data-line="1" data-task="x" class="task-list-item is-checked" dir="auto"><input data-line="1" type="checkbox" class="task-list-item-checkbox" checked="">Migrations are reversible</li>
+<li data-line="2" data-task=" " class="task-list-item" dir="auto"><input data-line="2" type="checkbox" class="task-list-item-checkbox">Feature flags for risky changes default to <code>off</code></li>
+<li data-line="3" data-task=" " class="task-list-item" dir="auto"><input data-line="3" type="checkbox" class="task-list-item-checkbox">Status page message drafted<sup data-footnote-id="fnref-1-a1b2" class="footnote-ref" id="fnref-1-a1b2"><a href="#fn-1-a1b2" class="footnote-link" target="_blank" rel="noopener nofollow">[1]</a></sup></li>
+</ul></div>
+<div><div data-callout-metadata="" data-callout-fold="" data-callout="tip" class="callout"><div class="callout-title" dir="auto"><div class="callout-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg></div><div class="callout-title-inner">Speed up the soak</div></div><div class="callout-content">
+<p dir="auto">Watch the error budget dashboard instead of waiting the full 24 hours when traffic is high:</p>
+<pre class="language-bash" tabindex="0"><code class="language-bash is-loaded">gh workflow run soak.yml <span class="token parameter variable">-f</span> <span class="token assign-left variable">hours</span><span class="token operator">=</span><span class="token number">6</span> <span class="token parameter variable">-f</span> <span class="token assign-left variable">min_rps</span><span class="token operator">=</span><span class="token number">400</span>
+<span class="token comment"># fails if the 5xx rate goes above 0.3 %</span></code><button class="copy-code-button">Copy</button></pre>
+<div data-callout-metadata="" data-callout-fold="" data-callout="bug" class="callout"><div class="callout-title" dir="auto"><div class="callout-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon lucide-bug"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path></svg></div><div class="callout-title-inner">Known issue</div></div><div class="callout-content">
+<p dir="auto">The soak job ignores <code>min_rps</code> on weekends (PLAT-2291).</p>
+</div></div>
+</div></div></div>
+<div><h3 data-heading="Who does what">Who does what</h3></div>
+<div><table>
+<thead><tr><th>Step</th><th style="text-align: center;">Who</th><th style="text-align: right;">Time</th></tr></thead>
+<tbody>
+<tr><td>Cut tag, write notes</td><td style="text-align: center;">Release captain</td><td style="text-align: right;">30 min</td></tr>
+<tr><td>Watch CI and staging</td><td style="text-align: center;">On-call</td><td style="text-align: right;">24 h</td></tr>
+<tr><td>Announce in <code>#general</code></td><td style="text-align: center;">Release captain</td><td style="text-align: right;">5 min</td></tr>
+</tbody></table></div>
+<div><blockquote dir="auto"><p>"Boring releases are good releases." — the platform team, every quarter</p></blockquote></div>
+<div><hr></div>
+<div><section data-footnotes="" class="footnotes"><ol><li data-line="0" id="fn-1-a1b2" dir="auto"><p>Template in <a data-href="Status page templates" href="Status page templates.md" class="internal-link" target="_blank" rel="noopener nofollow">Status page templates</a>. <a href="#fnref-1-a1b2" class="footnote-backref footnote-link" target="_blank" rel="noopener nofollow">↩︎</a></p></li></ol></section></div>
+</div>
+</div>
+</body>
+</html>

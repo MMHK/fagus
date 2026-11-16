@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 24" width="72" height="24">
+  <style>svg > g { display: none } svg > g:target { display: inline } </style>
+  <g id="red"><circle cx="12" cy="12" r="10" fill="#d33"/></g>
+  <g id="green"><rect x="26" y="2" width="20" height="20" fill="#3a3"/></g>
+  <g id="blue"><path d="M50 22 L60 2 L70 22 Z" fill="#33d"/></g>
+</svg>

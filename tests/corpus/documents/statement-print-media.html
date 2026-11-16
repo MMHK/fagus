@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Account statement — screen and print styles</title>
+<meta name="color-scheme" content="light dark">
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400; src: url(../../webfonts/Inter-400-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 700; src: url(../../webfonts/Inter-700-latin.woff2) format('woff2'); }
+:root { --bg: #ffffff; --fg: #0f172a; --muted: #64748b; --accent: #2563eb; --rule: #e2e8f0; --band: #eff6ff }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b1120; --fg: #e2e8f0; --muted: #94a3b8; --accent: #60a5fa; --rule: #1e293b; --band: #172554 }
+}
+@page { size: A5 landscape; margin: 10mm 12mm 12mm;
+  @top-right { content: "Statement 2026-10 · " counter(page) "/" counter(pages); font: 7pt Inter, sans-serif; color: #64748b } }
+html { background: var(--bg); color: var(--fg); font: 8.5pt/1.45 Inter, sans-serif }
+body { margin: 0 }
+.screen-only, nav { display: block; background: #fde68a; padding: 2mm; }
+.print-only { display: none }
+header { display: flex; justify-content: space-between; align-items: center; padding: 3mm 4mm; background: var(--accent); color: #fff; border-radius: 2mm }
+header h1 { margin: 0; font-size: 13pt }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 4mm 0 }
+.card { background: var(--band); border-radius: 1.5mm; padding: 2mm 3mm }
+.card b { display: block; font-size: 12pt }
+.card.neg b { color: #dc2626 }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums }
+th { text-align: left; color: var(--muted); font-weight: 700; border-bottom: 1pt solid var(--fg); padding: 1mm 1.5mm }
+td { padding: 1mm 1.5mm; border-bottom: 0.5pt solid var(--rule) }
+td.amt { text-align: right; white-space: nowrap }
+td.amt.neg { color: #dc2626 }
+tbody tr:nth-child(odd) td { background: #f8fafc }
+.badge { display: inline-block; padding: 0 1.5mm; border-radius: 1mm; font-size: 7pt; background: #dcfce7; color: #166534 }
+.badge.pending { background: #fef9c3; color: #854d0e }
+a { color: var(--accent) }
+footer { margin-top: 4mm; font-size: 7pt; color: var(--muted) }
+
+@media print {
+  .screen-only, nav, button { display: none !important }
+  .print-only { display: block }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 6.5pt; color: #64748b }
+  /* Backgrounds of the header and the cards print as on screen; the table's stripes are dropped. */
+  header, .card, .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact }
+  tbody tr:nth-child(odd) td { background: none }
+  thead { display: table-header-group }
+  tr { break-inside: avoid }
+}
+@media screen { .medium::after { content: "screen" } }
+@media print { .medium::after { content: "print" } }
+@media (prefers-color-scheme: light) { .scheme::after { content: "light" } }
+@media (prefers-color-scheme: dark) { .scheme::after { content: "dark" } }
+@media (monochrome) { .mono::after { content: "monochrome" } }
+@media (color) { .mono::after { content: "colour" } }
+@media (prefers-reduced-motion: reduce) { .motion::after { content: "reduce" } }
+@media (prefers-reduced-motion: no-preference) { .motion::after { content: "no-preference" } }
+@media (hover: hover) { .hover::after { content: "hover" } }
+@media (hover: none) { .hover::after { content: "none" } }
+@media (forced-colors: active) { .forced::after { content: "active" } }
+@media (forced-colors: none) { .forced::after { content: "none" } }
+</style></head>
+<body>
+<nav>Dashboard · Accounts · Payments · <button>Download CSV</button></nav>
+<div class="screen-only">You are viewing the online version. Use your browser's print function for a paper copy.</div>
+<header><h1>Northwind Bank — Current account</h1><div>IBAN DE12 5001 0517 0648 4898 90<br>October 2026</div></header>
+<p class="print-only" style="margin:3mm 0 0">Printed copy · medium <span class="medium"></span>, colour scheme <span class="scheme"></span>, <span class="mono"></span>, motion <span class="motion"></span>, hover <span class="hover"></span>, forced colours <span class="forced"></span>.</p>
+<div class="cards">
+  <div class="card">Opening balance<b>€ 4,218.37</b></div>
+  <div class="card">Money in<b>€ 6,904.12</b></div>
+  <div class="card neg">Money out<b>−€ 5,377.80</b></div>
+  <div class="card">Closing balance<b>€ 5,744.69</b></div>
+</div>
+<table>
+  <thead><tr><th>Date</th><th>Description</th><th>Reference</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead>
+  <tbody>
+    <tr><td>01.10.</td><td>Salary October — Contoso GmbH</td><td>SAL-2026-10</td><td><span class="badge">booked</span></td><td class="amt">€ 4,120.00</td></tr>
+    <tr><td>02.10.</td><td>Rent, Lindenstraße 14</td><td>SEPA DD 88231</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 1,350.00</td></tr>
+    <tr><td>04.10.</td><td>Grocery store, card payment</td><td>POS 4471</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 86.42</td></tr>
+    <tr><td>07.10.</td><td>Electricity, <a href="https://stadtwerke.example/bill">online bill</a></td><td>SEPA DD 99120</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 74.00</td></tr>
+    <tr><td>09.10.</td><td>Refund, online shop</td><td>RF-55102</td><td><span class="badge">booked</span></td><td class="amt">€ 59.99</td></tr>
+    <tr><td>12.10.</td><td>Transfer to savings</td><td>STO 0001</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 500.00</td></tr>
+    <tr><td>15.10.</td><td>Insurance premium Q4</td><td>POL 77-1203</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 212.30</td></tr>
+    <tr><td>18.10.</td><td>Freelance invoice 2026-031</td><td>INV 031</td><td><span class="badge">booked</span></td><td class="amt">€ 2,450.00</td></tr>
+    <tr><td>21.10.</td><td>Mobile phone contract</td><td>SEPA DD 31188</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 29.99</td></tr>
+    <tr><td>23.10.</td><td>Train tickets, <a href="https://rail.example/tickets">rail.example</a></td><td>POS 8812</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 148.40</td></tr>
+    <tr><td>26.10.</td><td>Cash withdrawal</td><td>ATM 0193</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 200.00</td></tr>
+    <tr><td>28.10.</td><td>Gym membership</td><td>SEPA DD 41002</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 39.90</td></tr>
+    <tr><td>29.10.</td><td>Bookshop, card payment</td><td>POS 2209</td><td><span class="badge pending">pending</span></td><td class="amt neg">−€ 64.80</td></tr>
+    <tr><td>30.10.</td><td>Interest credit</td><td>INT 10</td><td><span class="badge">booked</span></td><td class="amt">€ 274.13</td></tr>
+    <tr><td>31.10.</td><td>Account fee</td><td>FEE 10</td><td><span class="badge">booked</span></td><td class="amt neg">−€ 4.90</td></tr>
+    <tr><td>31.10.</td><td>Credit card settlement</td><td>CC 5521</td><td><span class="badge pending">pending</span></td><td class="amt neg">−€ 2,666.09</td></tr>
+  </tbody>
+</table>
+<footer>Northwind Bank AG · Deposits are protected up to € 100,000 per customer. Questions? <a href="https://northwind.example/help">northwind.example/help</a></footer>
+</body></html>

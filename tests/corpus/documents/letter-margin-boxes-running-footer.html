@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Angebot und Leistungsbeschreibung</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 30mm 20mm 25mm 25mm;
+  @top-left { content: "Stadtwerke Talheim · Angebot 2026-ANG-0815"; font: 8pt Inter; color: #555; vertical-align: bottom; padding-bottom: 3mm; border-bottom: 0.5pt solid #999; }
+  @top-right { content: "13.11.2026"; font: 8pt Inter; color: #555; vertical-align: bottom; padding-bottom: 3mm; border-bottom: 0.5pt solid #999; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 8pt Inter; color: #333; }
+  @bottom-left { content: "Stadtwerke Talheim GmbH · Sitz Talheim · AG Heilbronn HRB 100 237"; font: 7pt Inter; color: #777; }
+}
+@page :first { margin-top: 20mm;
+  @top-left { content: none; border: 0; }
+  @top-right { content: none; border: 0; }
+}
+@page :left { @bottom-right { content: none; } @bottom-left { content: "Seite " counter(page) " von " counter(pages); font: 8pt Inter; color: #333; } }
+html { font: 10pt/1.45 Inter, sans-serif; color: #1c1c1c; hyphens: manual; }
+body { margin: 0; }
+.head { display: flex; justify-content: space-between; margin-bottom: 20mm; }
+.head .logo { font-weight: 700; font-size: 15pt; color: #0e7490; }
+.head .logo::before { content: "◆ "; color: #f59e0b; }
+.head address { font-style: normal; font-size: 8pt; text-align: right; color: #444; }
+.recipient { margin-bottom: 10mm; }
+h1 { font-size: 13pt; margin: 0 0 5mm; }
+h2 { font-size: 11pt; margin: 6mm 0 2mm; break-after: avoid; }
+h2 { counter-increment: sec; } h2::before { content: counter(sec) ". "; color: #0e7490; }
+p { margin: 0 0 3mm; text-align: justify; orphans: 2; widows: 2; }
+ul { margin: 0 0 3mm; padding-left: 5mm; } li::marker { color: #0e7490; }
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9pt; break-inside: avoid; }
+th { text-align: left; border-bottom: 1pt solid #0e7490; padding: 1mm; }
+td { border-bottom: 0.5pt solid #ccc; padding: 1mm; }
+td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.note { border-left: 3pt solid #f59e0b; background: #fffbeb; padding: 2mm 3mm; margin: 4mm 0; break-inside: avoid; }
+.running-footer { position: running(footer); font-size: 7pt; color: #0e7490; }
+@page { @bottom-center { content: element(footer); } }
+.sig { margin-top: 10mm; break-inside: avoid; display: flex; gap: 20mm; }
+.sig div { flex: 1; border-top: 0.5pt solid #000; padding-top: 1mm; font-size: 8pt; }
+.annex { break-before: page; }
+</style></head><body>
+<div class="running-footer">Energie aus der Region – seit 1898</div>
+<div class="head"><div class="logo">Stadtwerke Talheim</div><address>Stadtwerke Talheim GmbH<br>Bahnhofstraße 21 · 74388 Talheim<br>Tel. 07133 09811-0 · angebote@sw-talheim.example</address></div>
+<div class="recipient">Gemeinde Flein<br>Bauamt, Herrn Christoph Bäuerle<br>Kellergasse 1<br>74223 Flein</div>
+<h1>Angebot über die Errichtung einer Ladeinfrastruktur am Rathausplatz</h1>
+<p>Sehr geehrter Herr Bäuerle,</p>
+<p>vielen Dank für Ihre Anfrage vom 21. Oktober 2026. Gerne bieten wir Ihnen die Planung, Lieferung, Errichtung und den Betrieb von vier öffentlich zugänglichen Ladepunkten am Rathausplatz an. Grundlage sind die Begehung vom 4. November 2026 und das Leistungsverzeichnis der Gemeinde in der Fassung vom 28. Oktober 2026.</p>
+<h2>Leistungsumfang</h2>
+<p>Das Angebot umfasst zwei Ladesäulen mit je zwei Ladepunkten (AC, 22 kW, Typ 2), die Netzanbindung über einen neuen Hausanschluss mit 100 kVA, die Tiefbauarbeiten zwischen Trafostation und Stellplätzen sowie die Beschilderung und Markierung der Stellplätze nach StVO.</p>
+<ul><li>Planung, Genehmigungsmanagement und Abstimmung mit dem Verteilnetzbetreiber</li><li>Lieferung und Montage der Ladesäulen einschließlich Fundamenten und Anfahrschutz</li><li>Eichrechtskonforme Messung, Anbindung an das Backend über OCPP 2.0.1</li><li>Inbetriebnahme, Dokumentation und Einweisung des Bauhofs</li></ul>
+<table><thead><tr><th>Pos.</th><th>Leistung</th><th>Betrag netto</th></tr></thead><tbody>
+<tr><td>1</td><td>Planung und Genehmigung</td><td>4.800,00 €</td></tr>
+<tr><td>2</td><td>Ladesäulen (2 Stück) einschließlich Montage</td><td>21.360,00 €</td></tr>
+<tr><td>3</td><td>Netzanschluss 100 kVA (Baukostenzuschuss nach Preisblatt)</td><td>9.950,00 €</td></tr>
+<tr><td>4</td><td>Tiefbau, 38 m Kabelgraben, Oberflächenwiederherstellung</td><td>14.420,00 €</td></tr>
+<tr><td>5</td><td>Beschilderung und Markierung</td><td>1.180,00 €</td></tr>
+<tr><td></td><td><b>Summe netto</b></td><td><b>51.710,00 €</b></td></tr></tbody></table>
+<h2>Förderung</h2>
+<p>Das Vorhaben ist nach dem Landesprogramm „Charge@BW kommunal“ förderfähig. Wir übernehmen auf Wunsch die Antragstellung; die Förderquote beträgt nach aktuellem Stand 40 % der förderfähigen Kosten, höchstens 2.500 € je Ladepunkt. Der Förderbescheid muss vor der Beauftragung vorliegen, da ein vorzeitiger Maßnahmenbeginn die Förderung ausschließt.</p>
+<div class="note"><b>Hinweis:</b> Die Preise gelten bei Beauftragung bis zum 31. Dezember 2026. Für Tiefbauarbeiten in Frostperioden behalten wir uns eine Verschiebung der Ausführung vor.</div>
+<h2>Betrieb und Abrechnung</h2>
+<p>Für den Betrieb bieten wir zwei Modelle an. Im Betreibermodell bleiben die Ladesäulen in unserem Eigentum; wir tragen Wartung, Störungsbeseitigung und die Abrechnung mit den Nutzerinnen und Nutzern und zahlen der Gemeinde eine jährliche Standortpacht. Im Eigentumsmodell erwirbt die Gemeinde die Ladesäulen und beauftragt uns mit Betriebsführung und Abrechnung zu einem monatlichen Festpreis je Ladepunkt.</p>
+<p>In beiden Modellen werden die Ladepunkte ad hoc ohne Vertrag nutzbar sein (Kartenzahlung nach Ladesäulenverordnung) und in den gängigen Roaming-Plattformen sichtbar. Die Verfügbarkeit garantieren wir mit 97 % im Jahresmittel; Störungen werden werktags innerhalb von 24 Stunden bearbeitet.</p>
+<p>Der Strom stammt zu 100 % aus erneuerbaren Quellen mit Herkunftsnachweisen aus Anlagen in Baden-Württemberg. Auf Wunsch weisen wir den Anteil aus der gemeindeeigenen Photovoltaikanlage auf dem Bauhof gesondert aus.</p>
+<h2>Zeitplan</h2>
+<p>Nach Eingang des Förderbescheids rechnen wir mit acht Wochen bis zur Inbetriebnahme: zwei Wochen Ausführungsplanung, drei Wochen Tiefbau und Netzanschluss, zwei Wochen Montage und eine Woche Inbetriebnahme und Abnahme. Die Arbeiten im öffentlichen Raum stimmen wir mit dem Ordnungsamt ab, damit der Wochenmarkt am Samstag nicht beeinträchtigt wird.</p>
+<p>Wir würden uns freuen, das Vorhaben gemeinsam mit Ihnen umzusetzen, und stehen für Rückfragen jederzeit zur Verfügung.</p>
+<p>Mit freundlichen Grüßen</p>
+<div class="sig"><div>Dr. Felicitas Grünwald, Geschäftsführerin</div><div>Tobias Heinle, Projektleiter E-Mobilität</div></div>
+<section class="annex"><h2>Anlage: Technische Daten</h2>
+<table><thead><tr><th>Merkmal</th><th>Wert</th><th>Norm</th></tr></thead><tbody>
+<tr><td>Ladeleistung je Ladepunkt</td><td>bis 22 kW AC, 3-phasig</td><td>IEC 61851-1</td></tr>
+<tr><td>Steckertyp</td><td>Typ 2 Steckdose mit Shutter</td><td>IEC 62196-2</td></tr>
+<tr><td>Schutzart / Stoßfestigkeit</td><td>IP54 / IK10</td><td>IEC 60529, IEC 62262</td></tr>
+<tr><td>Messung</td><td>eichrechtskonform, Transparenzsoftware</td><td>PTB-A 50.7</td></tr>
+<tr><td>Kommunikation</td><td>LTE, OCPP 2.0.1, ISO 15118 vorbereitet</td><td>–</td></tr></tbody></table>
+<p>Alle Komponenten werden mit Konformitätserklärungen und Prüfprotokollen nach DIN VDE 0100-722 übergeben.</p></section>
+</body></html>

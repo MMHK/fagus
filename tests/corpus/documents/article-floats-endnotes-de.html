@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Elektronische Rechnungen im Mittelstand</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@font-face { font-family: "STIX Two Math"; src: local("STIX Two Math"); }
+@page { size: A4; margin: 25mm 25mm 28mm; @bottom-center { content: "– " counter(page) " –"; font: 8pt "Inter"; } }
+html { font: 10pt/1.55 "Inter", sans-serif; color: #161616; }
+body { margin: 0; counter-reset: fn abb tab; }
+math { font-family: "STIX Two Math", math; }
+h1 { font-size: 19pt; line-height: 1.2; margin: 0 0 4pt; }
+.authors { color: #555; margin-bottom: 14pt; }
+.abstract { border-top: 0.75pt solid #000; border-bottom: 0.75pt solid #000; padding: 6pt 0; margin-bottom: 14pt; font-size: 9pt; text-align: justify; hyphens: manual; }
+h2 { font-size: 12pt; margin: 14pt 0 5pt; break-after: avoid; }
+p { margin: 0 0 6pt; text-align: justify; hyphens: manual; orphans: 3; widows: 3; }
+sup.fn a { text-decoration: none; color: #1d4ed8; }
+sup.fn { counter-increment: fn; font-size: 7pt; line-height: 0; }
+sup.fn a::after { content: counter(fn); }
+figure { float: right; width: 62mm; margin: 2pt 0 8pt 10pt; counter-increment: abb; }
+figure.left { float: left; margin: 2pt 10pt 8pt 0; }
+figure svg { display: block; width: 100%; height: auto; border: 0.5pt solid #ccc; }
+figcaption { font-size: 8pt; color: #444; margin-top: 3pt; text-align: left; }
+figcaption::before { content: "Abb. " counter(abb) ": "; font-weight: 700; color: #000; }
+table { border-collapse: collapse; width: 100%; font-size: 8.5pt; margin: 6pt 0 10pt; counter-increment: tab; break-inside: avoid; clear: both; }
+caption { caption-side: bottom; text-align: left; font-size: 8pt; color: #444; padding-top: 3pt; }
+caption::before { content: "Tab. " counter(tab) ": "; font-weight: 700; color: #000; }
+th, td { padding: 2.5pt 5pt; border-bottom: 0.5pt solid #bbb; text-align: left; }
+th { border-bottom: 1pt solid #000; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; }
+q { quotes: "„" "“" "‚" "‘"; }
+.notes { border-top: 0.5pt solid #000; margin-top: 16pt; padding-top: 4pt; font-size: 8pt; clear: both; }
+.notes ol { margin: 0; padding-left: 14pt; }
+.notes li { margin-bottom: 2pt; text-align: justify; }
+.notes li::marker { font-weight: 700; color: #1d4ed8; }
+.eq { text-align: center; margin: 6pt 0; font-size: 11pt; }
+</style>
+</head>
+<body>
+<h1>Elektronische Rechnungen im Mittelstand: Erfahrungen aus dem ersten Jahr der Empfangspflicht</h1>
+<div class="authors">Dr. Anna Muster · Jonas Beispiel, M.&nbsp;Sc. — Institut für Musterforschung, Musterstadt</div>
+<div class="abstract"><b>Zusammenfassung.</b> Seit dem 1.&nbsp;Januar&nbsp;2025 müssen inländische Unternehmen elektronische Rechnungen empfangen können. Wir haben 214 kleine und mittlere Unternehmen zu ihren Erfahrungen im ersten Jahr befragt. Die Ergebnisse zeigen, dass die technische Umstellung meist gelang, die organisatorische aber unterschätzt wurde: Nur 38&nbsp;% der Befragten verarbeiten eingehende Rechnungen bereits vollständig medienbruchfrei.</div>
+<h2>1&nbsp;&nbsp;Einleitung</h2>
+<figure><svg viewBox="0 0 200 120" font-family="Inter" font-size="8"><rect width="200" height="120" fill="#f8fafc"/><g fill="#1d4ed8"><rect x="20" y="70" width="22" height="40"/><rect x="60" y="50" width="22" height="60"/><rect x="100" y="34" width="22" height="76"/><rect x="140" y="18" width="22" height="92"/></g><g text-anchor="middle" fill="#333"><text x="31" y="66">21 %</text><text x="71" y="46">34 %</text><text x="111" y="30">47 %</text><text x="151" y="14">62 %</text></g></svg><figcaption>Anteil der Unternehmen, die E-Rechnungen versenden, nach Quartal 2025.</figcaption></figure>
+<p>Mit dem Wachstumschancengesetz hat der Gesetzgeber die elektronische Rechnung im inländischen B2B-Verkehr zur Regel gemacht.<sup class="fn"><a href="#n1"></a></sup> Eine Rechnung gilt nur noch dann als elektronisch, wenn sie in einem strukturierten Format ausgestellt, übermittelt und empfangen wird, das ihre elektronische Verarbeitung ermöglicht. Ein PDF genügt dafür nicht mehr; es bleibt nur noch während der Übergangs&shy;fristen als „sonstige Rechnung“ zulässig.</p>
+<p>Für den Empfang gibt es keine Übergangsfrist. Viele Unternehmen haben deshalb zunächst nur sichergestellt, dass sie die Dateien entgegennehmen und lesbar darstellen können. Wie sie die Daten danach weiterverarbeiten, haben sie oft offen gelassen. Unsere Befragung sollte klären, wie verbreitet diese <q>Zwischenlösung</q> ist und welche Hürden einer durchgängigen Verarbeitung im Weg stehen.</p>
+<p>Die Befragten nannten am häufigsten fehlende Schnittstellen zwischen E-Mail-Postfach und Buchhaltungs&shy;software, gefolgt von Unsicherheiten bei der Prüfung der Pflicht&shy;angaben und der Archivierung. Bemerkenswert ist, dass die Formatfrage – XRechnung oder ZUGFeRD – kaum eine Rolle spielte.<sup class="fn"><a href="#n2"></a></sup></p>
+<h2>2&nbsp;&nbsp;Methode</h2>
+<p>Wir haben zwischen Oktober und Dezember 2025 Geschäftsführer, Inhaber und Leiter der Buchhaltung von 214 Unternehmen mit 5 bis 249 Beschäftigten befragt. Die Stichprobe wurde nach Branche und Größe geschichtet. Die Antworten wurden auf die Grundgesamtheit hochgerechnet; der Hochrechnungsfaktor eines Unternehmens <i>i</i> in Schicht <i>h</i> ist</p>
+<div class="eq"><math display="block"><msub><mi>w</mi><mrow><mi>h</mi><mi>i</mi></mrow></msub><mo>=</mo><mfrac><msub><mi>N</mi><mi>h</mi></msub><msub><mi>n</mi><mi>h</mi></msub></mfrac><mo>,</mo></math></div>
+<p>wobei <math><msub><mi>N</mi><mi>h</mi></msub></math> die Zahl der Unternehmen der Schicht in der Grundgesamtheit und <math><msub><mi>n</mi><mi>h</mi></msub></math> die Zahl der befragten Unternehmen ist. Der Stichproben&shy;fehler eines Anteils liegt bei höchstens ±6,7 Prozentpunkten.<sup class="fn"><a href="#n3"></a></sup></p>
+<table>
+<caption>Stichprobe nach Größenklasse und Branche (Anzahl befragter Unternehmen).</caption>
+<tr><th>Beschäftigte</th><th>Handel</th><th>Handwerk</th><th>Dienstleistung</th><th>Industrie</th><th>Summe</th></tr>
+<tr><td>5 bis 9</td><td class="n">18</td><td class="n">24</td><td class="n">21</td><td class="n">6</td><td class="n">69</td></tr>
+<tr><td>10 bis 49</td><td class="n">22</td><td class="n">19</td><td class="n">26</td><td class="n">15</td><td class="n">82</td></tr>
+<tr><td>50 bis 249</td><td class="n">14</td><td class="n">8</td><td class="n">17</td><td class="n">24</td><td class="n">63</td></tr>
+<tr><td><b>Summe</b></td><td class="n"><b>54</b></td><td class="n"><b>51</b></td><td class="n"><b>64</b></td><td class="n"><b>45</b></td><td class="n"><b>214</b></td></tr>
+</table>
+<h2>3&nbsp;&nbsp;Ergebnisse</h2>
+<figure class="left"><svg viewBox="0 0 200 120" font-family="Inter" font-size="8"><rect width="200" height="120" fill="#f8fafc"/><circle cx="60" cy="60" r="42" fill="#e5e7eb"/><path d="M60 60 L60 18 A42 42 0 0 1 98.6 76.4 Z" fill="#1d4ed8"/><path d="M60 60 L98.6 76.4 A42 42 0 0 1 35.6 94.2 Z" fill="#93c5fd"/><g fill="#333"><rect x="120" y="30" width="8" height="8" fill="#1d4ed8"/><text x="132" y="37">medienbruchfrei</text><rect x="120" y="50" width="8" height="8" fill="#93c5fd"/><text x="132" y="57">teilweise</text><rect x="120" y="70" width="8" height="8" fill="#e5e7eb"/><text x="132" y="77">manuell</text></g></svg><figcaption>Verarbeitung eingehender E-Rechnungen Ende 2025.</figcaption></figure>
+<p>38&nbsp;% der Unternehmen verarbeiten eingehende E-Rechnungen vollständig medienbruchfrei: Die Datei wird automatisch erkannt, die Daten werden in die Buchhaltung übernommen und das Original revisionssicher archiviert. Weitere 27&nbsp;% haben einzelne Schritte automatisiert, etwa den Import, prüfen und buchen aber manuell. Bei 35&nbsp;% der Unternehmen werden die Rechnungen weiterhin ausgedruckt oder als PDF visualisiert und dann von Hand erfasst.</p>
+<p>Der Grad der Automatisierung hängt stark von der Unternehmens&shy;größe ab. Unter den Unternehmen mit 50 bis 249 Beschäftigten arbeiten 61&nbsp;% medienbruchfrei, unter denen mit weniger als zehn Beschäftigten nur 19&nbsp;%. Die kleinsten Unternehmen nutzen häufig die Visualisierungs&shy;funktion ihres Steuerberaters und senden die Belege anschließend gesammelt weiter.</p>
+<p>Als größte Hürde nannten 44&nbsp;% der Befragten fehlende oder unzureichende Funktionen ihrer Buchhaltungssoftware. 29&nbsp;% gaben an, dass ihnen das Wissen fehle, welche Angaben sie bei einer E-Rechnung prüfen müssen; 17&nbsp;% nannten Kosten, 10&nbsp;% sonstige Gründe. Mehrfachnennungen waren nicht möglich.</p>
+<h2>4&nbsp;&nbsp;Fazit</h2>
+<p>Die Empfangspflicht hat die technische Grundlage geschaffen, die organisatorische Umstellung steht vielerorts noch aus. Für kleine Unternehmen könnten einfache, standardisierte Importfunktionen in verbreiteten Buchhaltungs&shy;programmen den größten Fortschritt bringen. Mit dem Ende der Übergangsfristen für den Versand im Jahr 2028 wird der Druck auf eine durchgängige Verarbeitung weiter steigen.</p>
+<div class="notes"><ol>
+<li id="n1">Gesetz zur Stärkung von Wachstumschancen, Investitionen und Innovation sowie Steuervereinfachung und Steuerfairness (Wachstumschancengesetz) vom 27.&nbsp;März&nbsp;2024, BGBl.&nbsp;2024&nbsp;I Nr.&nbsp;108.</li>
+<li id="n2">Beide Formate erfüllen die Anforderungen der Norm EN&nbsp;16931; ZUGFeRD-Rechnungen enthalten zusätzlich eine für Menschen lesbare PDF-Darstellung.</li>
+<li id="n3">Bei einem Konfidenzniveau von 95&nbsp;% und einem Anteil von 50&nbsp;%, unter Berücksichtigung des Designeffekts der Schichtung.</li>
+</ol></div>
+</body>
+</html>

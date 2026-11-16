@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+<title>Datenmigration</title>
+<style type='text/css'>
+@font-face { font-family: "Open Sans"; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Open Sans"; src: url(../../fonts/Inter-Bold.ttf); font-weight: bold; }
+@font-face { font-family: "Open Sans"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 18mm 16mm; }
+/* Written for this test. The markup is what Typora exports with its GitHub theme; the rules
+   and values below are our own, covering only what this markup uses. */
+:root { --ink: #2f3337; --quiet: #737a81; --line: #dde1e5; --wash: #f6f7f8; --link: #3b7bbf;
+  --mono: Menlo, Consolas, "Courier New", monospace; }
+html { font-size: 13px; color: var(--ink); background: #fff; }
+body { margin: 0; font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif; line-height: 1.6; }
+*, ::before, ::after { box-sizing: border-box; }
+#write { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+#write p, #write li { white-space: pre-wrap; }
+a { color: var(--link); }
+h1, h2, h3 { margin: 1.1rem 0 0.9rem; line-height: 1.3; font-weight: bold; break-after: avoid; }
+h1 { font-size: 2.2em; padding-bottom: 0.1em; border-bottom: 1px solid #e8eaec; }
+h2 { font-size: 1.7em; padding-bottom: 0.1em; border-bottom: 1px solid #e8eaec; }
+h3 { font-size: 1.45em; }
+p, ul, ol, blockquote, figure { margin: 0.75em 0; }
+ul, ol { padding-left: 2em; }
+li > p { margin: 0.35em 0; }
+mark { background: #ffef5a; color: inherit; }
+
+/* [TOC]: a single paragraph whose spans are turned into lines */
+.md-toc { margin: 18px 0; padding-bottom: 16px; font-size: 0.9rem; }
+.md-toc-content { margin: 0; }
+.md-toc-item { display: block; }
+.md-toc-inner { text-decoration: none; }
+.md-toc-h1 .md-toc-inner { font-weight: bold; }
+.md-toc-h2 { padding-left: 1.8em; }
+.md-toc-h3 { padding-left: 3.6em; }
+
+/* footnote reference and the footnotes at the end */
+sup.md-footnote { padding: 1px 4px; border-radius: 3px; background: #eceef0; color: #555b61; }
+sup.md-footnote a { color: inherit; text-decoration: none; }
+.footnotes-area { margin-top: 12px; color: #858b91; }
+.footnotes-area hr { height: 1px; margin: 14px 0; border: 0; background: #e3e6e9; }
+.footnote-line { margin-top: 0.6em; font-size: 0.72em; }
+.reversefootnote { margin-left: 2px; text-decoration: none; }
+
+/* fenced blocks; a diagram is a <pre> holding a <div> holding the SVG */
+.md-fences { display: block; margin: 14px 0; padding: 8px 4px 6px; font-family: var(--mono); font-size: 0.9em;
+  white-space: pre; background: var(--wash); border: 1px solid #e3e6e9; border-radius: 4px; break-inside: avoid; }
+.md-diagram { padding: 0; white-space: normal; background: none; border: 0; }
+.md-diagram-panel { margin-top: 10px; padding-bottom: 8px; text-align: center; }
+.md-diagram-panel svg { max-width: 100%; height: auto; }
+.md-diagram .node text { font-size: 13px; }
+
+/* code blocks keep CodeMirror's DOM; only its lines are shown */
+.ty-contain-cm { white-space: normal; }
+.CodeMirror { text-align: left; }
+.CodeMirror-measure, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler { position: absolute; visibility: hidden; }
+.CodeMirror-lines { padding: 2px 6px; }
+pre.CodeMirror-line { margin: 0; padding: 0 2px; font-family: var(--mono); white-space: pre-wrap;
+  overflow-wrap: break-word; break-inside: avoid; }
+.cm-keyword { color: #8a2b9e; } .cm-def { color: #1f4fd1; } .cm-builtin { color: #4b2bb0; }
+.cm-operator { color: #a0352c; } .cm-string { color: #b0281d; } .cm-number { color: #1d7a4f; }
+.cm-property { color: #2f5d8c; } .cm-comment { color: #8b6a1f; font-style: italic; }
+
+code { padding: 1px 3px; font-family: var(--mono); font-size: 0.88em; background: #f2f3f4;
+  border: 1px solid #e3e6e9; border-radius: 3px; }
+kbd { display: inline-block; margin: 0 0.1em; padding: 0 0.5em; font-size: 0.8em; line-height: 1.6; color: #24292e;
+  background: #fafbfc; border: 1px solid #b3b9bf; border-radius: 3px; box-shadow: inset 0 -1px 0 #b3b9bf;
+  vertical-align: middle; white-space: nowrap; }
+
+/* table in a <figure> */
+figure { margin: 1em 0; padding: 0; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 5px 12px; border: 1px solid var(--line); }
+thead, tbody tr:nth-child(even) { background: var(--wash); }
+tr { break-inside: avoid; }
+
+blockquote { padding: 0 14px; color: var(--quiet); border-left: 4px solid var(--line); }
+blockquote > :first-child { margin-top: 0; }
+blockquote > :last-child { margin-bottom: 0; }
+
+/* task list: the checkbox hangs left of the text */
+.task-list-item { position: relative; list-style: none; }
+.task-list-item > input { position: absolute; left: -1.5em; top: 0.4em; margin: 0; }
+.task-list-item > p { margin: 0.3em 0; }
+</style>
+</head>
+<body class='typora-export os-macOS'><div class='typora-export-content'>
+<div id='write'  class=''><h1 id='datenmigration-crm--erp'><span>Datenmigration CRM → ERP</span></h1><div class='md-toc' mdtype='toc'><p class="md-toc-content" role="list"><span role="listitem" class="md-toc-item md-toc-h1" data-ref="n0"><a class="md-toc-inner" href="#datenmigration-crm--erp">Datenmigration CRM → ERP</a></span><span role="listitem" class="md-toc-item md-toc-h2" data-ref="n4"><a class="md-toc-inner" href="#ablauf">Ablauf</a></span><span role="listitem" class="md-toc-item md-toc-h2" data-ref="n9"><a class="md-toc-inner" href="#feldzuordnung">Feldzuordnung</a></span><span role="listitem" class="md-toc-item md-toc-h3" data-ref="n12"><a class="md-toc-inner" href="#sonderfälle">Sonderfälle</a></span><span role="listitem" class="md-toc-item md-toc-h2" data-ref="n20"><a class="md-toc-inner" href="#offene-punkte">Offene Punkte</a></span></p></div><p><span>Die Kundendaten wandern am </span><strong><span>Wochenende 15./16. November</span></strong><span> vom alten CRM ins ERP. Dieses Dokument beschreibt Reihenfolge, Zuordnung und Rückfallplan.</span><sup class='md-footnote'><a href='#dfref-footnote-1' name='ref-footnote-1'>1</a></sup></p><h2 id='ablauf'><span>Ablauf</span></h2><pre class="md-fences md-end-block md-diagram md-fences-advanced" spellcheck="false" lang="mermaid"><div class="md-diagram-panel md-fences-adv-panel"><div class="md-diagram-panel-header"></div><div class="md-diagram-panel-preview"><svg id="mermaidChart0" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width: 640px;" viewBox="0 0 640 120"><style>#mermaidChart0{font-family:"Open Sans",sans-serif;font-size:14px;fill:#333;}#mermaidChart0 .node rect{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaidChart0 .edgePath .path{stroke:#333333;stroke-width:1.5px;}#mermaidChart0 .label text{fill:#333;}#mermaidChart0 .arrowheadPath{fill:#333333;}#mermaidChart0 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mermaidChart0 .cluster text{fill:#333;}</style><g transform="translate(0, 0)"><g class="output"><g class="clusters"><g class="cluster" id="sg1"><rect x="8" y="8" width="400" height="104"></rect><g class="label" transform="translate(208, 26)"><text text-anchor="middle" style="font-size:12px">Samstag</text></g></g></g><g class="edgePaths"><g class="edgePath"><path class="path" d="M128,70L168,70" marker-end="url(#arrowhead1)" style="fill:none"></path><defs><marker id="arrowhead1" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="strokeWidth" markerWidth="8" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowheadPath" style="stroke-width: 1px; stroke-dasharray: 1px, 0px;"></path></marker></defs></g><g class="edgePath"><path class="path" d="M288,70L328,70" marker-end="url(#arrowhead1)" style="fill:none"></path></g><g class="edgePath"><path class="path" d="M392,70L472,70" marker-end="url(#arrowhead1)" style="fill:none"></path></g></g><g class="nodes"><g class="node" transform="translate(72,70)"><rect rx="5" ry="5" x="-56" y="-20" width="112" height="40"></rect><g class="label"><text text-anchor="middle" dy="5">Export CRM</text></g></g><g class="node" transform="translate(228,70)"><rect x="-60" y="-20" width="120" height="40"></rect><g class="label"><text text-anchor="middle" dy="5">Bereinigen</text></g></g><g class="node" transform="translate(360,70)"><polygon points="0,-28 32,0 0,28 -32,0" style="fill:#ECECFF;stroke:#9370DB"></polygon><g class="label"><text text-anchor="middle" dy="5">OK?</text></g></g><g class="node" transform="translate(544,70)"><rect rx="20" ry="20" x="-72" y="-20" width="144" height="40" style="fill:#d4edda;stroke:#28a745"></rect><g class="label"><text text-anchor="middle" dy="5">Import ERP</text></g></g></g></g></g></svg></div></div></pre><ol start='' ><li><p><span>CRM in den Nur-Lese-Modus setzen (Sa 06:00)</span></p></li><li><p><span>Export als CSV, UTF-8, Trennzeichen </span><code>;</code></p></li><li><p><span>Bereinigen mit </span><code>clean.py</code><span> und Stichprobe von </span><mark><span>200 Datensätzen</span></mark></p></li><li><p><span>Import, danach Abgleich der Summen</span></p></li></ol><h2 id='feldzuordnung'><span>Feldzuordnung</span></h2><figure><table><thead><tr><th style='text-align:left;' ><span>CRM-Feld</span></th><th style='text-align:left;' ><span>ERP-Feld</span></th><th style='text-align:center;' ><span>Pflicht</span></th><th><span>Umwandlung</span></th></tr></thead><tbody><tr><td style='text-align:left;' ><code>company</code></td><td style='text-align:left;' ><code>Kunde.Name1</code></td><td style='text-align:center;' ><span>ja</span></td><td><span>auf 40 Zeichen kürzen, Rest nach </span><code>Name2</code></td></tr><tr><td style='text-align:left;' ><code>vat_id</code></td><td style='text-align:left;' ><code>Kunde.UStIdNr</code></td><td style='text-align:center;' ><span>nein</span></td><td><span>Leerzeichen entfernen, Großbuchstaben</span></td></tr><tr><td style='text-align:left;' ><code>payment_terms</code></td><td style='text-align:left;' ><code>Kunde.ZahlBed</code></td><td style='text-align:center;' ><span>ja</span></td><td><span>„14 Tage netto“ → </span><code>Z014</code><span>, sonst </span><code>Z030</code></td></tr></tbody></table></figure><h3 id='sonderfälle'><span>Sonderfälle</span></h3><pre spellcheck="false" class="md-fences md-end-block ty-contain-cm modeLoaded" lang="python"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="python"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-code" role="presentation" style=""><div class="CodeMirror-activeline" style="position: relative;"><div class="CodeMirror-activeline-background CodeMirror-linebackground"></div><div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">def</span> <span class="cm-def">ust_id</span>(<span class="cm-variable">wert</span>: <span class="cm-builtin">str</span>) <span class="cm-operator">-&gt;</span> <span class="cm-builtin">str</span> <span class="cm-operator">|</span> <span class="cm-keyword">None</span>:</span></pre></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;">    <span class="cm-comment"># „DE 123 456 789“ → „DE123456789“; Platzhalter wie „-“ werden zu None</span></span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;">    <span class="cm-variable">wert</span> <span class="cm-operator">=</span> <span class="cm-variable">wert</span>.<span class="cm-property">replace</span>(<span class="cm-string">" "</span>, <span class="cm-string">""</span>).<span class="cm-property">upper</span>()</span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;">    <span class="cm-keyword">return</span> <span class="cm-variable">wert</span> <span class="cm-keyword">if</span> <span class="cm-builtin">len</span>(<span class="cm-variable">wert</span>) <span class="cm-operator">&gt;</span> <span class="cm-number">4</span> <span class="cm-keyword">else</span> <span class="cm-keyword">None</span></span></pre></div></div></div></div></div><div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 92px;"></div><div class="CodeMirror-gutters" style="display: none; height: 92px;"></div></div></div></pre><blockquote><p><span>Dubletten (gleiche USt-IdNr.) </span><strong><span>nicht</span></strong><span> automatisch zusammenführen – Liste an den Vertrieb geben. Tastenkürzel im ERP zum Zusammenführen: </span><kbd>Strg</kbd><span>+</span><kbd>M</kbd></p></blockquote><h2 id='offene-punkte'><span>Offene Punkte</span></h2><ul><li class="md-task-list-item task-list-item task-list-done"><input type='checkbox' checked/><p><span>Rückfallplan mit IT abgestimmt</span></p></li><li class="md-task-list-item task-list-item task-list-not-done"><input type='checkbox' /><p><span>Freigabe Datenschutz für die Testkopie</span></p></li><li class="md-task-list-item task-list-item task-list-not-done"><input type='checkbox' /><p><span>Ansprechpartner am Sonntag benennen</span></p></li></ul><div class='footnotes-area'  ><hr/>
+<div class='footnote-line'><span class='md-fn-count'>1</span> <span>Rückfragen an das Projektteam, Kanal </span><code>#erp-migration</code><span>.</span><a name='dfref-footnote-1' href='#ref-footnote-1' title='back to document' class='reversefootnote' >↩</a></div></div></div></div>
+</body>
+</html>

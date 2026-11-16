@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Contact preferences</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+body { font: 14px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1f2933; margin: 0; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+p.lead { color: #52606d; margin: 0 0 16px; }
+.row { display: flex; gap: 16px; margin-bottom: 12px; align-items: flex-start; }
+.field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+label { font-weight: 600; font-size: 13px; }
+.hint { font-size: 12px; color: #7b8794; }
+.inline label { font-weight: 400; margin-right: 12px; }
+fieldset { border: 1px solid #cbd2d9; border-radius: 4px; padding: 8px 12px 12px; margin: 0 0 14px; }
+legend { font-weight: 700; padding: 0 4px; }
+table.grid { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.grid td, table.grid th { border-bottom: 1px solid #e4e7eb; padding: 6px 4px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Contact preferences</h1>
+<p class="lead">Please complete all fields marked with an asterisk. This form was printed on 8 November 2026.</p>
+
+<fieldset>
+<legend>Personal details</legend>
+<div class="row">
+  <div class="field"><label for="fn">First name *</label><input id="fn" type="text" value="Charlotte"></div>
+  <div class="field"><label for="ln">Last name *</label><input id="ln" type="text" value="Brontë-Smith"></div>
+</div>
+<div class="row">
+  <div class="field"><label for="em">E-mail</label><input id="em" type="email" value="charlotte@example.org"></div>
+  <div class="field"><label for="ph">Phone</label><input id="ph" type="tel" placeholder="+44 20 7946 0000"></div>
+</div>
+<div class="row">
+  <div class="field"><label for="pw">Password</label><input id="pw" type="password" value="secret123"></div>
+  <div class="field"><label for="url">Website</label><input id="url" type="url" value="https://example.org/charlotte"></div>
+</div>
+<div class="row">
+  <div class="field"><label for="se">Search</label><input id="se" type="search" value="newsletters"></div>
+  <div class="field"><label for="age">Age</label><input id="age" type="number" value="34" min="18" max="120"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Dates and times</legend>
+<div class="row">
+  <div class="field"><label>Date of birth</label><input type="date" value="1992-04-21"></div>
+  <div class="field"><label>Preferred time</label><input type="time" value="14:30"></div>
+</div>
+<div class="row">
+  <div class="field"><label>Appointment</label><input type="datetime-local" value="2026-12-03T09:15"></div>
+  <div class="field"><label>Month</label><input type="month" value="2027-01"></div>
+  <div class="field"><label>Week</label><input type="week" value="2027-W05"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Preferences</legend>
+<div class="row">
+  <div class="field"><label>Favourite colour</label><input type="color" value="#3b82f6"></div>
+  <div class="field"><label>Volume</label><input type="range" min="0" max="10" value="7"></div>
+  <div class="field"><label>Attachment</label><input type="file"></div>
+</div>
+<div class="row inline">
+  <div class="field"><span><input type="checkbox" id="c1" checked><label for="c1">Newsletter</label>
+  <input type="checkbox" id="c2"><label for="c2">Product updates</label>
+  <input type="checkbox" id="c3" checked disabled><label for="c3">Legal notices</label></span></div>
+</div>
+<div class="row inline">
+  <div class="field"><span><input type="radio" name="freq" id="r1"><label for="r1">Daily</label>
+  <input type="radio" name="freq" id="r2" checked><label for="r2">Weekly</label>
+  <input type="radio" name="freq" id="r3"><label for="r3">Monthly</label>
+  <input type="radio" name="freq" id="r4" disabled><label for="r4">Never</label></span></div>
+</div>
+<div class="row">
+  <div class="field"><label>Country</label>
+  <select><option>Austria</option><option selected>United Kingdom</option><option>Germany</option></select></div>
+  <div class="field"><label>Interests</label>
+  <select multiple size="4"><option selected>Design</option><option>Engineering</option><option selected>Marketing</option><option>Sales</option><option>Support</option></select></div>
+  <div class="field"><label>Language</label>
+  <input list="langs" value="English"><datalist id="langs"><option value="English"><option value="Deutsch"></datalist></div>
+</div>
+<div class="row">
+  <div class="field"><label>Comments</label><textarea rows="4">I would like to receive the printed catalogue as well.
+Thank you!</textarea></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Status</legend>
+<table class="grid">
+<tr><th>Profile completeness</th><td><progress value="70" max="100">70 %</progress></td><td>70 %</td></tr>
+<tr><th>Upload</th><td><progress></progress></td><td>pending</td></tr>
+<tr><th>Storage used</th><td><meter value="0.4">40 %</meter></td><td>4 of 10 GB</td></tr>
+<tr><th>Quota warning</th><td><meter min="0" max="100" low="60" high="80" optimum="20" value="85"></meter></td><td>85 %</td></tr>
+<tr><th>Medium level</th><td><meter min="0" max="100" low="60" high="80" optimum="20" value="70"></meter></td><td>70 %</td></tr>
+<tr><th>Total</th><td><output>€ 1,240.00</output></td><td>computed</td></tr>
+</table>
+</fieldset>
+
+<p><button type="button">Cancel</button> <input type="reset" value="Reset"> <input type="submit" value="Save preferences"> <button disabled>Delete account</button></p>
+</body>
+</html>

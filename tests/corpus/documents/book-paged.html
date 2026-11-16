@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Handbuch Lagerverwaltung</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+
+/* Pages: A5 with mirrored margins, running heads from the chapter titles (`string-set`), page
+   numbers outside, a cover and a contents page of their own. */
+@page {
+  size: A5;
+  margin: 18mm 16mm 20mm 20mm;
+  @bottom-center { content: counter(page); font: 8pt Inter, sans-serif; color: #555; }
+}
+@page :left {
+  margin-left: 16mm;
+  margin-right: 20mm;
+  @top-left { content: string(chapter); font: italic 8pt Inter, sans-serif; color: #555; }
+}
+@page :right {
+  @top-right { content: string(chapter); font: italic 8pt Inter, sans-serif; color: #555; }
+}
+@page cover {
+  margin: 0;
+  background: #1d3557;
+  @bottom-center { content: none; }
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+@page contents {
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-center { content: counter(page, lower-roman); }
+}
+@page chapter:first {
+  @top-right { content: none; }
+}
+
+html { font: 10pt/1.45 Inter, sans-serif; color: #1b1b1b; }
+body { margin: 0; }
+
+.cover { page: cover; height: 210mm; box-sizing: border-box; padding: 40mm 18mm 0; color: #f1faee; }
+.cover h1 { font-size: 26pt; line-height: 1.15; margin: 0 0 6mm; }
+.cover p { margin: 0; font-size: 11pt; color: #a8dadc; }
+.cover .edition { margin-top: 90mm; font-size: 9pt; }
+
+nav { page: contents; }
+nav h2 { font-size: 14pt; margin: 0 0 6mm; }
+nav ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+nav li { counter-increment: toc; margin: 0 0 2mm; }
+nav li a { display: flex; color: inherit; text-decoration: none; }
+nav li a::before { content: counter(toc) "\2003"; font-weight: 700; }
+nav li a .dots { flex: 1; border-bottom: 0.5pt dotted #888; margin: 0 2mm 0.8ex; }
+nav li a::after { content: target-counter(attr(href), page); }
+
+section.chapter { break-before: right; counter-increment: chapter; }
+section.chapter h2 { string-set: chapter content(text); font-size: 16pt; line-height: 1.2; margin: 0 0 5mm; padding-top: 12mm; }
+section.chapter h2::before { content: "Kapitel " counter(chapter); display: block; font-size: 9pt; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; color: #457b9d; margin-bottom: 2mm; }
+h3 { font-size: 11pt; margin: 5mm 0 2mm; break-after: avoid; }
+p { margin: 0; text-align: justify; hyphens: auto; orphans: 2; widows: 2; }
+p + p { text-indent: 1.2em; }
+.note { margin: 4mm 0; padding: 3mm 4mm; background: #f1faee; border-left: 1.2mm solid #457b9d; font-size: 9pt; break-inside: avoid; }
+.note p + p { text-indent: 0; margin-top: 1.5mm; }
+table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 8.5pt; }
+th { text-align: left; border-bottom: 0.8pt solid #1b1b1b; padding: 1mm 1.5mm; }
+td { border-bottom: 0.4pt solid #ccc; padding: 1mm 1.5mm; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+a.xref { color: #1d3557; text-decoration: none; }
+a.xref::after { content: " (S. " target-counter(attr(href), page) ")"; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Handbuch Lager&shy;verwaltung</h1>
+  <p>Wareneingang, Einlagerung und Inventur</p>
+  <p class="edition">Ausgabe 2027 · Logistikzentrum Kassel</p>
+</div>
+
+<nav>
+  <h2>Inhalt</h2>
+  <ol>
+    <li><a href="#eingang">Wareneingang<span class="dots"></span></a></li>
+    <li><a href="#einlagerung">Einlagerung<span class="dots"></span></a></li>
+    <li><a href="#inventur">Inventur<span class="dots"></span></a></li>
+  </ol>
+</nav>
+
+<section class="chapter" id="eingang">
+  <h2>Wareneingang</h2>
+  <p>Jede Lieferung wird an der Rampe angenommen, mit dem Lieferschein verglichen und im
+  Lagerverwaltungssystem gebucht. Erst danach dürfen die Waren das Eingangslager verlassen.
+  Beschädigte Packstücke werden fotografiert und auf dem Lieferschein vermerkt; der Fahrer
+  bestätigt den Vermerk mit seiner Unterschrift.</p>
+  <p>Bei Sammelsendungen prüft die Annahme zuerst die Zahl der Packstücke und erst danach den
+  Inhalt. Fehlmengen werden innerhalb von 24 Stunden an den Einkauf gemeldet, Überlieferungen
+  bleiben bis zur Klärung im Sperrlager.</p>
+  <h3>Prüfung der Lieferung</h3>
+  <p>Die Stichprobe richtet sich nach dem Lieferanten: Neue Lieferanten werden in den ersten drei
+  Monaten vollständig geprüft, bewährte nur stichprobenartig. Die Ergebnisse fließen in die
+  Lieferantenbewertung ein, die quartalsweise erstellt wird.</p>
+  <div class="note">
+    <p><b>Hinweis:</b> Gefahrgut wird ausschließlich an Rampe 4 angenommen.</p>
+    <p>Die Sicherheitsdatenblätter liegen im Ordner neben dem Rolltor.</p>
+  </div>
+  <p>Nach der Prüfung erhält jedes Packstück ein Etikett mit Wareneingangsnummer und Barcode.
+  Die Einlagerung beschreibt <a class="xref" href="#einlagerung">Kapitel 2</a>.</p>
+</section>
+
+<section class="chapter" id="einlagerung">
+  <h2>Einlagerung</h2>
+  <p>Das System schlägt für jede Palette einen Lagerplatz vor. Schnelldreher kommen in die
+  vorderen Gassen, Langsamdreher in die oberen Ebenen. Der Staplerfahrer scannt den Platz und
+  die Palette; erst dann gilt die Ware als eingelagert.</p>
+  <table>
+    <thead><tr><th>Zone</th><th>Art der Ware</th><th class="num">Plätze</th><th class="num">Belegt</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>Schnelldreher, Kommissionierung</td><td class="num">480</td><td class="num">91 %</td></tr>
+      <tr><td>B</td><td>Normaldreher</td><td class="num">1.240</td><td class="num">84 %</td></tr>
+      <tr><td>C</td><td>Langsamdreher, Reserve</td><td class="num">2.160</td><td class="num">67 %</td></tr>
+      <tr><td>K</td><td>Kühlware bis 8&nbsp;°C</td><td class="num">96</td><td class="num">72 %</td></tr>
+    </tbody>
+  </table>
+  <p>Weicht der tatsächliche Platz vom Vorschlag ab, muss der Fahrer einen Grund wählen. Häufige
+  Abweichungen deuten auf falsche Stammdaten hin und werden wöchentlich ausgewertet.</p>
+</section>
+
+<section class="chapter" id="inventur">
+  <h2>Inventur</h2>
+  <p>Wir zählen permanent: Jeder Lagerplatz wird mindestens einmal im Jahr gezählt, Plätze der
+  Zone A viermal. Die Zählliste erzeugt das System jeden Morgen; Differenzen über 2 % oder
+  500&nbsp;€ werden sofort nachgezählt.</p>
+  <p>Zum Jahresende wird keine Stichtagsinventur mehr durchgeführt. Die Wirtschaftsprüfer
+  begleiten stattdessen zwei Zähltage im Herbst, siehe <a class="xref" href="#eingang">Kapitel 1</a>
+  zur Annahme der Waren.</p>
+</section>
+
+</body>
+</html>

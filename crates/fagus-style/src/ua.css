@@ -1,0 +1,320 @@
+/*
+ * The user agent stylesheet of Fagus for print, after the rendering section of the HTML
+ * specification (https://html.spec.whatwg.org/multipage/rendering.html).
+ */
+
+@namespace url(http://www.w3.org/1999/xhtml);
+
+@page {
+  size: A4;
+  margin: 28pt;
+  /* How the text of the margin boxes is aligned, as Chrome's user agent stylesheet says
+     (CSS Paged Media 3, §5.3.1). */
+  @top-left-corner { text-align: right; vertical-align: middle; }
+  @top-left { text-align: left; vertical-align: middle; }
+  @top-center { text-align: center; vertical-align: middle; }
+  @top-right { text-align: right; vertical-align: middle; }
+  @top-right-corner { text-align: left; vertical-align: middle; }
+  @right-top { text-align: center; vertical-align: top; }
+  @right-middle { text-align: center; vertical-align: middle; }
+  @right-bottom { text-align: center; vertical-align: bottom; }
+  @bottom-right-corner { text-align: left; vertical-align: middle; }
+  @bottom-right { text-align: right; vertical-align: middle; }
+  @bottom-center { text-align: center; vertical-align: middle; }
+  @bottom-left { text-align: left; vertical-align: middle; }
+  @bottom-left-corner { text-align: right; vertical-align: middle; }
+  @left-bottom { text-align: center; vertical-align: bottom; }
+  @left-middle { text-align: center; vertical-align: middle; }
+  @left-top { text-align: center; vertical-align: top; }
+}
+
+[hidden], area, base, basefont, datalist, head, link, meta, noembed, noframes, param, rp, script,
+style, template, title, dialog:not([open]) {
+  display: none;
+}
+
+html, address, blockquote, body, center, dialog, div, figure, figcaption, footer, form, header,
+hr, legend, listing, main, p, plaintext, pre, search, xmp, details, summary,
+article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, dir, dd, dl, dt, menu, ol, ul,
+fieldset, optgroup {
+  display: block;
+}
+/* A dialog is an absolutely positioned box centered across its containing block, as tall and wide
+   as its content; a popover is fixed in the middle of the page and shows only where it is open,
+   which it is not in print (Chrome's html.css). */
+dialog {
+  position: absolute; inset-inline-start: 0; inset-inline-end: 0; width: fit-content; height: fit-content;
+  margin: auto; border: solid; padding: 1em; background-color: Canvas; color: CanvasText;
+}
+[popover] {
+  position: fixed; inset: 0; width: fit-content; height: fit-content; margin: auto; border: solid;
+  padding: 0.25em; overflow: auto; color: CanvasText; background-color: Canvas;
+}
+[popover] { display: none; }
+dialog[open] { display: block; }
+
+li { display: list-item; }
+
+/* The summary of a details element, with its disclosure triangle. */
+details > summary:first-of-type {
+  display: list-item;
+  counter-increment: list-item 0;
+  list-style: disclosure-closed inside;
+}
+details[open] > summary:first-of-type { list-style-type: disclosure-open; }
+table { display: table; }
+caption { display: table-caption; }
+colgroup { display: table-column-group; }
+col { display: table-column; }
+thead { display: table-header-group; }
+tbody { display: table-row-group; }
+tfoot { display: table-footer-group; }
+tr { display: table-row; }
+td, th { display: table-cell; }
+ruby { display: ruby; }
+ruby, rt { text-indent: 0; }
+rt { line-height: normal; text-emphasis: none; }
+ruby > rt { display: ruby-text; font-size: 50%; text-align: start; }
+input, select, button, textarea, video, canvas, iframe, object, embed { display: inline-block; }
+iframe { border: 2px inset; }
+
+html { color: CanvasText; }
+body { margin: 8px; }
+
+p, blockquote, figure, listing, plaintext, pre, xmp, dl, dir, menu, ol, ul {
+  margin-block: 1em;
+}
+blockquote, figure { margin-inline: 40px; }
+dd { margin-inline-start: 40px; }
+dir, menu, ol, ul { padding-inline-start: 40px; }
+ol { list-style-type: decimal; }
+/* Blink's `marker.css`; outside markers keep their spaces (`white-space: pre`, set in the
+   cascade as Blink's `StyleAdjuster` does), inside markers take the item's. */
+::marker {
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  text-indent: 0 !important;
+  text-align: start !important;
+  text-align-last: auto !important;
+}
+ul ul, ol ul, menu ul, dir ul { list-style-type: circle; }
+ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
+:is(dir, dl, menu, ol, ul) :is(dir, dl, menu, ol, ul) { margin-block: 0; }
+
+h1 { font-size: 2em; margin-block: 0.67em; }
+h1 { bookmark-level: 1; } h2 { bookmark-level: 2; } h3 { bookmark-level: 3; }
+h4 { bookmark-level: 4; } h5 { bookmark-level: 5; } h6 { bookmark-level: 6; }
+h2 { font-size: 1.5em; margin-block: 0.83em; }
+h3 { font-size: 1.17em; margin-block: 1em; }
+h4 { margin-block: 1.33em; }
+h5 { font-size: 0.83em; margin-block: 1.67em; }
+h6 { font-size: 0.67em; margin-block: 2.33em; }
+h1, h2, h3, h4, h5, h6, th, b, strong { font-weight: bold; }
+
+address, cite, dfn, em, i, var { font-style: italic; }
+code, kbd, samp, tt, pre, listing, plaintext, xmp { font-family: monospace; }
+pre, listing, plaintext, xmp { white-space: pre; }
+mark { background-color: yellow; color: black; }
+small { font-size: smaller; }
+big { font-size: larger; }
+sub { vertical-align: sub; font-size: smaller; }
+sup { vertical-align: super; font-size: smaller; }
+u, ins { text-decoration-line: underline; }
+s, strike, del { text-decoration-line: line-through; }
+a:link { color: #0000ee; text-decoration-line: underline; }
+abbr[title] { text-decoration-line: underline; text-decoration-style: dotted; }
+center { text-align: -webkit-center; }
+nobr { white-space: nowrap; }
+br { white-space: pre-line; }
+
+hr {
+  color: gray;
+  border-style: inset;
+  border-width: 1px;
+  margin-block: 0.5em;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+/* Bidirectional text (HTML, §15.3.5). */
+[dir]:dir(ltr), bdi:dir(ltr) { direction: ltr; }
+[dir]:dir(rtl), bdi:dir(rtl) { direction: rtl; }
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing,
+main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section,
+search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol,
+ul, li, bdi, output, [dir=ltr i], [dir=rtl i], [dir=auto i] {
+  unicode-bidi: isolate;
+}
+bdo, bdo[dir] { unicode-bidi: isolate-override; }
+textarea[dir=auto i], pre[dir=auto i] { unicode-bidi: plaintext; }
+
+table { box-sizing: border-box; border-spacing: 2px; border-collapse: separate; text-indent: initial; }
+td, th { padding: 1px; vertical-align: inherit; }
+th { text-align: -internal-center; }
+thead, tbody, tfoot, table > tr { vertical-align: middle; }
+tr { vertical-align: inherit; }
+thead, tbody, tfoot, tr { border-color: inherit; }
+/* Chrome's for paged media: only headers and footers that avoid breaks inside repeat. */
+thead, tfoot { break-inside: avoid; }
+caption { text-align: center; }
+
+fieldset { margin-inline: 2px; border: 2px groove ThreeDFace; padding-block: 0.35em 0.625em; padding-inline: 0.75em; min-inline-size: min-content; }
+legend { padding-inline: 2px; }
+
+/* Form controls, with the values Chrome computes for them (its html.css). */
+input, textarea, select, button {
+  margin: 0; font: 13.333333px Arial; color: FieldText; letter-spacing: normal; word-spacing: normal;
+  text-transform: none; text-indent: 0; text-shadow: initial; text-align: start;
+}
+input { padding: 1px 2px; border: 2px inset light-dark(#767676, #858585); background-color: Field; }
+input[type="search" i] { box-sizing: border-box; }
+input[type="hidden" i] { display: none !important; }
+input[type="radio" i], input[type="checkbox" i] { padding: 0; background-color: transparent; border: 0; box-sizing: border-box; }
+input[type="checkbox" i] { margin: 3px 3px 3px 4px; }
+input[type="radio" i] { margin: 3px 3px 0 5px; }
+input[type="button" i], input[type="submit" i], input[type="reset" i], button {
+  box-sizing: border-box; text-align: center; padding-block: 1px; padding-inline: 6px;
+  border: 2px outset light-dark(black, #6b6b6b); background-color: ButtonFace; color: ButtonText; white-space: pre;
+}
+button { white-space: normal; }
+/* Chrome's scroll_button.css and scroll_marker.css (CSS Overflow 5). */
+::scroll-button(*) {
+  display: inline-block; margin: 0; font: 13.333333px Arial; letter-spacing: normal; word-spacing: normal;
+  line-height: normal; text-transform: none; text-indent: 0; text-shadow: none; text-align: center;
+  padding-block: 1px; padding-inline: 6px; border: 2px outset light-dark(black, #6b6b6b); box-sizing: border-box;
+  background-color: ButtonFace; color: ButtonText; align-items: flex-start;
+}
+::scroll-marker, ::column::scroll-marker { color: #0000ee; text-decoration-line: underline; }
+input[type="range" i] { padding: 0; border: 0; margin: 2px; color: light-dark(#101010, #ffffff); }
+input[type="color" i] {
+  box-sizing: border-box; inline-size: 50px; block-size: 27px; border: 1px solid black; padding: 1px 2px;
+  background-color: #efefef;
+}
+input[type="file" i] { padding: 0; border: 0; background-color: transparent; }
+input[type="image" i] { padding: 0; border: 0; background-color: transparent; }
+input[type="date" i], input[type="datetime-local" i], input[type="month" i], input[type="week" i],
+input[type="time" i] { font-family: monospace; padding-block: 0; padding-inline: 1px 0; }
+textarea {
+  font-family: monospace; white-space: pre-wrap; overflow-wrap: break-word; resize: both;
+  border: 1px solid light-dark(#767676, #858585); background-color: Field; padding: 2px;
+}
+::placeholder { color: #757575; }
+select { box-sizing: border-box; border: 1px solid light-dark(#767676, #858585); background-color: Field; white-space: pre; }
+input:disabled, textarea:disabled {
+  background-color: light-dark(rgba(239, 239, 239, 0.3), rgba(59, 59, 59, 0.3)); color: light-dark(#545454, #aaaaaa);
+}
+input[type="checkbox" i]:disabled, input[type="radio" i]:disabled, input[type="file" i]:disabled,
+input[type="range" i]:disabled { background-color: transparent; }
+input[type="button" i]:disabled, input[type="submit" i]:disabled, input[type="reset" i]:disabled,
+button:disabled {
+  background-color: light-dark(rgba(239, 239, 239, 0.3), rgba(19, 1, 1, 0.3));
+  border-color: light-dark(rgba(118, 118, 118, 0.3), rgba(195, 195, 195, 0.3));
+  color: light-dark(rgba(16, 16, 16, 0.3), rgba(255, 255, 255, 0.3));
+}
+select:disabled { color: #808080; border-color: rgba(118, 118, 118, 0.3); }
+progress { box-sizing: border-box; display: inline-block; inline-size: 10em; block-size: 1em; vertical-align: -0.2em; }
+progress::-webkit-progress-bar { background-color: gray; block-size: 100%; inline-size: 100%; box-sizing: border-box; }
+progress::-webkit-progress-value { background-color: green; block-size: 100%; inline-size: 50%; box-sizing: border-box; }
+meter { box-sizing: border-box; display: inline-block; inline-size: 5em; block-size: 1em; vertical-align: -0.2em; }
+/* The parts of a meter (Chrome's `html.css`); with the native look, the cascade adds a flat
+   rounded track and value colors. */
+meter::-webkit-meter-bar {
+  box-sizing: border-box; inline-size: 100%; block-size: 100%; overflow: hidden;
+  background: linear-gradient(to bottom, #ddd, #eee 20%, #ccc 45%, #ccc 55%, #ddd);
+}
+meter::-webkit-meter-optimum-value {
+  background: linear-gradient(to bottom, #ad7, #cea 20%, #7a3 45%, #7a3 55%, #ad7); block-size: 100%; box-sizing: border-box;
+}
+meter::-webkit-meter-suboptimum-value {
+  background: linear-gradient(to bottom, #fe7, #ffc 20%, #db3 45%, #db3 55%, #fe7); block-size: 100%; box-sizing: border-box;
+}
+meter::-webkit-meter-even-less-good-value {
+  background: linear-gradient(to bottom, #f77, #fcc 20%, #d44 45%, #d44 55%, #f77); block-size: 100%; box-sizing: border-box;
+}
+video { object-fit: contain; }
+/* Replaced elements clip what they show at their content box (as Chrome's html.css and svg.css). */
+video, canvas, img { overflow: clip; overflow-clip-margin: content-box; }
+iframe, embed, object { overflow: clip !important; overflow-clip-margin: content-box !important; }
+input[type="image" i] { overflow: clip !important; overflow-clip-margin: content-box !important; }
+/* Chrome gives `svg` elements `overflow: hidden`, which clips a replaced element as `clip` does. */
+svg:not(:root) { overflow: clip; overflow-clip-margin: content-box; }
+q::before { content: open-quote; }
+q::after { content: close-quote; }
+
+/*
+ * MathML, after Chrome's mathml.css (BSD license, see `CHROMIUM-LICENSE`). `display: block math` and `inline math` are `block` and
+ * `inline` here: Fagus lays out a formula from its `<math>` element. Fagus does not resolve
+ * namespace prefixes, so the rules name elements in any namespace (`*|`): only MathML has
+ * these names, and the elements inside `<math>` stand for all its elements. Children after the
+ * first are `* + *`, the second one `* + *:not(* + * + *)` and so on, as `:first-child` and
+ * `:nth-child()` count all siblings of every element they are tried on; `:nth-child(even)` and
+ * `(odd)` take the elements of MathML Core (`:is()`), so that only they count theirs.
+ */
+*|math *|* {
+  font-size: math;
+  display: block;
+  writing-mode: horizontal-tb !important;
+}
+*|math {
+  direction: ltr;
+  text-indent: 0;
+  letter-spacing: normal;
+  line-height: normal;
+  word-spacing: normal;
+  font-family: math;
+  font-size: inherit;
+  font-style: normal;
+  font-weight: normal;
+  display: inline;
+  math-shift: normal;
+  math-style: compact;
+  math-depth: 0;
+}
+*|math[display="block" i] { display: block; math-style: normal; }
+*|math[display="inline" i] { display: inline; math-style: compact; }
+*|semantics > *|* + *|*, *|maction > *|* + *|* { display: none; }
+*|merror { border: 1px solid red; background-color: lightyellow; }
+*|mphantom { visibility: hidden; }
+*|mtable { math-style: compact; }
+*|mtd { text-align: -webkit-center; padding: 0.5ex 0.4em; }
+*|mfrac { padding-inline-start: 1px; padding-inline-end: 1px; }
+*|mfrac > *|* { math-depth: auto-add; math-style: compact; }
+*|mfrac > *|* + *|*:not(*|* + *|* + *|*) { math-shift: compact; }
+*|mroot > *|* + *|* { math-depth: add(2); math-style: compact; }
+*|mroot, *|msqrt { math-shift: compact; }
+*|msub > *|* + *|*,
+*|msup > *|* + *|*,
+*|msubsup > *|* + *|*,
+*|mmultiscripts > *|* + *|*,
+*|munder > *|* + *|*,
+*|mover > *|* + *|*,
+*|munderover > *|* + *|* {
+  math-depth: add(1);
+  math-style: compact;
+}
+*|munder[accentunder="true" i] > *|* + *|*:not(*|* + *|* + *|*),
+*|mover[accent="true" i] > *|* + *|*:not(*|* + *|* + *|*),
+*|munderover[accentunder="true" i] > *|* + *|*:not(*|* + *|* + *|*),
+*|munderover[accent="true" i] > *|* + *|* + *|*:not(*|* + *|* + *|* + *|*) {
+  font-size: inherit;
+}
+*|msub > *|* + *|*:not(*|* + *|* + *|*),
+*|msubsup > *|* + *|*:not(*|* + *|* + *|*),
+*|mmultiscripts > :is(*|mi, *|mn, *|mo, *|ms, *|mtext, *|mspace, *|mrow, *|mfrac, *|msqrt,
+  *|mroot, *|mstyle, *|merror, *|mpadded, *|mphantom, *|msub, *|msup, *|msubsup, *|munder,
+  *|mover, *|munderover, *|mmultiscripts, *|none, *|mtable, *|maction, *|semantics):nth-child(even),
+*|mmultiscripts > *|mprescripts ~ :is(*|mi, *|mn, *|mo, *|ms, *|mtext, *|mspace, *|mrow, *|mfrac,
+  *|msqrt, *|mroot, *|mstyle, *|merror, *|mpadded, *|mphantom, *|msub, *|msup, *|msubsup,
+  *|munder, *|mover, *|munderover, *|mmultiscripts, *|none, *|mtable, *|maction,
+  *|semantics):nth-child(odd),
+*|mover[accent="true" i] > *|*:not(*|* + *|*),
+*|munderover[accent="true" i] > *|*:not(*|* + *|*) {
+  math-shift: compact;
+}
+*|mmultiscripts > *|mprescripts ~ :is(*|mi, *|mn, *|mo, *|ms, *|mtext, *|mspace, *|mrow, *|mfrac,
+  *|msqrt, *|mroot, *|mstyle, *|merror, *|mpadded, *|mphantom, *|msub, *|msup, *|msubsup,
+  *|munder, *|mover, *|munderover, *|mmultiscripts, *|none, *|mtable, *|maction,
+  *|semantics):nth-child(even) {
+  math-shift: inherit;
+}

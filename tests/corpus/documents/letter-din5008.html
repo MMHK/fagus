@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Brief DIN 5008 Form B</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 0; }
+@page follow { margin: 20mm 20mm 25mm 25mm;
+  @top-left { content: "Hausverwaltung Morgenstern · Schreiben vom 6. November 2026"; font: 7.5pt Inter, sans-serif; color: #666; vertical-align: bottom; padding-bottom: 4mm; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 7.5pt Inter, sans-serif; color: #666; } }
+html { font: 10pt/1.4 Inter, sans-serif; color: #000; }
+body { margin: 0; }
+.first { position: relative; width: 210mm; height: 297mm; break-after: page; overflow: hidden; }
+.mark { position: absolute; left: 0; width: 5mm; border-top: .25mm solid #000; }
+.fold1 { top: 105mm; } .fold2 { top: 210mm; } .punch { top: 148.5mm; width: 8mm; }
+.letterhead { position: absolute; top: 0; left: 25mm; right: 20mm; height: 45mm; display: flex; justify-content: space-between; align-items: center; }
+.letterhead .name { font-size: 16pt; font-weight: 700; letter-spacing: .02em; color: #1d4e89; }
+.letterhead .name small { display: block; font-size: 8pt; font-weight: 400; color: #555; letter-spacing: .1em; text-transform: uppercase; }
+.letterhead img { height: 18mm; }
+.address { position: absolute; top: 45mm; left: 25mm; width: 85mm; height: 45mm; }
+.address .return { height: 5mm; font-size: 7pt; line-height: 5mm; border-bottom: .2mm solid #999; white-space: nowrap; overflow: hidden; }
+.address .note { height: 12.7mm; font-size: 8pt; display: flex; flex-direction: column; justify-content: flex-end; }
+.address .recipient { height: 27.3mm; padding-top: 1mm; box-sizing: border-box; }
+.info { position: absolute; top: 50mm; left: 125mm; width: 75mm; font-size: 8pt; line-height: 1.45; }
+.info dl { display: grid; grid-template-columns: 26mm 1fr; margin: 0; }
+.info dt { color: #555; } .info dd { margin: 0; }
+.body { position: absolute; top: 98.46mm; left: 25mm; right: 20mm; }
+.subject { font-weight: 700; margin: 0 0 8.46mm; }
+p { margin: 0 0 4.23mm; text-align: left; }
+.foot { position: absolute; bottom: 8mm; left: 25mm; right: 20mm; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; font-size: 6.5pt; line-height: 1.35; color: #555; border-top: .2mm solid #999; padding-top: 2mm; }
+.cont { page: follow; }
+.cont h2 { font-size: 10pt; margin: 0 0 3mm; }
+table { border-collapse: collapse; width: 100%; margin: 2mm 0 6mm; font-size: 9pt; }
+td, th { border-bottom: .2mm solid #aaa; padding: 1.2mm 1mm; text-align: left; }
+td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.closing { margin-top: 8mm; }
+.sig { height: 14mm; }
+.attach { margin-top: 8mm; font-size: 9pt; }
+.attach b { display: block; }
+</style></head><body>
+<div class="first">
+  <div class="mark fold1"></div><div class="mark punch"></div><div class="mark fold2"></div>
+  <div class="letterhead"><div class="name">Hausverwaltung Morgenstern<small>Immobilienverwaltung seit 1979</small></div><img src="../images/logo.svg" alt=""></div>
+  <div class="address">
+    <div class="return">Hausverwaltung Morgenstern · Bahnhofstraße 7 · 79098 Freiburg</div>
+    <div class="note">Einschreiben Einwurf</div>
+    <div class="recipient">Frau<br>Ingrid Haberkorn-Schwarzwälder<br>Kartäuserstraße 61, App. 12<br>79102 Freiburg im Breisgau</div>
+  </div>
+  <div class="info"><dl>
+    <dt>Ihr Zeichen</dt><dd>IH/2026-10</dd>
+    <dt>Ihre Nachricht vom</dt><dd>28.10.2026</dd>
+    <dt>Unser Zeichen</dt><dd>MS-BK-61/12</dd>
+    <dt>Name</dt><dd>Moritz Seiler</dd>
+    <dt>Telefon</dt><dd>0761 0456 78-21</dd>
+    <dt>E-Mail</dt><dd>m.seiler@morgenstern.example</dd>
+    <dt>Datum</dt><dd>06.11.2026</dd>
+  </dl></div>
+  <div class="body">
+    <p class="subject">Betriebskostenabrechnung 2025 – Ihre Rückfrage vom 28. Oktober 2026</p>
+    <p>Sehr geehrte Frau Haberkorn-Schwarzwälder,</p>
+    <p>vielen Dank für Ihr Schreiben. Gern erläutern wir Ihnen die Positionen der Betriebskostenabrechnung für das Jahr 2025, insbesondere die gestiegenen Kosten für Heizung und Warmwasser sowie die erstmals umgelegten Kosten für die Wartung der Rauchwarnmelder.</p>
+    <p>Der Anstieg der Heizkosten beruht vor allem auf dem höheren Arbeitspreis des Fernwärmeversorgers, der zum 1. Januar 2025 von 11,4 auf 13,9 Cent je Kilowattstunde angehoben wurde. Ihr Verbrauch ist gegenüber dem Vorjahr dagegen um rund sechs Prozent gesunken. Die Verteilung erfolgte wie bisher zu 70 % nach Verbrauch und zu 30 % nach Wohnfläche.</p>
+    <p>Die Wartung der Rauchwarnmelder ist nach § 2 Nr. 17 der Betriebskostenverordnung als sonstige Betriebskosten umlagefähig; sie ist in § 4 Ihres Mietvertrags ausdrücklich vereinbart. Die Einzelheiten finden Sie in der Aufstellung auf der folgenden Seite.</p>
+    <p>Für Rückfragen stehe ich Ihnen gern zur Verfügung. Eine Einsicht in die Belege ist nach Terminvereinbarung in unserem Büro möglich.</p>
+  </div>
+  <div class="foot">
+    <div>Hausverwaltung Morgenstern GmbH<br>Bahnhofstraße 7<br>79098 Freiburg</div>
+    <div>Geschäftsführung<br>Dr. Elke Morgenstern<br>HRB 700123 Freiburg</div>
+    <div>Telefon 0761 0456 78-0<br>info@morgenstern.example<br>www.morgenstern.example</div>
+    <div>Volksbank Freiburg<br>IBAN DE61 6809 0000 0012 3456 78<br>BIC GENODE61FR1</div>
+  </div>
+</div>
+<div class="cont">
+  <h2>Aufstellung der umlagefähigen Kosten 2025 (Auszug, Ihr Anteil)</h2>
+  <table>
+    <tr><th>Kostenart</th><th>Verteilerschlüssel</th><th>Ihr Anteil</th></tr>
+    <tr><td>Heizung und Warmwasser</td><td>70 % Verbrauch / 30 % Fläche</td><td>1.284,60 €</td></tr>
+    <tr><td>Wasser und Abwasser</td><td>Verbrauch</td><td>412,18 €</td></tr>
+    <tr><td>Grundsteuer</td><td>Wohnfläche 64,5 m²</td><td>238,04 €</td></tr>
+    <tr><td>Müllabfuhr</td><td>Personen</td><td>176,40 €</td></tr>
+    <tr><td>Hausreinigung und Gartenpflege</td><td>Wohnfläche</td><td>301,77 €</td></tr>
+    <tr><td>Aufzug</td><td>Wohnfläche</td><td>196,12 €</td></tr>
+    <tr><td>Rauchwarnmelder (Wartung)</td><td>Wohneinheiten</td><td>18,50 €</td></tr>
+    <tr><th>Summe</th><th></th><th>2.627,61 €</th></tr>
+  </table>
+  <p>Ihre Vorauszahlungen betrugen 2.520,00 €, sodass sich eine Nachzahlung von 107,61 € ergibt. Wir bitten um Überweisung bis zum 15. Dezember 2026.</p>
+  <p class="closing">Mit freundlichen Grüßen</p>
+  <div class="sig"></div>
+  <p>Moritz Seiler<br>Objektbetreuung</p>
+  <div class="attach"><b>Anlagen</b>Heizkostenabrechnung des Messdienstleisters<br>Kopie Mietvertrag § 4</div>
+</div>
+</body></html>

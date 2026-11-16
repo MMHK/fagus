@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tickets</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+
+@page { size: 210mm 74mm; margin: 0; }
+html { font: 9pt/1.3 Inter, sans-serif; }
+body { margin: 0; }
+.ticket { width: 210mm; height: 74mm; display: flex; break-after: page; box-sizing: border-box; overflow: hidden; }
+.ticket:last-child { break-after: auto; }
+.main { flex: 1; padding: 6mm 8mm; background: linear-gradient(135deg, #14213d, #274690); color: #fff; position: relative; }
+.main h1 { font: 700 20pt/1.1 Inter, sans-serif; margin: 0 0 2mm; }
+.main .meta { display: grid; grid-template-columns: repeat(3, auto); gap: 1mm 8mm; justify-content: start; margin-top: 4mm; }
+.main .meta b { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .08em; opacity: .7; font-weight: 400; }
+.main .bc { position: absolute; left: 8mm; bottom: 5mm; width: 70mm; background: #fff; padding: 1mm; }
+.main .bc svg { display: block; width: 100%; height: 8mm; }
+.perf { width: 0; border-left: 0.5mm dashed #888; margin: 3mm 0; }
+.stub { width: 48mm; position: relative; background: #f2f2f2; }
+.stub .rot { position: absolute; left: 50%; top: 50%; width: 64mm; transform: translate(-50%, -50%) rotate(-90deg); text-align: center; }
+.stub .rot strong { display: block; font-size: 12pt; }
+.stub .side { position: absolute; right: 2mm; top: 4mm; bottom: 4mm; writing-mode: vertical-rl; font-size: 7pt; letter-spacing: .1em; color: #555; text-align: center; }
+.stub .seat { position: absolute; left: 4mm; top: 4mm; bottom: 4mm; writing-mode: vertical-rl; transform: rotate(180deg); font: 700 9pt Inter, sans-serif; }
+</style></head><body>
+<div class="ticket">
+  <div class="main"><h1>Nordic Jazz Nights</h1>Konzerthaus Berlin · Großer Saal
+    <div class="meta"><div><b>Date</b>Fri 20 Nov 2026</div><div><b>Doors</b>19:00</div><div><b>Block</b>Parkett links</div><div><b>Row</b>12</div><div><b>Seat</b>27</div><div><b>Price</b>€ 64,00</div></div>
+    <div class="bc"><svg class="barcode" viewBox="0 0 220 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" width="2" height="60"/><rect x="13" width="1" height="60"/><rect x="16" width="1" height="60"/><rect x="21" width="1" height="60"/><rect x="25" width="2" height="60"/><rect x="28" width="1" height="60"/><rect x="32" width="3" height="60"/><rect x="36" width="1" height="60"/><rect x="38" width="2" height="60"/><rect x="43" width="2" height="60"/><rect x="46" width="3" height="60"/><rect x="52" width="1" height="60"/><rect x="54" width="1" height="60"/><rect x="57" width="2" height="60"/><rect x="60" width="3" height="60"/><rect x="65" width="2" height="60"/><rect x="69" width="3" height="60"/><rect x="74" width="1" height="60"/><rect x="76" width="1" height="60"/><rect x="79" width="3" height="60"/><rect x="83" width="2" height="60"/><rect x="87" width="2" height="60"/><rect x="91" width="3" height="60"/><rect x="96" width="1" height="60"/><rect x="98" width="2" height="60"/><rect x="102" width="3" height="60"/><rect x="106" width="1" height="60"/><rect x="109" width="1" height="60"/><rect x="112" width="2" height="60"/><rect x="115" width="3" height="60"/><rect x="120" width="1" height="60"/><rect x="123" width="3" height="60"/><rect x="127" width="2" height="60"/><rect x="131" width="1" height="60"/><rect x="134" width="3" height="60"/><rect x="138" width="2" height="60"/><rect x="142" width="1" height="60"/><rect x="145" width="3" height="60"/><rect x="149" width="2" height="60"/><rect x="153" width="2" height="60"/><rect x="157" width="1" height="60"/><rect x="160" width="3" height="60"/><rect x="164" width="1" height="60"/><rect x="167" width="3" height="60"/><rect x="172" width="2" height="60"/><rect x="175" width="3" height="60"/><rect x="179" width="2" height="60"/><rect x="182" width="3" height="60"/><rect x="186" width="1" height="60"/><rect x="188" width="1" height="60"/><rect x="193" width="2" height="60"/><rect x="197" width="2" height="60"/><rect x="202" width="3" height="60"/><rect x="206" width="1" height="60"/><rect x="208" width="2" height="60"/></svg></div>
+  </div>
+  <div class="perf"></div>
+  <div class="stub"><div class="seat">ROW 12 · SEAT 27</div><div class="rot"><strong>Nordic Jazz Nights</strong>20.11.2026 · 19:30<br>Parkett links</div><div class="side">ADMIT ONE · NO RE-ENTRY</div></div>
+</div>
+<div class="ticket">
+  <div class="main" style="background:linear-gradient(135deg,#3d1414,#902727)"><h1>Nordic Jazz Nights</h1>Konzerthaus Berlin · Großer Saal
+    <div class="meta"><div><b>Date</b>Sat 21 Nov 2026</div><div><b>Doors</b>19:00</div><div><b>Block</b>Rang Mitte</div><div><b>Row</b>3</div><div><b>Seat</b>8</div><div><b>Price</b>€ 48,00</div></div>
+    <div class="bc"><svg class="barcode" viewBox="0 0 220 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" width="2" height="60"/><rect x="13" width="1" height="60"/><rect x="16" width="1" height="60"/><rect x="21" width="1" height="60"/><rect x="25" width="2" height="60"/><rect x="28" width="1" height="60"/><rect x="32" width="3" height="60"/><rect x="36" width="1" height="60"/><rect x="38" width="2" height="60"/><rect x="43" width="2" height="60"/><rect x="46" width="3" height="60"/><rect x="52" width="1" height="60"/><rect x="54" width="1" height="60"/><rect x="57" width="2" height="60"/><rect x="60" width="3" height="60"/><rect x="65" width="2" height="60"/><rect x="69" width="3" height="60"/><rect x="74" width="1" height="60"/><rect x="76" width="1" height="60"/><rect x="79" width="3" height="60"/><rect x="83" width="2" height="60"/><rect x="87" width="2" height="60"/><rect x="91" width="3" height="60"/><rect x="96" width="1" height="60"/><rect x="98" width="2" height="60"/><rect x="102" width="3" height="60"/><rect x="106" width="1" height="60"/><rect x="109" width="1" height="60"/><rect x="112" width="2" height="60"/><rect x="115" width="3" height="60"/><rect x="120" width="1" height="60"/><rect x="123" width="3" height="60"/><rect x="127" width="2" height="60"/><rect x="131" width="1" height="60"/><rect x="134" width="3" height="60"/><rect x="138" width="2" height="60"/><rect x="142" width="1" height="60"/><rect x="145" width="3" height="60"/><rect x="149" width="2" height="60"/><rect x="153" width="2" height="60"/><rect x="157" width="1" height="60"/><rect x="160" width="3" height="60"/><rect x="164" width="1" height="60"/><rect x="167" width="3" height="60"/><rect x="172" width="2" height="60"/><rect x="175" width="3" height="60"/><rect x="179" width="2" height="60"/><rect x="182" width="3" height="60"/><rect x="186" width="1" height="60"/><rect x="188" width="1" height="60"/><rect x="193" width="2" height="60"/><rect x="197" width="2" height="60"/><rect x="202" width="3" height="60"/><rect x="206" width="1" height="60"/><rect x="208" width="2" height="60"/></svg></div>
+  </div>
+  <div class="perf"></div>
+  <div class="stub"><div class="seat">ROW 3 · SEAT 8</div><div class="rot"><strong>Nordic Jazz Nights</strong>21.11.2026 · 19:30<br>Rang Mitte</div><div class="side">ADMIT ONE · NO RE-ENTRY</div></div>
+</div>
+</body></html>

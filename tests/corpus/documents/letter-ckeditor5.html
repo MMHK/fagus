@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Angebotsschreiben – Wartungsvertrag 2027</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+@page { size: A4; margin: 18mm 20mm 20mm 25mm;
+  @bottom-left { content: "Sparkasse Freiburg · IBAN DE12 6805 0101 0012 3456 78"; font: 7pt Inter, sans-serif; color: #777; }
+  @bottom-right { content: "Amtsgericht Freiburg HRB 7104 · Seite " counter(page); font: 7pt Inter, sans-serif; color: #777; } }
+body { font-family: Inter, sans-serif; font-size: 10pt; line-height: 1.45; color: #222; margin: 0; }
+.letterhead { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1d4ed8; padding-bottom: 6px; margin-bottom: 14mm; }
+.letterhead .brand { font-size: 16pt; font-weight: 700; color: #1d4ed8; letter-spacing: .02em; }
+.letterhead .contact { font-size: 7.5pt; text-align: right; color: #555; line-height: 1.35; }
+.window { font-size: 7pt; color: #666; text-decoration: underline; margin-bottom: 2mm; }
+.address { height: 32mm; }
+.meta { float: right; width: 55mm; font-size: 8.5pt; margin-top: -30mm; }
+.meta dt { color: #666; float: left; clear: left; width: 24mm; }
+.meta dd { margin: 0 0 0 24mm; }
+h1.subject { font-size: 11pt; margin: 4mm 0 5mm; }
+
+/* The letter body is HTML as CKEditor 5 saves it. The template styles the classes that markup
+   carries itself; CKEditor's own content stylesheet is not used. */
+.ck-content { overflow-wrap: break-word; }
+.ck-content p { margin: 0 0 .7em; }
+.ck-content h2 { font-size: 12pt; color: #1d4ed8; margin: 1.2em 0 .35em; }
+.ck-content h3 { font-size: 10.5pt; margin: .9em 0 .25em; }
+.ck-content a { color: #1d4ed8; }
+.ck-content .text-tiny { font-size: 7pt; color: #555; }
+.ck-content .text-small { font-size: 8.5pt; }
+.ck-content .text-big { font-size: 13pt; font-weight: 700; }
+
+/* Highlights: pastel fills for markers, coloured text for the pen. */
+.ck-content .marker-yellow, .ck-content .marker-green, .ck-content .marker-pink { padding: 0 .1em; border-radius: 1px; }
+.ck-content .marker-yellow { background: #fff1a8; }
+.ck-content .marker-green { background: #cdeec4; }
+.ck-content .marker-pink { background: #fbd3dd; }
+.ck-content .pen-red { color: #b91c1c; }
+
+.ck-content blockquote { margin: 1em 0 1em 2mm; padding: 2mm 4mm; background: #f3f6fc; border-left: 3px solid #93a8d8; color: #3a4252; font-style: italic; }
+.ck-content blockquote p { margin: 0; }
+.ck-content ol > li > ol { list-style-type: lower-alpha; }
+.ck-content hr { border: 0; border-top: 1px solid #c3cad6; margin: 1.1em 0; }
+.ck-content code { font-size: 9pt; background: #eef0f3; padding: 0 .25em; border-radius: 2px; }
+
+/* Price table: a full-width figure whose caption is set above the grid. */
+.ck-content figure.table { display: table; margin: 1em 0; }
+.ck-content figure.table > figcaption { display: table-caption; caption-side: top; text-align: left; font-size: 8pt; font-weight: 700; color: #1d4ed8; padding: 0 0 1.5mm; }
+.ck-content figure.table table { width: 100%; border-collapse: collapse; border-top: 1.5px solid #1d4ed8; border-bottom: 1.5px solid #1d4ed8; }
+.ck-content figure.table th, .ck-content figure.table td { padding: 1.6mm 2mm; border-bottom: 1px solid #d5dbe6; vertical-align: top; }
+.ck-content figure.table th { font-size: 8.5pt; text-align: left; background: #eef2fb; }
+.ck-content figure.table tbody tr:last-child td { background: #f6f8fc; }
+
+/* Photo beside the text: the figure is a table so that the caption under the picture
+   wraps at the width of the picture. */
+.ck-content figure.image { display: table; margin: 0 auto 1em; }
+.ck-content figure.image img { display: block; height: auto; max-width: 100%; min-width: 100%; }
+.ck-content figure.image > figcaption { display: table-caption; caption-side: bottom; font-size: 7.5pt; line-height: 1.3; color: #555; padding-top: 1.5mm; border-bottom: 1px solid #d5dbe6; padding-bottom: 1.5mm; }
+.ck-content .image-style-side { float: right; max-width: 50%; margin: .2em 0 .8em 6mm; }
+
+/* To-do list: the checkbox loses its native look; ::before draws the box, ::after the tick. */
+.ck-content ul.todo-list { list-style: none; padding-left: 6mm; }
+.ck-content ul.todo-list li { margin: 0 0 1.2mm; }
+.ck-content ul.todo-list ul.todo-list { margin-top: 1.2mm; }
+.ck-content .todo-list__label > input { appearance: none; -webkit-appearance: none; position: relative; display: inline-block; width: 3.4mm; height: 3.4mm; margin: 0 2.2mm 0 -5.6mm; vertical-align: -.5mm; border: 0; }
+.ck-content .todo-list__label > input::before { content: ""; position: absolute; inset: 0; border: 1.2px solid #4b5563; border-radius: 50%; }
+.ck-content .todo-list__label > input::after { content: ""; position: absolute; left: 1.25mm; top: .55mm; width: .8mm; height: 1.7mm; border: solid transparent; border-width: 0 .45mm .45mm 0; transform: rotate(40deg); }
+.ck-content .todo-list__label > input[checked]::before { background: #1d4ed8; border-color: #1d4ed8; }
+.ck-content .todo-list__label > input[checked]::after { border-color: #fff; }
+
+/* The editor's page-break widget: a dashed rule on screen, a forced page break in print. */
+.ck-content .page-break { clear: both; break-after: page; }
+@media screen {
+  .ck-content .page-break { border-top: 1px dashed #9aa3b2; margin: 8mm 0; }
+}
+
+.signature { margin-top: 10mm; }
+.signature .line { width: 60mm; border-top: 1px solid #333; margin-top: 14mm; padding-top: 2px; font-size: 8pt; color: #555; }
+</style>
+</head>
+<body>
+<header class="letterhead">
+  <div class="brand">Haustechnik Brenner GmbH</div>
+  <div class="contact">Lindenstraße 14 · 79098 Freiburg<br>Telefon 0761 04471-0 · info@brenner-haustechnik.example<br>USt-IdNr. DE 287 445 190</div>
+</header>
+<div class="window">Haustechnik Brenner GmbH · Lindenstraße 14 · 79098 Freiburg</div>
+<div class="address">Wohnungseigentümergemeinschaft<br>Kirchplatz 3–5<br>z. Hd. Frau Annette Vogelsang<br>Hausverwaltung Rheintal<br>79312 Emmendingen</div>
+<dl class="meta">
+  <dt>Datum</dt><dd>12. November 2026</dd>
+  <dt>Angebot</dt><dd>AN-2026-0418</dd>
+  <dt>Kunde</dt><dd>K-10233</dd>
+  <dt>Bearbeiter</dt><dd>Jonas Brenner</dd>
+</dl>
+<h1 class="subject">Angebot über einen Wartungsvertrag für Ihre Heizungs- und Lüftungsanlage</h1>
+
+<div class="ck-content">
+<p>Sehr geehrte Frau Vogelsang,</p>
+<p>vielen Dank für das freundliche Gespräch am <strong>4. November</strong> und die Begehung der Technikzentrale. Wie besprochen bieten wir Ihnen für die Anlagen der Eigentümergemeinschaft einen <span class="marker-yellow">Vollwartungsvertrag mit 24-Stunden-Bereitschaft</span> an. Die Leistungen haben wir nach den Herstellervorgaben und der <a href="https://example.com/vdi-6022">VDI 6022</a> zusammengestellt.</p>
+<figure class="image image-style-side"><img src="../images/photo.jpg" alt="Technikzentrale" width="160"><figcaption>Gaskessel und Pufferspeicher in der Technikzentrale (Aufnahme vom 4.&nbsp;November)</figcaption></figure>
+<h2>Umfang der Wartung</h2>
+<p>Der Vertrag umfasst alle Arbeiten, die für einen sicheren und sparsamen Betrieb nötig sind:</p>
+<ol>
+  <li>Jährliche Inspektion der <strong>Brennwertkessel</strong> einschließlich Abgasmessung
+    <ol>
+      <li>Reinigung von Brennkammer und Wärmetauscher</li>
+      <li>Prüfung der Sicherheitseinrichtungen und des Ausdehnungsgefäßes</li>
+    </ol>
+  </li>
+  <li>Halbjährlicher Filterwechsel an den beiden <i>Lüftungsgeräten</i> im Dachgeschoss</li>
+  <li>Hydraulischer Abgleich nach Bedarf, höchstens einmal je Heizperiode</li>
+</ol>
+<p class="text-small">Ersatzteile über 150&nbsp;€ netto stimmen wir vor dem Einbau mit Ihnen ab. Kleinmaterial wie Dichtungen und Filtermatten ist im Pauschalpreis enthalten.</p>
+<figure class="table" style="width:100%;">
+  <figcaption>Leistungen und Preise je Jahr (netto)</figcaption>
+  <table>
+    <colgroup><col style="width:46%;"><col style="width:18%;"><col style="width:16%;"><col style="width:20%;"></colgroup>
+    <thead><tr><th>Leistung</th><th>Intervall</th><th style="text-align:right;">Einsätze</th><th style="text-align:right;">Preis</th></tr></thead>
+    <tbody>
+      <tr><td>Inspektion Brennwertkessel (2 Geräte)</td><td>jährlich</td><td style="text-align:right;">1</td><td style="text-align:right;">640,00 €</td></tr>
+      <tr><td>Filterwechsel Lüftungsgeräte</td><td>halbjährlich</td><td style="text-align:right;">2</td><td style="text-align:right;">380,00 €</td></tr>
+      <tr><td>Hygieneinspektion nach VDI&nbsp;6022</td><td>alle 2 Jahre</td><td style="text-align:right;">0,5</td><td style="text-align:right;">215,00 €</td></tr>
+      <tr><td>Bereitschaft 24/7, Anfahrt im Notfall</td><td>laufend</td><td style="text-align:right;">–</td><td style="text-align:right;">420,00 €</td></tr>
+      <tr><td colspan="3"><strong>Jahrespauschale</strong></td><td style="text-align:right;"><strong>1.655,00 €</strong></td></tr>
+    </tbody>
+  </table>
+</figure>
+<blockquote><p>„Seit dem Wechsel zu Brenner hatten wir im Winter keinen einzigen Ausfall mehr.“ – Hausverwaltung Kaiserstuhl, Referenzkunde seit 2019</p></blockquote>
+<h2>Was wir vor Vertragsbeginn erledigen</h2>
+<ul class="todo-list">
+  <li><label class="todo-list__label"><input type="checkbox" disabled="disabled" checked="checked"><span class="todo-list__label__description">Bestandsaufnahme der Anlagen und Typenschilder</span></label></li>
+  <li><label class="todo-list__label"><input type="checkbox" disabled="disabled" checked="checked"><span class="todo-list__label__description">Prüfung der letzten Abgasmessung des Schornsteinfegers</span></label></li>
+  <li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Schlüsselübergabe für die Technikzentrale</span></label>
+    <ul class="todo-list">
+      <li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Zugangscode für das Dachgeschoss</span></label></li>
+    </ul>
+  </li>
+  <li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Eintrag in unser Störungsportal mit Ihren Ansprechpartnern</span></label></li>
+</ul>
+<p>Die Laufzeit beträgt <span class="pen-red"><strong>24 Monate</strong></span> und verlängert sich um jeweils ein Jahr, wenn sie nicht drei Monate vor Ablauf gekündigt wird. Preisanpassungen richten sich nach dem Index <code>GP 09-43 22</code> des Statistischen Bundesamts.</p>
+<p>Wir würden uns freuen, Ihre Anlagen künftig betreuen zu dürfen. Für Rückfragen erreichen Sie mich unter der Durchwahl <span class="text-big">-23</span>.</p>
+<p>Mit freundlichen Grüßen</p>
+<div class="page-break" style="page-break-after:always;"><span style="display:none;">&nbsp;</span></div>
+<h2>Anlage: Allgemeine Wartungsbedingungen</h2>
+<h3>1. Zutritt</h3>
+<p>Der Auftraggeber sorgt dafür, dass die Anlagen zu den vereinbarten Terminen zugänglich sind. Vergebliche Anfahrten berechnen wir mit 65,00&nbsp;€ netto.</p>
+<h3>2. Störungen</h3>
+<p>Störungen nehmen wir rund um die Uhr unter <mark class="marker-green">0761 04471-99</mark> an. Wir sind innerhalb von vier Stunden vor Ort; an Sonn- und Feiertagen innerhalb von sechs Stunden.</p>
+<hr>
+<h3>3. Haftung</h3>
+<p>Wir haften für Schäden, die wir vorsätzlich oder grob fahrlässig verursachen, nach den gesetzlichen Vorschriften. Im Übrigen ist die Haftung auf den <mark class="marker-pink">vorhersehbaren, vertragstypischen Schaden</mark> begrenzt.</p>
+<p class="text-tiny">Stand der Bedingungen: 1. Januar 2026. Es gilt deutsches Recht; Gerichtsstand ist Freiburg im Breisgau.</p>
+</div>
+
+<div class="signature">
+  <div class="line">Jonas Brenner, Geschäftsführer</div>
+</div>
+</body>
+</html>

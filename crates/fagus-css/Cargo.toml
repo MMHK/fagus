@@ -1,0 +1,23 @@
+[package]
+name = "fagus-css"
+description = "CSS parsing and rule indexing for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+lightningcss.workspace = true
+parcel_selectors.workspace = true
+cssparser.workspace = true
+fagus-dom.workspace = true
+rustc-hash.workspace = true
+smallvec.workspace = true
+unicode-bidi.workspace = true

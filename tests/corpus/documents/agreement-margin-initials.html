@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master Services Agreement</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page {
+  size: A4;
+  margin: 24mm 22mm 26mm;
+  @top-left { content: "MASTER SERVICES AGREEMENT"; font: 700 7pt "Inter"; letter-spacing: 0.12em; color: #0f3d5c; }
+  @top-right { content: "Confidential"; font: italic 7.5pt "Inter"; color: #0f3d5c; }
+  @bottom-left { content: "Initials: Provider ______   Client ______"; font: 7.5pt "Inter"; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt "Inter"; }
+}
+@page cover { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+html { font: 10pt/1.55 "Inter", sans-serif; color: #1b1b1b; }
+body { margin: 0; }
+.cover { page: cover; height: 297mm; box-sizing: border-box; padding: 60mm 25mm 0; background: linear-gradient(160deg, #0f3d5c 0 38%, #fff 38%); color: #fff; }
+.cover h1 { font-size: 30pt; line-height: 1.1; margin: 0; letter-spacing: -0.02em; }
+.cover .between { margin-top: 18mm; color: #0f3d5c; font-size: 11pt; }
+.cover .between b { display: block; font-size: 14pt; }
+.cover .date { margin-top: 30mm; color: #555; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.15em; }
+h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: 0.06em; color: #0f3d5c; margin: 16pt 0 6pt; break-after: avoid; counter-increment: article; counter-reset: clause; }
+h2::before { content: "Article " counter(article) " – "; }
+body { counter-reset: article; }
+.clause { margin: 0 0 6pt 30pt; text-indent: -30pt; text-align: justify; orphans: 3; widows: 3; counter-increment: clause; }
+.clause::before { content: counter(article) "." counter(clause); display: inline-block; width: 30pt; text-indent: 0; font-weight: 700; }
+.clause em { font-style: italic; }
+dl.defs { margin: 0 0 6pt 30pt; display: grid; grid-template-columns: max-content 1fr; gap: 3pt 10pt; }
+dl.defs dt { font-weight: 700; }
+dl.defs dd { margin: 0; text-align: justify; }
+table.sla { border-collapse: collapse; width: calc(100% - 30pt); margin: 4pt 0 8pt 30pt; font-size: 9pt; }
+table.sla th { background: #0f3d5c; color: #fff; text-align: left; padding: 3pt 6pt; font-weight: 700; }
+table.sla td { padding: 3pt 6pt; border-bottom: 0.5pt solid #c8d3db; }
+table.sla tr:nth-child(even) td { background: #f2f6f9; }
+.witness { break-before: page; }
+.signatures { width: 100%; border-collapse: collapse; margin-top: 12pt; }
+.signatures td { width: 50%; vertical-align: top; padding: 0 10pt 22pt 0; }
+.signatures .who { font-weight: 700; color: #0f3d5c; padding-bottom: 30pt; }
+.signatures .line { border-top: 0.75pt solid #000; padding-top: 2pt; font-size: 8.5pt; }
+.stamp { width: 34mm; height: 34mm; border: 1.5pt dashed #9ab; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #9ab; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6pt; }
+</style>
+</head>
+<body>
+<section class="cover">
+<h1>Master Services<br>Agreement</h1>
+<div class="between">between<b>Northwind Software Ltd.</b>and<b>Contoso Retail GmbH</b></div>
+<div class="date">Effective as of 1 January 2027 · Ref. MSA-2026-118</div>
+</section>
+<h2>Definitions</h2>
+<p class="clause">In this Agreement the following terms have the meanings set out below; other capitalised terms are defined where they first appear.</p>
+<dl class="defs">
+<dt>“Affiliate”</dt><dd>any entity that directly or indirectly controls, is controlled by, or is under common control with a party, where control means ownership of more than fifty percent of the voting interests.</dd>
+<dt>“Deliverables”</dt><dd>all documents, software and other materials that the Provider delivers to the Client under a Statement of Work.</dd>
+<dt>“Statement of Work”</dt><dd>a document signed by both parties that describes services, Deliverables, fees and timelines, and refers to this Agreement.</dd>
+<dt>“Business Day”</dt><dd>a day other than a Saturday, Sunday or public holiday in Berlin, Germany.</dd>
+</dl>
+<h2>Services</h2>
+<p class="clause">The Provider shall perform the services described in each Statement of Work with reasonable skill and care, in accordance with good industry practice and the Client’s reasonable written instructions.</p>
+<p class="clause">Each Statement of Work forms a separate contract incorporating the terms of this Agreement. In case of conflict, this Agreement prevails unless the Statement of Work <em>expressly</em> states that a specific provision of this Agreement is varied.</p>
+<p class="clause">The Provider may use subcontractors with the Client’s prior written consent, which shall not be unreasonably withheld. The Provider remains responsible for the acts and omissions of its subcontractors as for its own.</p>
+<p class="clause">Either party may request changes to a Statement of Work. No change is binding until both parties have signed a written change request that sets out its effect on fees, timelines and Deliverables.</p>
+<h2>Service Levels</h2>
+<p class="clause">The Provider shall meet the service levels set out in the table below for the hosted components of the Deliverables. Service credits are the Client’s sole monetary remedy for a failure to meet them, without prejudice to its right to terminate under Article 7.</p>
+<table class="sla">
+<tr><th>Service</th><th>Availability</th><th>Response (P1)</th><th>Credit</th></tr>
+<tr><td>Invoice API</td><td>99.9 %</td><td>30 minutes</td><td>5 % per 0.1 % below target</td></tr>
+<tr><td>Customer portal</td><td>99.5 %</td><td>2 hours</td><td>3 % per 0.5 % below target</td></tr>
+<tr><td>Batch exports</td><td>99.0 %</td><td>4 hours</td><td>2 % per 1 % below target</td></tr>
+<tr><td>Support desk</td><td>Business Days, 8:00–18:00</td><td>1 Business Day</td><td>none</td></tr>
+</table>
+<p class="clause">Availability is measured monthly and excludes scheduled maintenance announced at least five Business Days in advance and performed outside 07:00–20:00 CET.</p>
+<h2>Fees and Payment</h2>
+<p class="clause">The Client shall pay the fees set out in each Statement of Work. Unless stated otherwise, the Provider invoices time and materials monthly in arrears and fixed fees on acceptance of the relevant milestone.</p>
+<p class="clause">Invoices are payable within thirty days of receipt. The Provider shall issue electronic invoices in the EN 16931 format; the Client may reject invoices in any other format.</p>
+<p class="clause">If the Client disputes an invoice in good faith, it shall notify the Provider within fifteen days, pay the undisputed part, and the parties shall resolve the dispute under Article 9.</p>
+<h2>Intellectual Property</h2>
+<p class="clause">Each party retains all rights in its pre-existing materials. Upon full payment, the Provider assigns to the Client all rights in the Deliverables specifically created for the Client, excluding the Provider’s pre-existing materials and generic know-how.</p>
+<p class="clause">The Provider grants the Client a perpetual, worldwide, non-exclusive, royalty-free licence to use the Provider’s pre-existing materials to the extent incorporated in the Deliverables, solely for the Client’s and its Affiliates’ internal business purposes.</p>
+<h2>Warranties and Liability</h2>
+<p class="clause">The Provider warrants that the Deliverables will materially conform to their specification for ninety days after acceptance. The Provider shall remedy any non-conformity notified within that period free of charge.</p>
+<p class="clause">Neither party excludes or limits liability for death or personal injury caused by negligence, for fraud, or for any other liability that cannot be excluded or limited by law.</p>
+<p class="clause">Subject to the preceding clause, each party’s total liability under or in connection with this Agreement in any contract year is limited to the fees paid or payable in that contract year, and neither party is liable for loss of profits, revenue, or data, or for indirect or consequential loss.</p>
+<h2>Term and Termination</h2>
+<p class="clause">This Agreement starts on the effective date and continues until terminated by either party on six months’ written notice, which may not expire before all Statements of Work have been completed or terminated.</p>
+<p class="clause">Either party may terminate this Agreement or any Statement of Work with immediate effect by written notice if the other party commits a material breach that is not remedied within thirty days of being notified of it, or becomes insolvent.</p>
+<p class="clause">On termination, the Client shall pay for services performed up to the termination date, and the Provider shall deliver all work in progress and return or destroy the Client’s confidential information.</p>
+<h2>Confidentiality</h2>
+<p class="clause">Each party shall keep the other party’s confidential information secret, use it only to perform this Agreement, and disclose it only to employees and advisers who need to know it and are bound by equivalent obligations.</p>
+<p class="clause">These obligations do not apply to information that is or becomes public through no fault of the receiving party, was lawfully known to it before disclosure, or must be disclosed by law or by order of a court or authority.</p>
+<h2>Disputes and Governing Law</h2>
+<p class="clause">The parties shall first try to resolve any dispute through good-faith negotiation between their senior representatives. If the dispute is not resolved within thirty days, either party may refer it to the courts of Berlin, Germany, which shall have exclusive jurisdiction.</p>
+<p class="clause">This Agreement and any non-contractual obligations arising out of it are governed by the laws of the Federal Republic of Germany, excluding the United Nations Convention on Contracts for the International Sale of Goods.</p>
+<section class="witness">
+<h2>Execution</h2>
+<p class="clause">This Agreement has been entered into on the date stated at the beginning of it, in two counterparts, each of which is an original.</p>
+<table class="signatures">
+<tr><td class="who">For Northwind Software Ltd.</td><td class="who">For Contoso Retail GmbH</td></tr>
+<tr><td><div class="line">Signature</div></td><td><div class="line">Signature</div></td></tr>
+<tr><td><div class="line">Name and title</div></td><td><div class="line">Name and title</div></td></tr>
+<tr><td><div class="line">Date</div></td><td><div class="line">Date</div></td></tr>
+<tr><td><div class="stamp">Company seal</div></td><td><div class="stamp">Company seal</div></td></tr>
+</table>
+</section>
+</body>
+</html>

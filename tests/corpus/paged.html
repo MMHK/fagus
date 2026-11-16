@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Jahresbericht 2026</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+  @page {
+    size: A4;
+    margin: 26mm 18mm 24mm 18mm;
+    @top-left { content: string(chapter); font: 600 9pt Inter, sans-serif; color: #1e3a8a; vertical-align: bottom; padding-bottom: 4mm; }
+    @top-right { content: "Jahresbericht 2026"; font: 9pt Inter, sans-serif; color: #64748b; vertical-align: bottom; padding-bottom: 4mm; }
+    @bottom-center { content: element(footer); vertical-align: top; padding-top: 5mm; }
+    @bottom-right-corner { content: counter(page); background: #1e3a8a; color: #fff; font: 600 10pt Inter, sans-serif; text-align: center; }
+  }
+  @page :first {
+    margin-top: 40mm;
+    @top-left { content: none; }
+    @top-right { content: none; }
+    @top-center { content: element(letterhead); }
+    @bottom-right-corner { content: none; }
+  }
+  @page wide {
+    size: A4 landscape;
+    margin: 20mm 18mm;
+    @top-left { content: "Anhang zu: " string(chapter, last); font: 600 9pt Inter, sans-serif; color: #9a3412; }
+    @top-right { content: none; }
+    @bottom-center { content: "Seite " counter(page) " von " counter(pages); font: 8pt Inter, sans-serif; color: #64748b; }
+  }
+
+  body { margin: 0; font: 10pt/1.55 Inter, sans-serif; color: #0f172a; }
+
+  .letterhead { position: running(letterhead); display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1e3a8a; padding-bottom: 3mm; }
+  .letterhead .name { font-size: 18pt; font-weight: 700; color: #1e3a8a; }
+  .letterhead .meta { font-size: 8pt; color: #64748b; text-align: right; }
+
+  .footer { position: running(footer); display: flex; gap: 6mm; border-top: 1px solid #cbd5e1; padding-top: 2mm; font-size: 7.5pt; color: #64748b; }
+  .footer div { flex: 1; }
+  .footer .page { text-align: right; }
+  .footer .page::after { content: "Seite " counter(page) " von " counter(pages); color: #0f172a; font-weight: 600; }
+
+  h1 { font-size: 22pt; margin: 0 0 4mm; color: #1e3a8a; }
+  h2 { string-set: chapter counter(chapter) ". " content(); counter-increment: chapter; break-before: page; font-size: 15pt; color: #1e3a8a; margin: 0 0 3mm; }
+  h2::before { content: counter(chapter) ". "; }
+  h1 + p { font-size: 11pt; color: #334155; }
+  p { margin: 0 0 3mm; }
+
+  .wide { page: wide; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  th { text-align: left; background: #fff7ed; color: #9a3412; }
+  th, td { border-bottom: 1px solid #fed7aa; padding: 1.5mm 2mm; }
+  td.num, th.num { text-align: right; }
+</style>
+</head>
+<body>
+  <div class="letterhead">
+    <div class="name">Muster GmbH</div>
+    <div class="meta">Hauptstraße 1 · 12345 Musterstadt<br>bericht@muster.example</div>
+  </div>
+  <div class="footer">
+    <div>Muster GmbH<br>Hauptstraße 1, 12345 Musterstadt</div>
+    <div>Geschäftsführung: Erika Muster<br>Amtsgericht Musterstadt HRB 12345</div>
+    <div class="page"></div>
+  </div>
+
+  <h1>Jahresbericht 2026</h1>
+  <p>Der Bericht fasst das Geschäftsjahr zusammen. Die Kopfzeile jeder Seite nennt das Kapitel, in dem die Seite beginnt; die erste Seite trägt stattdessen den Briefkopf. Die Fußzeile ist ein eigenes Element mit drei Spalten, und ihre Seitenzahl kommt aus dem generierten Inhalt.</p>
+
+  <h2>Überblick</h2>
+  <p>Im Jahr 2026 wuchs der Umsatz um zwölf Prozent. Die meisten neuen Kunden kamen aus dem Mittelstand, vor allem aus Handwerk und Handel. Die Zahl der Mitarbeitenden stieg von 41 auf 48.</p>
+  <p>Die Investitionen flossen in die Entwicklung und in den Ausbau des Rechenzentrums. Beide Vorhaben wurden im geplanten Rahmen abgeschlossen.</p>
+
+  <h2>Umsatz und Ergebnis</h2>
+  <p>Der Umsatz stieg auf 8,4 Millionen Euro. Das Ergebnis vor Steuern lag bei 1,1 Millionen Euro und damit über dem Plan.</p>
+  <p>Wiederkehrende Umsätze machen inzwischen zwei Drittel aus. Sie verteilen sich auf mehr als 600 Verträge, keiner davon trägt mehr als drei Prozent zum Umsatz bei.</p>
+  <p>Die Kosten wuchsen langsamer als der Umsatz. Personalkosten sind der größte Posten, gefolgt von Rechenzentrum und Lizenzen.</p>
+
+  <section class="wide">
+    <table>
+      <thead><tr><th>Quartal</th><th>Region</th><th class="num">Neukunden</th><th class="num">Umsatz</th><th class="num">Kosten</th><th class="num">Ergebnis</th><th class="num">Marge</th></tr></thead>
+      <tbody>
+        <tr><td>Q1</td><td>Nord</td><td class="num">31</td><td class="num">1.020.000 €</td><td class="num">890.000 €</td><td class="num">130.000 €</td><td class="num">12,7 %</td></tr>
+        <tr><td>Q1</td><td>Süd</td><td class="num">27</td><td class="num">980.000 €</td><td class="num">860.000 €</td><td class="num">120.000 €</td><td class="num">12,2 %</td></tr>
+        <tr><td>Q2</td><td>Nord</td><td class="num">35</td><td class="num">1.060.000 €</td><td class="num">910.000 €</td><td class="num">150.000 €</td><td class="num">14,2 %</td></tr>
+        <tr><td>Q2</td><td>Süd</td><td class="num">30</td><td class="num">1.010.000 €</td><td class="num">880.000 €</td><td class="num">130.000 €</td><td class="num">12,9 %</td></tr>
+        <tr><td>Q3</td><td>Nord</td><td class="num">38</td><td class="num">1.090.000 €</td><td class="num">930.000 €</td><td class="num">160.000 €</td><td class="num">14,7 %</td></tr>
+        <tr><td>Q3</td><td>Süd</td><td class="num">33</td><td class="num">1.040.000 €</td><td class="num">900.000 €</td><td class="num">140.000 €</td><td class="num">13,5 %</td></tr>
+        <tr><td>Q4</td><td>Nord</td><td class="num">41</td><td class="num">1.120.000 €</td><td class="num">950.000 €</td><td class="num">170.000 €</td><td class="num">15,2 %</td></tr>
+        <tr><td>Q4</td><td>Süd</td><td class="num">36</td><td class="num">1.080.000 €</td><td class="num">930.000 €</td><td class="num">150.000 €</td><td class="num">13,9 %</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <h2>Ausblick</h2>
+  <p>Für 2027 plant die Geschäftsführung ein Wachstum von zehn Prozent. Neue Stellen entstehen vor allem in Entwicklung und Kundenservice.</p>
+</body>
+</html>

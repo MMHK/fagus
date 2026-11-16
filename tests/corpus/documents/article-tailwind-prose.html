@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Why we moved our invoices to plain HTML</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+</style>
+<link rel="stylesheet" href="vendor/tailwind-3.4.17-article.css">
+<style>@page { size: A4; margin: 16mm 18mm; }</style>
+</head>
+<body class="bg-white font-sans text-slate-900 antialiased">
+<header class="mx-auto max-w-3xl border-b border-slate-200 pb-6 mb-8">
+  <p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">Engineering · 8 min read</p>
+  <h1 class="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 [text-wrap:balance]">Why we moved our invoices from a PDF library to plain HTML and CSS</h1>
+  <div class="mt-4 flex items-center gap-x-3 text-sm text-slate-500">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700 ring-2 ring-white">MK</span>
+    <span>Maja Kowalski</span><span aria-hidden="true">&middot;</span><time datetime="2024-05-14">14 May 2024</time>
+    <span class="ml-auto rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Updated</span>
+  </div>
+</header>
+<article class="prose prose-slate prose-lg mx-auto max-w-3xl prose-headings:font-bold prose-a:text-indigo-600 prose-code:before:content-none prose-code:after:content-none hyphens-auto">
+  <p class="lead">For six years our invoices were drawn line by line with a PDF library. Every new field meant a developer, a pull request and a deploy. Last spring we replaced 4,000 lines of drawing code with one HTML template.</p>
+  <p>The old generator positioned every string by hand: <code>doc.text(x, y, label)</code>, with <em>x</em> and <em>y</em> computed from font metrics we copied out of the font files. Long customer names overflowed into the amount column, and right-to-left addresses came out reversed.</p>
+  <h2>What we wanted</h2>
+  <ol>
+    <li>Templates that designers can change without us.</li>
+    <li>Tables that break across pages and repeat their headers.</li>
+    <li>The same output on every server, byte for byte.
+      <ul>
+        <li>No fonts from the system.</li>
+        <li>No network access while rendering.</li>
+      </ul>
+    </li>
+  </ol>
+  <blockquote><p>The best layout engine we had was the one in every browser. We just had to stop drawing and start describing.</p></blockquote>
+  <h2>The template</h2>
+  <p>An invoice is a header, two address blocks, a table and a footer. In HTML that is about sixty lines:</p>
+  <pre><code class="language-html">&lt;table class="items"&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Item&lt;/th&gt;&lt;th&gt;Qty&lt;/th&gt;&lt;th&gt;Price&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;
+    {% for line in invoice.lines %}
+    &lt;tr&gt;&lt;td&gt;{{ line.name }}&lt;/td&gt;&lt;td&gt;{{ line.qty }}&lt;/td&gt;&lt;td&gt;{{ line.price | money }}&lt;/td&gt;&lt;/tr&gt;
+    {% endfor %}
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+  <p>Page numbers come from CSS counters in the page margins, which the <a href="https://www.w3.org/TR/css-page-3/">CSS Paged Media</a> module describes.</p>
+  <h3>Numbers</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Before</th><th>After</th></tr></thead>
+    <tbody>
+      <tr><td>Lines of code</td><td>4,112</td><td>380</td></tr>
+      <tr><td>Median render time</td><td>210 ms</td><td>95 ms</td></tr>
+      <tr><td>Support tickets per month</td><td>14</td><td>2</td></tr>
+    </tbody>
+  </table>
+  <figure>
+    <svg viewBox="0 0 600 160" class="w-full rounded-lg bg-slate-50" role="img"><rect x="40" y="30" width="420" height="30" fill="#c7d2fe"/><rect x="40" y="90" width="190" height="30" fill="#6366f1"/><text x="470" y="51" font-size="14" fill="#334155">before</text><text x="240" y="111" font-size="14" fill="#334155">after</text></svg>
+    <figcaption>Median render time per invoice, in milliseconds.</figcaption>
+  </figure>
+  <h2>What surprised us</h2>
+  <p>Hyphenation, of all things. Narrow columns of German product names look ragged without it, and <code>hyphens: auto</code> needs a <code>lang</code> attribute to work. Keyboard shortcuts in our internal docs, like <kbd>Ctrl</kbd> + <kbd>P</kbd>, now print as they look on screen.</p>
+  <hr>
+  <p><strong>Next:</strong> e-invoices. We attach the XML to the PDF and are done.</p>
+</article>
+<footer class="mx-auto mt-10 max-w-3xl divide-y divide-slate-200 border-t border-slate-200 text-sm text-slate-500">
+  <div class="flex justify-between py-3"><span>Tags</span><span class="space-x-2"><span class="rounded bg-slate-100 px-2 py-0.5">pdf</span><span class="rounded bg-slate-100 px-2 py-0.5">css</span><span class="rounded bg-slate-100 px-2 py-0.5">invoices</span></span></div>
+  <div class="flex justify-between py-3"><span>License</span><span>CC BY 4.0</span></div>
+</footer>
+</body>
+</html>

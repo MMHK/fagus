@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Remittance receipt</title>
+<style>
+@page { size: A5; margin: 10mm 11mm 12mm; @bottom-center { content: "Receipt RM-2026-55071 · " counter(page) "/" counter(pages); font: 7pt Helvetica, Arial, sans-serif; color: #666 } }
+body { margin: 0; font: 9pt/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif; color: #222 }
+.top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2pt solid #0e7490; padding-bottom: 2mm }
+.top b { font-size: 14pt; color: #0e7490 }
+.top .no { text-align: right; font-size: 8pt }
+h1 { font-size: 11pt; margin: 3mm 0 1mm }
+h1 span { display: block; font-weight: 400; font-size: 10pt; color: #444 }
+dl { display: grid; grid-template-columns: 34mm 1fr; gap: 0.8mm 3mm; margin: 2mm 0 }
+dt { color: #666 }
+dd { margin: 0 }
+.box { border: 0.75pt solid #0e7490; border-radius: 1.5mm; padding: 2mm 3mm; margin: 2mm 0 }
+.amount { display: flex; justify-content: space-between; align-items: baseline; font-size: 10pt }
+.amount b { font-size: 15pt; font-variant-numeric: tabular-nums }
+.bn { font-family: "Kohinoor Bangla", "Bangla Sangam MN", sans-serif }
+.ta { font-family: "Tamil Sangam MN", "InaiMathi", sans-serif }
+.note { font-size: 8pt; color: #444; text-align: justify }
+.note p { margin: 0 0 1.5mm }
+.sig { display: flex; gap: 8mm; margin-top: 6mm; font-size: 8pt }
+.sig div { flex: 1; border-top: 0.5pt solid #888; padding-top: 1mm }
+</style></head>
+<body>
+<div class="top"><div><b>SwiftSend Remit</b><br><span style="font-size:8pt;color:#555">Licensed money transfer operator · London · Dhaka · Chennai</span></div><div class="no">Receipt No.<br><b style="font-size:10pt">RM-2026-55071</b><br>07 Nov 2026, 14:32</div></div>
+<h1>Money transfer receipt<span lang="bn">টাকা পাঠানোর রসিদ</span><span lang="ta">பணப் பரிமாற்ற ரசீது</span></h1>
+<dl>
+  <dt>Sender</dt><dd>Rahim Uddin, 14 Brick Lane, London E1 6RF</dd>
+  <dt>Recipient (BD)</dt><dd class="bn" lang="bn">মোছাম্মৎ ফাতেমা খাতুন, গ্রাম: কাশিপুর, জেলা: সিলেট</dd>
+  <dt>Recipient (IN)</dt><dd class="ta" lang="ta">திருமதி லட்சுமி சுப்பிரமணியம், அண்ணா நகர், சென்னை 600040</dd>
+  <dt>Payout</dt><dd>bKash wallet +880 17 1234 5678 / Indian Bank, IFSC IDIB000A012</dd>
+</dl>
+<div class="box">
+  <div class="amount"><span>Sent</span><b>£ 500.00</b></div>
+  <div class="amount"><span>Fee</span><span>£ 3.99</span></div>
+  <div class="amount"><span>Rate (GBP → BDT) <span class="bn" lang="bn">বিনিময় হার</span></span><span>1 GBP = 153.42 BDT</span></div>
+  <div class="amount"><span>Received in Bangladesh <span class="bn" lang="bn">প্রাপ্ত অর্থ</span></span><b>৳ 38,355.00</b></div>
+  <div class="amount"><span>Received in India <span class="ta" lang="ta">பெறப்பட்ட தொகை</span></span><b>₹ 27,940.50</b></div>
+</div>
+<div class="note">
+  <p>The recipient can collect the money within 30 days. Keep this receipt until the transfer has been paid out. Complaints: complaints@swiftsend.example, +44 20 7946 0321.</p>
+  <p class="bn" lang="bn">প্রাপক ৩০ দিনের মধ্যে টাকা তুলতে পারবেন। অর্থ পরিশোধ না হওয়া পর্যন্ত এই রসিদটি সংরক্ষণ করুন।</p>
+  <p class="ta" lang="ta">பெறுநர் 30 நாட்களுக்குள் பணத்தைப் பெற்றுக்கொள்ளலாம். பணம் வழங்கப்படும் வரை இந்த ரசீதை வைத்திருக்கவும்.</p>
+  <p lang="bn">Fallback text without a named font: সংক্ষিপ্ত নোট — ধন্যবাদ!</p>
+  <p lang="ta">Fallback text without a named font: குறிப்பு — நன்றி!</p>
+</div>
+<div class="sig"><div>Agent: Priya N. (ID 2207)</div><div>Customer signature</div></div>
+</body></html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anlage Muster 2026</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 12mm 12mm 14mm 18mm; }
+* { box-sizing: border-box; }
+html { font: 8pt/1.3 "Inter", sans-serif; color: #000; }
+body { margin: 0; }
+.bar { display: grid; grid-template-columns: 1fr 60mm; gap: 4mm; align-items: end; }
+.bar h1 { font-size: 20pt; margin: 0; line-height: 1; }
+.bar .year { font-size: 26pt; font-weight: 700; text-align: right; }
+.id { display: grid; grid-template-columns: auto 1fr; gap: 1mm 3mm; align-items: center; margin: 3mm 0; }
+.comb { display: inline-flex; }
+.comb span { width: 5mm; height: 6mm; border: 0.5pt solid #000; border-left: none; display: inline-flex; align-items: center; justify-content: center; font: 10pt "Inter"; background: #fff; }
+.comb span:first-child { border-left: 0.5pt solid #000; }
+.comb span.sep { border: none; width: 2mm; background: none; }
+.sheet { background: #e8f1e4; padding: 2mm; }
+table.lines { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.lines col.no { width: 7mm; } table.lines col.k { width: 9mm; } table.lines col.amt { width: 38mm; }
+table.lines td { border: 0.5pt solid #6b8a5e; padding: 1mm 1.5mm; vertical-align: middle; background: #fff; height: 7.5mm; }
+table.lines td.no { background: #6b8a5e; color: #fff; text-align: center; font-weight: 700; }
+table.lines td.k { background: #d5e5cd; text-align: center; font-size: 6.5pt; }
+table.lines td.amt { text-align: right; font: 10pt "Inter"; letter-spacing: 0.15em; }
+table.lines tr.head td { background: #6b8a5e; color: #fff; font-weight: 700; height: auto; }
+table.lines tr.sum td { font-weight: 700; }
+.chk { display: inline-flex; align-items: center; gap: 1.5mm; margin-right: 5mm; }
+.chk i { width: 3.5mm; height: 3.5mm; border: 0.5pt solid #000; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 8pt; font-weight: 700; background: #fff; }
+input[type=checkbox] { width: 3.5mm; height: 3.5mm; margin: 0 1mm 0 0; vertical-align: middle; }
+.note { font-size: 6.5pt; color: #333; margin-top: 2mm; text-align: justify; columns: 2; column-gap: 6mm; column-rule: 0.5pt solid #9ab08f; }
+.foot { display: flex; justify-content: space-between; margin-top: 3mm; font-size: 6.5pt; color: #444; }
+.barcode { height: 9mm; width: 60mm; background: repeating-linear-gradient(90deg, #000 0 0.4mm, #fff 0.4mm 0.7mm, #000 0.7mm 0.9mm, #fff 0.9mm 1.5mm); }
+</style>
+</head>
+<body>
+<div class="bar"><h1>Anlage EÜR-Muster</h1><div class="year">2026</div></div>
+<div>Einnahmenüberschussrechnung – Gewinnermittlung nach §&nbsp;4 Abs.&nbsp;3 EStG für das Kalenderjahr</div>
+<div class="id">
+<span>Steuernummer</span><span class="comb"><span>1</span><span>2</span><span>3</span><span class="sep"></span><span>4</span><span>5</span><span>6</span><span class="sep"></span><span>7</span><span>8</span><span>9</span><span>0</span><span>1</span></span>
+<span>Name</span><span class="comb"><span>M</span><span>U</span><span>S</span><span>T</span><span>E</span><span>R</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+<span>Vorname</span><span class="comb"><span>A</span><span>N</span><span>N</span><span>A</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+</div>
+<div style="margin: 2mm 0 3mm">
+<span class="chk"><i>X</i> Einzelunternehmen</span><span class="chk"><i></i> Personengesellschaft</span><span class="chk"><i></i> Betriebsaufgabe</span>
+<label class="chk"><input type="checkbox" checked>Kleinunternehmer</label><label class="chk"><input type="checkbox">Land- und Forstwirtschaft</label>
+</div>
+<div class="sheet">
+<table class="lines">
+<colgroup><col class="no"><col><col class="k"><col class="amt"></colgroup>
+<tr class="head"><td></td><td>1. Gewinnermittlung – Betriebseinnahmen</td><td>Kz</td><td style="text-align:right">EUR, Ct</td></tr>
+<tr><td class="no">11</td><td>Betriebseinnahmen als umsatzsteuerlicher Kleinunternehmer</td><td class="k">111</td><td class="amt">21.480,00</td></tr>
+<tr><td class="no">12</td><td>davon nicht steuerbare Umsätze sowie Umsätze nach §&nbsp;19 Abs.&nbsp;1 Satz&nbsp;2 UStG</td><td class="k">119</td><td class="amt">0,00</td></tr>
+<tr><td class="no">13</td><td>Umsatzsteuerpflichtige Betriebseinnahmen</td><td class="k">112</td><td class="amt"></td></tr>
+<tr><td class="no">14</td><td>Umsatzsteuerfreie, nicht umsatzsteuerbare Betriebseinnahmen sowie Betriebseinnahmen, für die der Leistungsempfänger die Umsatzsteuer nach §&nbsp;13b UStG schuldet</td><td class="k">103</td><td class="amt">1.250,00</td></tr>
+<tr><td class="no">15</td><td>Vereinnahmte Umsatzsteuer sowie Umsatzsteuer auf unentgeltliche Wertabgaben</td><td class="k">140</td><td class="amt"></td></tr>
+<tr><td class="no">16</td><td>Private Kfz-Nutzung</td><td class="k">106</td><td class="amt">2.160,00</td></tr>
+<tr class="sum"><td class="no">17</td><td>Summe Betriebseinnahmen</td><td class="k">159</td><td class="amt">24.890,00</td></tr>
+<tr class="head"><td></td><td>2. Betriebsausgaben</td><td>Kz</td><td style="text-align:right">EUR, Ct</td></tr>
+<tr><td class="no">21</td><td>Waren, Rohstoffe und Hilfsstoffe einschließlich der Nebenkosten</td><td class="k">100</td><td class="amt">3.412,50</td></tr>
+<tr><td class="no">22</td><td>Bezogene Fremdleistungen</td><td class="k">110</td><td class="amt">1.800,00</td></tr>
+<tr><td class="no">23</td><td>Ausgaben für eigenes Personal (z.&nbsp;B. Gehälter, Löhne und Versicherungsbeiträge)</td><td class="k">120</td><td class="amt"></td></tr>
+<tr><td class="no">24</td><td>Absetzung für Abnutzung (AfA) auf unbewegliche Wirtschaftsgüter</td><td class="k">136</td><td class="amt"></td></tr>
+<tr><td class="no">25</td><td>AfA auf bewegliche Wirtschaftsgüter (z.&nbsp;B. Notebook, Kfz)</td><td class="k">131</td><td class="amt">724,33</td></tr>
+<tr><td class="no">26</td><td>Aufwendungen für Telekommunikation (z.&nbsp;B. Telefon, Internet)</td><td class="k">280</td><td class="amt">486,12</td></tr>
+<tr><td class="no">27</td><td>Fortbildungskosten (ohne Reisekosten)</td><td class="k">281</td><td class="amt">395,00</td></tr>
+<tr><td class="no">28</td><td>Kosten für Rechts- und Steuerberatung, Buchführung</td><td class="k">194</td><td class="amt">650,00</td></tr>
+<tr><td class="no">29</td><td>Miete/Leasing für bewegliche Wirtschaftsgüter</td><td class="k">222</td><td class="amt"></td></tr>
+<tr class="sum"><td class="no">30</td><td>Summe Betriebsausgaben</td><td class="k">199</td><td class="amt">7.467,95</td></tr>
+<tr class="sum"><td class="no">31</td><td>Gewinn / Verlust</td><td class="k">219</td><td class="amt">17.422,05</td></tr>
+</table>
+</div>
+<div class="note">Hinweis: Diese Anlage ist ein frei erfundenes Muster und kein amtlicher Vordruck. Betriebseinnahmen sind grundsätzlich in dem Kalenderjahr anzusetzen, in dem sie zugeflossen sind; regelmäßig wiederkehrende Einnahmen, die kurze Zeit vor Beginn oder nach Beendigung des Kalenderjahres zufließen, gelten als in diesem Kalenderjahr bezogen. Betriebsausgaben sind in dem Kalenderjahr abzusetzen, in dem sie geleistet worden sind. Für Wirtschaftsgüter des Anlagevermögens sind die Absetzungen für Abnutzung nach den allgemeinen Regeln vorzunehmen. Bitte übertragen Sie die Summen in die entsprechenden Zeilen der Anlage&nbsp;G oder S und bewahren Sie die Belege mindestens zehn Jahre auf.</div>
+<div class="foot"><span class="barcode"></span><span>Muster-Vordruck 2026 · Seite 1 von 1 · nicht zur Abgabe bestimmt</span></div>
+</body>
+</html>

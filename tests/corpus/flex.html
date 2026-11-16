@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Flexbox</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @page { size: A4; margin: 16mm; }
+  body { margin: 0; font: 10pt/1.5 Inter, sans-serif; color: #1f2937; }
+  .page { display: flex; flex-direction: column; gap: 5mm; }
+  h2 { font-size: 13pt; margin: 0; color: #7c3aed; }
+  .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #7c3aed; padding-bottom: 2mm; }
+  .header .name { font-size: 18pt; font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 2mm; }
+  .chips span { background: #ede9fe; border: 1px solid #a78bfa; border-radius: 3mm; padding: 1mm 3mm; font-size: 9pt; }
+  .reverse { display: flex; flex-direction: row-reverse; gap: 3mm; }
+  .reverse div { background: #fef3c7; padding: 2mm 4mm; }
+  .card { display: flex; flex-direction: column; min-height: 45mm; border: 1px solid #d1d5db; border-radius: 2mm; width: 70mm; }
+  .card main { flex: 1; padding: 3mm; }
+  .card footer { background: #f3f4f6; padding: 2mm 3mm; font-size: 8pt; color: #6b7280; }
+  .grid { display: flex; flex-wrap: wrap; gap: 4mm; }
+  .grid div { width: 54mm; height: 30mm; background: #e0e7ff; border: 1px solid #6366f1; box-sizing: border-box; padding: 2mm; }
+  section p { margin: 0; }
+  section { background: #f9fafb; border-left: 3px solid #a78bfa; padding: 3mm; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header"><div class="name">Muster GmbH</div><div>Angebot AN-2026-0107<br>2. November 2026</div></div>
+  <h2>Leistungen</h2>
+  <div class="chips"><span>Konzept</span><span>Gestaltung</span><span>Entwicklung</span><span>Barrierefreiheit</span><span>Tests</span><span>Betrieb</span><span>Schulung</span><span>Dokumentation</span><span>Wartung</span><span>Hosting</span><span>Analyse</span><span>Beratung</span><span>Support</span></div>
+  <div class="reverse"><div>Eins</div><div>Zwei</div><div>Drei</div></div>
+  <div class="card"><main><b>Paket S</b><br>Für kleine Teams.</main><footer>Monatlich kündbar</footer></div>
+  <h2>Projekte</h2>
+  <div class="grid"><div>A</div><div>B</div><div>C</div><div>D</div><div>E</div><div>F</div><div>G</div><div>H</div><div>I</div><div>J</div><div>K</div><div>L</div><div>M</div><div>N</div><div>O</div><div>P</div><div>Q</div><div>R</div><div>S</div><div>T</div><div>U</div></div>
+  <h2>Abschnitte</h2>
+  <section><p>Abschnitt 1. Die Seite ist ein Flex-Container in Spaltenrichtung, wie ihn viele Vorlagen mit Tailwind um den ganzen Inhalt legen. Er bricht wie ein Block über die Seiten.</p></section>
+  <section><p>Abschnitt 2. Lange Absätze in einem Element dürfen ebenfalls umbrechen, wenn sie am Seitenende nicht mehr ganz passen, und laufen auf der nächsten Seite weiter.</p></section>
+  <section><p>Abschnitt 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p></section>
+  <section><p>Abschnitt 4. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p></section>
+  <section><p>Abschnitt 5. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p></section>
+  <section><p>Abschnitt 6. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</p></section>
+</div>
+</body>
+</html>

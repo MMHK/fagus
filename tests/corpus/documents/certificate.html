@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Certificate of completion</title>
+<style>
+@font-face { font-family: "Inter Display"; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff"); font-weight: 100 900; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4 landscape; margin: 0; }
+html { font: 11pt/1.4 Inter, sans-serif; color: #2b2118; }
+body { margin: 0; }
+.sheet { position: relative; width: 297mm; height: 210mm; box-sizing: border-box; padding: 12mm; overflow: hidden;
+  background: radial-gradient(circle at 0 0, rgba(176, 141, 87, .25), transparent 40%), radial-gradient(circle at 100% 100%, rgba(176, 141, 87, .25), transparent 40%), url(../images/pattern.png) center / 18mm repeat, #fffdf7; }
+.frame { position: absolute; inset: 9mm; border: 2.5mm double #b08d57; outline: .4mm solid #b08d57; outline-offset: -5mm; }
+.corner { position: absolute; width: 18mm; height: 18mm; border: .8mm solid #7a5c2e; }
+.corner.tl { top: 14mm; left: 14mm; border-right: 0; border-bottom: 0; border-top-left-radius: 6mm; }
+.corner.tr { top: 14mm; right: 14mm; border-left: 0; border-bottom: 0; border-top-right-radius: 6mm; }
+.corner.bl { bottom: 14mm; left: 14mm; border-right: 0; border-top: 0; border-bottom-left-radius: 6mm; }
+.corner.br { bottom: 14mm; right: 14mm; border-left: 0; border-top: 0; border-bottom-right-radius: 6mm; }
+.content { position: relative; text-align: center; padding-top: 22mm; }
+.org { font-size: 10pt; letter-spacing: .4em; text-transform: uppercase; color: #7a5c2e; }
+h1 { font: 850 46pt/1 "Inter Display", sans-serif; letter-spacing: .06em; margin: 6mm 0 1mm; text-transform: uppercase;
+  background: linear-gradient(180deg, #8a6a33, #c9a86a 55%, #7a5c2e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.kind { font: 300 16pt "Inter Display", sans-serif; letter-spacing: .3em; text-transform: uppercase; margin-bottom: 9mm; }
+.pre { font-style: italic; color: #5c4a33; }
+.name { font: 600 32pt/1.2 "Inter Display", sans-serif; margin: 2mm auto 2mm; display: inline-block; padding: 0 14mm 1mm; border-bottom: .5mm solid #b08d57; }
+.what { width: 170mm; margin: 4mm auto 0; text-wrap: balance; }
+.what strong { font-weight: 700; }
+.seal { position: absolute; right: 38mm; bottom: 30mm; width: 34mm; height: 34mm; border-radius: 50%;
+  background: repeating-conic-gradient(#b08d57 0 6deg, #c9a86a 6deg 12deg); display: grid; place-items: center; box-shadow: 0 .6mm 1.5mm rgba(0,0,0,.25); }
+.seal span { width: 25mm; height: 25mm; border-radius: 50%; background: #7a5c2e; color: #fff6e0; display: grid; place-items: center; font: 700 7pt/1.2 Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-align: center; border: .4mm dashed #fff6e0; box-sizing: border-box; }
+.signs { position: absolute; left: 40mm; bottom: 30mm; display: flex; gap: 22mm; }
+.signs div { width: 55mm; text-align: center; font-size: 9pt; color: #5c4a33; }
+.signs .line { font: italic 400 15pt/1 Inter, sans-serif; color: #1f3a68; border-bottom: .3mm solid #2b2118; padding-bottom: 1.5mm; margin-bottom: 1.5mm; transform: rotate(-3deg); }
+.number { position: absolute; left: 0; right: 0; bottom: 16mm; text-align: center; font-size: 7pt; letter-spacing: .2em; color: #7a5c2e; font-variant-numeric: tabular-nums slashed-zero; }
+</style></head><body>
+<div class="sheet">
+  <div class="frame"></div>
+  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+  <div class="content">
+    <div class="org">Akademie für Handwerk und Gestaltung · Weimar</div>
+    <h1>Certificate</h1>
+    <div class="kind">of completion</div>
+    <div class="pre">This is to certify that</div>
+    <div class="name">Johanna Weißenfels</div>
+    <p class="what">has successfully completed the advanced course <strong>“Historic Joinery and Furniture Restoration”</strong> of 240 hours, including the final project with distinction, from 1 March to 30 September 2026.</p>
+  </div>
+  <div class="signs"><div><div class="line">K. Brenner</div>Course director</div><div><div class="line">Dr. A. Hoffmann</div>Head of the academy</div></div>
+  <div class="seal"><span>Awarded<br>with<br>distinction</span></div>
+  <div class="number">No. AHG-2026-00418 · Weimar, 30 September 2026</div>
+</div>
+</body></html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de" xml:lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Lena Vogt" />
+  <meta name="author" content="Tobias Reinhardt" />
+  <meta name="dcterms.date" content="2026-10-30" />
+  <meta name="keywords" content="Lagerhaltung, Bestellpunkt, Simulation" />
+  <title>Bestellpunkte bei schwankender Nachfrage</title>
+  <style>
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+    @font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+    @page { size: A4; margin: 22mm 20mm 25mm; }
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 11pt;
+        padding: 0;
+        max-width: none;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h4, h5 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* The extensions of pandoc's template for its citations and footnotes. */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+      margin-bottom: 0.5em;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
+    /* The paper's own stylesheet (`--css paper.css`). */
+    body { font-family: Inter, sans-serif; line-height: 1.45; text-align: justify; }
+    h1.title { font-size: 1.7em; margin-bottom: 0.3em; text-align: center; }
+    p.author, p.date { margin: 0.2em 0; text-align: center; }
+    .abstract { margin: 2em 2.5em; font-size: 0.9em; }
+    .abstract-title { font-weight: 700; text-align: center; margin-bottom: 0.3em; }
+    h2 { font-size: 1.2em; }
+    h2 .header-section-number { margin-right: 0.6em; }
+    figure { margin: 1.2em 0; text-align: center; }
+    figcaption { font-size: 0.85em; color: #444; margin-top: 0.4em; }
+    a.footnote-ref sup, a.footnote-ref { text-decoration: none; }
+    section.footnotes { font-size: 0.85em; }
+    section.footnotes hr { margin-top: 2em; }
+    section#refs { text-align: left; }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Bestellpunkte bei schwankender Nachfrage</h1>
+<p class="author">Lena Vogt</p>
+<p class="author">Tobias Reinhardt</p>
+<p class="date">30. Oktober 2026</p>
+<div class="abstract">
+<div class="abstract-title">Zusammenfassung</div>
+<p>Wir vergleichen drei Verfahren zur Bestimmung des Bestellpunkts in einem
+Ersatzteillager mit saisonal schwankender Nachfrage. In einer Simulation
+über 36 Monate senkt ein gleitend geschätzter Sicherheitsbestand die
+Fehlmengen um 41 % bei nahezu gleichem mittlerem Lagerbestand.</p>
+</div>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#einleitung" id="toc-einleitung"><span class="toc-section-number">1</span> Einleitung</a></li>
+<li><a href="#modell" id="toc-modell"><span class="toc-section-number">2</span> Modell</a></li>
+<li><a href="#ergebnisse" id="toc-ergebnisse"><span class="toc-section-number">3</span> Ergebnisse</a></li>
+<li><a href="#literatur" id="toc-literatur">Literatur</a></li>
+</ul>
+</nav>
+<section id="einleitung" class="level2" data-number="1">
+<h2 data-number="1"><span class="header-section-number">1</span> Einleitung</h2>
+<p>Der Bestellpunkt <span class="math inline"><em>s</em></span> ist der
+Lagerbestand, bei dessen Unterschreiten nachbestellt wird. Klassische
+Lehrbücher setzen eine stationäre, normalverteilte Nachfrage voraus <span
+class="citation" data-cites="silver2017 axsaeter2015">(Silver, Pyke, und Thomas
+2017; Axsäter 2015)</span>. In der Praxis schwankt die Nachfrage nach
+Ersatzteilen jedoch stark mit der Jahreszeit<a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, und
+die Lieferzeiten der Hersteller sind selbst unsicher.</p>
+<p>Wir untersuchen, wie gut sich drei einfache Verfahren unter diesen
+Bedingungen schlagen. Unser Beitrag ist eine Simulation mit realen
+Nachfragedaten eines mittelständischen Großhändlers<a href="#fn2"
+class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+</section>
+<section id="modell" class="level2" data-number="2">
+<h2 data-number="2"><span class="header-section-number">2</span> Modell</h2>
+<p>Für jede Periode <span class="math inline"><em>t</em></span> sei <span
+class="math inline"><em>d</em><sub><em>t</em></sub></span> die Nachfrage
+und <span class="math inline"><em>L</em></span> die Lieferzeit in Tagen.
+Der Bestellpunkt ergibt sich aus der erwarteten Nachfrage während der
+Lieferzeit und einem Sicherheitsbestand:</p>
+<p><span class="math display"><em>s</em> = <em>μ</em><sub><em>L</em></sub> + <em>z</em> · <em>σ</em><sub><em>L</em></sub>,  <em>σ</em><sub><em>L</em></sub> = √(<em>L</em> <em>σ</em><sub><em>d</em></sub><sup>2</sup> + <em>μ</em><sub><em>d</em></sub><sup>2</sup> <em>σ</em><sub><em>L</em></sub><sup>2</sup>)</span></p>
+<p>Dabei ist <span class="math inline"><em>z</em></span> das Quantil der
+Standardnormalverteilung zum gewünschten Servicegrad. Verfahren A schätzt
+<span class="math inline"><em>μ</em></span> und <span
+class="math inline"><em>σ</em></span> einmal aus dem Vorjahr, Verfahren B
+monatlich aus den letzten zwölf Monaten, Verfahren C mit exponentieller
+Glättung (<span class="math inline"><em>α</em> = 0.2</span>).</p>
+<figure>
+<img src="../images/photo.jpg" style="width:60.0%" alt="Das Ersatzteillager in Kassel" />
+<figcaption aria-hidden="true">Das Ersatzteillager in Kassel</figcaption>
+</figure>
+</section>
+<section id="ergebnisse" class="level2" data-number="3">
+<h2 data-number="3"><span class="header-section-number">3</span> Ergebnisse</h2>
+<p><a href="#tbl:ergebnis" data-reference-type="ref" data-reference="tbl:ergebnis">Tabelle 1</a> fasst die Ergebnisse über alle 1.240 Artikel zusammen.
+Verfahren C erreicht den höchsten Servicegrad, ohne den Lagerbestand
+nennenswert zu erhöhen.</p>
+<div id="tbl:ergebnis">
+<table>
+<caption>Tabelle 1: Ergebnisse der Simulation über 36 Monate</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Verfahren</th>
+<th style="text-align: right;">Servicegrad</th>
+<th style="text-align: right;">Fehlmengen</th>
+<th style="text-align: right;">Mittlerer Bestand</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A (Vorjahr)</td>
+<td style="text-align: right;">91,2 %</td>
+<td style="text-align: right;">4.812</td>
+<td style="text-align: right;">18.340 €</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B (gleitend)</td>
+<td style="text-align: right;">94,6 %</td>
+<td style="text-align: right;">3.105</td>
+<td style="text-align: right;">18.910 €</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C (geglättet)</td>
+<td style="text-align: right;">96,1 %</td>
+<td style="text-align: right;">2.839</td>
+<td style="text-align: right;">18.720 €</td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>Ein gleitend geschätzter Sicherheitsbestand ist für saisonale Teile
+fast immer die bessere Wahl.</p>
+</blockquote>
+<p>Die Unterschiede zwischen B und C sind klein; für Artikel mit sehr
+seltener Nachfrage empfehlen sich eigene Verfahren <span class="citation"
+data-cites="croston1972">(Croston 1972)</span>. Den Code der Simulation
+starten Sie mit <code>python sim.py --monate 36</code>.</p>
+</section>
+<section id="literatur" class="level2 unnumbered">
+<h2 class="unnumbered">Literatur</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-axsaeter2015" class="csl-entry" role="listitem">
+Axsäter, Sven. 2015. <em>Inventory Control</em>. 3. Aufl. International
+Series in Operations Research &amp; Management Science. Cham: Springer.
+</div>
+<div id="ref-croston1972" class="csl-entry" role="listitem">
+Croston, J. D. 1972. <span>„Forecasting and Stock Control for
+Intermittent Demands“</span>. <em>Operational Research Quarterly</em> 23
+(3): 289–303.
+</div>
+<div id="ref-silver2017" class="csl-entry" role="listitem">
+Silver, Edward A., David F. Pyke, und Douglas J. Thomas. 2017.
+<em>Inventory and Production Management in Supply Chains</em>. 4. Aufl.
+Boca Raton: CRC Press.
+</div>
+</div>
+</section>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Im untersuchten Lager liegt die Nachfrage nach
+Heizungsteilen im Januar beim Vierfachen des Juliwerts.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Die Daten wurden anonymisiert; Artikelnummern sind
+durch fortlaufende Kennungen ersetzt.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>

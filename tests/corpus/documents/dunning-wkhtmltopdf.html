@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>2. Mahnung – Kundennummer 40-2291</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+/* Written for wkhtmltopdf (Qt WebKit): old flexbox, page-break-* and zoom against its DPI. */
+@page { size: A4; margin: 15mm 18mm 20mm 20mm; }
+* { -webkit-box-sizing: border-box; box-sizing: border-box; }
+body { font-family: Inter, sans-serif; font-size: 13px; color: #333; margin: 0; }
+.sheet { zoom: 0.85; }
+.header { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; -webkit-box-align: end; border-bottom: 2px solid #2b2b2b; padding-bottom: 8px; }
+.header .name { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.header .name span { color: #c92a2a; }
+.header .claim { font-size: 11px; color: #777; text-align: right; }
+.row { display: -webkit-box; margin-top: 30px; }
+.row .col { -webkit-box-flex: 1; }
+.row .col.narrow { -webkit-box-flex: 0; width: 230px; }
+.sender-line { font-size: 9px; color: #777; text-decoration: underline; margin-bottom: 6px; }
+.facts { width: 100%; border-collapse: collapse; font-size: 12px; }
+.facts td { padding: 2px 0; }
+.facts td.l { color: #777; }
+.facts td.v { text-align: right; }
+h1 { font-size: 20px; margin: 40px 0 6px; color: #c92a2a; }
+.lead { margin: 0 0 16px; color: #555; }
+p { line-height: 1.5; margin: 0 0 10px; }
+table.items { width: 100%; border-collapse: collapse; margin: 14px 0; page-break-inside: auto; }
+table.items thead { display: table-header-group; }
+table.items tfoot { display: table-row-group; }
+table.items tr { page-break-inside: avoid; page-break-after: auto; }
+table.items th { background: #f1f3f5; border-top: 1px solid #ced4da; border-bottom: 1px solid #ced4da; padding: 7px 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: #555; }
+table.items td { padding: 7px 8px; border-bottom: 1px solid #e9ecef; }
+table.items .num { text-align: right; white-space: nowrap; }
+table.items tfoot td { border-bottom: 0; }
+table.items tfoot tr.total td { background: #fff5f5; border-top: 2px solid #c92a2a; font-weight: 700; font-size: 15px; }
+.box { display: -webkit-box; border: 1px solid #ced4da; margin-top: 16px; page-break-inside: avoid; }
+.box > div { -webkit-box-flex: 1; padding: 10px 12px; }
+.box > div + div { border-left: 1px solid #ced4da; }
+.box small { display: block; font-size: 10px; text-transform: uppercase; color: #868e96; margin-bottom: 2px; }
+.box strong { font-size: 14px; }
+.warning { border-left: 4px solid #c92a2a; background: #fff5f5; padding: 8px 12px; margin: 16px 0; }
+.page-break { page-break-before: always; }
+.small { font-size: 11px; color: #666; }
+ol.steps { padding-left: 20px; margin: 0 0 10px; }
+ol.steps li { margin-bottom: 4px; }
+.footer { margin-top: 30px; border-top: 1px solid #ced4da; padding-top: 8px; display: -webkit-box; font-size: 10px; color: #868e96; }
+.footer div { -webkit-box-flex: 1; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="header">
+    <div class="name">Fit<span>&amp;</span>Fun Studios</div>
+    <div class="claim">Fit&amp;Fun Studios GmbH · Kundenservice Beitragswesen<br>Postfach 10 22 61 · 44022 Dortmund</div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="sender-line">Fit&amp;Fun Studios GmbH · Postfach 10 22 61 · 44022 Dortmund</div>
+      Herrn<br>Dennis Kowalczyk<br>Hohe Straße 71<br>44139 Dortmund
+    </div>
+    <div class="col narrow">
+      <table class="facts">
+        <tr><td class="l">Datum</td><td class="v">11.11.2026</td></tr>
+        <tr><td class="l">Kundennummer</td><td class="v">40-2291</td></tr>
+        <tr><td class="l">Vertrag</td><td class="v">Premium 24</td></tr>
+        <tr><td class="l">Studio</td><td class="v">Dortmund-Mitte</td></tr>
+        <tr><td class="l">Mahnstufe</td><td class="v"><strong>2</strong></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h1>2. Mahnung</h1>
+  <p class="lead">Offene Mitgliedsbeiträge aus Ihrem Vertrag vom 01.03.2025</p>
+  <p>Sehr geehrter Herr Kowalczyk,</p>
+  <p>leider konnten wir trotz unserer Zahlungserinnerung vom 14.10.2026 keinen Zahlungseingang für die unten aufgeführten Beiträge feststellen. Die Lastschriften wurden von Ihrer Bank mangels Deckung zurückgegeben; die dafür berechneten Bankgebühren haben wir Ihnen weiterbelastet.</p>
+
+  <table class="items">
+    <thead><tr><th style="width:14%">Fällig am</th><th>Bezeichnung</th><th class="num" style="width:13%">Betrag</th><th class="num" style="width:13%">Gebühr</th><th class="num" style="width:13%">Zinsen</th><th class="num" style="width:14%">Summe</th></tr></thead>
+    <tbody>
+      <tr><td>01.08.2026</td><td>Beitrag August 2026</td><td class="num">39,90 €</td><td class="num">3,50 €</td><td class="num">0,59 €</td><td class="num">43,99 €</td></tr>
+      <tr><td>01.09.2026</td><td>Beitrag September 2026</td><td class="num">39,90 €</td><td class="num">3,50 €</td><td class="num">0,40 €</td><td class="num">43,80 €</td></tr>
+      <tr><td>01.10.2026</td><td>Beitrag Oktober 2026</td><td class="num">39,90 €</td><td class="num">3,50 €</td><td class="num">0,21 €</td><td class="num">43,61 €</td></tr>
+      <tr><td>15.09.2026</td><td>Getränkeflatrate Q3 2026</td><td class="num">27,00 €</td><td class="num">–</td><td class="num">0,24 €</td><td class="num">27,24 €</td></tr>
+      <tr><td>14.10.2026</td><td>Mahngebühr Zahlungserinnerung</td><td class="num">–</td><td class="num">2,50 €</td><td class="num">–</td><td class="num">2,50 €</td></tr>
+      <tr><td>11.11.2026</td><td>Mahngebühr 2. Mahnung</td><td class="num">–</td><td class="num">5,00 €</td><td class="num">–</td><td class="num">5,00 €</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="2">Zwischensumme</td><td class="num">146,70 €</td><td class="num">18,00 €</td><td class="num">1,44 €</td><td class="num">166,14 €</td></tr>
+      <tr><td colspan="5">abzüglich Teilzahlung vom 02.11.2026</td><td class="num">−40,00 €</td></tr>
+      <tr class="total"><td colspan="5">Offener Gesamtbetrag</td><td class="num">126,14 €</td></tr>
+    </tfoot>
+  </table>
+  <p class="small">Verzugszinsen: 5 Prozentpunkte über dem Basiszinssatz (§ 288 Abs. 1 BGB), derzeit 7,27 % p. a., taggenau berechnet bis zum Datum dieses Schreibens.</p>
+
+  <div class="box">
+    <div><small>Zahlbar bis</small><strong>25.11.2026</strong></div>
+    <div><small>IBAN</small><strong>DE89 4405 0199 0001 2345 67</strong></div>
+    <div><small>Verwendungszweck</small><strong>40-2291 M2</strong></div>
+  </div>
+
+  <div class="warning"><strong>Bitte beachten Sie:</strong> Geht der Betrag nicht bis zum 25.11.2026 bei uns ein, übergeben wir die Forderung ohne weitere Ankündigung an unser Inkassobüro. Dadurch entstehen Ihnen weitere Kosten. Ihr Zugang zum Studio ist bis zum Ausgleich gesperrt.</div>
+  <p>Sollten Sie die Zahlung inzwischen geleistet haben, betrachten Sie dieses Schreiben bitte als gegenstandslos. Wenn Sie den Betrag nicht auf einmal zahlen können, sprechen Sie uns an: Wir bieten Ihnen gerne eine Ratenzahlung an.</p>
+  <p>Mit freundlichen Grüßen<br><br>Ihr Team Beitragswesen</p>
+
+  <div class="page-break"></div>
+  <h1 style="margin-top:0">Ihre Möglichkeiten</h1>
+  <p class="lead">So gleichen Sie den offenen Betrag aus</p>
+  <ol class="steps">
+    <li><strong>Überweisung</strong> auf das oben genannte Konto mit dem Verwendungszweck <em>40-2291 M2</em>.</li>
+    <li><strong>Barzahlung</strong> am Empfang Ihres Studios während der Servicezeiten (Mo–Fr 9–21 Uhr).</li>
+    <li><strong>Ratenzahlung</strong>: drei Monatsraten zu 42,05 €, zusammen mit dem laufenden Beitrag. Rufen Sie uns dazu an: 0231 0880 455-0.</li>
+  </ol>
+  <div class="box">
+    <div><small>Telefon</small><strong>0231 0880 455-0</strong></div>
+    <div><small>E-Mail</small><strong>beitrag@fitfun.example</strong></div>
+  </div>
+  <div class="footer">
+    <div>Fit&amp;Fun Studios GmbH<br>Sitz Dortmund, AG Dortmund HRB 31207</div>
+    <div>Geschäftsführung<br>Melanie Brandt, Kai Nowak</div>
+    <div>Gläubiger-ID<br>DE98ZZZ09999999999</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Produktetiketten Charge 27-118</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: 100mm 150mm; margin: 4mm; }
+html { font: 7pt/1.25 Inter, sans-serif; color: #1c1917; }
+body { margin: 0; }
+.label { height: 142mm; box-sizing: border-box; border: .6mm solid #1c1917; border-radius: 2.5mm; padding: 4mm 4mm 3mm 9mm; position: relative; break-after: page; display: flex; flex-direction: column; overflow: hidden; }
+.label:last-child { break-after: auto; }
+.side { position: absolute; left: 0; top: 0; bottom: 0; width: 6mm; background: var(--tone); color: #fff; writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; font-size: 6.5pt; line-height: 6mm; }
+.brand { display: flex; justify-content: space-between; align-items: center; }
+.brand img { height: 7mm; }
+.brand b { font-size: 6pt; letter-spacing: .2em; color: var(--tone); }
+h1 { font-size: 15pt; line-height: 1.05; margin: 3mm 0 1mm; }
+.sub { color: #57534e; margin: 0 0 2mm; }
+.weight { display: flex; align-items: baseline; gap: 1.5mm; margin-bottom: 2mm; }
+.weight b { font-size: 18pt; }
+.weight .e { font-size: 12pt; font-weight: 700; }
+.ingredients { font-size: 6.2pt; text-align: justify; hyphens: auto; margin: 0 0 2mm; }
+.ingredients strong { text-transform: uppercase; }
+table.nutri { border-collapse: collapse; width: 100%; font-size: 6.4pt; border: .4mm solid #1c1917; }
+table.nutri caption { text-align: left; font-weight: 700; font-size: 7.5pt; padding-bottom: .8mm; }
+table.nutri th, table.nutri td { padding: .5mm 1.2mm; border-bottom: .2mm solid #1c1917; text-align: left; font-weight: 400; }
+table.nutri td { text-align: right; font-variant-numeric: tabular-nums; }
+table.nutri thead th { border-bottom: .8mm solid #1c1917; font-weight: 700; }
+table.nutri tr.sub th { padding-left: 4mm; }
+.icons { display: flex; gap: 2mm; margin: 2mm 0; }
+.icons svg { width: 8mm; height: 8mm; }
+.bottom { margin-top: auto; display: grid; grid-template-columns: 1fr auto; gap: 1mm 3mm; align-items: end; }
+.lot { font-size: 6.5pt; font-variant-numeric: tabular-nums; }
+.lot b { display: inline-block; min-width: 13mm; }
+.ean { width: 34mm; height: 18mm; }
+.ean text { font: 8px Inter, sans-serif; }
+.storage { grid-column: 1 / -1; font-size: 6pt; color: #57534e; border-top: .2mm dashed #a8a29e; padding-top: 1mm; }
+</style></head><body>
+<section class="label" style="--tone: #9a3412">
+  <div class="side">Hofmanufaktur · Charge 27-118</div>
+  <div class="brand"><img src="../images/logo.png" alt=""><b>BIO · DE-ÖKO-006</b></div>
+  <h1>Kürbiskern-Pesto</h1>
+  <p class="sub">mit Bergkäse und Petersilie</p>
+  <div class="weight"><b>180</b>g<span class="e">e</span></div>
+  <p class="ingredients"><b>Zutaten:</b> Rapsöl*, Kürbiskerne* 24 %, Petersilie* 12 %, <strong>Bergkäse</strong>* (<strong>Milch</strong>, Salz, Lab) 10 %, <strong>Cashewkerne</strong>*, Zitronensaft*, Meersalz, Knoblauch*, Pfeffer*. *aus kontrolliert ökologischer Landwirtschaft. Kann Spuren von <strong>Sellerie</strong> und <strong>Senf</strong> enthalten.</p>
+  <table class="nutri">
+    <caption>Nährwerte</caption>
+    <thead><tr><th>pro 100 g</th><td style="font-weight:700"></td></tr></thead>
+    <tr><th>Energie</th><td>2.297 kJ / 557 kcal</td></tr>
+    <tr><th>Fett</th><td>56 g</td></tr>
+    <tr class="sub"><th>davon gesättigte Fettsäuren</th><td>7,4 g</td></tr>
+    <tr><th>Kohlenhydrate</th><td>3,1 g</td></tr>
+    <tr class="sub"><th>davon Zucker</th><td>1,2 g</td></tr>
+    <tr><th>Eiweiß</th><td>11 g</td></tr>
+    <tr><th>Salz</th><td>1,6 g</td></tr>
+  </table>
+  <div class="icons">
+    <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#65a30d"/><path d="M9 17 L14 22 L24 10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#1c1917" stroke-width="2"/><path d="M16 6 v14 M10 14 l6 6 6-6 M8 25 h16" fill="none" stroke="#1c1917" stroke-width="2.4"/></svg>
+    <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="#0369a1" stroke-width="2"/><text x="16" y="21" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#0369a1">7°</text></svg>
+  </div>
+  <div class="bottom">
+    <div class="lot"><b>Charge</b>27-118-04<br><b>MHD</b>14.06.2027<br><b>Abgefüllt</b>14.03.2027</div>
+    <svg class="ean" viewBox="0 0 113 64" shape-rendering="crispEdges"><g fill="#000">
+      <rect x="10" y="0" width="1" height="56"/><rect x="12" y="0" width="1" height="56"/>
+      <rect x="15" width="2" height="50"/><rect x="19" width="1" height="50"/><rect x="22" width="1" height="50"/><rect x="25" width="3" height="50"/><rect x="29" width="2" height="50"/><rect x="33" width="1" height="50"/><rect x="36" width="1" height="50"/><rect x="39" width="2" height="50"/><rect x="43" width="3" height="50"/><rect x="47" width="1" height="50"/><rect x="50" width="2" height="50"/><rect x="54" width="1" height="50"/>
+      <rect x="56" y="0" width="1" height="56"/><rect x="58" y="0" width="1" height="56"/>
+      <rect x="60" width="3" height="50"/><rect x="64" width="1" height="50"/><rect x="67" width="2" height="50"/><rect x="71" width="1" height="50"/><rect x="74" width="1" height="50"/><rect x="77" width="3" height="50"/><rect x="81" width="2" height="50"/><rect x="85" width="1" height="50"/><rect x="88" width="3" height="50"/><rect x="92" width="1" height="50"/><rect x="95" width="1" height="50"/><rect x="98" width="2" height="50"/>
+      <rect x="102" y="0" width="1" height="56"/><rect x="104" y="0" width="1" height="56"/></g>
+      <text x="4" y="62">4</text><text x="18" y="62" letter-spacing="2.2">260381</text><text x="63" y="62" letter-spacing="2.2">540297</text></svg>
+    <div class="storage">Nach dem Öffnen gekühlt lagern und innerhalb von 7 Tagen verbrauchen. Ölschicht stets bedeckt halten.<br>Hofmanufaktur Grünwald GmbH · Am Mühlbach 3 · 83646 Bad Tölz</div>
+  </div>
+</section>
+<section class="label" style="--tone: #1d4ed8">
+  <div class="side">Hofmanufaktur · Charge 27-121</div>
+  <div class="brand"><img src="../images/logo.png" alt=""><b>BIO · DE-ÖKO-006</b></div>
+  <h1>Wildheidelbeer-Fruchtaufstrich</h1>
+  <p class="sub">55 % Fruchtanteil, mit Rohrohrzucker</p>
+  <div class="weight"><b>220</b>g<span class="e">e</span></div>
+  <p class="ingredients"><b>Zutaten:</b> Wildheidelbeeren* 55 %, Rohrohrzucker*, Zitronensaft*, Geliermittel: Pektin. Hergestellt aus 55 g Früchten je 100 g, Gesamtzuckergehalt 49 g je 100 g. *aus kontrolliert ökologischer Landwirtschaft.</p>
+  <table class="nutri">
+    <caption>Nährwerte</caption>
+    <thead><tr><th>pro 100 g</th><td></td></tr></thead>
+    <tr><th>Energie</th><td>866 kJ / 204 kcal</td></tr>
+    <tr><th>Fett</th><td>0,3 g</td></tr>
+    <tr class="sub"><th>davon gesättigte Fettsäuren</th><td>&lt; 0,1 g</td></tr>
+    <tr><th>Kohlenhydrate</th><td>49 g</td></tr>
+    <tr class="sub"><th>davon Zucker</th><td>49 g</td></tr>
+    <tr><th>Eiweiß</th><td>0,5 g</td></tr>
+    <tr><th>Salz</th><td>0,01 g</td></tr>
+  </table>
+  <div class="icons">
+    <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#65a30d"/><path d="M9 17 L14 22 L24 10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg viewBox="0 0 32 32"><path d="M16 2 L30 28 H2 Z" fill="#facc15" stroke="#1c1917" stroke-width="2" stroke-linejoin="round"/><text x="16" y="25" text-anchor="middle" font-family="Inter" font-weight="700" font-size="14">!</text></svg>
+  </div>
+  <div class="bottom">
+    <div class="lot"><b>Charge</b>27-121-01<br><b>MHD</b>31.12.2028<br><b>Abgefüllt</b>15.03.2027</div>
+    <svg class="ean" viewBox="0 0 113 64" shape-rendering="crispEdges"><g fill="#000">
+      <rect x="10" y="0" width="1" height="56"/><rect x="12" y="0" width="1" height="56"/>
+      <rect x="14" width="1" height="50"/><rect x="17" width="3" height="50"/><rect x="21" width="2" height="50"/><rect x="25" width="1" height="50"/><rect x="28" width="2" height="50"/><rect x="31" width="1" height="50"/><rect x="34" width="3" height="50"/><rect x="38" width="1" height="50"/><rect x="41" width="2" height="50"/><rect x="45" width="1" height="50"/><rect x="48" width="3" height="50"/><rect x="52" width="2" height="50"/>
+      <rect x="56" y="0" width="1" height="56"/><rect x="58" y="0" width="1" height="56"/>
+      <rect x="61" width="2" height="50"/><rect x="64" width="1" height="50"/><rect x="68" width="3" height="50"/><rect x="72" width="1" height="50"/><rect x="75" width="2" height="50"/><rect x="79" width="1" height="50"/><rect x="82" width="1" height="50"/><rect x="85" width="3" height="50"/><rect x="89" width="2" height="50"/><rect x="93" width="1" height="50"/><rect x="96" width="2" height="50"/><rect x="99" width="1" height="50"/>
+      <rect x="102" y="0" width="1" height="56"/><rect x="104" y="0" width="1" height="56"/></g>
+      <text x="4" y="62">4</text><text x="18" y="62" letter-spacing="2.2">260381</text><text x="63" y="62" letter-spacing="2.2">540310</text></svg>
+    <div class="storage">Nach dem Öffnen gekühlt lagern. Ungeöffnet kühl und trocken lagern.<br>Hofmanufaktur Grünwald GmbH · Am Mühlbach 3 · 83646 Bad Tölz</div>
+  </div>
+</section>
+</body></html>

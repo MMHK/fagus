@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notification settings</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@page { size: Letter; margin: 0.6in; }
+:root { color-scheme: light; --accent: #0f766e; accent-color: var(--accent); }
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.5 Inter, sans-serif; color: #111; }
+h1 { font: 600 22px/1.2 Inter; margin: 0 0 4px; }
+.sub { color: #555; margin: 0 0 20px; }
+.tabs { display: flex; gap: 20px; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+.tabs a { padding: 8px 0; color: #666; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-current] { color: #111; border-color: #111; font-weight: 400; }
+fieldset { border: 0; padding: 0; margin: 0 0 24px; }
+legend { font-weight: 600; font-size: 15px; padding: 0; margin-bottom: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 0; border-top: 1px solid #eee; }
+.row:last-child { border-bottom: 1px solid #eee; }
+.row .text b { display: block; font-weight: 400; }
+.row .text span { color: #666; font-size: 13px; }
+/* toggle switch built from a checkbox */
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.switch .slider { position: absolute; inset: 0; background: #d4d4d4; border-radius: 22px; transition: .2s; }
+.switch .slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.switch input:checked + .slider { background: var(--accent); }
+.switch input:checked + .slider::before { transform: translateX(18px); }
+.switch input:disabled + .slider { opacity: .5; }
+/* switch from Pico-style role=switch */
+input[role=switch] { appearance: none; width: 2.25em; height: 1.25em; border: 2px solid #bbb; border-radius: 1.25em; background: #bbb; margin: 0; vertical-align: middle; position: relative; flex: none; }
+input[role=switch]::before { content: ""; display: block; width: calc(1.25em - 4px); height: 100%; border-radius: 50%; background: #fff; }
+input[role=switch]:checked { background: var(--accent); border-color: var(--accent); }
+input[role=switch]:checked::before { margin-inline-start: calc(1em); }
+.seg { display: inline-flex; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; }
+.seg label { padding: 4px 12px; border-left: 1px solid #ccc; }
+.seg label:first-of-type { border-left: 0; }
+.seg input { position: absolute; opacity: 0; }
+.seg input:checked + label { background: #111; color: #fff; }
+select, input[type=time], input[type=email] { font: inherit; padding: 4px 8px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+.radios label { display: block; margin: 4px 0; }
+.radios input { margin: 0 8px 0 0; vertical-align: -2px; }
+.danger { border: 1px solid #fca5a5; border-radius: 10px; padding: 16px; background: #fef2f2; display: flex; align-items: center; justify-content: space-between; }
+.danger button { font: inherit; font-weight: 400; color: #fff; background: #dc2626; border: 0; border-radius: 6px; padding: 6px 14px; }
+.foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.foot button { font: inherit; padding: 6px 16px; border-radius: 6px; border: 1px solid #ccc; background: #fff; }
+.foot button.primary { background: #111; color: #fff; border-color: #111; }
+</style>
+</head>
+<body>
+<h1>Settings</h1>
+<p class="sub">Manage how and when we contact you.</p>
+<nav class="tabs"><a href="#">Profile</a><a href="#">Account</a><a href="#" aria-current="page">Notifications</a><a href="#">Billing</a><a href="#">Integrations</a></nav>
+<fieldset><legend>E-mail</legend>
+<div class="row"><div class="text"><b>Product updates</b><span>New features and improvements, about once a month.</span></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="row"><div class="text"><b>Weekly digest</b><span>A summary of activity in your workspaces.</span></div><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+<div class="row"><div class="text"><b>Security alerts</b><span>Always on: sign-ins from new devices and password changes.</span></div><label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label></div>
+<div class="row"><div class="text"><b>Send to</b><span>Where we send e-mail notifications.</span></div><input type="email" value="ops@example.com" size="24"></div>
+</fieldset>
+<fieldset><legend>Push and mobile</legend>
+<div class="row"><div class="text"><b>Mentions</b><span>When someone mentions you in a comment.</span></div><input type="checkbox" role="switch" checked></div>
+<div class="row"><div class="text"><b>Direct messages</b><span>Only from people in your organisation.</span></div><input type="checkbox" role="switch"></div>
+<div class="row"><div class="text"><b>Quiet hours</b><span>No push notifications between these times.</span></div><span><input type="time" value="22:00"> – <input type="time" value="07:30"></span></div>
+<div class="row"><div class="text"><b>Badge count</b><span>Show unread count on the app icon.</span></div><div class="seg"><input type="radio" name="b" id="b1"><label for="b1">Off</label><input type="radio" name="b" id="b2" checked><label for="b2">Mentions</label><input type="radio" name="b" id="b3"><label for="b3">All</label></div></div>
+</fieldset>
+<fieldset><legend>Frequency</legend>
+<div class="radios">
+<label><input type="radio" name="f" checked> Immediately</label>
+<label><input type="radio" name="f"> Hourly summary</label>
+<label><input type="radio" name="f"> Daily at <select><option>08:00</option><option selected>09:00</option></select></label>
+<label><input type="radio" name="f" disabled> Weekly (Enterprise plan only)</label>
+</div>
+</fieldset>
+<div class="danger"><div><b>Unsubscribe from everything</b><br><span style="color:#7f1d1d;font-size:13px">You will still receive legally required messages.</span></div><button type="button">Unsubscribe</button></div>
+<div class="foot"><button type="reset">Cancel</button><button class="primary">Save changes</button></div>
+</body>
+</html>

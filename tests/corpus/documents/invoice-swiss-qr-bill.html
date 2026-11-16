@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<title>Rechnung 2026-0458</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { display: flex; flex-direction: column; min-height: 100vh; font: 9.5pt/1.4 Inter, sans-serif; color: #000; }
+.sheet { flex: 1 0 auto; padding: 18mm 20mm 0 22mm; }
+.head { display: grid; grid-template-columns: 1fr auto; align-items: start; margin-bottom: 8mm; }
+.head .brand { font-weight: 700; font-size: 14pt; }
+.head .brand span { display: block; font-weight: 400; font-size: 8pt; color: #555; }
+.head address { font-style: normal; text-align: right; font-size: 8pt; line-height: 1.35; color: #333; }
+.recipient { margin-left: 100mm; min-height: 24mm; line-height: 1.35; }
+.meta { display: flex; gap: 10mm; font-size: 8.5pt; margin: 6mm 0 5mm; }
+.meta div b { display: block; font-size: 7.5pt; color: #555; font-weight: 400; }
+h1 { font-size: 13pt; margin: 0 0 3mm; }
+table.pos { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.pos th, table.pos td { padding: 1.4mm 1mm; border-bottom: .3mm solid #bbb; text-align: left; }
+table.pos th { font-size: 8pt; border-bottom: .5mm solid #000; }
+table.pos .r { text-align: right; }
+table.pos tfoot td { border-bottom: 0; }
+table.pos tfoot tr.total td { font-weight: 700; border-top: .5mm solid #000; border-bottom: 1mm double #000; }
+.thanks { margin-top: 6mm; }
+/* the payment part after the Swiss Implementation Guidelines for the QR-bill (version 2.3):
+   receipt 62 mm and payment part 148 mm wide, 105 mm tall, at the bottom of the page */
+.qr-bill { flex: none; position: relative; display: flex; width: 210mm; height: 105mm; margin-top: 6mm; border-top: .2mm dashed #000; font-size: 8pt; line-height: 9pt; }
+.qr-bill::before { content: ""; position: absolute; top: -2.1mm; left: 52mm; width: 6mm; height: 4mm;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 16'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.6'%3E%3Ccircle cx='4' cy='4' r='3'/%3E%3Ccircle cx='4' cy='12' r='3'/%3E%3Cpath d='M6.5 5.5 L22 13 M6.5 10.5 L22 3'/%3E%3C/g%3E%3C/svg%3E"); }
+.receipt { width: 62mm; padding: 5mm; border-right: .2mm dashed #000; display: flex; flex-direction: column; }
+.payment { width: 148mm; padding: 5mm; display: grid; grid-template-columns: 51mm 1fr; grid-template-rows: auto 1fr auto; column-gap: 5mm; }
+.qr-bill h2 { font-size: 11pt; line-height: 13pt; margin: 0 0 5mm; font-weight: 700; }
+.qr-bill h3 { font-size: 6pt; line-height: 9pt; margin: 0; font-weight: 700; }
+.receipt h3 { font-size: 6pt; }
+.receipt p, .payment p { margin: 0 0 3mm; }
+.receipt p { font-size: 8pt; }
+.receipt .acceptance { margin-top: auto; text-align: right; font-size: 6pt; font-weight: 700; padding-right: 0; }
+.amount-row { display: flex; gap: 6mm; }
+.amount-row h3 + span { display: block; }
+.qr-square { grid-column: 1; width: 46mm; height: 46mm; margin: 0 0 5mm; position: relative; }
+.qr-square svg { width: 100%; height: 100%; display: block; }
+.qr-square .cross { position: absolute; left: 50%; top: 50%; width: 7mm; height: 7mm; transform: translate(-50%, -50%); }
+.payment .info { grid-column: 2; grid-row: 1 / span 3; }
+.payment .left-bottom { grid-column: 1; grid-row: 3; }
+.payment .further { grid-column: 1 / -1; font-size: 7pt; line-height: 8pt; }
+.payment .further b { font-weight: 700; }
+.blank { width: 40mm; height: 15mm; position: relative; }
+.blank::before { content: ""; position: absolute; inset: 0; border: .75pt solid #000; clip-path: polygon(0 0, 3mm 0, 3mm .75pt, .75pt .75pt, .75pt 2mm, 0 2mm, 0 calc(100% - 2mm), .75pt calc(100% - 2mm), .75pt calc(100% - .75pt), 3mm calc(100% - .75pt), 3mm 100%, 0 100%,
+  0 0, 100% 0); }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="head">
+    <div class="brand">Velowerk Bühler<span>Fahrräder · Service · Vermietung</span></div>
+    <address>Velowerk Bühler GmbH<br>Seestrasse 41<br>8800 Thalwil<br>CHE-412.778.903 MWST</address>
+  </header>
+  <div class="recipient">Frau<br>Corinne Aebischer-Vuilleumier<br>Rue du Château 12<br>2000 Neuchâtel</div>
+  <div class="meta">
+    <div><b>Rechnung</b>2026-0458</div>
+    <div><b>Datum</b>6. November 2026</div>
+    <div><b>Kunde</b>K-3307</div>
+    <div><b>Zahlbar bis</b>6. Dezember 2026</div>
+  </div>
+  <h1>Rechnung für den Herbstservice</h1>
+  <table class="pos">
+    <thead><tr><th>Pos.</th><th>Bezeichnung</th><th class="r">Menge</th><th class="r">Preis CHF</th><th class="r">Total CHF</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Service «Komfort» E-Bike, inkl. Software-Update Antrieb</td><td class="r">1</td><td class="r">189.00</td><td class="r">189.00</td></tr>
+      <tr><td>2</td><td>Bremsbeläge Scheibenbremse, organisch, Paar</td><td class="r">2</td><td class="r">32.50</td><td class="r">65.00</td></tr>
+      <tr><td>3</td><td>Kette 11-fach, inkl. Montage</td><td class="r">1</td><td class="r">54.90</td><td class="r">54.90</td></tr>
+      <tr><td>4</td><td>Reifen 27.5 × 2.4" Schwalbe, Paar</td><td class="r">1</td><td class="r">118.00</td><td class="r">118.00</td></tr>
+      <tr><td>5</td><td>Rabatt Stammkundin 5 % auf Pos. 1</td><td class="r">1</td><td class="r">−9.45</td><td class="r">−9.45</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="4">Total exkl. MWST</td><td class="r">417.45</td></tr>
+      <tr><td colspan="4">MWST 8.1 %</td><td class="r">33.81</td></tr>
+      <tr class="total"><td colspan="4">Total CHF</td><td class="r">451.26</td></tr>
+    </tfoot>
+  </table>
+  <p class="thanks">Besten Dank für Ihren Auftrag. Bitte verwenden Sie für die Zahlung den untenstehenden Zahlteil mit QR-Code.</p>
+</div>
+
+<section class="qr-bill" aria-label="Zahlteil">
+  <div class="receipt">
+    <h2>Empfangsschein</h2>
+    <h3>Konto / Zahlbar an</h3>
+    <p>CH44 3199 9123 0008 8901 2<br>Velowerk Bühler GmbH<br>Seestrasse 41<br>8800 Thalwil</p>
+    <h3>Referenz</h3>
+    <p>21 00000 00003 13947 14300 09017</p>
+    <h3>Zahlbar durch</h3>
+    <p>Corinne Aebischer-Vuilleumier<br>Rue du Château 12<br>2000 Neuchâtel</p>
+    <div class="amount-row"><div><h3>Währung</h3><span>CHF</span></div><div><h3>Betrag</h3><span>451.26</span></div></div>
+    <div class="acceptance">Annahmestelle</div>
+  </div>
+  <div class="payment">
+    <div>
+      <h2>Zahlteil</h2>
+      <div class="qr-square">
+        <svg viewBox="0 0 25 25" shape-rendering="crispEdges"><path d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2zM18 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 18h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM8 0h1v2H8zm2 1h3v1h-3zm4-1h2v3h-2zM9 3h2v2H9zm3 1h1v3h-1zm3 1h2v1h-2zM8 8h2v1H8zm3 0h1v2h-1zm3 0h3v1h-3zm5 0h1v2h-1zm2 0h3v1h-3zM0 9h2v1H0zm3 0h3v2H3zm6 2h2v1H9zm6-1h2v2h-2zm4 2h2v1h-2zm3 0h3v2h-3zM1 12h2v2H1zm5 0h2v1H6zm4 2h3v1h-3zm4 0h1v3h-1zm3-1h2v2h-2zm3 2h3v1h-3zM0 15h3v1H0zm5 0h2v2H5zm4 1h2v2H9zm9 1h2v2h-2zm4 0h3v1h-3zM8 18h1v3H8zm3 1h3v1h-3zm5 0h1v2h-1zm4 1h2v2h-2zm3 2h2v3h-2zM9 22h2v3H9zm3 1h3v1h-3zm5 0h3v2h-3z"/></svg>
+        <svg class="cross" viewBox="0 0 19.8 19.8"><rect width="19.8" height="19.8" fill="#fff"/><rect x=".7" y=".7" width="18.4" height="18.4" fill="#000"/><path fill="#fff" d="M8.3 4h3.2v4.3h4.3v3.2h-4.3v4.3H8.3v-4.3H4V8.3h4.3z"/></svg>
+      </div>
+    </div>
+    <div class="info">
+      <h3>Konto / Zahlbar an</h3>
+      <p>CH44 3199 9123 0008 8901 2<br>Velowerk Bühler GmbH<br>Seestrasse 41<br>8800 Thalwil</p>
+      <h3>Referenz</h3>
+      <p>21 00000 00003 13947 14300 09017</p>
+      <h3>Zusätzliche Informationen</h3>
+      <p>Rechnung 2026-0458 // Herbstservice<br>//S1/10/20260458/11/261106/30/412778903/32/8.1</p>
+      <h3>Zahlbar durch</h3>
+      <p>Corinne Aebischer-Vuilleumier<br>Rue du Château 12<br>2000 Neuchâtel</p>
+    </div>
+    <div class="left-bottom amount-row"><div><h3>Währung</h3><span>CHF</span></div><div><h3>Betrag</h3><span>451.26</span></div></div>
+  </div>
+</section>
+</body>
+</html>

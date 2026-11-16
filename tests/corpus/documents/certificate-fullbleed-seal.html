@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Certificate of Completion</title>
+<style>
+@font-face { font-family: Playfair; src: url(../../fonts/Inter-Bold.ttf); font-weight: 900; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4 landscape; margin: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: Inter, sans-serif; color: #1f2937; }
+.sheet { position: relative; width: 297mm; height: 210mm; overflow: hidden; box-sizing: border-box; padding: 14mm;
+  background: radial-gradient(ellipse at 15% 10%, #fff7e6 0, transparent 55%), radial-gradient(circle at 90% 95%, #e8f0ff 0, transparent 45%), linear-gradient(135deg, #fffdf8, #f6f1e7); }
+.frame { position: absolute; inset: 8mm; border: 3mm solid transparent; border-image: repeating-linear-gradient(45deg, #b08d57 0 4px, #e8d5a8 4px 8px) 12; }
+.frame::after { content: ""; position: absolute; inset: 3mm; border: 0.4mm solid #b08d57; outline: 0.25mm solid #b08d57; outline-offset: 1.2mm; }
+.corner { position: absolute; width: 26mm; height: 26mm; }
+.corner.tl { top: 12mm; left: 12mm; } .corner.tr { top: 12mm; right: 12mm; transform: scaleX(-1); } .corner.bl { bottom: 12mm; left: 12mm; transform: scaleY(-1); } .corner.br { bottom: 12mm; right: 12mm; transform: scale(-1); }
+.content { position: relative; text-align: center; padding-top: 22mm; }
+.org { font-size: 10pt; letter-spacing: .35em; text-transform: uppercase; color: #8a6d3b; }
+h1 { font: 900 44pt/1 Playfair, serif; margin: 6mm 0 2mm; color: #1e3a5f; letter-spacing: .02em; }
+h1 small { display: block; font: 700 12pt Inter, sans-serif; letter-spacing: .5em; text-transform: uppercase; color: #8a6d3b; margin-top: 3mm; }
+.presented { margin-top: 10mm; font-style: italic; color: #6b7280; }
+.name { font: 900 34pt/1.1 Playfair, serif; color: #111827; margin: 3mm auto 0; padding: 0 10mm 2mm; display: inline-block; border-bottom: 0.4mm solid #b08d57; background: linear-gradient(transparent 60%, rgb(232 213 168 / .45) 60%); }
+.what { max-width: 175mm; margin: 6mm auto 0; font-size: 11pt; line-height: 1.55; text-wrap: balance; }
+.footer { position: absolute; left: 30mm; right: 30mm; bottom: 26mm; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 12mm; }
+.sig { text-align: center; font-size: 9pt; }
+.sig svg { display: block; margin: 0 auto -2mm; }
+.sig .line { border-top: 0.3mm solid #374151; padding-top: 1.5mm; }
+.sig b { display: block; font-size: 10pt; }
+.seal { width: 34mm; height: 34mm; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient(from 0deg, #c9a24d, #f3e2b3, #c9a24d, #a37b2c, #c9a24d); box-shadow: 0 0 0 1.2mm #fff, 0 0 0 1.6mm #b08d57; }
+.seal::before { content: ""; position: absolute; inset: 3mm; border-radius: 50%; border: 0.4mm dashed rgb(255 255 255 / .8); }
+.seal span { font: 900 11pt/1.1 Playfair, serif; color: #fff; text-align: center; text-shadow: 0 0.3mm 0.6mm rgb(0 0 0 / .35); }
+.meta { position: absolute; right: 16mm; bottom: 15mm; display: flex; gap: 3mm; align-items: center; font-size: 7pt; color: #6b7280; text-align: right; }
+.meta svg { width: 16mm; height: 16mm; background: #fff; padding: 1mm; }
+.ribbon { position: absolute; top: 18mm; right: -14mm; width: 70mm; transform: rotate(45deg); background: #1e3a5f; color: #fff; text-align: center; font: 700 8pt/2.2 Inter; letter-spacing: .3em; box-shadow: 0 1mm 2mm rgb(0 0 0 / .25); }
+.watermark { position: absolute; inset: 0; display: grid; place-items: center; font: 900 160pt Playfair, serif; color: rgb(30 58 95 / .04); pointer-events: none; }
+</style></head><body>
+<div class="sheet">
+  <div class="watermark">A</div>
+  <div class="frame"></div>
+  <svg class="corner tl" viewBox="0 0 100 100"><path d="M0 0h60c-20 6-34 14-42 28C10 42 6 56 0 70z" fill="#b08d57" opacity=".85"/><path d="M8 8c30 0 50 10 58 30M8 8c0 30 10 50 30 58" fill="none" stroke="#1e3a5f" stroke-width="1.5"/><circle cx="20" cy="20" r="5" fill="#1e3a5f"/></svg>
+  <svg class="corner tr" viewBox="0 0 100 100"><path d="M0 0h60c-20 6-34 14-42 28C10 42 6 56 0 70z" fill="#b08d57" opacity=".85"/><path d="M8 8c30 0 50 10 58 30M8 8c0 30 10 50 30 58" fill="none" stroke="#1e3a5f" stroke-width="1.5"/><circle cx="20" cy="20" r="5" fill="#1e3a5f"/></svg>
+  <svg class="corner bl" viewBox="0 0 100 100"><path d="M0 0h60c-20 6-34 14-42 28C10 42 6 56 0 70z" fill="#b08d57" opacity=".85"/><path d="M8 8c30 0 50 10 58 30M8 8c0 30 10 50 30 58" fill="none" stroke="#1e3a5f" stroke-width="1.5"/><circle cx="20" cy="20" r="5" fill="#1e3a5f"/></svg>
+  <svg class="corner br" viewBox="0 0 100 100"><path d="M0 0h60c-20 6-34 14-42 28C10 42 6 56 0 70z" fill="#b08d57" opacity=".85"/><path d="M8 8c30 0 50 10 58 30M8 8c0 30 10 50 30 58" fill="none" stroke="#1e3a5f" stroke-width="1.5"/><circle cx="20" cy="20" r="5" fill="#1e3a5f"/></svg>
+  <div class="ribbon">VERIFIED</div>
+  <div class="content">
+    <div class="org">Aurelia Academy of Applied Data Science</div>
+    <h1>Certificate<small>of Completion</small></h1>
+    <div class="presented">This certificate is proudly presented to</div>
+    <div class="name">Dr. Ingrid Okonkwo-Haraldsen</div>
+    <p class="what">for successfully completing the 120-hour professional programme <b>“Machine Learning Operations in Regulated Industries”</b>, including a capstone project on model risk management, with distinction.</p>
+  </div>
+  <div class="footer">
+    <div class="sig"><svg width="160" height="44" viewBox="0 0 160 44"><path d="M4 34c12-26 22-30 26-10s6 16 16-6 12-14 16 6 10 10 22-12c6-10 10-6 12 4s8 12 18-6 10 4 16 10 12-2 24-12" fill="none" stroke="#1e3a5f" stroke-width="1.6" stroke-linecap="round"/></svg><div class="line"><b>Prof. Matteo Ricciardi</b>Programme Director</div></div>
+    <div class="seal"><span>AURELIA<br>2026</span></div>
+    <div class="sig"><svg width="160" height="44" viewBox="0 0 160 44"><path d="M6 30c8-14 18-24 28-12s4 18 18 2 16-20 22-4 14 12 26-8c8-12 16-6 18 6s10 10 20-8 8-4 16 2" fill="none" stroke="#1e3a5f" stroke-width="1.6" stroke-linecap="round"/></svg><div class="line"><b>Hannah Lindqvist</b>Head of Examinations</div></div>
+  </div>
+  <div class="meta"><div>Certificate ID<br><b>AAD-MLOPS-2026-04817</b><br>Issued 13 November 2026<br>verify.aurelia.example</div>
+    <svg viewBox="0 0 21 21" shape-rendering="crispEdges"><path d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2zM14 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 14h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM8 0h1v2H8zm2 1h2v1h-2zm-2 3h3v1H8zm4-1h1v3h-1zM8 8h2v1H8zm3 0h3v2h-3zm4 1h2v1h-2zm3-1h3v1h-3zM0 9h3v1H0zm4 0h2v2H4zm4 2h1v3H8zm2 1h3v1h-3zm4-1h2v2h-2zm3 1h3v1h-3zM1 12h2v1H1zm8 3h2v2H9zm3 1h1v3h-1zm2-1h3v1h-3zm4 1h2v2h-2zM8 19h3v1H8zm6 0h1v2h-1zm2 1h3v1h-3z"/></svg></div>
+</div>
+</body></html>

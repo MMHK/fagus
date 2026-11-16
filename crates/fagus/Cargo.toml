@@ -1,0 +1,33 @@
+[package]
+name = "fagus"
+description = "HTML and CSS to PDF, without a browser"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus-dom.workspace = true
+fagus-css.workspace = true
+fagus-style.workspace = true
+fagus-text.workspace = true
+fagus-layout.workspace = true
+fagus-paint.workspace = true
+fagus-pdf.workspace = true
+thiserror.workspace = true
+rustc-hash.workspace = true
+
+[features]
+default = ["parallel"]
+# Writes the PDF on a pool of threads (see the feature of fagus-pdf).
+parallel = ["fagus-pdf/parallel"]
+
+[dev-dependencies]
+flate2.workspace = true

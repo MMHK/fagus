@@ -1,0 +1,227 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Fagus\Laravel\Tests;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Fagus\Engine;
+use Fagus\Internal\Release;
+use Fagus\Laravel\Facades\Fagus;
+use Fagus\Laravel\PdfFactory;
+use Fagus\Laravel\PendingPdf;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use Orchestra\Testbench\Attributes\DefineEnvironment;
+use PHPUnit\Framework\Attributes\Test;
+
+final class FagusTest extends TestCase
+{
+    #[Test]
+    public function it_renders_blade_views(): void
+    {
+        $pdf = Fagus::view('invoice', ['number' => 'RE-1', 'lines' => ['Beratung', 'Entwicklung']])->render();
+
+        $this->assertStringStartsWith('%PDF-', $pdf->bytes());
+        $this->assertSame(1, $pdf->pages());
+        $this->assertSame([], $pdf->diagnostics());
+    }
+
+    #[Test]
+    public function it_downloads_and_shows_pdfs(): void
+    {
+        $download = Fagus::html('<p>Hallo</p>')->name('rechnung.pdf')->download();
+        $this->assertSame('application/pdf', $download->headers->get('Content-Type'));
+        $this->assertSame('attachment; filename=rechnung.pdf', $download->headers->get('Content-Disposition'));
+
+        $inline = Fagus::html('<p>Hallo</p>')->inline('Übersicht März.pdf');
+        $this->assertStringStartsWith('inline; filename=', (string) $inline->headers->get('Content-Disposition'));
+        $this->assertStringContainsString("filename*=utf-8''%C3%9Cbersicht%20M%C3%A4rz.pdf", (string) $inline->headers->get('Content-Disposition'));
+    }
+
+    #[Test]
+    public function controllers_can_return_pending_pdfs(): void
+    {
+        Route::get('/rechnung', fn (): PendingPdf => Fagus::view('invoice', ['number' => 'RE-2', 'lines' => []])->name('re-2.pdf'));
+
+        $response = $this->get('/rechnung');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', (string) $response->getContent());
+    }
+
+    #[Test]
+    public function it_stores_pdfs_on_disks(): void
+    {
+        Storage::fake('local');
+
+        $pdf = Fagus::html('<p>Archiv</p>')->pdfA('3b')->store('rechnungen/re-3.pdf');
+
+        Storage::disk('local')->assertExists('rechnungen/re-3.pdf');
+        $this->assertSame($pdf->bytes(), Storage::disk('local')->get('rechnungen/re-3.pdf'));
+    }
+
+    #[Test]
+    public function it_shares_one_engine(): void
+    {
+        $this->assertSame($this->app->make(Engine::class), Fagus::engine());
+        $this->assertSame(Fagus::engine(), $this->app->make('fagus')->engine());
+    }
+
+    #[Test]
+    #[DefineEnvironment('withOctane')]
+    public function it_warms_the_engine_under_octane(): void
+    {
+        $this->assertSame(['config', 'view', Engine::class], $this->app['config']->get('octane.warm'));
+
+        // What Octane does: it resolves the services in `warm` when its worker boots, gives each
+        // request a copy of the container and flushes the copy when the request ends.
+        $engine = $this->app->make(Engine::class);
+        $sandbox = clone $this->app;
+        $this->assertSame($engine, $sandbox->make(Engine::class));
+        $sandbox->flush();
+        $this->assertSame($engine, $this->app->make(Engine::class));
+    }
+
+    #[Test]
+    #[DefineEnvironment('withOctaneWarmingTheEngine')]
+    public function it_warms_the_engine_once(): void
+    {
+        $this->assertSame([Engine::class, 'view'], $this->app['config']->get('octane.warm'));
+    }
+
+    #[Test]
+    public function it_leaves_the_configuration_alone_without_octane(): void
+    {
+        $this->assertNull($this->app['config']->get('octane'));
+    }
+
+    protected function withOctane($app): void
+    {
+        $app['config']->set('octane.warm', ['config', 'view']);
+    }
+
+    protected function withOctaneWarmingTheEngine($app): void
+    {
+        $app['config']->set('octane.warm', [Engine::class, 'view']);
+    }
+
+    #[Test]
+    public function it_reads_files_from_the_base_directory(): void
+    {
+        $this->app['config']->set('fagus.base_directory', __DIR__.'/../../../tests');
+        $this->app->forgetInstance('fagus');
+        $this->app->forgetInstance(PdfFactory::class);
+
+        $pdf = Fagus::html('<img src="corpus/images/logo.png" width="40">')->render();
+
+        $this->assertSame([], $pdf->diagnostics());
+    }
+
+    #[Test]
+    public function it_writes_form_controls_in_the_configured_locale(): void
+    {
+        // What is drawn; the metadata differ, as the locale is the language of a document without one.
+        $render = static fn (string $html): array => self::drawn(Fagus::html($html)
+            ->tagged(false)
+            ->created(new DateTimeImmutable('2026-11-05 12:00:00', new DateTimeZone('Europe/Berlin')))
+            ->render()
+            ->bytes());
+        $controls = '<input type=submit> <input type=date value=2026-11-04>';
+        $english = $render($controls);
+        $german = $render('<body lang=de>'.$controls);
+
+        $this->app['config']->set('fagus.locale', 'de-DE');
+        $this->app->forgetInstance(Engine::class);
+        $this->app->forgetInstance('fagus');
+        $this->app->forgetInstance(PdfFactory::class);
+        Fagus::clearResolvedInstances();
+
+        $this->assertNotSame($english, $render($controls));
+        $this->assertSame($german, $render($controls));
+    }
+
+    #[Test]
+    public function it_tags_pdfs_unless_configured_otherwise(): void
+    {
+        $tagged = fn (PendingPdf $pdf): bool => str_contains(self::decoded($pdf->render()->bytes()), '/StructTreeRoot');
+        $this->assertTrue($tagged(Fagus::html('<p>Hallo</p>')));
+        $this->assertFalse($tagged(Fagus::html('<p>Hallo</p>')->tagged(false)));
+
+        $this->app['config']->set('fagus.tagged', false);
+        $this->app->forgetInstance('fagus');
+        $this->app->forgetInstance(PdfFactory::class);
+        Fagus::clearResolvedInstances();
+
+        $this->assertFalse($tagged(Fagus::html('<p>Hallo</p>')));
+        $this->assertTrue($tagged(Fagus::html('<p>Hallo</p>')->tagged()));
+    }
+
+    /**
+     * The bytes of a PDF followed by the decoded contents of its object streams.
+     */
+    private static function decoded(string $pdf): string
+    {
+        preg_match_all('~/Type/ObjStm/N \d+/First \d+/Filter/FlateDecode/Length (\d+)>>\nstream\n~', $pdf, $streams, PREG_OFFSET_CAPTURE);
+        $decoded = $pdf;
+        foreach ($streams[0] as $index => [$header, $offset]) {
+            $decoded .= (string) gzuncompress(substr($pdf, $offset + strlen($header), (int) $streams[1][$index][0]));
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * The streams of a PDF that hold what it draws: all but the metadata, the object streams and
+     * the cross-reference stream.
+     *
+     * @return list<string>
+     */
+    private static function drawn(string $pdf): array
+    {
+        preg_match_all('~<<(.*?)>>\nstream\n~s', $pdf, $streams, PREG_OFFSET_CAPTURE);
+        $drawn = [];
+        foreach ($streams[0] as $index => [$header, $offset]) {
+            $dictionary = $streams[1][$index][0];
+            if (preg_match('~/Type/(Metadata|ObjStm|XRef)\b~', $dictionary) === 1 || preg_match('~/Length (\d+)~', $dictionary, $length) !== 1) {
+                continue;
+            }
+            $drawn[] = substr($pdf, $offset + strlen($header), (int) $length[1]);
+        }
+
+        return $drawn;
+    }
+
+    #[Test]
+    public function it_renders_xhtml_with_the_configuration(): void
+    {
+        $this->app['config']->set('fagus.base_directory', __DIR__.'/../../../tests');
+        $this->app->forgetInstance('fagus');
+        $this->app->forgetInstance(PdfFactory::class);
+        Fagus::clearResolvedInstances();
+
+        $pdf = Fagus::xhtml('<html xmlns="http://www.w3.org/1999/xhtml"><body><div style="break-after: page"/><img src="corpus/images/logo.png" width="40"/></body></html>')->render();
+
+        $this->assertSame(2, $pdf->pages(), 'the empty div ends before the image');
+        $this->assertSame([], $pdf->diagnostics(), 'the image is found in the base directory');
+    }
+
+    #[Test]
+    public function it_reports_why_artisan_cannot_install_the_binary(): void
+    {
+        // A source without the binary: the installer fails, with or without pinned binaries.
+        $empty = sys_get_temp_dir().'/fagus-install-'.bin2hex(random_bytes(4));
+        mkdir($empty);
+        putenv("FAGUS_DOWNLOAD_URL={$empty}");
+        try {
+            $this->artisan('fagus:install', ['directory' => $empty.'/bin'])
+                ->expectsOutputToContain(Release::BINARIES === [] ? 'a development version without built binaries' : 'could not be downloaded')
+                ->assertFailed();
+        } finally {
+            putenv('FAGUS_DOWNLOAD_URL');
+            rmdir($empty);
+        }
+    }
+}

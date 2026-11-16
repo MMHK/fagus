@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Quittio's default template as its Blade views write it for mPDF, with the mPDF constructs in standard CSS and Fagus extensions (see README.md). -->
+<meta charset="utf-8">
+<style>
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; font-style: normal; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; font-style: normal; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+    @font-face { font-family: inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+/* Following pages start below their header (logo, title, number and buyer); the first page with the letterhead. */
+    @page { size: A4; margin: 40mm 19mm 37mm 20mm;
+      @top-center { content: element(quittioHeader); vertical-align: top; padding-top: 14.6mm; }
+      @bottom-center { content: element(quittioFooter); vertical-align: bottom; padding-bottom: 5.5mm; } }
+    @page :first { margin-top: 15mm; @top-center { content: none; } }
+    @page slip { margin: 40mm 0 0 0; @top-center { padding-left: 20mm; padding-right: 19mm; }
+      @bottom-center { content: none; } }
+    
+    /* The page of the payment slip: no footer, the slip takes the bottom 105 mm. */
+    
+    body { font-family: inter; font-size: 9.75pt; color: #15171c; line-height: 1.45; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { vertical-align: top; padding: 0; line-height: 1.5; }
+    .muted { color: #5f6470; }
+    .small { font-size: 7.9pt; }
+    .right { text-align: right; }
+    .letterhead td { height: 30mm; }
+    .company { font-size: 16.5pt; font-weight: bold; color: #2741d9; line-height: 1.2; }
+    .issuer-address { font-size: 7.9pt; color: #5f6470; }
+    /* mPDF ignores margin and padding of blocks inside table cells; spacing there uses cell padding. */
+    /* The address field is positioned on the page (letter layout, e.g. DIN 5008), whatever the letterhead height. */
+    .address { position: absolute; top: 30mm; left: 0mm; width: 85mm; height: 45mm; overflow: visible; }
+    .sender-line { font-size: 9pt; color: #5f6470; border-bottom: 0.26mm solid #cdd0d6; padding-bottom: 1.2mm; line-height: 1.3; }
+    .address-lines { font-size: 10.5pt; line-height: 1.5; padding-top: 2.2mm; }
+    .mark { position: absolute; left: -20mm; width: 4.2mm; height: 0; border-top: 0.26mm solid #cdd0d6; }
+    .head td.address-space { width: 108.6mm; height: 41.8mm; }
+    .meta td { font-size: 9.4pt; padding-bottom: 0.75mm; line-height: 1.5; }
+    .meta td.label { color: #5f6470; padding-right: 4mm; }
+    .meta td.value { text-align: right; }
+    h1 { font-size: 13.5pt; color: #2741d9; font-weight: normal; font-weight: bold; margin: 0 0 5mm 0; line-height: 1.5; }
+    .lines th { font-size: 9pt; color: #5f6470; font-weight: normal; font-weight: bold; text-align: left; padding: 0 0 2mm 0; border-bottom: 0.26mm solid #15171c; }
+    .lines td { padding: 2.2mm 0 2.6mm 0; border-bottom: 0.26mm solid #e6e8ec; }
+    .lines .num { text-align: right; white-space: nowrap; }
+    /* mPDF does not let one class rule override another on the same cell: muted cells have a class of their own. */
+    .lines td.position, .lines td.quiet { color: #5f6470; }
+    .lines .name { font-weight: bold; }
+    .lines .group td { font-weight: bold; padding-top: 5mm; }
+    .lines .sub td { color: #5f6470; font-size: 9pt; padding-top: 1mm; }
+    /* Highlighted lines (LineBuilder::highlight()): shaded, marked in the secondary colour. */
+    .lines .highlight td { background-color: #f8fafc; }
+    .lines .highlight td.position { border-left: 0.8mm solid #2741d9; padding-left: 1.5mm; }
+    /* Carry-over rows at page breaks (filled in by the PDF renderer). */
+    .lines .carry td { border-bottom: 0; padding-top: 3.6mm; }
+    .lines .carry-in td { border-bottom: 0.26mm solid #e6e8ec; padding-top: 2.2mm; }
+    .lines td.carry-amount { font-weight: bold; }
+    .description { color: #5f6470; font-size: 9pt; }
+    .totals { width: 74.2mm; margin-left: auto; margin-top: 3.1mm; page-break-inside: avoid; }
+    .totals td { padding: 0.47mm 0; }
+    .totals tr.gap td { height: 2.2mm; padding: 0; line-height: 1; }
+    .totals td.label { color: #5f6470; }
+    .totals .grand td { border-top: 0.26mm solid #15171c; padding-top: 3.1mm; vertical-align: bottom; line-height: 1.2; }
+    .totals td.grand-label { font-size: 10.5pt; font-weight: bold; }
+    .totals .grand td.amount { font-size: 12.75pt; font-weight: bold; color: #2741d9; }
+    .section { margin-top: 8.3mm; page-break-inside: avoid; }
+    .section-title { font-size: 9pt; color: #2741d9; font-weight: bold; }
+    .payment td { font-size: 9.4pt; }
+    .payment td.terms { width: 77mm; padding-right: 6mm; }
+    td.qr { width: 17mm; text-align: center; padding-left: 4mm; }
+    .payment td.section-title { font-size: 9pt; padding-bottom: 0.7mm; }
+    .qr-caption { font-size: 7.9pt; color: #5f6470; text-align: center; }
+    .running td { vertical-align: top; }
+    .running-title { font-size: 11.25pt; font-weight: bold; color: #2741d9; }
+    .running-meta { font-size: 9pt; color: #5f6470; }
+    /* Payment slip (Swiss QR bill): receipt 62 mm and payment part 148 mm, 105 mm high, at the bottom of the page. */
+    .slip { position: absolute; font-family: inter; color: #000; line-height: 1.15; }
+    .slip-title { font-size: 11pt; font-weight: bold; }
+    .slip-heading { font-size: 8pt; font-weight: bold; padding-top: 2.6mm; }
+    .slip-value { font-size: 10pt; }
+    .receipt .slip-heading { font-size: 6pt; padding-top: 2.4mm; }
+    .receipt .slip-value { font-size: 8pt; }
+    .slip-field { border: 0.26mm solid #000; }
+    .footer-rule { border-top: 0.26mm solid #e6e8ec; }
+    .footer td { font-size: 7.9pt; color: #5f6470; padding: 3.4mm 3mm 0 0; }
+    .page-number { font-size: 7.9pt; color: #5f6470; text-align: center; padding-top: 6.9mm; }
+    .mpdf-pageno::after { content: counter(page); }
+    .mpdf-nbpg::after { content: counter(pages); }
+    .slip-page { page: slip; position: relative; height: 0; }
+    body { margin: 0; }
+    .lines tbody tr[data-carry-over] { string-set: carry-over attr(data-carry-over); }
+    .lines .carry { -fagus-repeat: at-break; }
+    .mpdf-amount::after { content: string(carry-over); }
+    .mpdf-next::after { content: counter(-fagus-next-page); }
+    .mpdf-previous::after { content: counter(-fagus-previous-page); }
+    @supports not (-fagus-repeat: at-break) { .lines .carry { display: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="mpdf-running" style="position: running(quittioHeader);">
+    <table class="running"><tr>
+        <td>
+                            <span class="company">Muster GmbH</span>
+                    </td>
+        <td class="right">
+            <div class="running-title">Rechnung RE-2026-0042</div>
+            <div class="running-meta">Kunde AG · Kundennummer K-10001</div>
+            <div class="running-meta">Rechnungsdatum 03.10.2026</div>
+        </td>
+    </tr></table>
+</div>
+
+<div class="mpdf-running" style="position: running(quittioFooter);">
+            <div class="footer-rule"><table class="footer"><tr>
+                            
+                                    <td style="width: 43.8mm;">Muster GmbH<br>Hauptstraße 1<br>12345 Musterstadt<br> </td>
+                                    <td style="width: 43.8mm;">+49 123 456789<br>rechnung@muster.example<br> </td>
+                                    <td style="width: 43.8mm;">HRB 12345<br>Amtsgericht Musterstadt<br>Geschäftsführer: Max Muster<br> </td>
+                                    <td style="width: 39.6mm;">USt-IdNr. DE123456789<br>St.-Nr. 12/345/67890<br> </td>
+                                    </tr></table></div>
+        <div class="page-number">Seite <span class="mpdf-pageno"></span> von <span class="mpdf-nbpg"></span></div>
+</div>
+
+
+<div class="mark" style="top: 90mm;"></div>
+    <div class="mark" style="top: 195mm;"></div>
+    <div class="mark" style="top: 133.5mm; width: 6.3mm;"></div>
+
+
+<div class="address">
+    <div class="sender-line">Muster GmbH · Hauptstraße 1 · 12345 Musterstadt
+</div>
+    <div class="address-lines">Kunde AG<br>
+    Bahnhofstraße 5<br>
+    54321 Beispielstadt<br>
+</div>
+</div>
+
+<table class="letterhead"><tr>
+    <td>
+                    <div class="company">Muster GmbH</div>
+                    </td>
+</tr></table>
+
+<table class="head"><tr>
+    <td class="address-space">&nbsp;</td>
+    <td class="meta-cell">
+        <table class="meta">
+    <tr><td class="label">Rechnungsnummer</td><td class="value">RE-2026-0042</td></tr>
+    <tr><td class="label">Rechnungsdatum</td><td class="value">03.10.2026</td></tr>
+                        <tr><td class="label">Leistungsdatum</td><td class="value">30.09.2026</td></tr>
+                    <tr><td class="label">Kundennummer</td><td class="value">K-10001</td></tr>
+                <tr><td class="label">Ihre Referenz</td><td class="value">PO-4711</td></tr>
+        
+        
+            <tr><td class="label">Ihre USt-IdNr.</td><td class="value">DE987654321</td></tr>
+                </table>
+    </td>
+</tr></table>
+
+<h1>Rechnung</h1>
+<table class="lines">
+    <thead><tr>
+        <th style="width: 11.1mm;">Pos.</th>
+        <th style="width: 79.9mm;">Beschreibung</th>
+        <th class="num" style="width: 24mm;">Menge</th>
+                    <th class="num" style="width: 27mm;">Einzelpreis</th>
+                        <th class="num" style="width: 29mm;">Betrag</th>
+            </tr>
+    <tr class="carry carry-in"><td></td><td colspan="3" class="quiet">Übertrag von Seite <span class="mpdf-previous"></span></td><td class="num quiet"><span class="mpdf-amount"></span></td></tr></thead>
+    <tfoot><tr class="carry carry-out"><td colspan="2" class="quiet">Fortsetzung auf Seite <span class="mpdf-next"></span></td><td colspan="2" class="quiet" style="padding-left: 5.8mm;">Übertrag</td><td class="num carry-amount"><span class="mpdf-amount"></span></td></tr></tfoot>
+    <tbody>
+    <!--quittio:rows-->
+                                <tr class="line" data-carry-over="8.800,00 €">
+                <td class="position">1</td>
+                <td>
+                    <div class="name"> Schnittstellenentwicklung ERP – Phase 2 mit erweitertem Funktionsumfang und Abnahme</div>
+                    <div class="description">Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.<br>
+<br>
+Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.<br>
+<br>
+Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.<br>
+<br>
+Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.<br>
+<br>
+Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.<br>
+<br>
+Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.</div>                                        <div class="description">Projekt: ERP-2026</div><div class="description">Ansprechpartner: Erika Kunde</div>                                                                                                </td>
+                <td class="num quiet">80 Std.</td>
+                                    <td class="num quiet">110,00 € </td>
+                                        <td class="num">8.800,00 €</td>
+                            </tr>
+                                    <!--/quittio:rows-->
+    </tbody>
+</table>
+
+
+
+<table class="totals">
+        <tr><td class="label">Nettobetrag</td><td class="right">8.800,00 €</td></tr>
+            <tr><td class="label">USt. 19 %</td><td class="right">1.672,00 €</td></tr>
+                
+        <tr class="gap"><td></td><td></td></tr>
+        <tr class="grand"><td class="grand-label">Gesamtbetrag</td><td class="right amount">10.472,00 €</td></tr>
+    </table>
+<div class="section">
+    
+    <table><tr>
+        <td>
+            <table class="payment">
+                <tr>
+                    <td class="terms section-title">Zahlung</td>                    <td class="section-title">Bankverbindung</td>
+                </tr>
+                <tr>
+                                            <td class="terms">
+                                                                                                <div class="">Bitte bis zum 17.10.2026 überweisen.</div>
+                                                                                                                                            </td>
+                                        <td>
+                                                                                                                                                    
+                                                                <div>DE02 1203 0000 0000 2020 51</div>
+                                <div class="muted">BYLADEM1001 · Zweck: RE-2026-0042</div>
+                                                                        </td>
+                </tr>
+            </table>
+        </td>
+                    
+            <td class="qr">
+                <img src="data:image/png;base64,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" style="width: 17mm; height: 17mm;">
+                <div class="qr-caption">GiroCode</div>
+            </td>
+            </tr></table>
+</div>
+<div class="section">
+    <div class="section-title">Hinweise</div>
+            <div>Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb. Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb. Konzeption, Umsetzung und Test der Schnittstelle zum Warenwirtschaftssystem einschließlich Fehlerbehandlung, Protokollierung, Monitoring und Dokumentation für den Betrieb.</div>
+    </div>
+
+</body>
+</html>

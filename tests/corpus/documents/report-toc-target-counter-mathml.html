@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Technical Report: Rounding in Invoice Totals</title>
+<style>
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@font-face { font-family: "STIX Two Math"; src: local("STIX Two Math"); }
+@page { size: A4; margin: 25mm 22mm 25mm;
+  @top-right { content: "TR-2026-07"; font: italic 8pt "Inter"; color: #555; }
+  @bottom-center { content: counter(page); font: 8pt "Inter"; } }
+@page :first { @top-right { content: none; } @bottom-center { content: none; } }
+html { font: 10pt/1.5 "Inter", sans-serif; color: #111; }
+body { margin: 0; counter-reset: h2 fig eq; }
+math { font-family: "STIX Two Math", math; }
+.cover { height: 220mm; display: flex; flex-direction: column; justify-content: center; break-after: page; }
+.cover h1 { font-size: 26pt; line-height: 1.15; margin: 0 0 10pt; }
+.cover .no { text-transform: uppercase; letter-spacing: 0.2em; font-size: 9pt; color: #666; }
+.cover .by { margin-top: 30pt; font-size: 11pt; }
+nav { break-after: page; }
+nav h2::before { content: none; }
+nav ol { list-style: none; padding: 0; margin: 0; }
+nav li { display: flex; align-items: baseline; margin: 3pt 0; }
+nav li.sub { padding-left: 16pt; font-size: 9.5pt; }
+nav li a { color: inherit; text-decoration: none; }
+nav li .dots { flex: 1; border-bottom: 1pt dotted #888; margin: 0 4pt; transform: translateY(-3pt); }
+nav li a.pg::after { content: target-counter(attr(href url), page); font-variant-numeric: tabular-nums; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; counter-increment: h2; counter-reset: h3; break-after: avoid; }
+h2::before { content: counter(h2) "  "; color: #1d4ed8; }
+h3 { font-size: 11pt; margin: 12pt 0 4pt; counter-increment: h3; break-after: avoid; }
+h3::before { content: counter(h2) "." counter(h3) "  "; color: #1d4ed8; }
+h2.chapter { break-before: page; }
+p { margin: 0 0 6pt; text-align: justify; hyphens: manual; }
+.display { display: flex; align-items: center; margin: 8pt 0; counter-increment: eq; }
+.display math { flex: 1; font-size: 12pt; }
+.display::after { content: "(" counter(eq) ")"; }
+figure { margin: 10pt 0; break-inside: avoid; counter-increment: fig; }
+figcaption { font-size: 8.5pt; color: #444; margin-top: 4pt; }
+figcaption::before { content: "Figure " counter(fig) ": "; font-weight: 700; color: #111; }
+table { border-collapse: collapse; margin: 0 auto; font-variant-numeric: tabular-nums; font-size: 9pt; }
+th, td { border: 0.5pt solid #bbb; padding: 3pt 8pt; text-align: right; }
+th { background: #eef2ff; }
+pre { font-size: 8pt; background: #f6f8fa; border: 0.5pt solid #ddd; padding: 6pt 8pt; white-space: pre-wrap; break-inside: avoid; }
+.note { font-size: 8.5pt; }
+.note sup { color: #1d4ed8; }
+.endnotes { font-size: 8.5pt; padding-left: 16pt; }
+.endnotes li::marker { color: #1d4ed8; font-weight: 700; }
+</style>
+</head>
+<body>
+<section class="cover">
+<div class="no">Technical Report TR-2026-07</div>
+<h1>Rounding in Invoice Totals:<br>Line-Level versus Document-Level</h1>
+<p>An analysis of rounding differences under EN&nbsp;16931 and their effect on validation.</p>
+<div class="by">Ada Example · Ben Sample<br><small>November 2026</small></div>
+</section>
+<nav>
+<h2 style="counter-increment: none;">Contents</h2>
+<ol>
+<li><a href="#s1">1 Introduction</a><span class="dots"></span><a class="pg" href="#s1"></a></li>
+<li><a href="#s2">2 Rounding models</a><span class="dots"></span><a class="pg" href="#s2"></a></li>
+<li class="sub"><a href="#s21">2.1 Line-level rounding</a><span class="dots"></span><a class="pg" href="#s21"></a></li>
+<li class="sub"><a href="#s22">2.2 Document-level rounding</a><span class="dots"></span><a class="pg" href="#s22"></a></li>
+<li><a href="#s3">3 Bounds on the difference</a><span class="dots"></span><a class="pg" href="#s3"></a></li>
+<li><a href="#s4">4 Experiments</a><span class="dots"></span><a class="pg" href="#s4"></a></li>
+<li class="sub"><a href="#s41">4.1 Data set</a><span class="dots"></span><a class="pg" href="#s41"></a></li>
+<li class="sub"><a href="#s42">4.2 Results</a><span class="dots"></span><a class="pg" href="#s42"></a></li>
+<li><a href="#s5">5 Recommendations</a><span class="dots"></span><a class="pg" href="#s5"></a></li>
+<li><a href="#notes">Notes</a><span class="dots"></span><a class="pg" href="#notes"></a></li>
+</ol>
+</nav>
+<h2 id="s1">Introduction</h2>
+<p>An invoice under EN&nbsp;16931 states amounts at three levels: the net amount of each line, the sum of line net amounts, and the tax amount per VAT category. Every amount must be rounded to two decimals, but the standard leaves open whether tax is computed per line and then summed, or once per category from the summed net amounts.<sup>1</sup></p>
+<p>The two approaches can differ by several cents on long invoices. Validators then reject documents whose totals were computed with the other method, although both are permitted by the tax law of most member states. This report quantifies the difference and gives bounds that implementations can use to decide which method a received invoice used.</p>
+<h2 id="s2" class="chapter">Rounding models</h2>
+<p>Let an invoice have lines <i>i</i> = 1, …, <i>n</i> with net amounts <i>a<sub>i</sub></i> (already rounded to cents) in one VAT category with rate <i>t</i>.</p>
+<h3 id="s21">Line-level rounding</h3>
+<p>Tax is computed and rounded per line, then summed:</p>
+<div class="display"><math display="block"><msub><mi>T</mi><mtext>line</mtext></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mi>round</mi><mo>(</mo><mi>t</mi><mo>·</mo><msub><mi>a</mi><mi>i</mi></msub><mo>)</mo></math></div>
+<h3 id="s22">Document-level rounding</h3>
+<p>Net amounts are summed first and tax is rounded once:</p>
+<div class="display"><math display="block"><msub><mi>T</mi><mtext>doc</mtext></msub><mo>=</mo><mi>round</mi><mrow><mo>(</mo><mi>t</mi><mo>·</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>a</mi><mi>i</mi></msub><mo>)</mo></mrow></math></div>
+<p>EN&nbsp;16931 business rule BR-CO-17 requires that the category tax amount equals the category taxable amount multiplied by the rate, rounded to two decimals, which corresponds to document-level rounding. Many accounting systems nevertheless compute tax per line.</p>
+<h2 id="s3">Bounds on the difference</h2>
+<p>Each rounding introduces an error of at most half a cent. Writing <i>ε<sub>i</sub></i> for the error of line <i>i</i>, the difference between both methods is bounded by</p>
+<div class="display"><math display="block"><mrow><mo>|</mo><msub><mi>T</mi><mtext>line</mtext></msub><mo>−</mo><msub><mi>T</mi><mtext>doc</mtext></msub><mo>|</mo></mrow><mo>≤</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo>|</mo><msub><mi>ε</mi><mi>i</mi></msub><mo>|</mo></mrow><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>≤</mo><mfrac><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow><mn>2</mn></mfrac></math></div>
+<p>in cents. If the errors are independent and uniformly distributed on [−½,&nbsp;½], their sum has variance <i>n</i>/12, so the typical difference grows only with <math><msqrt><mi>n</mi></msqrt></math>:</p>
+<div class="display"><math display="block"><mi>E</mi><mrow><mo>[</mo><mo>|</mo><msub><mi>T</mi><mtext>line</mtext></msub><mo>−</mo><msub><mi>T</mi><mtext>doc</mtext></msub><mo>|</mo><mo>]</mo></mrow><mo>≈</mo><msqrt><mfrac><mi>n</mi><mrow><mn>6</mn><mi>π</mi></mrow></mfrac></msqrt></math></div>
+<figure>
+<svg width="100%" height="150" viewBox="0 0 500 150" font-family="Inter" font-size="9">
+<line x1="40" y1="130" x2="490" y2="130" stroke="#000"/><line x1="40" y1="10" x2="40" y2="130" stroke="#000"/>
+<path d="M40 130 C 100 95, 160 80, 220 70 S 380 52, 490 44" fill="none" stroke="#1d4ed8" stroke-width="1.5"/>
+<g fill="#c2410c"><circle cx="60" cy="118" r="2.5"/><circle cx="100" cy="102" r="2.5"/><circle cx="150" cy="86" r="2.5"/><circle cx="210" cy="74" r="2.5"/><circle cx="280" cy="64" r="2.5"/><circle cx="350" cy="56" r="2.5"/><circle cx="420" cy="49" r="2.5"/><circle cx="480" cy="47" r="2.5"/></g>
+<text x="265" y="146" text-anchor="middle">number of lines n (1 … 200)</text><text x="36" y="14" text-anchor="end">3¢</text><text x="36" y="133" text-anchor="end">0</text>
+</svg>
+<figcaption>Mean absolute difference between line-level and document-level tax (dots) and the approximation of equation (4) (line).</figcaption>
+</figure>
+<h2 id="s4" class="chapter">Experiments</h2>
+<h3 id="s41">Data set</h3>
+<p>We used 52,000 invoices exported from four accounting systems, with between 1 and 640 lines each. All invoices use a single VAT category of 19&nbsp;% or 7&nbsp;%; invoices with several categories were split per category.</p>
+<pre>for each invoice:
+    t_line = sum(round(rate * a) for a in lines)
+    t_doc  = round(rate * sum(lines))
+    record(len(lines), abs(t_line - t_doc))</pre>
+<h3 id="s42">Results</h3>
+<p>The observed mean difference follows equation (4) closely. The largest difference was 9&nbsp;cents on an invoice with 612 lines.</p>
+<table>
+<thead><tr><th>Lines</th><th>Invoices</th><th>Mean diff. (¢)</th><th>Max diff. (¢)</th><th>Identical</th></tr></thead>
+<tbody>
+<tr><td>1–5</td><td>31,204</td><td>0.21</td><td>2</td><td>79.4&nbsp;%</td></tr>
+<tr><td>6–20</td><td>14,880</td><td>0.63</td><td>3</td><td>48.1&nbsp;%</td></tr>
+<tr><td>21–100</td><td>5,102</td><td>1.34</td><td>6</td><td>27.0&nbsp;%</td></tr>
+<tr><td>101–640</td><td>814</td><td>3.02</td><td>9</td><td>11.2&nbsp;%</td></tr>
+</tbody>
+</table>
+<h2 id="s5">Recommendations</h2>
+<p>Senders should compute tax at document level, as BR-CO-17 requires. Receivers should accept a difference of up to (<i>n</i>+1)/2 cents when they recompute totals, and flag larger differences as errors rather than rounding artefacts.<sup>2</sup></p>
+<h2 id="notes">Notes</h2>
+<ol class="endnotes">
+<li>The German XRechnung specification adds no further rule; the CIUS for Italy requires line-level rounding for some document types.</li>
+<li>The bound assumes a single VAT category. With several categories, apply it per category.</li>
+</ol>
+</body>
+</html>

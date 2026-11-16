@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customer Survey</title>
+<style>
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600; }
+@page { size: letter; margin: 0.6in; }
+* { box-sizing: border-box; }
+html { font: 10pt/1.45 "Geist", sans-serif; color: #1e293b; }
+body { margin: 0; }
+h1 { font-weight: 600; font-size: 18pt; margin: 0 0 2pt; }
+.lead { color: #475569; margin: 0 0 14pt; }
+.q { padding: 8pt 0; border-top: 0.75pt solid #e2e8f0; break-inside: avoid; }
+.q > .t { font-weight: 600; margin-bottom: 5pt; }
+.q > .t::before { counter-increment: q; content: counter(q) ". "; color: #6366f1; }
+body { counter-reset: q; }
+.likert { display: flex; justify-content: space-between; text-align: center; font-size: 8pt; color: #475569; }
+.likert label { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3pt; }
+.row { display: flex; gap: 12pt; align-items: center; flex-wrap: wrap; }
+.row label { display: flex; align-items: center; gap: 5pt; }
+input, select, textarea, button { font: inherit; }
+input[type=text] { flex: 1; min-width: 120pt; }
+textarea { width: 100%; height: 60pt; }
+.matrix { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.matrix th { font-weight: 400; color: #475569; font-size: 8pt; padding: 2pt; }
+.matrix td { text-align: center; padding: 3pt 2pt; border-top: 0.5pt solid #e2e8f0; }
+.matrix td:first-child { text-align: left; }
+.meter-row { display: grid; grid-template-columns: 90pt 1fr 40pt; align-items: center; gap: 8pt; margin: 3pt 0; }
+meter, progress { width: 100%; }
+.custom input[type=checkbox] { appearance: none; width: 12pt; height: 12pt; border: 1.5pt solid #6366f1; border-radius: 3pt; margin: 0; display: inline-grid; place-content: center; }
+.custom input[type=checkbox]:checked { background: #6366f1; }
+.custom input[type=checkbox]:checked::before { content: ""; width: 6pt; height: 3pt; border: solid #fff; border-width: 0 0 1.5pt 1.5pt; transform: translateY(-1pt) rotate(-45deg); }
+.custom input[type=radio] { appearance: none; width: 12pt; height: 12pt; border: 1.5pt solid #6366f1; border-radius: 50%; margin: 0; }
+.custom input[type=radio]:checked { background: radial-gradient(#6366f1 0 3pt, #fff 3.5pt); }
+button { border: 0; background: #6366f1; color: #fff; padding: 4pt 12pt; border-radius: 4pt; }
+.btn2 { background: #fff; color: #1e293b; border: 0.75pt solid #94a3b8; }
+input[type=range] { width: 160pt; }
+.foot { margin-top: 10pt; display: flex; justify-content: flex-end; gap: 8pt; }
+</style>
+</head>
+<body>
+<h1>How did we do?</h1>
+<p class="lead">Thank you for ordering from Northwind. This survey takes about three minutes. Your answers help us improve delivery and support.</p>
+<div class="q"><div class="t">How satisfied are you with your order overall?</div>
+<div class="likert"><label><input type="radio" name="s1">Very dissatisfied</label><label><input type="radio" name="s1">Dissatisfied</label><label><input type="radio" name="s1">Neutral</label><label><input type="radio" name="s1" checked>Satisfied</label><label><input type="radio" name="s1">Very satisfied</label></div></div>
+<div class="q"><div class="t">Which products did you buy?</div>
+<div class="row"><label><input type="checkbox" checked> Office chairs</label><label><input type="checkbox"> Desks</label><label><input type="checkbox" checked> Lamps</label><label><input type="checkbox"> Storage</label><label><input type="checkbox"> Other: </label><input type="text" placeholder="please specify"></div></div>
+<div class="q"><div class="t">Please rate the following aspects.</div>
+<table class="matrix"><tr><th></th><th>Poor</th><th>Fair</th><th>Good</th><th>Very good</th><th>Excellent</th></tr>
+<tr><td>Product quality</td><td><input type="radio" name="m1"></td><td><input type="radio" name="m1"></td><td><input type="radio" name="m1"></td><td><input type="radio" name="m1" checked></td><td><input type="radio" name="m1"></td></tr>
+<tr><td>Delivery time</td><td><input type="radio" name="m2"></td><td><input type="radio" name="m2" checked></td><td><input type="radio" name="m2"></td><td><input type="radio" name="m2"></td><td><input type="radio" name="m2"></td></tr>
+<tr><td>Packaging</td><td><input type="radio" name="m3"></td><td><input type="radio" name="m3"></td><td><input type="radio" name="m3"></td><td><input type="radio" name="m3"></td><td><input type="radio" name="m3" checked></td></tr>
+<tr><td>Customer support</td><td><input type="radio" name="m4"></td><td><input type="radio" name="m4"></td><td><input type="radio" name="m4" checked></td><td><input type="radio" name="m4"></td><td><input type="radio" name="m4"></td></tr>
+</table></div>
+<div class="q custom"><div class="t">What should we improve? (custom controls)</div>
+<div class="row"><label><input type="checkbox" checked> Faster shipping</label><label><input type="checkbox"> Assembly service</label><label><input type="checkbox" checked> Fewer emails</label><label><input type="radio" name="c" checked> Yes</label><label><input type="radio" name="c"> No</label></div></div>
+<div class="q"><div class="t">How did you hear about us?</div>
+<div class="row"><select><option>Search engine</option><option>Friend</option></select><select size="3"><option>Newsletter</option><option selected>Podcast</option><option>Trade fair</option></select><select multiple style="height:40pt"><option selected>Instagram</option><option>LinkedIn</option><option selected>YouTube</option></select></div></div>
+<div class="q"><div class="t">Your progress with our onboarding</div>
+<div class="meter-row"><span>Account set up</span><progress value="1" max="1"></progress><span>100%</span></div>
+<div class="meter-row"><span>First order</span><progress value="0.7"></progress><span>70%</span></div>
+<div class="meter-row"><span>Storage used</span><meter value="0.35" low="0.5" high="0.8" optimum="0.2"></meter><span>35%</span></div>
+<div class="meter-row"><span>Budget spent</span><meter value="0.9" low="0.5" high="0.8" optimum="0.2"></meter><span>90%</span></div>
+<div class="meter-row"><span>Likelihood to recommend</span><input type="range" min="0" max="10" value="8"><span>8 / 10</span></div></div>
+<div class="q"><div class="t">Anything else you would like to tell us?</div>
+<textarea>The lamp arrived with a small scratch, but support replaced it within two days. Great service!</textarea></div>
+<div class="q"><div class="t">May we contact you about your answers?</div>
+<div class="row"><label><input type="radio" name="ct" checked> Yes, by email</label><input type="text" value="maria@example.com"><label><input type="radio" name="ct"> No</label></div></div>
+<div class="foot"><button class="btn2">Back</button><button>Submit survey</button></div>
+</body>
+</html>

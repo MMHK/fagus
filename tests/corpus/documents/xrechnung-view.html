@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XRechnung RE-2026-1187</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 12mm 12mm 14mm; }
+/* In the style of the stylesheet of an XRechnung visualisation as its XSLT writes it: tabs for
+   the screen, boxes of table rows and cells, all tabs shown in print. */
+body { font-family: Inter, Arial, sans-serif; font-size: 9pt; color: #1a1a1a; margin: 0; }
+.menue { display: flex; gap: 2px; border-bottom: 2px solid #26579b; margin-bottom: 8px; }
+.tab { padding: 4px 10px; background: #e8eef7; border: 1px solid #c5d3e8; border-bottom: none; border-radius: 3px 3px 0 0; font-weight: 700; color: #26579b; cursor: pointer; }
+.tab.aktiv { background: #26579b; color: #fff; }
+.divHide { display: none; }
+.divShow { display: block; }
+h1 { font-size: 15pt; margin: 0 0 2px; color: #26579b; }
+.untertitel { color: #666; margin: 0 0 10px; }
+.boxtabelle { display: table; width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 8px; }
+.boxabstandtop { margin-top: 8px; }
+.boxzeile { display: table-row; }
+.boxzelle { display: table-cell; vertical-align: top; width: 50%; }
+.boxzelle + .boxzelle { padding-left: 8px; }
+.box { border: 1px solid #c5d3e8; border-radius: 3px; height: 100%; }
+.boxtitel { background: #e8eef7; color: #26579b; font-weight: 700; padding: 3px 6px; border-bottom: 1px solid #c5d3e8; }
+.boxtitelSub { font-weight: 400; color: #555; }
+.boxinhalt { padding: 4px 6px; }
+.boxdaten { display: table; width: 100%; }
+.boxdaten > div { display: table-row; }
+.legende, .wert { display: table-cell; padding: 1px 0; }
+.legende { width: 46%; color: #555; padding-right: 6px; }
+.wert { font-weight: 700; word-break: break-word; }
+.btnummer { color: #8a8a8a; font-weight: 400; font-size: 7pt; margin-left: 3px; }
+.rechnungsZeile { border: 1px solid #c5d3e8; border-radius: 3px; margin-bottom: 6px; break-inside: avoid; }
+.rechnungsZeile .kopf { display: flex; justify-content: space-between; background: #f4f7fb; padding: 3px 6px; border-bottom: 1px solid #c5d3e8; font-weight: 700; }
+.rechnungsZeile .spalten { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 10px; padding: 4px 6px; }
+.summen { width: 55%; margin-left: auto; }
+.summen .wert { text-align: right; }
+.summen .gesamt .legende, .summen .gesamt .wert { border-top: 1.5px solid #26579b; padding-top: 3px; font-size: 10.5pt; color: #26579b; }
+.haftungausschluss { margin-top: 10px; font-size: 7pt; color: #777; border-top: 1px solid #ddd; padding-top: 4px; }
+@media print {
+  .menue { display: none; }
+  .divHide { display: block; }
+  .divShow + .divHide, .divHide + .divHide { break-before: page; }
+}
+</style>
+<script>
+function zeige(id) {
+  document.querySelectorAll('.inhalt').forEach(function (div) { div.className = 'inhalt divHide'; });
+  document.getElementById(id).className = 'inhalt divShow';
+}
+</script>
+</head>
+<body>
+<div class="menue">
+  <div class="tab aktiv" onclick="zeige('uebersicht')">Übersicht</div>
+  <div class="tab" onclick="zeige('details')">Details</div>
+  <div class="tab" onclick="zeige('anlagen')">Anlagen</div>
+</div>
+
+<div id="uebersicht" class="inhalt divShow">
+  <h1>Rechnung RE-2026-1187</h1>
+  <p class="untertitel">XRechnung 3.0 · Leitweg-ID 06411-12345-67 · Rechnungsart 380 (Handelsrechnung)</p>
+
+  <div class="boxtabelle">
+    <div class="boxzeile">
+      <div class="boxzelle"><div class="box">
+        <div class="boxtitel">Käufer <span class="boxtitelSub">BG-7</span></div>
+        <div class="boxinhalt boxdaten">
+          <div><span class="legende">Name<span class="btnummer">BT-44</span></span><span class="wert">Stadt Darmstadt, Amt für Schulen</span></div>
+          <div><span class="legende">Straße<span class="btnummer">BT-50</span></span><span class="wert">Frankfurter Straße 71</span></div>
+          <div><span class="legende">PLZ und Ort<span class="btnummer">BT-53</span></span><span class="wert">64293 Darmstadt</span></div>
+          <div><span class="legende">Ansprechpartner<span class="btnummer">BT-56</span></span><span class="wert">Frau Okonkwo</span></div>
+          <div><span class="legende">E-Mail<span class="btnummer">BT-58</span></span><span class="wert">schulamt.beschaffung@example.org</span></div>
+        </div>
+      </div></div>
+      <div class="boxzelle"><div class="box">
+        <div class="boxtitel">Verkäufer <span class="boxtitelSub">BG-4</span></div>
+        <div class="boxinhalt boxdaten">
+          <div><span class="legende">Name<span class="btnummer">BT-27</span></span><span class="wert">Lehrmittel Hansen GmbH</span></div>
+          <div><span class="legende">Straße<span class="btnummer">BT-35</span></span><span class="wert">Industriestraße 9</span></div>
+          <div><span class="legende">PLZ und Ort<span class="btnummer">BT-38</span></span><span class="wert">63303 Dreieich</span></div>
+          <div><span class="legende">USt-IdNr.<span class="btnummer">BT-31</span></span><span class="wert">DE 284 193 557</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="boxtabelle">
+    <div class="boxzeile">
+      <div class="boxzelle"><div class="box">
+        <div class="boxtitel">Rechnungsdaten</div>
+        <div class="boxinhalt boxdaten">
+          <div><span class="legende">Rechnungsdatum<span class="btnummer">BT-2</span></span><span class="wert">06.11.2026</span></div>
+          <div><span class="legende">Leistungszeitraum<span class="btnummer">BG-14</span></span><span class="wert">01.10.2026 – 31.10.2026</span></div>
+          <div><span class="legende">Bestellnummer<span class="btnummer">BT-13</span></span><span class="wert">B-2026-0915</span></div>
+          <div><span class="legende">Währung<span class="btnummer">BT-5</span></span><span class="wert">EUR</span></div>
+        </div>
+      </div></div>
+      <div class="boxzelle"><div class="box">
+        <div class="boxtitel">Zahlung <span class="boxtitelSub">BG-16</span></div>
+        <div class="boxinhalt boxdaten">
+          <div><span class="legende">Zahlungsart<span class="btnummer">BT-81</span></span><span class="wert">58 (SEPA-Überweisung)</span></div>
+          <div><span class="legende">IBAN<span class="btnummer">BT-84</span></span><span class="wert">DE02 5085 0150 0000 7144 91</span></div>
+          <div><span class="legende">Fällig am<span class="btnummer">BT-9</span></span><span class="wert">06.12.2026</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="boxdaten summen">
+    <div><span class="legende">Summe der Positionen<span class="btnummer">BT-106</span></span><span class="wert">4.870,40 €</span></div>
+    <div><span class="legende">Umsatzsteuer 19 %<span class="btnummer">BT-117</span></span><span class="wert">925,38 €</span></div>
+    <div class="gesamt"><span class="legende">Zahlbetrag<span class="btnummer">BT-115</span></span><span class="wert">5.795,78 €</span></div>
+  </div>
+</div>
+
+<div id="details" class="inhalt divHide">
+  <h1>Rechnungspositionen</h1>
+  <p class="untertitel">4 Positionen <span class="btnummer">BG-25</span></p>
+  <div class="rechnungsZeile">
+    <div class="kopf"><span>1 · Klassensatz Atlas „Unsere Erde“, 30 Stück</span><span>1.620,00 €</span></div>
+    <div class="spalten boxdaten">
+      <div><span class="legende">Menge</span> <span class="wert">30 H87</span></div>
+      <div><span class="legende">Einzelpreis</span> <span class="wert">54,00 €</span></div>
+      <div><span class="legende">Steuer</span> <span class="wert">S 19 %</span></div>
+    </div>
+  </div>
+  <div class="rechnungsZeile">
+    <div class="kopf"><span>2 · Dokumentenkamera mit Stativ</span><span>1.398,00 €</span></div>
+    <div class="spalten boxdaten">
+      <div><span class="legende">Menge</span> <span class="wert">6 H87</span></div>
+      <div><span class="legende">Einzelpreis</span> <span class="wert">233,00 €</span></div>
+      <div><span class="legende">Steuer</span> <span class="wert">S 19 %</span></div>
+    </div>
+  </div>
+  <div class="rechnungsZeile">
+    <div class="kopf"><span>3 · Experimentierkasten Elektrik</span><span>1.284,40 €</span></div>
+    <div class="spalten boxdaten">
+      <div><span class="legende">Menge</span> <span class="wert">4 H87</span></div>
+      <div><span class="legende">Einzelpreis</span> <span class="wert">321,10 €</span></div>
+      <div><span class="legende">Steuer</span> <span class="wert">S 19 %</span></div>
+    </div>
+  </div>
+  <div class="rechnungsZeile">
+    <div class="kopf"><span>4 · Versand und Lieferung frei Verwendungsstelle</span><span>568,00 €</span></div>
+    <div class="spalten boxdaten">
+      <div><span class="legende">Menge</span> <span class="wert">1 C62</span></div>
+      <div><span class="legende">Einzelpreis</span> <span class="wert">568,00 €</span></div>
+      <div><span class="legende">Steuer</span> <span class="wert">S 19 %</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="anlagen" class="inhalt divHide">
+  <h1>Anlagen</h1>
+  <div class="boxtabelle boxabstandtop"><div class="boxzeile"><div class="boxzelle"><div class="box">
+    <div class="boxtitel">Rechnungsbegründende Unterlagen <span class="boxtitelSub">BG-24</span></div>
+    <div class="boxinhalt boxdaten">
+      <div><span class="legende">Kennung<span class="btnummer">BT-122</span></span><span class="wert">Lieferschein LS-88213</span></div>
+      <div><span class="legende">Datei<span class="btnummer">BT-125</span></span><span class="wert">lieferschein_LS-88213.pdf (application/pdf, 84 KB)</span></div>
+    </div>
+  </div></div></div></div>
+  <p class="haftungausschluss">Diese Darstellung dient der Lesbarkeit. Rechtlich maßgeblich ist allein die XML-Datei der Rechnung.</p>
+</div>
+</body>
+</html>

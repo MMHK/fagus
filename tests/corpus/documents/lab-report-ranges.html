@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Laborbefund 2027-03-0417</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 14mm 14mm 18mm;
+  @bottom-center { content: "Befund 2027-03-0417 · Seite " counter(page) " von " counter(pages); font: 7pt Inter, sans-serif; color: #6b7280; }
+  @top-right { content: "Lindqvist, Hanna · *12.05.1986"; font: 7pt Inter, sans-serif; color: #6b7280; } }
+@page :first { @top-right { content: none; } }
+html { font: 8.5pt/1.35 Inter, sans-serif; color: #111827; }
+body { margin: 0; }
+.lab { display: flex; justify-content: space-between; border-bottom: 1.5pt solid #0f766e; padding-bottom: 3mm; margin-bottom: 4mm; }
+.lab .name { font-size: 14pt; font-weight: 700; color: #0f766e; }
+.lab address { font-style: normal; text-align: right; font-size: 7.5pt; color: #4b5563; }
+.patient { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1mm 6mm; background: #f0fdfa; border: .5pt solid #99f6e4; border-radius: 1.5mm; padding: 3mm 4mm; margin-bottom: 5mm; }
+.patient div span { display: block; font-size: 6.5pt; color: #0f766e; text-transform: uppercase; letter-spacing: .08em; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 6.5pt; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; text-align: left; font-weight: 700; padding: 1.5mm 2mm; border-bottom: 1pt solid #111827; }
+tbody.group th { text-align: left; font-size: 8pt; color: #0f766e; padding: 3mm 2mm 1mm; border-bottom: .5pt solid #99f6e4; }
+tbody.group { break-inside: avoid; }
+td { padding: 1.3mm 2mm; border-bottom: .5pt solid #e5e7eb; vertical-align: middle; }
+td.value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; width: 14mm; white-space: nowrap; }
+td.flag { width: 5mm; text-align: center; font-weight: 700; }
+td.unit { color: #4b5563; width: 18mm; }
+td.ref { color: #4b5563; width: 22mm; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.high td.value, tr.high td.flag { color: #b91c1c; }
+tr.low td.value, tr.low td.flag { color: #1d4ed8; }
+td.bar { width: 38mm; }
+.range { position: relative; height: 2.6mm; border-radius: 1.3mm; background: linear-gradient(to right, #fecaca 0 20%, #d1fae5 20% 80%, #fecaca 80%); }
+.range::before, .range::after { content: ""; position: absolute; top: -.6mm; bottom: -.6mm; width: .3mm; background: #059669; left: 20%; }
+.range::after { left: 80%; }
+.range i { position: absolute; top: 50%; left: var(--at); width: 2.4mm; height: 2.4mm; margin: -1.2mm 0 0 -1.2mm; border-radius: 50%; background: #111827; border: .4mm solid #fff; box-shadow: 0 0 0 .2mm #111827; }
+tr.high .range i { background: #b91c1c; } tr.low .range i { background: #1d4ed8; }
+.comment { margin-top: 5mm; padding: 3mm 4mm; border-left: 1mm solid #0f766e; background: #f9fafb; break-inside: avoid; }
+.comment p { margin: 0 0 1.5mm; }
+.sign { margin-top: 8mm; display: flex; gap: 12mm; align-items: flex-end; break-inside: avoid; }
+.sign div { border-top: .5pt solid #111827; padding-top: 1mm; width: 60mm; font-size: 7.5pt; }
+.sign svg { display: block; width: 50mm; height: 12mm; margin-bottom: -2mm; }
+.legend { margin-top: 3mm; font-size: 7pt; color: #6b7280; }
+sup { font-size: 70%; line-height: 0; }
+</style></head><body>
+<div class="lab"><div><div class="name">Labor Dr. Albrecht &amp; Partner</div>Fachärzte für Laboratoriumsmedizin · Akkreditiert nach DIN EN ISO 15189</div>
+<address>Hafenstraße 41 · 24103 Kiel<br>Tel. 0431 0990 21-0 · befund@labor-albrecht.example</address></div>
+<div class="patient">
+  <div><span>Patientin</span><b>Lindqvist, Hanna</b></div><div><span>Geburtsdatum</span>12.05.1986 (40 J.)</div><div><span>Auftragsnummer</span>2027-03-0417</div>
+  <div><span>Einsender</span>Praxis Dr. Okafor, Kiel</div><div><span>Entnahme</span>08.03.2027, 07:42 Uhr, nüchtern</div><div><span>Befund vom</span>09.03.2027 (Endbefund)</div>
+</div>
+<table>
+  <thead><tr><th>Untersuchung</th><th style="text-align:right">Ergebnis</th><th></th><th>Einheit</th><th>Referenz</th><th>Lage im Referenzbereich</th></tr></thead>
+  <tbody class="group"><tr><th colspan="6">Kleines Blutbild</th></tr>
+    <tr><td>Leukozyten</td><td class="value">6,8</td><td class="flag"></td><td class="unit">/nl</td><td class="ref">3,9 – 10,2</td><td class="bar"><div class="range"><i style="--at: 42%"></i></div></td></tr>
+    <tr><td>Erythrozyten</td><td class="value">4,52</td><td class="flag"></td><td class="unit">/pl</td><td class="ref">3,92 – 5,08</td><td class="bar"><div class="range"><i style="--at: 59%"></i></div></td></tr>
+    <tr class="low"><td>Hämoglobin</td><td class="value">11,4</td><td class="flag">↓</td><td class="unit">g/dl</td><td class="ref">12,0 – 15,4</td><td class="bar"><div class="range"><i style="--at: 14%"></i></div></td></tr>
+    <tr><td>Hämatokrit</td><td class="value">36,1</td><td class="flag"></td><td class="unit">%</td><td class="ref">35,5 – 45,5</td><td class="bar"><div class="range"><i style="--at: 24%"></i></div></td></tr>
+    <tr class="low"><td>MCV</td><td class="value">78</td><td class="flag">↓</td><td class="unit">fl</td><td class="ref">80 – 99</td><td class="bar"><div class="range"><i style="--at: 15%"></i></div></td></tr>
+    <tr><td>Thrombozyten</td><td class="value">284</td><td class="flag"></td><td class="unit">/nl</td><td class="ref">150 – 370</td><td class="bar"><div class="range"><i style="--at: 57%"></i></div></td></tr>
+  </tbody>
+  <tbody class="group"><tr><th colspan="6">Eisenstoffwechsel</th></tr>
+    <tr class="low"><td>Ferritin</td><td class="value">9</td><td class="flag">↓</td><td class="unit">µg/l</td><td class="ref">13 – 150</td><td class="bar"><div class="range"><i style="--at: 6%"></i></div></td></tr>
+    <tr><td>Transferrinsättigung</td><td class="value">17</td><td class="flag"></td><td class="unit">%</td><td class="ref">16 – 45</td><td class="bar"><div class="range"><i style="--at: 22%"></i></div></td></tr>
+  </tbody>
+  <tbody class="group"><tr><th colspan="6">Klinische Chemie</th></tr>
+    <tr><td>Glucose (nüchtern)</td><td class="value">88</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">70 – 99</td><td class="bar"><div class="range"><i style="--at: 46%"></i></div></td></tr>
+    <tr><td>HbA<sub>1c</sub></td><td class="value">5,3</td><td class="flag"></td><td class="unit">%</td><td class="ref">&lt; 5,7</td><td class="bar"><div class="range"><i style="--at: 60%"></i></div></td></tr>
+    <tr><td>Kreatinin</td><td class="value">0,79</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">0,51 – 0,95</td><td class="bar"><div class="range"><i style="--at: 58%"></i></div></td></tr>
+    <tr><td>eGFR (CKD-EPI)</td><td class="value">&gt; 90</td><td class="flag"></td><td class="unit">ml/min/1,73 m²</td><td class="ref">&gt; 60</td><td class="bar"><div class="range"><i style="--at: 75%"></i></div></td></tr>
+    <tr class="high"><td>GPT (ALT)</td><td class="value">41</td><td class="flag">↑</td><td class="unit">U/l</td><td class="ref">&lt; 35</td><td class="bar"><div class="range"><i style="--at: 87%"></i></div></td></tr>
+    <tr><td>Gamma-GT</td><td class="value">22</td><td class="flag"></td><td class="unit">U/l</td><td class="ref">&lt; 40</td><td class="bar"><div class="range"><i style="--at: 45%"></i></div></td></tr>
+  </tbody>
+  <tbody class="group"><tr><th colspan="6">Lipide</th></tr>
+    <tr class="high"><td>Cholesterin gesamt</td><td class="value">226</td><td class="flag">↑</td><td class="unit">mg/dl</td><td class="ref">&lt; 200</td><td class="bar"><div class="range"><i style="--at: 88%"></i></div></td></tr>
+    <tr><td>HDL-Cholesterin</td><td class="value">64</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">&gt; 45</td><td class="bar"><div class="range"><i style="--at: 62%"></i></div></td></tr>
+    <tr class="high"><td>LDL-Cholesterin</td><td class="value">142</td><td class="flag">↑</td><td class="unit">mg/dl</td><td class="ref">&lt; 116</td><td class="bar"><div class="range"><i style="--at: 91%"></i></div></td></tr>
+    <tr><td>Triglyceride</td><td class="value">97</td><td class="flag"></td><td class="unit">mg/dl</td><td class="ref">&lt; 150</td><td class="bar"><div class="range"><i style="--at: 51%"></i></div></td></tr>
+    <tr><td>Lipoprotein (a)</td><td class="value">18</td><td class="flag"></td><td class="unit">nmol/l</td><td class="ref">&lt; 75</td><td class="bar"><div class="range"><i style="--at: 33%"></i></div></td></tr>
+  </tbody>
+  <tbody class="group"><tr><th colspan="6">Schilddrüse und Vitamine</th></tr>
+    <tr><td>TSH basal</td><td class="value">1,84</td><td class="flag"></td><td class="unit">mU/l</td><td class="ref">0,27 – 4,20</td><td class="bar"><div class="range"><i style="--at: 40%"></i></div></td></tr>
+    <tr class="low"><td>25-OH-Vitamin D<sub>3</sub></td><td class="value">17</td><td class="flag">↓</td><td class="unit">ng/ml</td><td class="ref">30 – 100</td><td class="bar"><div class="range"><i style="--at: 9%"></i></div></td></tr>
+    <tr><td>Vitamin B<sub>12</sub></td><td class="value">412</td><td class="flag"></td><td class="unit">pg/ml</td><td class="ref">197 – 771</td><td class="bar"><div class="range"><i style="--at: 50%"></i></div></td></tr>
+    <tr><td>Folsäure</td><td class="value">8,1</td><td class="flag"></td><td class="unit">ng/ml</td><td class="ref">&gt; 3,9</td><td class="bar"><div class="range"><i style="--at: 55%"></i></div></td></tr>
+  </tbody>
+</table>
+<p class="legend">↑ oberhalb, ↓ unterhalb des Referenzbereichs. Die Balken zeigen die Lage des Messwerts; der grüne Bereich entspricht dem Referenzbereich des Labors für Frauen von 18 bis 50 Jahren.</p>
+<div class="comment"><p><b>Beurteilung</b></p>
+<p>Mikrozytäre Anämie bei erniedrigtem Ferritin, vereinbar mit einem Eisenmangel. Eine Kontrolle nach acht bis zwölf Wochen Substitution wird empfohlen.</p>
+<p>Leicht erhöhtes LDL-Cholesterin; die Bewertung erfolgt unter Berücksichtigung des individuellen kardiovaskulären Risikos. Vitamin-D-Mangel; Substitution nach klinischer Einschätzung.</p></div>
+<div class="sign">
+  <div><svg viewBox="0 0 200 48"><path d="M6 36 C 20 8, 34 8, 30 30 S 52 44, 62 20 S 80 6, 84 30 C 88 44, 104 18, 112 26 S 130 38, 140 22 L 150 30 C 160 36, 176 18, 194 24" fill="none" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/></svg>Dr. med. Jonas Albrecht<br>Facharzt für Laboratoriumsmedizin</div>
+  <div style="width:auto;border:0;color:#6b7280">Elektronisch freigegeben am 09.03.2027, 11:18 Uhr</div>
+</div>
+</body></html>

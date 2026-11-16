@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><title>Τιμοκατάλογος / Прайс-лист 2027</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 15mm 14mm 18mm;
+  @bottom-center { content: "Σελίδα " counter(page) " / Страница " counter(page); font: 8pt Inter; color: #6b7280; } }
+:root { --blue: #0d5eaf; --red: #c8102e; --line: #d8dde6; }
+body { margin: 0; font: 9.5pt/1.45 Inter, sans-serif; color: #1c2430; }
+header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; border-bottom: 3px double var(--blue); padding-bottom: 8px; }
+header h1 { margin: 0; font-size: 18pt; letter-spacing: -.01em; }
+header h1 span { display: block; font-size: 12pt; font-weight: 400; color: var(--blue); }
+header .valid { text-align: right; font-size: 8.5pt; color: #4b5563; }
+.intro { columns: 2; column-gap: 22px; margin: 12px 0; font-size: 9pt; }
+.intro p { margin: 0 0 6px; }
+.intro p:lang(ru) { font-style: italic; }
+h2 { font-size: 11pt; margin: 16px 0 6px; padding: 3px 8px; background: var(--blue); color: #fff; border-radius: 3px; display: flex; justify-content: space-between; }
+h2 small { font-weight: 400; opacity: .85; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; text-align: left; padding: 3px 6px; border-bottom: 1px solid #9ca3af; }
+td { padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.code { font-size: 8pt; color: #6b7280; white-space: nowrap; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td .ru { display: block; color: #4b5563; font-size: 8.5pt; }
+tr.offer td { background: #fff4e5; }
+tr.offer td.num b { color: var(--red); }
+s { color: #9ca3af; }
+.terms { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 8pt; color: #374151; }
+.terms h3 { font-size: 9pt; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+.terms ol { margin: 0; padding-left: 16px; }
+.terms li::marker { color: var(--blue); font-weight: 700; }
+ol.greek { list-style: lower-greek; }
+ol.cyr { list-style: cyrillic-lower; }
+</style></head><body>
+<header>
+  <h1>Τιμοκατάλογος χονδρικής 2027<span>Оптовый прайс-лист 2027</span></h1>
+  <div class="valid">Ισχύει από 1 Ιανουαρίου 2027<br>Действует с 1 января 2027 г.<br>Τιμές σε ευρώ χωρίς ΦΠΑ / Цены в евро без НДС</div>
+</header>
+<div class="intro">
+  <p>Η εταιρεία «Ελαιώνας Μεσσηνίας Α.Ε.» παράγει εξαιρετικό παρθένο ελαιόλαδο, ελιές Καλαμών και προϊόντα ελιάς από το 1968. Οι τιμές του παρόντος καταλόγου ισχύουν για παραγγελίες άνω των 300 ευρώ και παράδοση εντός Ευρωπαϊκής Ένωσης.</p>
+  <p lang="ru">Компания «Элеонас Мессинии» производит оливковое масло первого холодного отжима, оливки Каламата и продукты из оливок с 1968 года. Цены действительны для заказов от 300 евро с доставкой в страны Европейского союза и Сербию.</p>
+</div>
+
+<h2>Ελαιόλαδο · Оливковое масло <small>κιβώτιο / коробка</small></h2>
+<table>
+  <thead><tr><th>Κωδ.</th><th>Προϊόν / Продукт</th><th>Συσκευασία</th><th class="num">Τεμ./κιβ.</th><th class="num">Τιμή €</th></tr></thead>
+  <tbody>
+    <tr><td class="code">EL-0250</td><td>Εξαιρετικό παρθένο, Κορωνέικη<span class="ru">Extra virgin, сорт Коронейки</span></td><td>γυάλινη φιάλη 250 ml</td><td class="num">24</td><td class="num">4,10</td></tr>
+    <tr><td class="code">EL-0500</td><td>Εξαιρετικό παρθένο, Κορωνέικη<span class="ru">Extra virgin, сорт Коронейки</span></td><td>γυάλινη φιάλη 500 ml</td><td class="num">12</td><td class="num">7,25</td></tr>
+    <tr class="offer"><td class="code">EL-1000</td><td>Εξαιρετικό παρθένο, βιολογικό<span class="ru">Extra virgin, органическое</span></td><td>φιάλη 1 l</td><td class="num">6</td><td class="num"><s>14,90</s> <b>12,90</b></td></tr>
+    <tr><td class="code">EL-3000</td><td>Παρθένο ελαιόλαδο για μαγείρεμα<span class="ru">Нерафинированное, для кулинарии</span></td><td>μεταλλικό δοχείο 3 l</td><td class="num">4</td><td class="num">21,60</td></tr>
+    <tr><td class="code">EL-5000</td><td>Εξαιρετικό παρθένο, πρώιμη συγκομιδή<span class="ru">Extra virgin, ранний сбор урожая</span></td><td>μεταλλικό δοχείο 5 l</td><td class="num">4</td><td class="num">38,40</td></tr>
+  </tbody>
+</table>
+
+<h2>Ελιές · Оливки <small>κιβώτιο / коробка</small></h2>
+<table>
+  <thead><tr><th>Κωδ.</th><th>Προϊόν / Продукт</th><th>Συσκευασία</th><th class="num">Τεμ./κιβ.</th><th class="num">Τιμή €</th></tr></thead>
+  <tbody>
+    <tr><td class="code">OL-K200</td><td>Ελιές Καλαμών σε άλμη<span class="ru">Оливки Каламата в рассоле</span></td><td>βάζο 200 g</td><td class="num">12</td><td class="num">3,15</td></tr>
+    <tr><td class="code">OL-K400</td><td>Ελιές Καλαμών χωρίς κουκούτσι<span class="ru">Оливки Каламата без косточки</span></td><td>βάζο 400 g</td><td class="num">12</td><td class="num">5,40</td></tr>
+    <tr class="offer"><td class="code">OL-P250</td><td>Πάστα ελιάς με ρίγανη<span class="ru">Оливковая паста с орегано</span></td><td>βάζο 250 g</td><td class="num">12</td><td class="num"><s>4,80</s> <b>3,95</b></td></tr>
+    <tr><td class="code">OL-M1K</td><td>Πράσινες ελιές Χαλκιδικής, γεμιστές<span class="ru">Зелёные оливки Халкидики, фаршированные</span></td><td>σακούλα 1 kg</td><td class="num">8</td><td class="num">9,70</td></tr>
+  </tbody>
+</table>
+
+<h2>Δώρα · Подарочные наборы <small>τεμάχιο / штука</small></h2>
+<table>
+  <thead><tr><th>Κωδ.</th><th>Προϊόν / Продукт</th><th>Περιεχόμενο</th><th class="num">Ελάχ.</th><th class="num">Τιμή €</th></tr></thead>
+  <tbody>
+    <tr><td class="code">GF-01</td><td>Κουτί «Μεσσηνία»<span class="ru">Набор «Мессиния»</span></td><td>ελαιόλαδο 250 ml, ελιές 200 g, σαπούνι</td><td class="num">10</td><td class="num">14,50</td></tr>
+    <tr><td class="code">GF-02</td><td>Κουτί «Ταΰγετος»<span class="ru">Набор «Тайгет»</span></td><td>ελαιόλαδο 500 ml, πάστα ελιάς, μέλι θυμαρίσιο 250 g</td><td class="num">10</td><td class="num">24,80</td></tr>
+  </tbody>
+</table>
+
+<section class="terms">
+  <div lang="el"><h3>Όροι πώλησης</h3><ol class="greek"><li>Πληρωμή εντός 30 ημερών από την έκδοση του τιμολογίου.</li><li>Δωρεάν μεταφορικά για παραγγελίες άνω των 1.500 €.</li><li>Ελάχιστη παραγγελία ανά κωδικό: ένα κιβώτιο.</li><li>Οι τιμές μπορεί να αλλάξουν λόγω τιμής παραγωγού.</li></ol></div>
+  <div lang="ru"><h3>Условия продажи</h3><ol class="cyr"><li>Оплата в течение 30 дней с даты выставления счёта.</li><li>Бесплатная доставка при заказе от 1 500 €.</li><li>Минимальный заказ по артикулу — одна коробка.</li><li>Цены могут меняться в зависимости от цены урожая.</li></ol></div>
+</section>
+</body></html>

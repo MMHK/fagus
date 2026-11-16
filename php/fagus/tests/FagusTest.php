@@ -1,0 +1,473 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Fagus\Tests;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Fagus\Binary;
+use Fagus\Conformance;
+use Fagus\Document;
+use Fagus\Engine;
+use Fagus\Exception\EngineException;
+use Fagus\Exception\FagusException;
+use Fagus\Exception\InvalidArgumentException;
+use Fagus\Exception\RenderException;
+use Fagus\Fagus;
+use Fagus\InvoiceProfile;
+use Fagus\Relationship;
+use Fagus\Severity;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+/**
+ * Runs against the fagus binary in FAGUS_BINARY, or the release build of this repository.
+ */
+final class FagusTest extends TestCase
+{
+    private const string FONTS = __DIR__.'/../../../tests/fonts';
+
+    private static Engine $engine;
+
+    private static string $binary;
+
+    public static function setUpBeforeClass(): void
+    {
+        $binary = getenv('FAGUS_BINARY') ?: __DIR__.'/../../../target/release/'.Binary::name();
+        if (! is_executable($binary)) {
+            self::markTestSkipped("No fagus binary at {$binary}; build it with `cargo build --release`.");
+        }
+        self::$binary = $binary;
+        self::$engine = new Engine($binary, [self::FONTS]);
+        Fagus::useEngine(self::$engine);
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        Fagus::useEngine(null);
+    }
+
+    #[Test]
+    public function it_renders_html_to_pdf(): void
+    {
+        $pdf = Fagus::html('<style>body { font-family: Inter }</style><h1>Rechnung</h1><p>Hallo</p>')->render();
+
+        $this->assertStringStartsWith('%PDF-', $pdf->bytes());
+        $this->assertSame(1, $pdf->pages());
+        $this->assertSame([], $pdf->diagnostics());
+        $this->assertArrayHasKey('layout', $pdf->timings());
+    }
+
+    #[Test]
+    public function it_keeps_the_worker_running_between_documents(): void
+    {
+        $first = Fagus::html('<p>Eins</p>')->render();
+        $second = Fagus::html('<p style="break-after: page">Zwei</p><p>Drei</p>')->render();
+
+        $this->assertSame(1, $first->pages());
+        $this->assertSame(2, $second->pages());
+        $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+/', self::$engine->version());
+    }
+
+    #[Test]
+    public function it_asks_the_resolver_for_resources(): void
+    {
+        $asked = [];
+        $font = (string) file_get_contents(self::FONTS.'/Inter-Bold.ttf');
+        $pdf = Fagus::html('<style>@font-face { font-family: Hausschrift; src: url(fonts/haus.ttf); } p { font-family: Hausschrift }</style><p>Hallo</p>')
+            ->resolver(function (string $url) use (&$asked, $font): ?string {
+                $asked[] = $url;
+
+                return $url === 'fonts/haus.ttf' ? $font : null;
+            })
+            ->render();
+
+        $this->assertSame(['fonts/haus.ttf'], $asked);
+        $this->assertSame([], $pdf->diagnostics());
+    }
+
+    #[Test]
+    public function it_uses_resources_that_are_handed_over(): void
+    {
+        $pixel = (string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+        $pdf = Fagus::html('<img src="logo.png" width="20" height="20">')->resource('logo.png', $pixel)->render();
+
+        $this->assertSame([], $pdf->diagnostics());
+        $this->assertMatchesRegularExpression('#/Subtype\s*/Image#', $pdf->bytes());
+    }
+
+    #[Test]
+    public function it_reports_diagnostics_and_fails_in_strict_mode(): void
+    {
+        $document = Fagus::html('<style>p { colr: red }</style><img src="fehlt.png"><p>x</p>');
+        $diagnostics = $document->render()->diagnostics();
+
+        $this->assertCount(2, $diagnostics);
+        $this->assertSame(Severity::Warning, $diagnostics[0]->severity);
+        $this->assertSame('css.unknown-property', $diagnostics[0]->code);
+
+        try {
+            $document->strict()->render();
+            $this->fail('No exception in strict mode.');
+        } catch (RenderException $exception) {
+            $this->assertCount(2, $exception->diagnostics());
+            $this->assertStringContainsString('css.unknown-property', $exception->getMessage());
+        }
+    }
+
+    #[Test]
+    public function it_writes_factur_x_invoices(): void
+    {
+        $xml = (string) file_get_contents(__DIR__.'/../../../tests/corpus/invoice/factur-x.xml');
+        $pdf = Fagus::html('<p>Rechnung</p>')
+            ->facturX($xml)
+            ->attach('notiz.txt', 'Danke!', 'text/plain', Relationship::Supplement, 'Eine Notiz')
+            ->created(new DateTimeImmutable('2026-11-02 13:00:00', new DateTimeZone('Europe/Berlin')))
+            ->render();
+
+        $bytes = $pdf->bytes();
+        $this->assertStringContainsString('/F(factur-x.xml)', self::decoded($bytes));
+        $this->assertStringContainsString('/F(notiz.txt)', self::decoded($bytes));
+        $this->assertStringContainsString('<pdfaid:part>3</pdfaid:part>', $bytes);
+        $this->assertStringContainsString('<fx:ConformanceLevel>EN 16931</fx:ConformanceLevel>', $bytes);
+        $this->assertStringContainsString('2026-11-02T12:00:00', $bytes, 'the date in UTC');
+    }
+
+    #[Test]
+    public function it_writes_pdf_a(): void
+    {
+        $pdf = Fagus::html('<p>Archiv</p>')->pdfA(Conformance::PdfA2u)->render();
+        $this->assertStringContainsString('<pdfaid:part>2</pdfaid:part><pdfaid:conformance>U</pdfaid:conformance>', $pdf->bytes());
+
+        $pdf = Fagus::html('<p>Archiv</p>')->pdfA('3B')->facturX('<x/>', InvoiceProfile::Extended)->render();
+        $this->assertStringContainsString('<fx:ConformanceLevel>EXTENDED</fx:ConformanceLevel>', $pdf->bytes());
+    }
+
+    #[Test]
+    public function it_writes_tagged_and_accessible_pdf(): void
+    {
+        $html = '<!doctype html><html lang="de"><title>Rechnung</title><h1>Rechnung</h1><p>Danke.</p>';
+        $this->assertStringContainsString('/StructTreeRoot', self::decoded(Fagus::html($html)->render()->bytes()), 'tagged by default');
+        $this->assertStringNotContainsString('/StructTreeRoot', self::decoded(Fagus::html($html)->tagged(false)->render()->bytes()));
+
+        $pdf = Fagus::html($html)->accessible()->pdfA(Conformance::PdfA3a)->render();
+        $this->assertStringContainsString('<pdfuaid:part>1</pdfuaid:part>', $pdf->bytes());
+        $this->assertStringContainsString('<pdfaid:conformance>A</pdfaid:conformance>', $pdf->bytes());
+
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('has no alternative text');
+        Fagus::html($html.'<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGNQd7wJRAwQCgAgYgUFHdy6BAAAAABJRU5ErkJggg==">')
+            ->accessible()
+            ->render();
+    }
+
+    #[Test]
+    public function it_saves_files(): void
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus '.bin2hex(random_bytes(6)).'.pdf';
+        try {
+            $pdf = Fagus::html('<p>Datei</p>')->save($path);
+            $this->assertSame($pdf->bytes(), file_get_contents($path));
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    #[Test]
+    public function documents_do_not_change(): void
+    {
+        $document = Document::html('<p>x</p>');
+        $strict = $document->strict();
+
+        $this->assertNotSame($document, $strict);
+        $this->assertSame([], $document->render()->diagnostics());
+    }
+
+    #[Test]
+    public function it_recovers_when_the_resolver_fails(): void
+    {
+        $document = Fagus::html('<img src="bild.png">')->resolver(function (): ?string {
+            throw new RuntimeException('Kein Zugriff');
+        });
+
+        try {
+            $document->render();
+            $this->fail('No exception from the resolver.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Kein Zugriff', $exception->getMessage());
+        }
+        $this->assertSame(1, Fagus::html('<p>Weiter</p>')->render()->pages(), 'a new worker takes over');
+    }
+
+    #[Test]
+    public function it_adds_fonts(): void
+    {
+        $this->assertGreaterThan(0, self::$engine->addFont((string) file_get_contents(self::FONTS.'/Inter-Italic.ttf')));
+
+        $this->expectException(EngineException::class);
+        self::$engine->addFont('keine Schrift');
+    }
+
+    /**
+     * The bytes of a PDF followed by the decoded contents of its object streams, where the
+     * dictionaries of the document are.
+     */
+    private static function decoded(string $pdf): string
+    {
+        preg_match_all('~/Type/ObjStm/N \d+/First \d+/Filter/FlateDecode/Length (\d+)>>\nstream\n~', $pdf, $streams, PREG_OFFSET_CAPTURE);
+        $decoded = $pdf;
+        foreach ($streams[0] as $index => [$header, $offset]) {
+            $data = substr($pdf, $offset + strlen($header), (int) $streams[1][$index][0]);
+            $decoded .= (string) gzuncompress($data);
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * The streams of a PDF that hold what it draws (contents, fonts, images): all but the
+     * metadata, the object streams and the cross-reference stream.
+     *
+     * @return list<string>
+     */
+    private static function drawn(string $pdf): array
+    {
+        preg_match_all('~<<(.*?)>>\nstream\n~s', $pdf, $streams, PREG_OFFSET_CAPTURE);
+        $drawn = [];
+        foreach ($streams[0] as $index => [$header, $offset]) {
+            $dictionary = $streams[1][$index][0];
+            if (preg_match('~/Type/(Metadata|ObjStm|XRef)\b~', $dictionary) === 1 || preg_match('~/Length (\d+)~', $dictionary, $length) !== 1) {
+                continue;
+            }
+            $drawn[] = substr($pdf, $offset + strlen($header), (int) $length[1]);
+        }
+
+        return $drawn;
+    }
+
+    #[Test]
+    public function it_writes_form_controls_in_the_engines_locale_unless_lang_says_otherwise(): void
+    {
+        // What is drawn; the metadata differ, as the locale is the language of a document without one.
+        $render = static fn (Engine $engine, string $html): array => self::drawn(Document::html($html)
+            ->tagged(false)
+            ->created(new DateTimeImmutable('2026-11-05 12:00:00', new DateTimeZone('Europe/Berlin')))
+            ->render($engine)
+            ->bytes());
+        $controls = '<input type=submit> <input type=date value=2026-11-04>';
+        $german = new Engine(self::$binary, [self::FONTS], locale: 'de-DE');
+
+        $this->assertNotSame($render(self::$engine, $controls), $render($german, $controls));
+        $this->assertSame($render(self::$engine, '<body lang=de>'.$controls), $render($german, $controls));
+        $this->assertSame($render(self::$engine, $controls), $render($german, '<body lang=en>'.$controls));
+    }
+
+    #[Test]
+    public function it_explains_a_missing_binary(): void
+    {
+        $this->expectException(EngineException::class);
+        $this->expectExceptionMessage('could not be started');
+        (new Engine('/nicht/vorhanden/fagus'))->render(Document::html('<p>x</p>'));
+    }
+
+    #[Test]
+    public function it_renders_xhtml(): void
+    {
+        // An empty-element tag closes the `div` in XHTML only; in HTML it holds the paragraph.
+        $markup = '<html xmlns="http://www.w3.org/1999/xhtml"><body><div style="break-after: page"/><p>Zwei</p></body></html>';
+
+        $this->assertSame(2, Fagus::xhtml($markup)->render()->pages());
+        $this->assertSame(1, Fagus::html($markup)->render()->pages());
+    }
+
+    #[Test]
+    public function it_keeps_added_fonts_for_a_new_worker(): void
+    {
+        $engine = new Engine(self::$binary);
+        $html = '<p style="font: italic bold 12px Inter">Kursiv</p>';
+        $this->assertStringNotContainsString('Inter-BoldItalic', self::decoded(Document::html($html)->render($engine)->bytes()));
+
+        $engine->addFont((string) file_get_contents(self::FONTS.'/Inter-BoldItalic.ttf'));
+        $this->assertStringContainsString('Inter-BoldItalic', self::decoded(Document::html($html)->render($engine)->bytes()));
+
+        $engine->close();
+        $this->assertStringContainsString('Inter-BoldItalic', self::decoded(Document::html($html)->render($engine)->bytes()), 'the new worker has the font');
+    }
+
+    #[Test]
+    public function it_passes_large_documents_and_binary_data_unchanged(): void
+    {
+        // Bytes that text mode would change on Windows (line ends, end of file), and many more.
+        $data = "\r\n\n\r\x1a\x00".random_bytes(4 << 20)."\r\n";
+        $html = '<!-- '.str_repeat('Füllung ', 1 << 20).' --><p>Groß</p>';
+
+        $pdf = Fagus::html($html)->attach('daten.bin', $data)->render();
+
+        $this->assertSame(1, $pdf->pages());
+        $this->assertStringContainsString($data, $pdf->bytes());
+        $this->assertStringEndsWith("%%EOF\n", $pdf->bytes());
+    }
+
+    #[Test]
+    public function it_stops_a_worker_that_does_not_answer_in_time(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('PHP cannot wait for pipes with a time limit on Windows.');
+        }
+        $engine = new Engine(self::$binary, [self::FONTS], timeout: 0.2);
+        $html = str_repeat('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>', 100_000);
+        $start = microtime(true);
+
+        try {
+            Document::html($html)->render($engine);
+            $this->fail('No timeout.');
+        } catch (EngineException $exception) {
+            $this->assertStringContainsString('did not answer within 0.2 seconds', $exception->getMessage());
+        }
+        // Stopped at once rather than waited for until it has rendered the document.
+        $this->assertLessThan(2.0, microtime(true) - $start);
+        $this->assertSame(1, Document::html('<p>Weiter</p>')->render($engine)->pages(), 'a new worker takes over');
+    }
+
+    #[Test]
+    public function it_explains_why_the_worker_stopped(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('The stand-in binary is a shell script.');
+        }
+        // A binary that fails at once, with a message on its error output.
+        $binary = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus-failing-'.bin2hex(random_bytes(6));
+        file_put_contents($binary, "#!/bin/sh\necho 'Error: reading fonts in /kaputt' >&2\nexit 1\n");
+        chmod($binary, 0755);
+        try {
+            (new Engine($binary))->render(Document::html('<p>x</p>'));
+            $this->fail('No exception from a worker that stopped.');
+        } catch (EngineException $exception) {
+            $this->assertMatchesRegularExpression('~stopped\. It exited with code 1\. .*reading fonts in /kaputt~s', $exception->getMessage());
+        } finally {
+            @unlink($binary);
+        }
+    }
+
+    #[Test]
+    public function it_names_a_font_directory_that_does_not_exist(): void
+    {
+        $engine = new Engine(self::$binary, [self::FONTS, '/nicht/vorhanden']);
+
+        $this->expectException(EngineException::class);
+        $this->expectExceptionMessage('The font directory `/nicht/vorhanden` does not exist.');
+        $engine->render(Document::html('<p>x</p>'));
+    }
+
+    #[Test]
+    public function it_describes_attachments_by_their_names(): void
+    {
+        // PDF/A-3 and PDF/UA require a description; without one, the name describes the file.
+        $html = '<!doctype html><html lang="de"><title>Anhang</title><p>Anhang</p>';
+        $archive = Fagus::html($html)->attach('daten.csv', "a;b\n", 'text/csv', Relationship::Data)->pdfA('3b')->render();
+        $accessible = Fagus::html($html)->attach('daten.csv', "a;b\n", 'text/csv')->accessible()->render();
+
+        $this->assertStringContainsString('/Desc(daten.csv)', self::decoded($archive->bytes()));
+        $this->assertStringContainsString('/Desc(daten.csv)', self::decoded($accessible->bytes()));
+    }
+
+    #[Test]
+    public function it_keeps_the_diagnostics_of_documents_that_fail(): void
+    {
+        try {
+            Fagus::html('<style>p { colr: red }</style><p>Brief</p>')->accessible()->render();
+            $this->fail('No exception for a document that is not PDF/UA.');
+        } catch (RenderException $exception) {
+            $this->assertStringContainsString('PDF/UA-1', $exception->getMessage());
+            $this->assertSame(['css.unknown-property'], array_map(static fn ($diagnostic): string => $diagnostic->code, $exception->diagnostics()));
+        }
+    }
+
+    #[Test]
+    public function it_counts_diagnostics_in_strict_mode(): void
+    {
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessageMatches('~^1 diagnostic in strict mode:\n~');
+        Fagus::html('<style>p { colr: red }</style><p>x</p>')->strict()->render();
+    }
+
+    #[Test]
+    public function it_names_the_pdf_a_levels_for_an_unknown_one(): void
+    {
+        try {
+            Fagus::html('<p>x</p>')->pdfA('4z');
+            $this->fail('No exception for an unknown level.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertInstanceOf(FagusException::class, $exception);
+            $this->assertSame("Unknown PDF/A level '4z'. The levels are '2b', '2u', '2a', '3b', '3u', '3a'.", $exception->getMessage());
+        }
+    }
+
+    #[Test]
+    public function it_takes_resources_handed_over_then_the_resolver_then_files(): void
+    {
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus-resources-'.bin2hex(random_bytes(6));
+        mkdir($directory);
+        // Each unknown property names the source that was used.
+        foreach (['handed.css' => 'datei', 'resolved.css' => 'datei', 'file.css' => 'datei'] as $name => $source) {
+            file_put_contents($directory.DIRECTORY_SEPARATOR.$name, "p { {$source}-{$name[0]}: 1 }");
+        }
+        $asked = [];
+        try {
+            $pdf = Fagus::html('<link rel=stylesheet href=handed.css><link rel=stylesheet href=resolved.css><link rel=stylesheet href=file.css><p>x</p>')
+                ->baseDirectory($directory)
+                ->resource('handed.css', 'p { uebergeben-h: 1 }')
+                ->resolver(function (string $url) use (&$asked): ?string {
+                    $asked[] = $url;
+
+                    return $url === 'resolved.css' ? 'p { resolver-r: 1 }' : null;
+                })
+                ->render();
+        } finally {
+            array_map(unlink(...), (array) glob($directory.DIRECTORY_SEPARATOR.'*.css'));
+            rmdir($directory);
+        }
+
+        $this->assertSame(['resolved.css', 'file.css'], $asked);
+        $messages = implode("\n", array_map(strval(...), $pdf->diagnostics()));
+        $this->assertStringContainsString('uebergeben-h', $messages);
+        $this->assertStringContainsString('resolver-r', $messages);
+        $this->assertStringContainsString('datei-f', $messages);
+        $this->assertStringNotContainsString('datei-h', $messages);
+        $this->assertStringNotContainsString('datei-r', $messages);
+    }
+
+    #[Test]
+    public function it_finds_the_binary(): void
+    {
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus path '.bin2hex(random_bytes(6));
+        mkdir($directory);
+        $link = $directory.DIRECTORY_SEPARATOR.Binary::name();
+        if (! @symlink((string) realpath(self::$binary), $link)) {
+            copy(self::$binary, $link);
+        }
+        $path = getenv('PATH');
+        $environment = getenv('FAGUS_BINARY');
+        try {
+            putenv('FAGUS_BINARY');
+            putenv('PATH='.$directory.PATH_SEPARATOR.$path);
+            $this->assertSame($link, Binary::locate());
+            $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+/', (new Engine)->version(), 'on the PATH, in a directory with a space');
+
+            putenv('FAGUS_BINARY='.$directory.DIRECTORY_SEPARATOR.'fehlt');
+            try {
+                Binary::locate();
+                $this->fail('A missing binary in FAGUS_BINARY was passed over.');
+            } catch (EngineException $exception) {
+                $this->assertStringContainsString('fehlt` could not be started', $exception->getMessage());
+            }
+        } finally {
+            putenv('PATH='.$path);
+            putenv($environment === false ? 'FAGUS_BINARY' : 'FAGUS_BINARY='.$environment);
+            unlink($link);
+            rmdir($directory);
+        }
+    }
+}

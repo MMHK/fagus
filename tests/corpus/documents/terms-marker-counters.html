@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Terms of Service</title>
+<style>
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 500; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600; }
+@font-face { font-family: "Geist"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page {
+  size: letter;
+  margin: 0.8in 0.9in 0.9in;
+  @bottom-left { content: "Acme Cloud, Inc. — Terms of Service"; font: 7.5pt "Geist"; color: #666; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt "Geist"; color: #666; }
+}
+html { font: 9.5pt/1.5 "Geist", sans-serif; color: #222; }
+body { margin: 0; }
+header { border-bottom: 2pt solid #222; padding-bottom: 8pt; margin-bottom: 14pt; display: flex; justify-content: space-between; align-items: flex-end; }
+header h1 { font-size: 20pt; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+header .meta { text-align: right; font-size: 8pt; color: #555; text-transform: uppercase; letter-spacing: 0.08em; }
+.lead { font-size: 10.5pt; color: #333; text-align: justify; }
+ol { padding-left: 0; margin: 0; }
+ol.terms { counter-reset: list-item; }
+ol.terms li { margin-left: 2.6em; }
+ol.terms > li { margin-top: 10pt; }
+ol.terms li::marker { content: counters(list-item, ".") ".  "; font-weight: 600; font-variant-numeric: tabular-nums; }
+ol.terms ol li { margin-left: 3.2em; margin-top: 3pt; }
+ol.terms ol ol li { margin-left: 3.8em; }
+ol.terms > li > strong:first-child { display: block; font-size: 10.5pt; font-weight: 600; break-after: avoid; }
+li p { margin: 2pt 0; text-align: justify; }
+ul.dash { list-style: none; padding-left: 1.4em; margin: 3pt 0; }
+ul.dash li { margin-left: 0 !important; }
+ul.dash li::before { content: "–"; display: inline-block; width: 1.4em; margin-left: -1.4em; }
+.caps { text-transform: uppercase; font-size: 8.8pt; letter-spacing: 0.02em; text-align: justify; }
+.callout { border-left: 3pt solid #2f6fde; background: #eef3fd; padding: 6pt 10pt; margin: 8pt 0; break-inside: avoid; }
+.accept { margin-top: 24pt; display: grid; grid-template-columns: 1fr 1fr; gap: 28pt; break-inside: avoid; }
+.accept div { border-top: 0.75pt solid #222; padding-top: 3pt; font-size: 8pt; color: #444; }
+.initials { float: right; border: 0.75pt solid #999; width: 60pt; height: 22pt; margin: 0 0 4pt 8pt; font-size: 6.5pt; color: #777; padding: 1pt 3pt; }
+</style>
+</head>
+<body>
+<header><h1>Terms of Service</h1><div class="meta">Effective November 13, 2026<br>Version 4.2</div></header>
+<p class="lead">These Terms of Service (the “Terms”) govern your access to and use of the services provided by Acme Cloud, Inc. (“Acme”, “we”, “us”). By creating an account or using the services you agree to these Terms. If you are entering into these Terms on behalf of an organization, you represent that you have the authority to bind that organization.</p>
+<ol class="terms">
+<li><strong>Definitions</strong>
+<ol>
+<li><p>“Account” means the account you create to access the Services.</p></li>
+<li><p>“Customer Data” means all data, files and other content that you or your users submit to the Services, including invoices, credit notes, and attachments.</p></li>
+<li><p>“Documentation” means the user guides, API references and help articles we make available at docs.acme.example, as updated from time to time.</p></li>
+<li><p>“Subscription Term” means the period stated in your order form, together with any renewal periods.</p></li>
+</ol></li>
+<li><strong>Access to the Services</strong>
+<ol>
+<li><p>Subject to these Terms, we grant you a non-exclusive, non-transferable right to access and use the Services during the Subscription Term for your internal business purposes.</p></li>
+<li><p>You must not, and must not allow anyone else to:</p>
+<ol>
+<li><p>copy, modify, or create derivative works of the Services, except as expressly permitted;</p></li>
+<li><p>reverse engineer, decompile, or attempt to discover the source code of the Services, except to the extent permitted by applicable law;</p></li>
+<li><p>use the Services to send unsolicited communications or to store or transmit malicious code;</p></li>
+<li><p>access the Services to build a competing product or to benchmark it for publication without our prior written consent.</p></li>
+</ol></li>
+<li><p>We may suspend access to the Services if we reasonably believe that your use poses a security risk, may harm other customers, or violates Section 2.2. We will give you notice where practicable and restore access promptly once the issue is resolved.</p></li>
+</ol></li>
+<li><strong>Customer Data</strong>
+<div class="initials">Initials</div>
+<ol>
+<li><p>As between the parties, you retain all rights in Customer Data. You grant us a worldwide, limited license to host, copy, process and display Customer Data only as necessary to provide the Services.</p></li>
+<li><p>We implement and maintain the technical and organizational measures described in the Documentation, including:</p>
+<ul class="dash"><li>encryption of Customer Data in transit and at rest;</li><li>logical separation of the data of different customers;</li><li>regular backups, retained for thirty (30) days;</li><li>annual penetration tests by an independent third party.</li></ul></li>
+<li><p>Where we process personal data on your behalf, the Data Processing Addendum forms part of these Terms and prevails in case of conflict.</p></li>
+</ol>
+<div class="callout"><b>Retention.</b> After termination you may export Customer Data for sixty (60) days. We then delete it from production systems within thirty (30) days and from backups in the ordinary course.</div></li>
+<li><strong>Fees and Payment</strong>
+<ol>
+<li><p>You will pay the fees stated in your order form. Unless stated otherwise, fees are billed annually in advance and are due thirty (30) days from the invoice date.</p></li>
+<li><p>Fees are exclusive of taxes. You are responsible for all sales, use, value added and similar taxes, except for taxes on our net income.</p></li>
+<li><p>Overdue amounts bear interest at the lower of 1.5% per month or the maximum rate permitted by law. We may suspend the Services if an undisputed amount is more than thirty (30) days overdue, after giving ten (10) days’ notice.</p></li>
+</ol></li>
+<li><strong>Warranties and Disclaimers</strong>
+<ol>
+<li><p>We warrant that the Services will perform materially in accordance with the Documentation. Your exclusive remedy for a breach of this warranty is that we will use reasonable efforts to correct the non-conformity or, if we cannot do so within a reasonable time, either party may terminate the affected subscription and we will refund prepaid fees for the remainder of the Subscription Term.</p></li>
+<li><p class="caps">Except as expressly provided in these Terms, the Services are provided “as is”, and we disclaim all other warranties, express or implied, including any warranties of merchantability, fitness for a particular purpose, title and non-infringement.</p></li>
+</ol></li>
+<li><strong>Limitation of Liability</strong>
+<ol>
+<li><p class="caps">Neither party will be liable for any indirect, incidental, special, consequential or punitive damages, or for any loss of profits, revenues, data or goodwill, even if advised of the possibility of such damages.</p></li>
+<li><p class="caps">Each party’s total liability arising out of or relating to these Terms will not exceed the amounts paid or payable by you in the twelve (12) months preceding the event giving rise to the liability.</p></li>
+<li><p>The limitations in this Section do not apply to your payment obligations, to a party’s indemnification obligations, or to liability that cannot be limited by law.</p></li>
+</ol></li>
+<li><strong>Term and Termination</strong>
+<ol>
+<li><p>These Terms continue until all subscriptions have expired or been terminated. Subscriptions renew automatically for successive periods of one year unless either party gives notice of non-renewal at least thirty (30) days before the end of the then-current term.</p></li>
+<li><p>Either party may terminate these Terms for cause if the other party materially breaches them and does not cure the breach within thirty (30) days after receiving written notice.</p></li>
+<li><p>Sections 3.3, 4, 5.2, 6, 7.3 and 8 survive termination.</p></li>
+</ol></li>
+<li><strong>General</strong>
+<ol>
+<li><p>These Terms are governed by the laws of the State of Delaware, without regard to its conflict of laws rules. The courts located in Wilmington, Delaware have exclusive jurisdiction.</p></li>
+<li><p>Neither party may assign these Terms without the other party’s consent, except to a successor in a merger, acquisition or sale of substantially all of its assets.</p></li>
+<li><p>These Terms, together with any order forms and addenda, are the entire agreement between the parties and supersede all prior agreements on their subject matter.</p></li>
+</ol></li>
+</ol>
+<div class="accept"><div>Customer signature, name and title</div><div>Date</div></div>
+</body>
+</html>

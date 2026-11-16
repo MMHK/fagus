@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Lieferschein LS-2026-5521</title>
+<link rel="stylesheet" href="vendor/trix-2.1.8.css">
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 14mm 16mm 16mm; }
+body { font-family: Inter, sans-serif; font-size: 9pt; color: #222; margin: 0; }
+.top { display: flex; justify-content: space-between; border-bottom: 3px solid #e8590c; padding-bottom: 4mm; }
+.top h1 { margin: 0; font-size: 22pt; color: #e8590c; font-weight: 700; }
+.top .company { text-align: right; font-size: 8pt; line-height: 1.35; }
+.addr { display: flex; gap: 8mm; margin: 6mm 0; }
+.addr > div { flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 3mm; line-height: 1.4; }
+.addr h4 { margin: 0 0 1mm; font-size: 7pt; text-transform: uppercase; color: #e8590c; letter-spacing: .06em; }
+.info { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5mm; }
+.info div { padding: 2mm 3mm; border-right: 1px solid #ddd; }
+.info div:last-child { border-right: 0; }
+.info small { display: block; color: #888; font-size: 6.5pt; text-transform: uppercase; }
+table.lines { width: 100%; border-collapse: collapse; }
+table.lines th { background: #fff4e6; text-align: left; padding: 2mm; font-size: 7.5pt; border-bottom: 1px solid #e8590c; }
+table.lines td { padding: 2mm; border-bottom: 1px solid #eee; vertical-align: top; }
+table.lines .c { text-align: center; }
+table.lines .box { display: inline-block; width: 9px; height: 9px; border: 1px solid #555; }
+.notes { margin-top: 6mm; padding: 3mm 4mm; background: #fafafa; border-left: 3px solid #e8590c; }
+.notes h3 { margin: 0 0 2mm; font-size: 9.5pt; }
+.receipt { margin-top: 8mm; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6mm; break-inside: avoid; }
+.receipt div { border-top: 1px solid #555; padding-top: 1mm; font-size: 7pt; color: #666; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Lieferschein</h1>
+  <div class="company"><strong>Baustoffe Ammerland GmbH</strong><br>Gewerbering 7 · 26655 Westerstede<br>Tel. 04488 092 51-0 · lager@baustoffe-ammerland.example</div>
+</div>
+<div class="addr">
+  <div><h4>Lieferanschrift</h4>Baustelle Neubau Kita „Sonnenblume“<br>Am Mühlenteich 12<br>26160 Bad Zwischenahn</div>
+  <div><h4>Rechnungsanschrift</h4>Holzbau Janssen GmbH &amp; Co. KG<br>Industriestraße 30<br>26188 Edewecht</div>
+  <div><h4>Ansprechpartner</h4>Polier Gerd Oltmanns<br>Mobil 0171 3920042<br>Anlieferung Tor 2</div>
+</div>
+<div class="info">
+  <div><small>Lieferschein</small>LS-2026-5521</div>
+  <div><small>Auftrag</small>AU-2026-3307</div>
+  <div><small>Lieferdatum</small>09.11.2026</div>
+  <div><small>Fahrzeug</small>WST-BA 412 (Kran)</div>
+</div>
+<table class="lines">
+  <thead><tr><th style="width:6%">Pos.</th><th style="width:15%">Art.-Nr.</th><th>Bezeichnung</th><th style="width:10%" class="c">Menge</th><th style="width:8%">Einheit</th><th style="width:9%" class="c">geprüft</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>KVH-60-160</td><td>Konstruktionsvollholz C24, 60 × 160 mm, Länge 5,00 m</td><td class="c">48</td><td>Stk.</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>2</td><td>KVH-80-200</td><td>Konstruktionsvollholz C24, 80 × 200 mm, Länge 6,00 m</td><td class="c">24</td><td>Stk.</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>3</td><td>OSB-3-22</td><td>OSB/3-Platte, Nut und Feder, 22 mm, 2500 × 675 mm</td><td class="c">90</td><td>Stk.</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>4</td><td>HFD-160</td><td>Holzfaserdämmplatte 160 mm, 1250 × 600 mm, λ 0,040</td><td class="c">62</td><td>m²</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>5</td><td>WSS-6x200</td><td>Holzbauschrauben 6 × 200 mm, Tellerkopf, verzinkt (Karton à 50)</td><td class="c">12</td><td>Ktn.</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>6</td><td>DAM-DIFF</td><td>Diffusionsoffene Unterdeckbahn, Rolle 1,5 × 50 m</td><td class="c">4</td><td>Rolle</td><td class="c"><span class="box"></span></td></tr>
+    <tr><td>7</td><td>PAL-EUR</td><td>Europalette (Pfand), Rücknahme bei nächster Lieferung</td><td class="c">6</td><td>Stk.</td><td class="c"><span class="box"></span></td></tr>
+  </tbody>
+</table>
+
+<div class="notes">
+<h3>Hinweise zur Lieferung</h3>
+<div class="trix-content">
+  <div>Bitte beachten Sie die folgenden Hinweise unseres Disponenten:<br><br><strong>Anlieferung nur über Tor 2</strong> – die Zufahrt über den Mühlenteich ist wegen der Kanalarbeiten bis Ende November gesperrt. Der Kran benötigt eine Aufstellfläche von <em>mindestens 6 × 8 m</em>.</div>
+  <h1>Lagerung auf der Baustelle</h1>
+  <ul><li>Holz auf Kanthölzern lagern, nicht direkt auf dem Boden.</li><li>Dämmplatten unbedingt abdecken; die Folie der Paletten reicht nicht aus.</li><li>OSB-Platten flach stapeln.</li></ul>
+  <blockquote>Bei Frost dürfen die Unterdeckbahnen nicht verlegt werden (Herstellerangabe unter +5&nbsp;°C).</blockquote>
+  <div><br></div>
+  <pre>Abladestelle:  N 53° 10' 54"  O 8° 0' 22"
+Zufahrt:       Tor 2, Schlüssel beim Polier</pre>
+  <div><br>Lageplan und Foto der Abladestelle:</div>
+  <div class="attachment-gallery attachment-gallery--2">
+    <action-text-attachment sgid="BAh7CEkiCGdpZAY6BkVU" content-type="image/png" filename="lageplan.png" filesize="4483" width="300" height="80" previewable="true" presentation="gallery"><figure class="attachment attachment--preview attachment--png"><img src="../images/logo.png" width="300" height="80"><figcaption class="attachment__caption"><span class="attachment__name">lageplan.png</span> <span class="attachment__size">4,38 KB</span></figcaption></figure></action-text-attachment>
+    <action-text-attachment sgid="BAh7CEkiCGdpZAY6BkVV" content-type="image/jpeg" filename="abladestelle.jpg" filesize="5192" width="320" height="180" previewable="true" presentation="gallery" caption="Abladestelle vor dem Rohbau, Blick nach Norden"><figure class="attachment attachment--preview attachment--jpg"><img src="../images/photo.jpg" width="320" height="180"><figcaption class="attachment__caption">Abladestelle vor dem Rohbau, Blick nach Norden</figcaption></figure></action-text-attachment>
+  </div>
+  <div>Für Rückfragen: <a href="tel:+4944880925122">04488 092 51-22</a> (Dispo, Herr Hinrichs). <action-text-attachment sgid="BAh7CEkiCGdpZAY6BkVW" content-type="application/pdf" filename="sicherheitsdatenblatt-osb.pdf" filesize="231000"><figure class="attachment attachment--file attachment--pdf"><figcaption class="attachment__caption"><span class="attachment__name">sicherheitsdatenblatt-osb.pdf</span> <span class="attachment__size">225,6 KB</span></figcaption></figure></action-text-attachment></div>
+</div>
+</div>
+<div class="receipt">
+  <div>Ware vollständig und unbeschädigt erhalten</div>
+  <div>Datum, Uhrzeit</div>
+  <div>Name in Druckbuchstaben, Unterschrift</div>
+</div>
+</body>
+</html>

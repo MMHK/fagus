@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Angebot A-2026-318</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 14mm 14mm 16mm; }
+/* The compiled CSS of Tailwind CSS v4 and daisyUI 5 for the classes this quote uses (a subset in
+   their form: layers, theme variables in oklch(), color-mix(), :where() and logical properties). */
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --spacing: .25rem;
+    --text-xs: .75rem; --text-xs--line-height: calc(1 / .75);
+    --text-sm: .875rem; --text-sm--line-height: calc(1.25 / .875);
+    --text-lg: 1.125rem; --text-lg--line-height: calc(1.75 / 1.125);
+    --text-2xl: 1.5rem; --text-2xl--line-height: calc(2 / 1.5);
+    --font-weight-bold: 700;
+    --tracking-wide: .025em;
+    --radius-md: .375rem;
+  }
+}
+:where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme=light] {
+  color-scheme: light;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(95% 0 0);
+  --color-base-content: oklch(21% .006 285.885);
+  --color-primary: oklch(45% .24 277.023);
+  --color-primary-content: oklch(93% .034 272.788);
+  --color-secondary: oklch(65% .241 354.308);
+  --color-success: oklch(76% .177 163.223);
+  --color-success-content: oklch(37% .077 168.94);
+  --color-warning: oklch(82% .189 84.429);
+  --color-warning-content: oklch(41% .112 45.904);
+  --color-neutral: oklch(14% .005 285.823);
+  --color-neutral-content: oklch(92% .004 286.32);
+  --radius-selector: .5rem;
+  --radius-field: .25rem;
+  --radius-box: .5rem;
+  --size-selector: .25rem;
+  --size-field: .25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+@layer base {
+  *, ::after, ::before { box-sizing: border-box; border: 0 solid; margin: 0; padding: 0; }
+  html, :host { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-family: var(--font-sans); }
+  h1, h2, h3 { font-size: inherit; font-weight: inherit; }
+  table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+  :root, [data-theme] { background-color: var(--root-bg, var(--color-base-100)); color: var(--color-base-content); }
+}
+@layer components {
+  .card { border-radius: var(--radius-box); outline-width: 2px; flex-direction: column; transition: outline .2s ease-in-out; display: flex; position: relative; }
+  .card-body { padding: var(--card-p, 1.5rem); font-size: var(--card-fs, .875rem); flex-direction: column; flex: auto; gap: .5rem; display: flex; }
+  .card-title { font-size: var(--cardtitle-fs, 1.125rem); align-items: center; gap: .5rem; font-weight: 600; display: flex; }
+  .card-border { border: var(--border) solid var(--color-base-200); }
+  .badge { border-radius: var(--radius-selector); vertical-align: middle; color: var(--badge-fg); border: var(--border) solid var(--badge-color, var(--color-base-200)); width: fit-content; padding-inline: calc(.25rem * 3 - var(--border)); background-size: auto, calc(var(--noise) * 100%); background-image: none, var(--fx-noise); background-color: var(--badge-bg); --badge-bg: var(--badge-color, var(--color-base-100)); --badge-fg: var(--color-base-content); --size: calc(var(--size-selector, .25rem) * 6); height: var(--size); justify-content: center; align-items: center; gap: .5rem; font-size: .875rem; display: inline-flex; }
+  .badge-sm { --size: calc(var(--size-selector, .25rem) * 5); padding-inline: calc(.25rem * 2.5 - var(--border)); font-size: .75rem; }
+  .badge-primary { --badge-color: var(--color-primary); --badge-fg: var(--color-primary-content); }
+  .badge-success { --badge-color: var(--color-success); --badge-fg: var(--color-success-content); }
+  .badge-soft { color: var(--badge-color, var(--color-base-content)); background-color: color-mix(in oklab, var(--badge-color, var(--color-base-content)) 8%, var(--color-base-100)); border-color: color-mix(in oklab, var(--badge-color, var(--color-base-content)) 10%, var(--color-base-100)); background-image: none; }
+  .badge-outline { color: var(--badge-color); --badge-bg: #0000; background-image: none; border-color: currentColor; }
+  .table { border-radius: var(--radius-box); text-align: left; width: 100%; font-size: .875rem; position: relative; }
+  .table :where(thead, tfoot) { white-space: nowrap; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); font-size: .875rem; font-weight: 600; }
+  .table :where(th, td) { vertical-align: middle; padding-block: .75rem; padding-inline: 1rem; }
+  .table :where(thead tr, tbody tr:not(:last-child)) { border-bottom: var(--border) solid color-mix(in oklch, var(--color-base-content) 5%, #0000); }
+  .table-zebra tbody tr:where(:nth-child(2n)) { background-color: var(--color-base-200); }
+  .table-sm :not(thead, tfoot) tr { font-size: .75rem; }
+  .table-sm :where(th, td) { padding-block: .5rem; padding-inline: .75rem; }
+  .divider { white-space: nowrap; height: 1rem; margin: var(--divider-m, 1rem 0); --divider-color: color-mix(in oklab, var(--color-base-content) 10%, transparent); flex-direction: row; align-self: stretch; align-items: center; display: flex; }
+  .divider:before, .divider:after { content: ""; background-color: var(--divider-color); flex-grow: 1; width: 100%; height: .125rem; }
+  .divider:not(:empty) { gap: 1rem; }
+  .stats { border-radius: var(--radius-box); grid-auto-flow: column; display: inline-grid; position: relative; overflow-x: auto; }
+  .stat { grid-template-columns: repeat(1, 1fr); column-gap: 1rem; width: 100%; padding-inline: 1.5rem; padding-block: 1rem; display: inline-grid; }
+  .stat:not(:last-child) { border-inline-end: var(--border) dashed color-mix(in oklab, currentColor 10%, #0000); border-block-end: none; }
+  .stat-title { white-space: nowrap; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); grid-column-start: 1; font-size: .75rem; }
+  .stat-value { white-space: nowrap; grid-column-start: 1; font-size: 2rem; font-weight: 800; }
+  .stat-desc { white-space: nowrap; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); grid-column-start: 1; font-size: .75rem; }
+  .steps { counter-reset: step; grid-auto-columns: 1fr; grid-auto-flow: column; display: inline-grid; overflow: hidden visible; }
+  .steps .step { text-align: center; --step-bg: var(--color-base-300); --step-fg: var(--color-base-content); grid-template-rows: 40px 1fr; grid-template-columns: auto; place-items: center; min-width: 4rem; display: grid; }
+  .steps .step:before { width: 100%; height: .5rem; color: var(--step-bg); background-color: var(--step-bg); content: ""; border: 1px solid; grid-row-start: 1; grid-column-start: 1; margin-inline-start: -100%; top: 0; }
+  .steps .step > .step-icon, .steps .step:not(:has(.step-icon)):after { content: counter(step); counter-increment: step; z-index: 1; color: var(--step-fg); background-color: var(--step-bg); border: 1px solid var(--step-bg); border-radius: 3.40282e38px; grid-row-start: 1; grid-column-start: 1; place-self: center; place-items: center; width: 2rem; height: 2rem; display: grid; position: relative; }
+  .steps .step:first-child:before { content: none; }
+  .steps .step-primary + .step-primary:before, .steps .step-primary:after { --step-bg: var(--color-primary); --step-fg: var(--color-primary-content); }
+  .steps .step-primary { --step-bg: var(--color-primary); --step-fg: var(--color-primary-content); }
+  .alert { border-radius: var(--radius-box); color: var(--color-base-content); background-color: var(--alert-color, var(--color-base-200)); justify-content: start; justify-items: start; gap: 1rem; padding-block: .75rem; padding-inline: 1rem; font-size: .875rem; line-height: 1.25rem; display: grid; grid-auto-flow: column; grid-template-columns: auto; text-align: start; align-items: center; border: var(--border) solid var(--color-base-200); }
+  .alert-warning { color: var(--color-warning-content); --alert-color: var(--color-warning); }
+  .alert-soft { color: var(--alert-color, var(--color-base-content)); background: color-mix(in oklab, var(--alert-color, var(--color-base-content)) 8%, var(--color-base-100)); border-color: color-mix(in oklab, var(--alert-color, var(--color-base-content)) 10%, var(--color-base-100)); }
+  .kbd { border-radius: var(--radius-field); background-color: var(--color-base-200); vertical-align: middle; border: var(--border) solid color-mix(in srgb, var(--color-base-content) 20%, #0000); border-bottom: calc(var(--border) + 1px) solid color-mix(in srgb, var(--color-base-content) 20%, #0000); --size: calc(var(--size-selector, .25rem) * 5); height: var(--size); min-width: var(--size); padding-inline: .25rem; font-size: .75rem; justify-content: center; align-items: center; display: inline-flex; }
+}
+@layer utilities {
+  .mx-auto { margin-inline: auto; }
+  .mt-1 { margin-top: calc(var(--spacing) * 1); }
+  .mt-2 { margin-top: calc(var(--spacing) * 2); }
+  .mt-4 { margin-top: calc(var(--spacing) * 4); }
+  .mt-6 { margin-top: calc(var(--spacing) * 6); }
+  .mb-2 { margin-bottom: calc(var(--spacing) * 2); }
+  .ms-auto { margin-inline-start: auto; }
+  .flex { display: flex; }
+  .grid { display: grid; }
+  .w-full { width: 100%; }
+  .w-72 { width: calc(var(--spacing) * 72); }
+  .max-w-3xl { max-width: 48rem; }
+  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .items-start { align-items: flex-start; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: calc(var(--spacing) * 2); }
+  .gap-6 { gap: calc(var(--spacing) * 6); }
+  .space-y-1 { :where(& > :not(:last-child)) { --tw-space-y-reverse: 0; margin-block-start: calc(calc(var(--spacing) * 1) * var(--tw-space-y-reverse)); margin-block-end: calc(calc(var(--spacing) * 1) * calc(1 - var(--tw-space-y-reverse))); } }
+  .rounded-box { border-radius: var(--radius-box); }
+  .border { border-style: var(--tw-border-style); border-width: 1px; }
+  .border-base-300 { border-color: var(--color-base-300); }
+  .bg-base-200 { background-color: var(--color-base-200); }
+  .bg-primary { background-color: var(--color-primary); }
+  .p-6 { padding: calc(var(--spacing) * 6); }
+  .px-6 { padding-inline: calc(var(--spacing) * 6); }
+  .py-4 { padding-block: calc(var(--spacing) * 4); }
+  .text-right { text-align: right; }
+  .text-2xl { font-size: var(--text-2xl); line-height: var(--tw-leading, var(--text-2xl--line-height)); }
+  .text-lg { font-size: var(--text-lg); line-height: var(--tw-leading, var(--text-lg--line-height)); }
+  .text-sm { font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); }
+  .text-xs { font-size: var(--text-xs); line-height: var(--tw-leading, var(--text-xs--line-height)); }
+  .font-bold { --tw-font-weight: var(--font-weight-bold); font-weight: var(--font-weight-bold); }
+  .tracking-wide { --tw-tracking: var(--tracking-wide); letter-spacing: var(--tracking-wide); }
+  .uppercase { text-transform: uppercase; }
+  .tabular-nums { --tw-numeric-spacing: tabular-nums; font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,); }
+  .text-primary { color: var(--color-primary); }
+  .text-primary-content { color: var(--color-primary-content); }
+  .opacity-60 { opacity: .6; }
+  .opacity-70 { opacity: .7; }
+  .shadow-sm { --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, #0000001a), 0 1px 2px -1px var(--tw-shadow-color, #0000001a); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
+}
+@property --tw-border-style { syntax: "*"; inherits: false; initial-value: solid; }
+@property --tw-space-y-reverse { syntax: "*"; inherits: false; initial-value: 0; }
+@property --tw-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-shadow-color { syntax: "*"; inherits: false; }
+@property --tw-inset-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-inset-ring-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-ring-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+@property --tw-ring-offset-shadow { syntax: "*"; inherits: false; initial-value: 0 0 #0000; }
+</style>
+</head>
+<body>
+<div class="max-w-3xl mx-auto">
+  <header class="flex justify-between items-start rounded-box bg-primary px-6 py-4 text-primary-content">
+    <div>
+      <div class="text-2xl font-bold">Pixelwerk Studio</div>
+      <div class="text-xs opacity-70">Webdesign &amp; Entwicklung · Leipzig</div>
+    </div>
+    <div class="text-right text-sm">
+      <div class="font-bold text-lg">Angebot</div>
+      <div>A-2026-318</div>
+      <div class="opacity-70">06.11.2026</div>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-2 gap-6 mt-6">
+    <div class="card card-border">
+      <div class="card-body">
+        <h2 class="card-title">Für</h2>
+        <div class="space-y-1">
+          <div class="font-bold">Weingut Albrecht</div>
+          <div>Hanna Albrecht</div>
+          <div>Weinbergstraße 12</div>
+          <div>06632 Freyburg</div>
+        </div>
+      </div>
+    </div>
+    <div class="card card-border">
+      <div class="card-body">
+        <h2 class="card-title">Projekt <span class="badge badge-sm badge-primary">neu</span></h2>
+        <div>Relaunch der Website mit Onlineshop für Weinpakete und Buchung von Weinproben.</div>
+        <div class="flex gap-2 mt-1"><span class="badge badge-soft badge-primary badge-sm">Shop</span><span class="badge badge-soft badge-sm">Buchung</span><span class="badge badge-outline badge-sm" style="--badge-color: var(--color-secondary)">SEO</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats shadow-sm w-full mt-6 border border-base-300">
+    <div class="stat">
+      <div class="stat-title">Gesamt netto</div>
+      <div class="stat-value text-primary tabular-nums">14.850 €</div>
+      <div class="stat-desc">zzgl. 19 % USt.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Dauer</div>
+      <div class="stat-value tabular-nums">9 Wochen</div>
+      <div class="stat-desc">ab Auftragserteilung</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Gültig bis</div>
+      <div class="stat-value tabular-nums">31.12.</div>
+      <div class="stat-desc">2026</div>
+    </div>
+  </div>
+
+  <div class="divider text-xs uppercase tracking-wide opacity-60">Leistungen</div>
+
+  <table class="table table-zebra table-sm">
+    <thead><tr><th>Pos.</th><th>Leistung</th><th class="text-right">Tage</th><th class="text-right">Betrag</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><div class="font-bold">Konzept und Design</div><div class="opacity-60">Workshop, Seitenstruktur, Gestaltung von 8 Vorlagen</div></td><td class="text-right tabular-nums">5</td><td class="text-right tabular-nums">4.250 €</td></tr>
+      <tr><td>2</td><td><div class="font-bold">Umsetzung</div><div class="opacity-60">Laravel mit Filament, Inhalte aus der bestehenden Seite</div></td><td class="text-right tabular-nums">8</td><td class="text-right tabular-nums">6.800 €</td></tr>
+      <tr><td>3</td><td><div class="font-bold">Shop und Buchung</div><div class="opacity-60">Weinpakete, Gutscheine, Kalender für Weinproben</div></td><td class="text-right tabular-nums">4</td><td class="text-right tabular-nums">3.400 €</td></tr>
+      <tr><td>4</td><td><div class="font-bold">Einweisung</div><div class="opacity-60">Schulung für zwei Personen, <kbd class="kbd">½</kbd> Tag</div></td><td class="text-right tabular-nums">0,5</td><td class="text-right tabular-nums">400 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="flex mt-4">
+    <table class="table table-sm w-72 ms-auto bg-base-200">
+      <tbody>
+        <tr><td>Summe netto</td><td class="text-right tabular-nums">14.850,00 €</td></tr>
+        <tr><td>USt. 19 %</td><td class="text-right tabular-nums">2.821,50 €</td></tr>
+        <tr class="font-bold"><td>Gesamt</td><td class="text-right tabular-nums">17.671,50 €</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider text-xs uppercase tracking-wide opacity-60">Ablauf</div>
+
+  <ul class="steps w-full text-xs">
+    <li class="step step-primary">Auftrag</li>
+    <li class="step step-primary">Konzept</li>
+    <li class="step">Design</li>
+    <li class="step">Umsetzung</li>
+    <li class="step">Start</li>
+  </ul>
+
+  <div role="alert" class="alert alert-warning alert-soft mt-6 text-sm">
+    <span class="font-bold">Hinweis</span>
+    <span>Hosting und Domains sind nicht enthalten; wir beraten Sie gerne zu passenden Angeboten.</span>
+  </div>
+</div>
+</body>
+</html>

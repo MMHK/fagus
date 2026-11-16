@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Columns</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @page { size: A4; margin: 16mm; }
+  body { margin: 0; font: 8pt/1.4 Inter, sans-serif; color: #1f2937; }
+  h2 { font-size: 11pt; margin: 5mm 0 2mm; color: #0f766e; }
+  p { margin: 0 0 1.5mm; text-align: justify; hyphens: auto; }
+  .agb { columns: 3; column-gap: 6mm; column-rule: 0.3mm solid #94a3b8; }
+  .agb h3 { font-size: 8pt; margin: 0 0 1mm; break-after: avoid; }
+  .two { column-count: 2; column-gap: 8mm; background: #f1f5f9; padding: 3mm; border: 0.3mm solid #cbd5e1; }
+  .width { column-width: 40mm; column-gap: 4mm; column-rule: 1px dashed #0f766e; }
+  .fill { columns: 2; column-fill: auto; height: 30mm; border: 0.3mm solid #cbd5e1; }
+  .break { columns: 3; }
+  .break .new { break-before: column; color: #b91c1c; }
+</style>
+</head>
+<body>
+  <h2>Allgemeine Geschäftsbedingungen in drei Spalten</h2>
+  <div class="agb">
+    <h3>§ 1 Geltungsbereich</h3>
+    <p>Diese Geschäftsbedingungen gelten für alle Verträge zwischen der Muster GmbH und ihren Kunden über die Lieferung von Waren und die Erbringung von Dienstleistungen. Abweichende Bedingungen des Kunden werden nicht Vertragsbestandteil, es sei denn, ihrer Geltung wird ausdrücklich schriftlich zugestimmt.</p>
+    <h3>§ 2 Vertragsschluss</h3>
+    <p>Angebote sind freibleibend. Ein Vertrag kommt erst mit der Auftragsbestätigung oder mit der Lieferung zustande. Mündliche Nebenabreden bedürfen der schriftlichen Bestätigung.</p>
+    <h3>§ 3 Preise und Zahlung</h3>
+    <p>Alle Preise verstehen sich zuzüglich der gesetzlichen Umsatzsteuer. Rechnungen sind innerhalb von vierzehn Tagen ohne Abzug zahlbar. Bei Zahlungsverzug werden Verzugszinsen in gesetzlicher Höhe berechnet.</p>
+    <h3>§ 4 Lieferung</h3>
+    <p>Liefertermine sind nur verbindlich, wenn sie ausdrücklich als verbindlich vereinbart wurden. Teillieferungen sind zulässig, soweit sie dem Kunden zumutbar sind.</p>
+    <h3>§ 5 Gewährleistung</h3>
+    <p>Mängel sind unverzüglich nach Entdeckung schriftlich anzuzeigen. Die Gewährleistungsfrist beträgt zwölf Monate ab Lieferung, soweit gesetzlich zulässig.</p>
+    <h3>§ 6 Haftung</h3>
+    <p>Die Haftung für leicht fahrlässige Pflichtverletzungen ist ausgeschlossen, sofern keine wesentlichen Vertragspflichten, Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit oder Garantien betroffen sind.</p>
+    <h3>§ 7 Schlussbestimmungen</h3>
+    <p>Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist, soweit zulässig, der Sitz der Muster GmbH. Sollte eine Bestimmung unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.</p>
+  </div>
+
+  <h2>Zwei Spalten mit Rahmen</h2>
+  <div class="two">
+    <p>Kurzer Text in zwei ausgeglichenen Spalten. Der Container hat einen Hintergrund, einen Rahmen und einen Innenabstand, die Spalten liegen in seinem Inhaltsbereich.</p>
+    <p>Der zweite Absatz folgt, wo der erste endet, und die Höhe beider Spalten ist so gleich wie möglich.</p>
+  </div>
+
+  <h2>Spalten nach Breite</h2>
+  <div class="width">
+    <p>Mit column-width bestimmt die verfügbare Breite die Zahl der Spalten: so viele, wie mindestens 40 mm breit nebeneinander passen. Die Linien zwischen den Spalten sind gestrichelt.</p>
+    <p>Ein weiterer Absatz, damit alle Spalten etwas zu tun haben, und noch ein Satz mehr.</p>
+  </div>
+
+  <h2>column-fill: auto</h2>
+  <div class="fill">
+    <p>Mit column-fill: auto und fester Höhe wird die erste Spalte vollständig gefüllt, bevor die zweite beginnt. Dieser Absatz ist lang genug, um die erste Spalte zu füllen und in die zweite überzulaufen, wenn die Höhe nur dreißig Millimeter beträgt und die Schrift klein ist.</p>
+  </div>
+
+  <h2>Erzwungener Spaltenumbruch</h2>
+  <div class="break">
+    <p>Erste Spalte.</p>
+    <p class="new">Zweite Spalte durch break-before: column.</p>
+    <p class="new">Dritte Spalte.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Installs the fagus binary of this package's release for this platform:
+ *
+ *     vendor/bin/fagus-install [directory]
+ *
+ * Without a directory, the binary goes where the engine finds it. FAGUS_GITHUB_TOKEN (or
+ * GITHUB_TOKEN) opens a private fork; FAGUS_DOWNLOAD_URL takes the binaries
+ * from a directory or URL of your own.
+ */
+
+use Fagus\Exception\FagusException;
+use Fagus\Installer;
+
+require $GLOBALS['_composer_autoload_path'] ?? __DIR__.'/../../../vendor/autoload.php';
+
+try {
+    $path = (new Installer)->install($argv[1] ?? null);
+    fwrite(STDOUT, "The fagus binary is installed at {$path}.\n");
+} catch (FagusException $exception) {
+    fwrite(STDERR, $exception->getMessage()."\n");
+    exit(1);
+}

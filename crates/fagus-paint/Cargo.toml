@@ -1,0 +1,22 @@
+[package]
+name = "fagus-paint"
+description = "Display lists for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+# Parts follow Chromium (CHROMIUM-LICENSE).
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause"
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fagus-dom.workspace = true
+fagus-layout.workspace = true
+fagus-style.workspace = true
+fagus-text.workspace = true
+rustc-hash.workspace = true

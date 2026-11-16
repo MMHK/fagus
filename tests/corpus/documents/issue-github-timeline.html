@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="light" data-light-theme="light">
+<head>
+<meta charset="utf-8">
+<title>PDF totals are rounded per line instead of per document · Issue #1187 · acme/invoicer</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 12mm; }
+:root {
+  --fontStack-sansSerif: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --fontStack-monospace: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --fgColor-default: #1f2328; --fgColor-muted: #59636e; --fgColor-accent: #0969da; --fgColor-success: #1a7f37; --fgColor-done: #8250df;
+  --fgColor-danger: #d1242f; --fgColor-onEmphasis: #ffffff;
+  --bgColor-default: #ffffff; --bgColor-muted: #f6f8fa; --bgColor-neutral-muted: #818b981f; --bgColor-accent-muted: #ddf4ff;
+  --bgColor-success-emphasis: #1f883d; --bgColor-done-emphasis: #8250df; --bgColor-attention-muted: #fff8c5;
+  --bgColor-success-muted: #dafbe1; --bgColor-danger-muted: #ffebe9;
+  --borderColor-default: #d1d9e0; --borderColor-muted: #d1d9e0b3; --borderColor-accent-muted: #54aeff66;
+  --borderRadius-medium: 6px; --borderRadius-full: 9999px;
+  --base-size-4: 4px; --base-size-8: 8px; --base-size-16: 16px;
+  --diffBlob-additionNum-bgColor: #d1f8d9; --diffBlob-additionLine-bgColor: #dafbe1; --diffBlob-additionWord-bgColor: #aceebb;
+  --diffBlob-deletionNum-bgColor: #ffcecb; --diffBlob-deletionLine-bgColor: #ffebe9; --diffBlob-deletionWord-bgColor: #ff818266;
+  --label-lightness-threshold: 0.453; --label-background-alpha: 0.18; --label-border-alpha: 0.3; --label-lighten-by: 0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--fontStack-sansSerif); font-size: 14px; line-height: 1.5; color: var(--fgColor-default); background-color: var(--bgColor-default); word-wrap: break-word; }
+a { color: var(--fgColor-accent); text-decoration: none; }
+.d-flex { display: flex !important; }
+.flex-items-center { align-items: center !important; }
+.flex-auto { flex: auto !important; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.color-fg-muted { color: var(--fgColor-muted) !important; }
+.text-bold { font-weight: 600 !important; }
+.mr-1 { margin-right: 4px !important; } .mr-2 { margin-right: 8px !important; } .ml-1 { margin-left: 4px !important; } .ml-2 { margin-left: 8px !important; }
+.mb-2 { margin-bottom: 8px !important; } .mb-3 { margin-bottom: 16px !important; } .mt-2 { margin-top: 8px !important; }
+.f6 { font-size: 12px !important; }
+.no-wrap { white-space: nowrap !important; }
+.octicon { display: inline-block; overflow: visible !important; vertical-align: text-bottom; fill: currentColor; }
+.avatar { display: inline-block; overflow: hidden; line-height: 1; vertical-align: middle; border-radius: var(--borderRadius-medium); flex-shrink: 0; box-shadow: 0 0 0 1px #1f23280f; }
+.avatar-user { border-radius: 50% !important; }
+.gh-header-title { margin: 0 0 4px; font-size: 26px; font-weight: 400; line-height: 1.125; word-wrap: break-word; }
+.gh-header-number { font-weight: 300; color: var(--fgColor-muted); letter-spacing: -1px; }
+.gh-header-meta { padding-bottom: 8px; margin-bottom: 16px; color: var(--fgColor-muted); border-bottom: 1px solid var(--borderColor-default); }
+.State { display: inline-flex; align-items: center; padding: 5px 12px; font-size: 14px; font-weight: 500; line-height: 20px; text-align: center; white-space: nowrap; border-radius: 2em; color: var(--fgColor-onEmphasis); border: 1px solid transparent; gap: 4px; }
+.State--open { background-color: var(--bgColor-success-emphasis); }
+.State--merged { background-color: var(--bgColor-done-emphasis); }
+.IssueLabel { display: inline-block; padding: 0 7px; font-size: 12px; font-weight: 500; line-height: 18px; white-space: nowrap; border: 1px solid transparent; border-radius: 2em; }
+/* GitHub derives label colours from the label's RGB with calc() in hsl() */
+.IssueLabel--big.lh-condensed, .hx_IssueLabel {
+  --perceived-lightness: calc(((var(--label-r) * 0.2126) + (var(--label-g) * 0.7152) + (var(--label-b) * 0.0722)) / 255);
+  --lightness-switch: max(0, min(calc((1/(var(--label-lightness-threshold) - var(--perceived-lightness)))), 1));
+  background: rgba(var(--label-r), var(--label-g), var(--label-b), var(--label-background-alpha));
+  color: hsl(var(--label-h), calc(var(--label-s) * 1%), calc((var(--label-l) - var(--label-lighten-by, 0)) * 1%));
+  border-color: hsla(var(--label-h), calc(var(--label-s) * 1%), calc((var(--label-l) - var(--label-lighten-by, 0)) * 1%), var(--label-border-alpha));
+}
+.Layout { display: grid; grid-template-columns: minmax(0, calc(100% - 220px - 24px)) 0 auto; grid-template-areas: "main divider sidebar"; column-gap: 24px; }
+.Layout-main { grid-area: main; min-width: 0; }
+.Layout-sidebar { grid-area: sidebar; width: 220px; }
+.discussion-sidebar-item { padding-top: 16px; font-size: 12px; color: var(--fgColor-muted); }
+.discussion-sidebar-item + .discussion-sidebar-item { margin-top: 16px; border-top: 1px solid var(--borderColor-muted); }
+.discussion-sidebar-heading { margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--fgColor-muted); }
+.css-truncate.css-truncate-target, .css-truncate .css-truncate-target { display: inline-block; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: top; }
+.Progress { display: flex; height: 8px; overflow: hidden; background-color: var(--bgColor-neutral-muted); border-radius: 6px; outline: 1px solid transparent; }
+.Progress-item { outline: 2px solid transparent; }
+.TimelineItem { position: relative; display: flex; padding: 16px 0; margin-left: 16px; }
+.TimelineItem::before { position: absolute; top: 0; bottom: 0; left: 0; display: block; width: 2px; content: ""; background-color: var(--borderColor-muted); }
+.TimelineItem-badge { position: relative; z-index: 1; display: flex; width: 32px; height: 32px; margin-right: 8px; margin-left: -15px; color: var(--fgColor-muted); align-items: center; background-color: #eff2f5; border: 2px solid var(--bgColor-default); border-radius: 50%; justify-content: center; flex-shrink: 0; }
+.TimelineItem-body { min-width: 0; max-width: 100%; margin-top: 4px; color: var(--fgColor-muted); flex: auto; }
+.TimelineItem-avatar { position: absolute; left: -72px; z-index: 1; }
+.TimelineItem--condensed { padding-top: 4px; padding-bottom: 0; }
+.TimelineItem--condensed .TimelineItem-badge { height: 16px; margin-top: 8px; margin-bottom: 8px; color: var(--fgColor-muted); background-color: var(--bgColor-default); border: 0; }
+.js-discussion { margin-left: 56px; }
+.timeline-comment-group { position: relative; }
+.timeline-comment { position: relative; color: var(--fgColor-default); background-color: var(--bgColor-default); border: 1px solid var(--borderColor-default); border-radius: 6px; }
+.timeline-comment--caret::after, .timeline-comment--caret::before { position: absolute; top: 11px; right: 100%; left: -8px; display: block; width: 8px; height: 16px; pointer-events: none; content: " "; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+.timeline-comment--caret::after { margin-left: 2px; background-color: var(--bgColor-default); background-image: linear-gradient(var(--bgColor-muted), var(--bgColor-muted)); }
+.timeline-comment--caret::before { background-color: var(--borderColor-default); }
+.current-user.timeline-comment .timeline-comment-header { background-color: var(--bgColor-accent-muted); border-bottom-color: var(--borderColor-accent-muted); }
+.current-user.timeline-comment--caret::after { background-image: linear-gradient(var(--bgColor-accent-muted), var(--bgColor-accent-muted)); }
+.current-user.timeline-comment { border-color: var(--borderColor-accent-muted); }
+.timeline-comment-header { display: flex; align-items: center; padding-right: 16px; padding-left: 16px; color: var(--fgColor-muted); flex-direction: row-reverse; background-color: var(--bgColor-muted); border-bottom: 1px solid var(--borderColor-default); border-top-left-radius: 6px; border-top-right-radius: 6px; }
+.timeline-comment-header-text { min-width: 0; padding-top: 8px; padding-bottom: 8px; margin-bottom: 1px; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timeline-comment-label { padding: 0 7px; margin-left: 4px; font-size: 12px; font-weight: 500; line-height: 18px; border: 1px solid var(--borderColor-default); border-radius: 2em; }
+.comment-body { width: 100%; padding: 16px; overflow: visible; font-size: 14px; }
+.comment-reactions { display: flex; padding: 0 16px 16px; gap: 4px; }
+.social-reaction-summary-item { height: 26px; padding: 0 4px !important; line-height: 26px; font-size: 12px; background-color: transparent; border: 1px solid var(--borderColor-default); border-radius: 100px; display: inline-flex; align-items: center; gap: 4px; }
+.social-reaction-summary-item.user-has-reacted { background-color: var(--bgColor-accent-muted); border-color: #0969da; }
+.markdown-body { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+.markdown-body > *:first-child { margin-top: 0 !important; }
+.markdown-body > *:last-child { margin-bottom: 0 !important; }
+.markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body table, .markdown-body pre, .markdown-body details { margin-top: 0; margin-bottom: 16px; }
+.markdown-body h3 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; font-size: 1.25em; }
+.markdown-body code { padding: .2em .4em; margin: 0; font-size: 85%; white-space: break-spaces; background-color: var(--bgColor-neutral-muted); border-radius: 6px; font-family: var(--fontStack-monospace); }
+.markdown-body pre { padding: 16px; overflow: auto; font-size: 85%; line-height: 1.45; color: var(--fgColor-default); background-color: var(--bgColor-muted); border-radius: 6px; font-family: var(--fontStack-monospace); word-wrap: normal; }
+.markdown-body pre code { display: inline; padding: 0; margin: 0; overflow: visible; line-height: inherit; word-wrap: normal; background-color: transparent; border: 0; font-size: 100%; white-space: pre; }
+.markdown-body blockquote { padding: 0 1em; color: var(--fgColor-muted); border-left: .25em solid var(--borderColor-default); margin-left: 0; }
+.markdown-body ul, .markdown-body ol { padding-left: 2em; }
+.markdown-body .contains-task-list { padding: 0; }
+.markdown-body .task-list-item { list-style-type: none; }
+.markdown-body .task-list-item + .task-list-item { margin-top: 4px; }
+.markdown-body .task-list-item-checkbox { margin: 0 .2em .25em -1.4em; vertical-align: middle; }
+.markdown-body .contains-task-list .task-list-item { padding-left: 1.6em !important; }
+.markdown-body kbd { display: inline-block; padding: 4px; font: 11px var(--fontStack-monospace); line-height: 10px; color: var(--fgColor-default); vertical-align: middle; background-color: var(--bgColor-muted); border: solid 1px #d1d9e0b3; border-bottom-color: #d1d9e0b3; border-radius: 6px; box-shadow: inset 0 -1px 0 #d1d9e0b3; }
+.markdown-body table { display: block; width: max-content; max-width: 100%; overflow: auto; border-spacing: 0; border-collapse: collapse; font-variant: tabular-nums; }
+.markdown-body table th { font-weight: 600; }
+.markdown-body table th, .markdown-body table td { padding: 6px 13px; border: 1px solid var(--borderColor-default); }
+.markdown-body table tr { background-color: var(--bgColor-default); border-top: 1px solid var(--borderColor-muted); }
+.markdown-body table tr:nth-child(2n) { background-color: var(--bgColor-muted); }
+.markdown-body .user-mention, .markdown-body .team-mention { font-weight: 600; color: var(--fgColor-default); white-space: nowrap; }
+.markdown-body .issue-link { font-weight: 400; }
+.markdown-body g-emoji { display: inline-block; min-width: 1ch; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; font-size: 1em; font-style: normal !important; font-weight: 400; line-height: 1; vertical-align: -0.075em; }
+.markdown-body .markdown-alert { padding: 8px 16px; margin-bottom: 16px; color: inherit; border-left: .25em solid var(--borderColor-default); }
+.markdown-body .markdown-alert > :first-child { margin-top: 0; }
+.markdown-body .markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-body .markdown-alert .markdown-alert-title { display: flex; font-weight: 500; align-items: center; line-height: 1; }
+.markdown-body .markdown-alert.markdown-alert-warning { border-left-color: #9a6700; }
+.markdown-body .markdown-alert.markdown-alert-warning .markdown-alert-title { color: #9a6700; }
+/* a suggested change */
+.js-suggested-changes-blob { border: 1px solid var(--borderColor-default); border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+.js-suggested-changes-blob .file-header { padding: 5px 10px; background-color: var(--bgColor-muted); border-bottom: 1px solid var(--borderColor-default); font-size: 12px; }
+.diff-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; tab-size: 8; }
+.blob-num { position: relative; width: 1%; min-width: 50px; padding-right: 10px; padding-left: 10px; font-family: var(--fontStack-monospace); font-size: 12px; line-height: 20px; color: var(--fgColor-muted); text-align: right; white-space: nowrap; vertical-align: top; user-select: none; }
+.blob-num::before { content: attr(data-line-number); }
+.blob-num-addition { color: var(--fgColor-default); background-color: var(--diffBlob-additionNum-bgColor); border-color: #1a7f37; }
+.blob-num-deletion { color: var(--fgColor-default); background-color: var(--diffBlob-deletionNum-bgColor); border-color: #cf222e; }
+.blob-code { position: relative; padding-right: 10px; padding-left: 10px; line-height: 20px; vertical-align: top; font-family: var(--fontStack-monospace); font-size: 12px; word-wrap: anywhere; white-space: pre-wrap; }
+.blob-code-inner { display: table-cell; overflow: visible; font-family: var(--fontStack-monospace); font-size: 12px; color: var(--fgColor-default); word-wrap: anywhere; white-space: pre-wrap; }
+.blob-code-marker::before { padding-right: 8px; content: attr(data-code-marker); }
+.blob-code-addition { background-color: var(--diffBlob-additionLine-bgColor); }
+.blob-code-deletion { background-color: var(--diffBlob-deletionLine-bgColor); }
+.blob-code-addition .x { background-color: var(--diffBlob-additionWord-bgColor); }
+.blob-code-deletion .x { background-color: var(--diffBlob-deletionWord-bgColor); }
+.pl-k { color: #cf222e; } .pl-en { color: #6639ba; } .pl-c1 { color: #0550ae; } .pl-s { color: #0a3069; } .pl-v { color: #953800; } .pl-c { color: #59636e; }
+@media print { .js-comment-edit-button, .timeline-comment-actions { display: none; } }
+</style>
+</head>
+<body>
+<div class="container-xl">
+<div class="gh-header">
+<h1 class="gh-header-title"><bdi class="js-issue-title markdown-title">PDF totals are rounded per line instead of per document</bdi> <span class="gh-header-number">#1187</span></h1>
+<div class="gh-header-meta d-flex flex-items-center">
+<span class="State State--open mr-2"><svg class="octicon octicon-issue-opened" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path></svg>Open</span>
+<div class="flex-auto"><a class="author text-bold" style="color: var(--fgColor-default)" href="https://git.example/kmeier">kmeier</a> opened this issue <relative-time datetime="2025-10-28T09:14:02Z">Oct 28, 2025</relative-time> · 4 comments</div>
+</div>
+</div>
+<div class="Layout">
+<div class="Layout-main">
+<div class="js-discussion">
+<div class="TimelineItem pt-0 js-comment-container">
+<div class="avatar-parent-child TimelineItem-avatar"><a href="https://git.example/kmeier"><img class="avatar avatar-user" height="40" width="40" alt="@kmeier" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23e8a87c'/%3E%3Cpath d='M8 8h8v8H8zM24 8h8v8h-8zM16 16h8v8h-8zM8 24h8v8H8zM24 24h8v8h-8z' fill='%23c0392b'/%3E%3C/svg%3E"></a></div>
+<div class="timeline-comment-group js-minimizable-comment-group">
+<div class="timeline-comment timeline-comment--caret current-user">
+<div class="timeline-comment-header clearfix d-flex">
+<span class="timeline-comment-label tooltipped">Author</span>
+<h3 class="f5 text-normal timeline-comment-header-text" style="font-size:14px;font-weight:400;margin:0"><strong><a class="author Link--primary text-bold" href="https://git.example/kmeier" style="color:var(--fgColor-default)">kmeier</a></strong> commented <a href="#issue-1187" class="Link--secondary" style="color:var(--fgColor-muted)"><relative-time datetime="2025-10-28T09:14:02Z">Oct 28, 2025</relative-time></a></h3>
+</div>
+<div class="comment-body markdown-body js-comment-body">
+<p>When an invoice has many lines with 19&nbsp;% VAT, the VAT in the PDF differs by a few cents from the one in the XML (ZUGFeRD). The PDF rounds the VAT of <strong>each line</strong> and adds them up; EN&nbsp;16931 wants the VAT of the <em>sum</em> per rate (BR-CO-17).</p>
+<h3 dir="auto">Steps to reproduce</h3>
+<ol dir="auto">
+<li>Create an invoice with 7 lines of 0,99&nbsp;€ at 19&nbsp;%</li>
+<li>Render the PDF with <code>invoicer render --zugferd</code></li>
+<li>Compare <code>TaxTotalAmount</code> in the XML with the total in the PDF</li>
+</ol>
+<table>
+<thead><tr><th>Where</th><th align="right">Net</th><th align="right">VAT</th><th align="right">Gross</th></tr></thead>
+<tbody>
+<tr><td>PDF</td><td align="right">6,93</td><td align="right">1,33</td><td align="right">8,26</td></tr>
+<tr><td>XML</td><td align="right">6,93</td><td align="right">1,32</td><td align="right">8,25</td></tr>
+</tbody>
+</table>
+<div class="markdown-alert markdown-alert-warning" dir="auto"><p class="markdown-alert-title" dir="auto"><svg class="octicon octicon-alert mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p><p dir="auto">Validators (KoSIT) reject these invoices, so customers in the public sector cannot pay them.</p></div>
+</div>
+<div class="comment-reactions">
+<button type="button" class="social-reaction-summary-item user-has-reacted" style="font-family:inherit;color:inherit"><g-emoji class="social-button-emoji" alias="+1">👍</g-emoji> <span class="js-discussion-reaction-group-count">5</span></button>
+<button type="button" class="social-reaction-summary-item" style="font-family:inherit;color:inherit"><g-emoji class="social-button-emoji" alias="eyes">👀</g-emoji> <span class="js-discussion-reaction-group-count">2</span></button>
+</div>
+</div>
+</div>
+</div>
+<div class="TimelineItem TimelineItem--condensed">
+<div class="TimelineItem-badge"><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"></path></svg></div>
+<div class="TimelineItem-body"><a class="author Link--primary text-bold" href="https://git.example/acme-bot" style="color:var(--fgColor-default)">acme-bot</a> added
+<a class="IssueLabel hx_IssueLabel" style="--label-r:215;--label-g:58;--label-b:74;--label-h:353;--label-s:66;--label-l:53;" href="#">bug</a>
+<a class="IssueLabel hx_IssueLabel" style="--label-r:251;--label-g:202;--label-b:4;--label-h:48;--label-s:96;--label-l:50;" href="#">e-invoicing</a>
+<a class="IssueLabel hx_IssueLabel" style="--label-r:0;--label-g:82;--label-b:204;--label-h:216;--label-s:100;--label-l:40;" href="#">good first issue</a>
+labels <relative-time datetime="2025-10-28T09:15:40Z">Oct 28, 2025</relative-time></div>
+</div>
+<div class="TimelineItem js-comment-container">
+<div class="avatar-parent-child TimelineItem-avatar"><img class="avatar avatar-user" height="40" width="40" alt="@lhansen" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d5e8f8'/%3E%3Cpath d='M16 8h8v8h-8zM8 16h8v8H8zM24 16h8v8h-8zM16 24h8v8h-8z' fill='%232e86de'/%3E%3C/svg%3E"></div>
+<div class="timeline-comment-group">
+<div class="timeline-comment timeline-comment--caret">
+<div class="timeline-comment-header clearfix d-flex">
+<span class="timeline-comment-label">Member</span>
+<h3 class="timeline-comment-header-text" style="font-size:14px;font-weight:400;margin:0"><strong><a class="author text-bold" href="https://git.example/lhansen" style="color:var(--fgColor-default)">lhansen</a></strong> commented <relative-time datetime="2025-10-29T16:02:11Z">Oct 29, 2025</relative-time> · edited</h3>
+</div>
+<div class="comment-body markdown-body">
+<p>Thanks <a class="user-mention notranslate" href="https://git.example/kmeier">@kmeier</a>, confirmed. It comes from <code>TotalsCalculator::vat()</code>; the fix is to group by rate first. Related: <a class="issue-link js-issue-link" href="https://git.example/acme/invoicer/issues/1042">#1042</a>.</p>
+<div class="js-suggested-changes-blob diff-view js-check-bidi" id="">
+<div class="file-header"><span class="text-bold">Suggested change</span></div>
+<table class="diff-table js-diff-table tab-size">
+<tbody>
+<tr class="border-0"><td class="blob-num blob-num-deletion" data-line-number="41"></td><td class="blob-code blob-code-deletion js-blob-code-deletion blob-code-marker-deletion"><span class="blob-code-inner blob-code-marker js-code-nav-pass" data-code-marker="-">        <span class="pl-k">return</span> <span class="pl-c1">array_sum</span>(<span class="pl-c1">array_map</span>(<span class="x">fn ($line) =&gt; round($line-&gt;vat(), 2)</span>, <span class="pl-smi">$this</span>-&gt;<span class="pl-c1">lines</span>));</span></td></tr>
+<tr class="border-0"><td class="blob-num blob-num-addition" data-line-number="41"></td><td class="blob-code blob-code-addition js-blob-code-addition blob-code-marker-addition"><span class="blob-code-inner blob-code-marker js-code-nav-pass" data-code-marker="+">        <span class="pl-k">return</span> <span class="pl-c1">array_sum</span>(<span class="pl-c1">array_map</span>(<span class="x">fn ($group) =&gt; round($group-&gt;net() * $group-&gt;rate, 2)</span>, <span class="pl-smi">$this</span>-&gt;<span class="x">byRate()</span>));</span></td></tr>
+</tbody>
+</table>
+</div>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked disabled> group lines by rate</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled> add a test with 7 × 0,99&nbsp;€</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled> mention it in the changelog under <em>Fixed</em></li>
+</ul>
+<p>Shortcut for reviewers: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> re-runs the KoSIT check locally.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="TimelineItem TimelineItem--condensed">
+<div class="TimelineItem-badge" style="color: var(--fgColor-done)"><svg class="octicon octicon-git-pull-request" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path></svg></div>
+<div class="TimelineItem-body"><a class="author text-bold" href="https://git.example/kmeier" style="color:var(--fgColor-default)">kmeier</a> linked a pull request that will close this issue <span class="State State--merged" style="padding:0 7px;font-size:12px;line-height:18px">Merged</span> <a href="https://git.example/acme/invoicer/pull/1191"><span class="text-bold">Round VAT per rate, not per line</span> #1191</a></div>
+</div>
+</div>
+</div>
+<div class="Layout-sidebar">
+<div class="discussion-sidebar-item"><div class="discussion-sidebar-heading">Assignees</div><img class="avatar avatar-user mr-1" width="20" height="20" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d5e8f8'/%3E%3C/svg%3E"><span class="css-truncate-target" style="display:inline-block;max-width:125px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top;color:var(--fgColor-default);font-weight:600">lhansen-with-a-very-long-handle</span></div>
+<div class="discussion-sidebar-item"><div class="discussion-sidebar-heading">Labels</div>
+<a class="IssueLabel hx_IssueLabel mb-2" style="--label-r:215;--label-g:58;--label-b:74;--label-h:353;--label-s:66;--label-l:53;" href="#">bug</a>
+<a class="IssueLabel hx_IssueLabel" style="--label-r:251;--label-g:202;--label-b:4;--label-h:48;--label-s:96;--label-l:50;" href="#">e-invoicing</a></div>
+<div class="discussion-sidebar-item"><div class="discussion-sidebar-heading">Milestone</div>
+<div class="Progress mb-2"><span class="Progress-item" style="background-color:#1f883d;width:62%"></span></div>
+<span style="color:var(--fgColor-default);font-weight:600">v4.3.0</span></div>
+<div class="discussion-sidebar-item"><div class="discussion-sidebar-heading">Participants</div>
+<span style="display:flex;gap:4px"><img class="avatar avatar-user" width="26" height="26" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23e8a87c'/%3E%3C/svg%3E"><img class="avatar avatar-user" width="26" height="26" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d5e8f8'/%3E%3C/svg%3E"></span></div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Membership application — summary</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-BoldItalic.ttf); font-weight: 700; font-style: italic; }
+</style>
+<link rel="stylesheet" href="vendor/pico-2.0.6.min.css">
+<style>
+@page { size: A4; margin: 14mm; }
+:root { --pico-font-family-sans-serif: Inter, sans-serif; --pico-font-size: 87.5%; --pico-spacing: .875rem; }
+.summary dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 0; }
+.summary dt { color: var(--pico-muted-color); }
+.summary dd { margin: 0; }
+.signature { border-bottom: 1px solid var(--pico-muted-border-color); height: 3rem; }
+</style>
+</head>
+<body>
+<main class="container">
+  <hgroup>
+    <h1>Membership application</h1>
+    <p>Rowing Club Lindau e.V. — summary of your online application of 2 May 2024</p>
+  </hgroup>
+  <article class="summary">
+    <header><strong>Applicant</strong> <mark>pending review</mark></header>
+    <dl>
+      <dt>Name</dt><dd>Jonas Albrecht</dd>
+      <dt>Date of birth</dt><dd>14 August 1991</dd>
+      <dt>Address</dt><dd>Seestraße 18, 88131 Lindau (Bodensee)</dd>
+      <dt>Email</dt><dd><a href="mailto:jonas@example.org">jonas@example.org</a></dd>
+      <dt>Membership</dt><dd>Active adult, with boat storage</dd>
+    </dl>
+    <footer><small>Application number <code>LRC-24-0193</code></small></footer>
+  </article>
+  <form>
+    <fieldset class="grid">
+      <label>First name<input type="text" name="first" value="Jonas" readonly></label>
+      <label>Last name<input type="text" name="last" value="Albrecht" readonly></label>
+    </fieldset>
+    <label>Email<input type="email" name="email" value="jonas@example.org" aria-invalid="false" readonly><small>We send the invoice to this address.</small></label>
+    <div class="grid">
+      <label>Membership type
+        <select name="type" disabled><option>Active adult</option><option selected>Active adult, with boat storage</option></select>
+      </label>
+      <label>Start date<input type="text" name="start" value="1 June 2024" readonly></label>
+    </div>
+    <label>Rowing experience<textarea name="experience" rows="3" readonly>Five years of sculling in Konstanz, mostly single and double. Licensed for the lake since 2021.</textarea></label>
+    <fieldset>
+      <legend>Boat classes</legend>
+      <label><input type="checkbox" name="c1" checked> Single scull (1x)</label>
+      <label><input type="checkbox" name="c2" checked> Double scull (2x)</label>
+      <label><input type="checkbox" name="c3"> Coxed four (4+)</label>
+    </fieldset>
+    <fieldset>
+      <legend>Payment</legend>
+      <label><input type="radio" name="pay" checked> SEPA direct debit</label>
+      <label><input type="radio" name="pay"> Invoice</label>
+      <label><input type="checkbox" role="switch" checked> I agree to the club statutes</label>
+    </fieldset>
+    <label>Fee progress<progress value="70" max="100"></progress></label>
+  </form>
+  <figure>
+    <table class="striped">
+      <thead><tr><th scope="col">Fee</th><th scope="col">Period</th><th scope="col">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Admission fee</td><td>once</td><td>€ 120.00</td></tr>
+        <tr><td>Membership, active adult</td><td>per year</td><td>€ 240.00</td></tr>
+        <tr><td>Boat storage</td><td>per year</td><td>€ 85.00</td></tr>
+      </tbody>
+      <tfoot><tr><th scope="row" colspan="2">First year</th><td><strong>€ 445.00</strong></td></tr></tfoot>
+    </table>
+  </figure>
+  <details open><summary>Data protection notice</summary><p>Your data is stored for the club's administration only and deleted three years after your membership ends.</p></details>
+  <details><summary role="button" class="outline">Show statutes</summary><p>Hidden.</p></details>
+  <div class="grid">
+    <div><div class="signature"></div><small>Place, date</small></div>
+    <div><div class="signature"></div><small>Signature</small></div>
+  </div>
+  <p><button>Submit</button> <button class="secondary">Edit</button> <button class="contrast outline">Cancel</button> <a href="#" role="button" class="outline">Print</a></p>
+</main>
+</body>
+</html>

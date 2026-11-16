@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Account statement – October 2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+
+@property --accent-l { syntax: "<percentage>"; inherits: true; initial-value: 52%; }
+@property --bar { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --gap { syntax: "<length>"; inherits: true; initial-value: 12px; }
+
+@layer base, components, components.cards, overrides;
+
+@layer base {
+  @page { size: A4; margin: 15mm 16mm 18mm; }
+  :root { --accent: hsl(212 70% var(--accent-l)); --ink: #172033; --muted: #5d6779; --line: #dfe3ea; --theme: plain; }
+  html { font: 10pt/1.45 Inter, sans-serif; color: var(--ink); }
+  body { margin: 0; }
+  h1, h2, h3, p, dl, dd { margin: 0; }
+  h1 { font-size: 18pt; letter-spacing: -.01em; }
+  h2 { font-size: 11pt; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  a { color: var(--accent); }
+}
+
+@layer components {
+  .top { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 8px; border-bottom: 3px solid var(--accent); }
+  .top .period { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); margin-top: var(--gap); }
+  .panel { container: panel / inline-size; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .panel.tinted { background: oklch(from var(--accent) 0.97 0.02 h); border-color: oklch(from var(--accent) 0.85 0.05 h); }
+  .balance { font-size: clamp(14pt, 8cqi, 26pt); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .balance small { font-size: .45em; font-weight: 400; color: var(--muted); margin-left: .3em; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 14px; margin-top: 8px; }
+  .facts dt { font-size: 8pt; color: var(--muted); }
+  .facts dd { font-weight: 700; font-variant-numeric: tabular-nums; }
+  @container panel (width < 220px) {
+    .facts { grid-template-columns: 1fr; }
+    .balance small { display: block; margin: 0; }
+  }
+  @container panel (width >= 220px) {
+    .panel-title::after { content: " (detailed)"; color: var(--muted); font-weight: 400; }
+  }
+  .bars { display: grid; gap: 4px; margin-top: 6px; }
+  .bars div { display: grid; grid-template-columns: 7em 1fr 4.5em; align-items: center; gap: 8px; font-size: 8.5pt; }
+  .bars div > i { display: block; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent) calc(var(--bar) * 1%), #e9edf3 0); }
+  .bars div > b { text-align: right; font-variant-numeric: tabular-nums; }
+  .bars div:nth-child(1) > i { --bar: 82; } .bars div:nth-child(2) > i { --bar: 47; }
+  .bars div:nth-child(3) > i { --bar: 31; } .bars div:nth-child(4) > i { --bar: round(up, 12.2, 5); }
+}
+
+@layer components.cards {
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+  .card { container-type: inline-size; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; break-inside: avoid; }
+  .card h3 { font-size: 9.5pt; }
+  .card p { font-size: 8.5pt; color: var(--muted); }
+  .card .amount { font-size: 12pt; font-weight: 700; font-variant-numeric: tabular-nums; }
+  @container style(--theme: warning) {
+    .card { border-color: #e7a33e; background: #fff8eb; }
+    .card h3::before { content: "! "; color: #b4690e; }
+  }
+  @container (min-width: 150px) { .card .amount { text-align: right; } }
+}
+
+@layer overrides {
+  .card.reset { all: revert-layer; display: block; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px; }
+  .muted-link { color: inherit !important; }
+}
+
+table.tx { width: 100%; border-collapse: collapse; font-size: 9pt; font-variant-numeric: tabular-nums; }
+table.tx th { text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border-bottom: 1.5px solid var(--ink); padding: 4px 6px; }
+table.tx td { padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.tx :is(td, th):nth-last-child(-n + 2) { text-align: right; }
+table.tx tr:where(.credit) td:nth-last-child(2) { color: #11743f; }
+table.tx tr:where(.credit) td:nth-last-child(2)::before { content: "+"; }
+table.tx tr:not(.credit) td:nth-last-child(2)::before { content: "−"; }
+table.tx tr:has(> td .flag) td:first-child { box-shadow: inset 3px 0 0 #e7a33e; }
+table.tx .flag { display: inline-block; font-size: 7pt; padding: 0 4px; border-radius: 3px; background: #fff1d6; color: #8a5300; margin-left: 4px; vertical-align: 1px; }
+table.tx tbody tr:nth-child(5n) td { border-bottom-color: #b7bfcc; }
+.ref { color: var(--muted); font-size: 8pt; display: block; }
+.note { margin-top: 12px; font-size: 8pt; color: var(--muted); text-wrap: balance; max-width: 60ch; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>Account statement</h1><div class="period">Business checking ·· 4471 · 1–31 October 2026</div></div>
+  <div style="text-align: right">Northwind Credit Union<br><span class="period">Statement no. 2026-10</span></div>
+</header>
+
+<div class="grid">
+  <section class="panel tinted">
+    <div class="panel-title"><b>Closing balance</b></div>
+    <div class="balance">$48,213.07<small>USD</small></div>
+    <dl class="facts">
+      <div><dt>Opening balance</dt><dd>$41,902.55</dd></div>
+      <div><dt>Credits (14)</dt><dd>$63,410.00</dd></div>
+      <div><dt>Debits (37)</dt><dd>$57,099.48</dd></div>
+      <div><dt>Interest earned</dt><dd>$12.40</dd></div>
+    </dl>
+  </section>
+  <section class="panel">
+    <div class="panel-title"><b>Spending</b></div>
+    <div class="balance">$57,099<small>this month</small></div>
+    <div class="facts"><div><dt>vs. September</dt><dd>+8.2%</dd></div><div><dt>Largest</dt><dd>Payroll</dd></div></div>
+  </section>
+</div>
+
+<h2>Where the money went</h2>
+<div class="panel">
+  <div class="bars">
+    <div><span>Payroll</span><i></i><b>$31,880</b></div>
+    <div><span>Suppliers</span><i></i><b>$14,210</b></div>
+    <div><span>Rent &amp; utilities</span><i></i><b>$6,900</b></div>
+    <div><span>Other</span><i></i><b>$4,109</b></div>
+  </div>
+</div>
+
+<h2>Notices</h2>
+<div class="cards">
+  <div class="card"><h3>Overdraft protection</h3><p>Linked to savings ·· 9902; no transfers were needed this month.</p><div class="amount">$0.00</div></div>
+  <div class="card" style="--theme: warning"><h3>Check hold</h3><p>Check 1187 is held until 4 Nov because of its amount.</p><div class="amount">$8,500.00</div></div>
+  <div class="card reset"><h3>New fee schedule</h3><p>From 1 January 2027 wire transfers abroad cost $25 instead of $30. <a class="muted-link" href="https://example.org/fees">Details</a></p></div>
+</div>
+
+<h2>Transactions</h2>
+<table class="tx">
+  <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Balance</th></tr></thead>
+  <tbody>
+    <tr><td>Oct 1</td><td>Opening balance</td><td></td><td>41,902.55</td></tr>
+    <tr class="credit"><td>Oct 1</td><td>ACH deposit Bluebird Retail Inc<span class="ref">Invoice 2026-311</span></td><td>12,400.00</td><td>54,302.55</td></tr>
+    <tr><td>Oct 2</td><td>Payroll Gusto 10/02<span class="ref">PPD ID 9216000012</span></td><td>15,940.00</td><td>38,362.55</td></tr>
+    <tr><td>Oct 3</td><td>Pacific Gas &amp; Electric</td><td>612.33</td><td>37,750.22</td></tr>
+    <tr class="credit"><td>Oct 6</td><td>Mobile check deposit 1187 <span class="flag">hold</span></td><td>8,500.00</td><td>46,250.22</td></tr>
+    <tr><td>Oct 7</td><td>Harborview Properties LLC rent</td><td>5,800.00</td><td>40,450.22</td></tr>
+    <tr><td>Oct 9</td><td>Card 4471 Staples #0291</td><td>148.17</td><td>40,302.05</td></tr>
+    <tr class="credit"><td>Oct 12</td><td>Wire in Lindqvist Trading AB<span class="ref">Ref. LT-88213, fee $15.00 deducted</span></td><td>9,985.00</td><td>50,287.05</td></tr>
+    <tr><td>Oct 14</td><td>Supplier payment Cascade Paper Co.</td><td>7,330.00</td><td>42,957.05</td></tr>
+    <tr><td>Oct 16</td><td>Payroll Gusto 10/16</td><td>15,940.00</td><td>27,017.05</td></tr>
+    <tr class="credit"><td>Oct 20</td><td>ACH deposit Pinecrest Schools District</td><td>22,525.00</td><td>49,542.05</td></tr>
+    <tr><td>Oct 22</td><td>Supplier payment Olympic Inks <span class="flag">late fee</span></td><td>6,880.00</td><td>42,662.05</td></tr>
+    <tr><td>Oct 27</td><td>Comcast Business</td><td>487.62</td><td>42,174.43</td></tr>
+    <tr class="credit"><td>Oct 31</td><td>Transfer from savings ·· 9902</td><td>6,000.00</td><td>48,174.43</td></tr>
+    <tr class="credit"><td>Oct 31</td><td>Interest</td><td>12.40</td><td>48,186.83</td></tr>
+    <tr class="credit"><td>Oct 31</td><td>Card refund Staples #0291</td><td>26.24</td><td>48,213.07</td></tr>
+  </tbody>
+</table>
+<p class="note">Report errors within 60 days. Deposits are insured up to $250,000 per depositor by the NCUA, an agency of the federal government. Rates and fees are on the schedule we send every January.</p>
+</body>
+</html>

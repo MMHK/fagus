@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Lists</title>
+<style>
+@page { size: A4; margin: 12mm; }
+body { margin: 0; font: 10pt/1.45 Inter, sans-serif; color: #111; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+h2 { font-size: 11pt; margin: 4mm 0 1mm; }
+ol.roman { list-style-type: lower-roman; }
+ol.alpha { list-style-type: upper-alpha; }
+ul.inside { list-style-position: inside; background: #f1f5f9; padding: 2mm; }
+ul.arrows li::marker { content: "\2192  "; color: #e11d48; }
+ol.colored li::marker { color: #2563eb; font-weight: 700; }
+ul.none { list-style: none; padding-left: 0; }
+.chapters { counter-reset: chapter; }
+.chapters h3 { counter-increment: chapter; counter-reset: section; font-size: 10pt; margin: 2mm 0; }
+.chapters h3::before { content: counter(chapter) ". "; color: #2563eb; }
+.chapters p { counter-increment: section; margin: 0 0 1mm 4mm; }
+.chapters p::before { content: counter(chapter) "." counter(section) " "; font-weight: 700; }
+ol.nested { counter-reset: item; list-style: none; padding-left: 0; }
+ol.nested li { counter-increment: item; }
+ol.nested li::before { content: counters(item, ".") " "; color: #16a34a; }
+ol.nested ol { counter-reset: item; list-style: none; padding-left: 5mm; }
+</style></head>
+<body>
+<div class="columns">
+<div>
+<h2>Bullets</h2>
+<ul><li>First item</li><li>Second item with a longer text that wraps onto a second line of the list</li>
+<li>Nested<ul><li>Circle</li><li>Circle<ul><li>Square</li></ul></li></ul></li></ul>
+<h2>Numbers</h2>
+<ol><li>One</li><li>Two</li><li>Three</li></ol>
+<ol start="7"><li>Seven</li><li value="10">Ten</li><li>Eleven</li></ol>
+<ol reversed><li>Three</li><li>Two</li><li>One</li></ol>
+<ol class="roman"><li>i</li><li>ii</li><li>iii</li><li>iv</li></ol>
+<ol class="alpha"><li>A</li><li>B</li></ol>
+</div>
+<div>
+<h2>Markers</h2>
+<ul class="inside"><li>Inside marker</li><li>Inside marker that wraps over two lines of text in the box</li></ul>
+<ul class="arrows"><li>Arrow content</li><li>Arrow content</li></ul>
+<ol class="colored"><li>Blue bold numbers</li><li><p style="margin: 0">Paragraph inside the item</p></li></ol>
+<ul class="none"><li>No marker</li><li>No marker</li></ul>
+<h2>Counters</h2>
+<div class="chapters">
+<h3>Introduction</h3><p>Scope</p><p>Terms</p>
+<h3>Payment</h3><p>Due date</p><p>Bank details</p><p>Late fees</p>
+</div>
+<ol class="nested"><li>Item<ol><li>Sub item</li><li>Sub item<ol><li>Deep</li></ol></li></ol></li><li>Item</li></ol>
+</div>
+</div>
+</body></html>

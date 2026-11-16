@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sales dashboard — October 2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 10mm; }
+:root { --c1: #4f46e5; --c2: #06b6d4; --c3: #f59e0b; --c4: #ef4444; --c5: #10b981; --muted: #6b7280; --line: #e5e7eb; }
+html { font: 8pt/1.35 Inter, sans-serif; color: #111827; }
+body { margin: 0; }
+.top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4mm; }
+.top h1 { font-size: 15pt; margin: 0; }
+.top span { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: auto; gap: 4mm; }
+.card { border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 4mm; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.card h2 { font-size: 7.5pt; margin: 0 0 2mm; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.kpi .value { font-size: 18pt; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi .delta { font-size: 7.5pt; font-weight: 700; padding: .3mm 1.5mm; border-radius: 99px; }
+.up { color: #047857; background: #d1fae5; } .down { color: #b91c1c; background: #fee2e2; }
+.spark { display: flex; align-items: flex-end; gap: .6mm; height: 9mm; margin-top: 2mm; }
+.spark i { flex: 1; background: color-mix(in srgb, var(--c1) 35%, white); border-radius: .4mm .4mm 0 0; }
+.spark i:last-child { background: var(--c1); }
+.wide { grid-column: span 2; }
+.tall { grid-row: span 2; }
+.pie-wrap { display: flex; gap: 5mm; align-items: center; }
+.pie { width: 34mm; aspect-ratio: 1; border-radius: 50%; flex: none;
+  background: conic-gradient(var(--c1) 0 38%, var(--c2) 38% 62%, var(--c3) 62% 79%, var(--c4) 79% 91%, var(--c5) 91% 100%); }
+.donut { width: 30mm; aspect-ratio: 1; border-radius: 50%; position: relative; flex: none;
+  background: conic-gradient(from -90deg, var(--c5) 0 72%, var(--line) 72% 100%);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 55%); mask: radial-gradient(circle, transparent 54%, #000 55%); }
+.gauge { position: relative; width: 30mm; }
+.gauge b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14pt; }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2mm; }
+.legend li { display: flex; align-items: center; gap: 2mm; }
+.legend li::before { content: ""; width: 2.5mm; height: 2.5mm; border-radius: .6mm; background: var(--c); }
+.legend li span { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); }
+.bars { display: flex; align-items: flex-end; gap: 2mm; height: 42mm; border-bottom: 1px solid #9ca3af; padding: 0 1mm;
+  background: repeating-linear-gradient(to top, var(--line) 0 1px, transparent 1px 10.5mm); }
+.bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; position: relative; }
+.bars .col i { display: block; }
+.bars .col i.a { background: var(--c1); border-radius: .8mm .8mm 0 0; }
+.bars .col i.b { background: var(--c2); }
+.bars .col em { position: absolute; bottom: calc(var(--h) + 1mm); left: 0; right: 0; text-align: center; font-style: normal; font-size: 6.5pt; color: var(--muted); }
+.months { display: flex; gap: 2mm; padding: 1mm 1mm 0; }
+.months span { flex: 1; text-align: center; color: var(--muted); font-size: 6.5pt; }
+.hbar { display: grid; grid-template-columns: 26mm 1fr 12mm; gap: 1.2mm 2mm; align-items: center; }
+.hbar .track { height: 3mm; background: #f3f4f6; border-radius: 99px; overflow: hidden; }
+.hbar .fill { height: 100%; width: var(--w); background: linear-gradient(90deg, var(--c2), var(--c1)); border-radius: 99px; }
+.hbar .n { text-align: right; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 1mm 1.5mm; border-bottom: 1px solid var(--line); text-align: left; }
+th { color: var(--muted); font-size: 7pt; font-weight: 700; }
+td:nth-child(n+3), th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+.status { display: inline-block; width: 2mm; height: 2mm; border-radius: 50%; margin-right: 1.2mm; background: var(--s); }
+.heat { display: grid; grid-template-columns: repeat(12, 1fr); gap: .7mm; }
+.heat i { aspect-ratio: 1; border-radius: .5mm; background: color-mix(in oklab, var(--c1) var(--p), #eef2ff); }
+</style></head><body>
+<div class="top"><h1>Sales dashboard · October 2026</h1><span>Exported 6 Nov 2026, 09:12 · all figures in EUR</span></div>
+<div class="grid">
+  <div class="card kpi"><h2>Revenue</h2><div class="value">1.84 M</div><span class="delta up">▲ 12.4 %</span>
+    <div class="spark"><i style="height:40%"></i><i style="height:52%"></i><i style="height:47%"></i><i style="height:61%"></i><i style="height:58%"></i><i style="height:70%"></i><i style="height:66%"></i><i style="height:79%"></i><i style="height:74%"></i><i style="height:88%"></i><i style="height:84%"></i><i style="height:100%"></i></div></div>
+  <div class="card kpi"><h2>Orders</h2><div class="value">7,412</div><span class="delta up">▲ 4.1 %</span>
+    <div class="spark"><i style="height:70%"></i><i style="height:64%"></i><i style="height:72%"></i><i style="height:69%"></i><i style="height:75%"></i><i style="height:80%"></i><i style="height:77%"></i><i style="height:83%"></i><i style="height:79%"></i><i style="height:86%"></i><i style="height:90%"></i><i style="height:94%"></i></div></div>
+  <div class="card kpi"><h2>Average basket</h2><div class="value">248.25</div><span class="delta up">▲ 7.9 %</span>
+    <div class="spark"><i style="height:55%"></i><i style="height:60%"></i><i style="height:58%"></i><i style="height:63%"></i><i style="height:66%"></i><i style="height:64%"></i><i style="height:71%"></i><i style="height:69%"></i><i style="height:76%"></i><i style="height:80%"></i><i style="height:78%"></i><i style="height:85%"></i></div></div>
+  <div class="card kpi"><h2>Return rate</h2><div class="value">3.6 %</div><span class="delta down">▲ 0.5 pt</span>
+    <div class="spark"><i style="height:30%"></i><i style="height:35%"></i><i style="height:33%"></i><i style="height:40%"></i><i style="height:38%"></i><i style="height:36%"></i><i style="height:45%"></i><i style="height:42%"></i><i style="height:48%"></i><i style="height:44%"></i><i style="height:50%"></i><i style="height:54%"></i></div></div>
+
+  <div class="card wide"><h2>Revenue by month (online / stores, k€)</h2>
+    <div class="bars">
+<div class="col" style="--h:56.5%"><em>1,130</em><i class="a" style="height:30.5%"></i><i class="b" style="height:26.0%"></i></div>
+<div class="col" style="--h:54.0%"><em>1,080</em><i class="a" style="height:29.0%"></i><i class="b" style="height:25.0%"></i></div>
+<div class="col" style="--h:58.5%"><em>1,170</em><i class="a" style="height:32.0%"></i><i class="b" style="height:26.5%"></i></div>
+<div class="col" style="--h:63.0%"><em>1,260</em><i class="a" style="height:35.0%"></i><i class="b" style="height:28.0%"></i></div>
+<div class="col" style="--h:61.5%"><em>1,230</em><i class="a" style="height:34.5%"></i><i class="b" style="height:27.0%"></i></div>
+<div class="col" style="--h:65.5%"><em>1,310</em><i class="a" style="height:36.0%"></i><i class="b" style="height:29.5%"></i></div>
+<div class="col" style="--h:68.5%"><em>1,370</em><i class="a" style="height:38.0%"></i><i class="b" style="height:30.5%"></i></div>
+<div class="col" style="--h:67.0%"><em>1,340</em><i class="a" style="height:37.0%"></i><i class="b" style="height:30.0%"></i></div>
+<div class="col" style="--h:72.0%"><em>1,440</em><i class="a" style="height:40.0%"></i><i class="b" style="height:32.0%"></i></div>
+<div class="col" style="--h:78.0%"><em>1,560</em><i class="a" style="height:43.5%"></i><i class="b" style="height:34.5%"></i></div>
+<div class="col" style="--h:81.5%"><em>1,630</em><i class="a" style="height:45.5%"></i><i class="b" style="height:36.0%"></i></div>
+<div class="col" style="--h:92.0%"><em>1,840</em><i class="a" style="height:49.0%"></i><i class="b" style="height:43.0%"></i></div>
+    </div>
+    <div class="months"><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span></div>
+  </div>
+  <div class="card"><h2>Revenue by channel</h2>
+    <div class="pie-wrap" style="flex-direction:column;align-items:stretch"><div class="pie" style="margin:0 auto"></div>
+    <ul class="legend"><li style="--c:var(--c1)">Web shop<span>38 %</span></li><li style="--c:var(--c2)">Stores<span>24 %</span></li><li style="--c:var(--c3)">Marketplace<span>17 %</span></li><li style="--c:var(--c4)">B2B<span>12 %</span></li><li style="--c:var(--c5)">Phone<span>9 %</span></li></ul></div>
+  </div>
+  <div class="card"><h2>Target reached</h2>
+    <div class="pie-wrap"><div class="gauge"><div class="donut"></div><b>72 %</b></div><div>Annual target<br><strong style="font-size:10pt">18.0 M</strong><br><span style="color:var(--muted)">12.96 M reached</span></div></div>
+    <h2 style="margin-top:4mm">Orders per weekday and hour</h2>
+    <div class="heat">
+<i style="--p:44%"></i><i style="--p:72%"></i><i style="--p:88%"></i><i style="--p:87%"></i><i style="--p:72%"></i><i style="--p:44%"></i><i style="--p:10%"></i><i style="--p:45%"></i><i style="--p:73%"></i><i style="--p:88%"></i><i style="--p:87%"></i><i style="--p:71%"></i><i style="--p:83%"></i><i style="--p:89%"></i><i style="--p:80%"></i><i style="--p:57%"></i><i style="--p:25%"></i><i style="--p:30%"></i><i style="--p:62%"></i><i style="--p:83%"></i><i style="--p:89%"></i><i style="--p:80%"></i><i style="--p:57%"></i><i style="--p:24%"></i><i style="--p:86%"></i><i style="--p:69%"></i><i style="--p:40%"></i><i style="--p:14%"></i><i style="--p:48%"></i><i style="--p:75%"></i><i style="--p:88%"></i><i style="--p:86%"></i><i style="--p:69%"></i><i style="--p:39%"></i><i style="--p:15%"></i><i style="--p:49%"></i><i style="--p:54%"></i><i style="--p:21%"></i><i style="--p:34%"></i><i style="--p:65%"></i><i style="--p:84%"></i><i style="--p:89%"></i><i style="--p:78%"></i><i style="--p:54%"></i><i style="--p:20%"></i><i style="--p:34%"></i><i style="--p:65%"></i><i style="--p:85%"></i><i style="--p:18%"></i><i style="--p:52%"></i><i style="--p:77%"></i><i style="--p:89%"></i><i style="--p:85%"></i><i style="--p:66%"></i><i style="--p:36%"></i><i style="--p:19%"></i><i style="--p:52%"></i><i style="--p:78%"></i><i style="--p:89%"></i><i style="--p:85%"></i>
+    </div>
+  </div>
+  <div class="card wide"><h2>Top product groups</h2>
+    <div class="hbar">
+      <span>Outdoor jackets</span><div class="track"><div class="fill" style="--w:92%"></div></div><span class="n">312 k</span>
+      <span>Hiking boots</span><div class="track"><div class="fill" style="--w:77%"></div></div><span class="n">261 k</span>
+      <span>Backpacks</span><div class="track"><div class="fill" style="--w:61%"></div></div><span class="n">207 k</span>
+      <span>Tents</span><div class="track"><div class="fill" style="--w:48%"></div></div><span class="n">163 k</span>
+      <span>Sleeping bags</span><div class="track"><div class="fill" style="--w:33%"></div></div><span class="n">112 k</span>
+      <span>Accessories</span><div class="track"><div class="fill" style="--w:21%"></div></div><span class="n">71 k</span>
+    </div>
+  </div>
+  <div class="card wide"><h2>Stores</h2>
+    <table><thead><tr><th>Store</th><th>Manager</th><th>Revenue</th><th>vs. plan</th><th>Orders</th></tr></thead><tbody>
+      <tr><td><span class="status" style="--s:var(--c5)"></span>Munich Marienplatz</td><td>S. Huber</td><td>214,800</td><td>+8.2 %</td><td>903</td></tr>
+      <tr><td><span class="status" style="--s:var(--c5)"></span>Hamburg Jungfernstieg</td><td>T. Petersen</td><td>188,120</td><td>+3.5 %</td><td>811</td></tr>
+      <tr><td><span class="status" style="--s:var(--c3)"></span>Cologne Schildergasse</td><td>A. Yıldız</td><td>141,660</td><td>−1.2 %</td><td>655</td></tr>
+      <tr><td><span class="status" style="--s:var(--c4)"></span>Leipzig Petersstraße</td><td>M. Krause</td><td>97,340</td><td>−6.8 %</td><td>472</td></tr>
+    </tbody></table>
+  </div>
+</div>
+</body></html>

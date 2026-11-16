@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Release readiness report – Q4</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+
+/* Layers declared up front: later layers win, but !important in an earlier layer wins over later ones. */
+@layer reset, tokens, base, components, utilities, print;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+  ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
+  table { border-collapse: collapse; }
+  .muted { color: red !important; } /* wins over every later layer's normal and !important rule but unlayered !important */
+}
+
+@layer tokens {
+  :root {
+    --ink: #1c2230;
+    --ink-2: #5b6475;
+    --line: #d9dee7;
+    --accent: oklch(55% 0.17 255);
+    --ok: oklch(62% 0.15 150);
+    --warn: oklch(72% 0.16 75);
+    --bad: oklch(58% 0.2 25);
+    --radius: 6px;
+    --space: 8px;
+    color-scheme: light dark;
+  }
+}
+
+@layer base {
+  html { font: 10.5pt/1.45 Inter, sans-serif; color: var(--ink); }
+  h1 { font-size: 20pt; line-height: 1.15; letter-spacing: -0.01em; }
+  h2 { font-size: 12.5pt; margin-block: calc(var(--space) * 3) var(--space); }
+  p { margin-block-end: var(--space); text-wrap: pretty; }
+  .muted { color: var(--ink-2) !important; }
+  a { color: inherit; }
+}
+
+@layer components {
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-block-end: 2px solid var(--accent);
+    padding-block-end: var(--space);
+
+    & .meta {
+      text-align: end;
+      font-size: 9pt;
+      & b { color: var(--accent); }
+    }
+    h1 & { display: none; }
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: calc(var(--space) * 1.5);
+    margin-block: calc(var(--space) * 2);
+  }
+
+  .kpi {
+    container: kpi / inline-size;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--space);
+    background: light-dark(#f7f9fc, #10141c);
+
+    .value { font-size: 18pt; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    &:has(.delta.down) { border-color: color-mix(in oklch, var(--bad) 40%, white); }
+    &:has(.delta.up) .value { color: var(--ok); }
+    &:not(:has(.delta)) { background: repeating-linear-gradient(-45deg, transparent 0 6px, #eef1f6 6px 7px); }
+  }
+
+  .delta {
+    font-size: 8pt;
+    &.up::before { content: "▲ "; color: var(--ok); }
+    &.down::before { content: "▼ "; color: var(--bad); }
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: calc(var(--space) * 2);
+  }
+
+  /* Cards adapt to the column they land in. */
+  .card-wrap { container-type: inline-size; container-name: card; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: calc(var(--space) * 1.25);
+    margin-block-end: var(--space);
+    break-inside: avoid;
+  }
+  @container card (min-width: 400px) {
+    .card { display: grid; grid-template-columns: 9em 1fr; column-gap: calc(var(--space) * 2); }
+    .card h3 { grid-row: span 3; border-inline-end: 1px solid var(--line); padding-inline-end: var(--space); }
+  }
+  @container card (max-width: 399.98px) {
+    .card h3 { font-size: 10pt; border-block-end: 1px dashed var(--line); margin-block-end: 4px; }
+  }
+  @container kpi (width < 120px) {
+    .value { font-size: 14pt; }
+  }
+
+  .status {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 8pt;
+    font-weight: 700;
+    color: white;
+    background: var(--ok);
+    &[data-state="at-risk"] { background: var(--warn); color: var(--ink); }
+    &[data-state="blocked"] { background: var(--bad); }
+  }
+
+  table.issues {
+    width: 100%;
+    font-size: 9pt;
+    th, td { padding: 4px 6px; border-block-end: 1px solid var(--line); text-align: start; vertical-align: top; }
+    th { font-size: 8pt; text-transform: uppercase; color: var(--ink-2); border-block-end-width: 2px; }
+    td:last-child, th:last-child { text-align: end; font-variant-numeric: tabular-nums; }
+    tr:has(.status[data-state="blocked"]) td { background: color-mix(in srgb, var(--bad) 8%, transparent); }
+    tr:has(+ tr .status[data-state="blocked"]) td { border-block-end-color: color-mix(in srgb, var(--bad) 50%, white); }
+    tbody tr:nth-child(odd of :not(.group)) td { background-image: linear-gradient(#0000000a, #0000000a); }
+    tr.group td { font-weight: 700; background: #eef2f8; border-block-start: 1px solid var(--line); }
+  }
+
+  /* @scope keeps the note styles from leaking into nested quotes. */
+  @scope (.note) to (blockquote) {
+    :scope { border-inline-start: 3px solid var(--accent); padding: 6px 10px; background: #f3f6fb; margin-block: var(--space); }
+    p { margin: 0 0 4px; }
+    strong { color: var(--accent); }
+  }
+  blockquote { margin: 6px 0 2px 12px; font-style: italic; color: var(--ink-2); }
+  blockquote strong { color: inherit; }
+
+  @scope (.legend) {
+    li { display: flex; gap: 6px; align-items: center; font-size: 8.5pt; }
+    li::before { content: ""; inline-size: 10px; block-size: 10px; border-radius: 2px; background: var(--swatch); }
+  }
+
+  .timeline {
+    counter-reset: step;
+    & > li {
+      counter-increment: step;
+      position: relative;
+      padding-inline-start: 28px;
+      padding-block-end: 6px;
+      &::before {
+        content: counter(step);
+        position: absolute; inset-inline-start: 0; inset-block-start: 0;
+        inline-size: 18px; block-size: 18px; border-radius: 50%;
+        display: grid; place-items: center;
+        font-size: 8pt; font-weight: 700; color: white; background: var(--accent);
+      }
+      &:has(> .done)::before { background: var(--ok); content: "✓"; }
+      &:not(:last-child)::after {
+        content: ""; position: absolute; inset-inline-start: 8.5px; inset-block: 19px 0;
+        border-inline-start: 1px solid var(--line);
+      }
+    }
+  }
+}
+
+@layer utilities {
+  .tnum { font-variant-numeric: tabular-nums; }
+  .end { text-align: end; }
+  .accent { color: var(--accent) !important; }
+  .small { font-size: 8.5pt; }
+}
+
+@layer print {
+  @media print {
+    @page { size: A4; margin: 16mm 15mm 18mm; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt Inter, sans-serif; color: #5b6475; } }
+    .screen-only { display: none; }
+    a[href^="http"]::after { content: " ↗"; font-size: 0.8em; }
+    h2 { break-after: avoid; }
+  }
+}
+
+/* Unlayered styles beat every layer's normal declarations. */
+.kpi .label { color: #5b6475; }
+.footer-note { margin-block-start: 16px; font-size: 8pt; border-block-start: 1px solid #d9dee7; padding-block-start: 6px; }
+@supports selector(:has(a)) { .supports-has::after { content: " (selectors supported)"; } }
+@supports not (display: grid) { .kpis { display: block; } }
+</style>
+</head>
+<body>
+<nav class="screen-only"><a href="#">Dashboard</a> / <a href="#">Reports</a></nav>
+<header class="masthead">
+  <div>
+    <h1>Release readiness</h1>
+    <p class="muted small">Platform 7.2 · prepared for the steering committee</p>
+  </div>
+  <div class="meta">Report date <b>6 Nov 2026</b><br>Cut-off <b>14 Nov 2026</b><br>Owner Release Engineering</div>
+</header>
+
+<section class="kpis" aria-label="Key figures">
+  <div class="kpi"><div class="label">Open blockers</div><div class="value">3</div><div class="delta down">+2 since last week</div></div>
+  <div class="kpi"><div class="label">Tests passing</div><div class="value">98.4%</div><div class="delta up">+0.6 pt</div></div>
+  <div class="kpi"><div class="label">Docs complete</div><div class="value">81%</div></div>
+  <div class="kpi"><div class="label">Migration dry-runs</div><div class="value">12/14</div><div class="delta up">2 this week</div></div>
+</section>
+
+<div class="grid-2">
+  <div class="card-wrap">
+    <h2>Workstreams</h2>
+    <div class="card">
+      <h3>API gateway</h3>
+      <p><span class="status" data-state="on-track">on track</span> Rate limiting rewritten on the new token bucket; load tests at 3× peak show p99 below 80 ms.</p>
+      <p class="muted small">Next: canary in eu-central from 10 Nov.</p>
+    </div>
+    <div class="card">
+      <h3>Billing exports</h3>
+      <p><span class="status" data-state="at-risk">at risk</span> The DATEV export needs the new account mapping; finance signs off on 12 Nov at the earliest.</p>
+      <p class="muted small">Fallback: ship with the old CSV format behind a flag.</p>
+    </div>
+    <div class="card">
+      <h3>Search indexing</h3>
+      <p><span class="status" data-state="blocked">blocked</span> Reindexing 40 M documents takes 31 hours against the 8-hour window; sharding by tenant is under review.</p>
+    </div>
+    <div class="note">
+      <p><strong>Decision needed.</strong> Approve the extra maintenance window for the search reindex, or move search to 7.2.1.</p>
+      <blockquote><p>We can live with the old relevance model for one more release, but not with a 31-hour freeze. <strong>– Customer Success</strong></p></blockquote>
+    </div>
+  </div>
+  <aside class="card-wrap">
+    <h2>Milestones</h2>
+    <ol class="timeline" role="list">
+      <li><span class="done"></span><b>Feature freeze</b><br><span class="small muted">23 Oct</span></li>
+      <li><span class="done"></span><b>Release candidate 1</b><br><span class="small muted">30 Oct</span></li>
+      <li><b>Release candidate 2</b><br><span class="small muted">7 Nov</span></li>
+      <li><b>Go / no-go</b><br><span class="small muted">13 Nov</span></li>
+      <li><b>General availability</b><br><span class="small muted">18 Nov</span></li>
+    </ol>
+    <div class="card">
+      <h3>Legend</h3>
+      <ul class="legend" role="list">
+        <li style="--swatch: oklch(62% 0.15 150)">on track</li>
+        <li style="--swatch: oklch(72% 0.16 75)">at risk</li>
+        <li style="--swatch: oklch(58% 0.2 25)">blocked</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<h2>Open issues</h2>
+<table class="issues">
+  <thead><tr><th>Key</th><th>Summary</th><th>Area</th><th>State</th><th>Est. days</th></tr></thead>
+  <tbody>
+    <tr class="group"><td colspan="5">Search</td></tr>
+    <tr><td>SRCH-881</td><td>Reindex exceeds maintenance window</td><td>Search</td><td><span class="status" data-state="blocked">blocked</span></td><td>6.0</td></tr>
+    <tr><td>SRCH-874</td><td>Synonyms for German compound nouns</td><td>Search</td><td><span class="status" data-state="on-track">on track</span></td><td>1.5</td></tr>
+    <tr><td>SRCH-870</td><td>Facet counts wrong after soft delete</td><td>Search</td><td><span class="status" data-state="at-risk">at risk</span></td><td>2.0</td></tr>
+    <tr class="group"><td colspan="5">Billing</td></tr>
+    <tr><td>BILL-342</td><td>DATEV account mapping for reverse charge</td><td>Billing</td><td><span class="status" data-state="at-risk">at risk</span></td><td>3.0</td></tr>
+    <tr><td>BILL-339</td><td>Rounding of tax totals per line vs. per invoice</td><td>Billing</td><td><span class="status" data-state="blocked">blocked</span></td><td>2.5</td></tr>
+    <tr><td>BILL-331</td><td>Credit notes show the original due date</td><td>Billing</td><td><span class="status" data-state="on-track">on track</span></td><td>0.5</td></tr>
+    <tr class="group"><td colspan="5">Gateway</td></tr>
+    <tr><td>GW-1207</td><td>Retry-After header missing on 429 for gRPC</td><td>Gateway</td><td><span class="status" data-state="on-track">on track</span></td><td>0.5</td></tr>
+    <tr><td>GW-1199</td><td>Canary routing ignores tenant pinning</td><td>Gateway</td><td><span class="status" data-state="blocked">blocked</span></td><td>4.0</td></tr>
+    <tr><td>GW-1188</td><td>Metrics label cardinality after rewrite</td><td>Gateway</td><td><span class="status" data-state="on-track">on track</span></td><td>1.0</td></tr>
+  </tbody>
+</table>
+
+<h2>Notes</h2>
+<p>All figures are taken from the CI dashboard and the tracker at 06:00 UTC. Status colours follow the legend; rows of blocked issues are tinted and the rule above them is drawn in red. See the <a href="https://wiki.example.org/release/7.2">release wiki</a> for the full checklist and the <a href="#appendix">appendix</a> for the migration plan.</p>
+<p class="supports-has muted small">This report uses nesting, cascade layers, container and scope rules</p>
+<p class="footer-note">Generated from the release dashboard. Confidential – internal use only.</p>
+</body>
+</html>

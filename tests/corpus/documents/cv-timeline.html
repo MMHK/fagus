@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Curriculum vitae: Jonas Albrecht</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page { size: A4; margin: 14mm 14mm 16mm; @bottom-right { content: "Jonas Albrecht · CV · " counter(page) "/" counter(pages); font: 7pt Inter, sans-serif; color: #8792a2; } }
+@page :first { @bottom-right { content: none; } }
+* { box-sizing: border-box; }
+:root { --accent: #0f766e; --muted: #5b6575; --line: #d5dbe3; }
+body { margin: 0; font: 9pt/1.42 Inter, sans-serif; color: #18202b; }
+.top { display: grid; grid-template-columns: 30mm 1fr auto; gap: 6mm; align-items: center; padding-bottom: 5mm; border-bottom: 2pt solid var(--accent); }
+.avatar { width: 30mm; aspect-ratio: 1; border-radius: 50%; background: url(../images/photo.jpg) center / cover; box-shadow: 0 0 0 1.2mm #fff, 0 0 0 1.6mm var(--accent); }
+.top h1 { margin: 0; font-size: 22pt; line-height: 1.1; letter-spacing: -.02em; }
+.top .role { color: var(--accent); font-weight: 700; font-size: 11pt; margin-top: 1mm; }
+.top .contact { font-size: 8pt; color: var(--muted); text-align: right; line-height: 1.6; }
+.layout { display: grid; grid-template-columns: 1fr 55mm; column-gap: 8mm; margin-top: 6mm; }
+main { min-width: 0; }
+aside { border-left: .5pt solid var(--line); padding-left: 6mm; }
+h2 { font-size: 10.5pt; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin: 0 0 3mm; display: flex; align-items: center; gap: 2mm; break-after: avoid; }
+h2::after { content: ""; flex: 1; height: .5pt; background: var(--line); }
+section + section { margin-top: 6mm; }
+.timeline { position: relative; padding-left: 6mm; }
+.timeline::before { content: ""; position: absolute; left: 1.4mm; top: 1.5mm; bottom: 1mm; width: .6mm; background: linear-gradient(var(--accent), #99d5ce); border-radius: .3mm; }
+.job { position: relative; margin-bottom: 4.5mm; break-inside: avoid; }
+.job::before { content: ""; position: absolute; left: -6mm; top: 1.2mm; width: 3.4mm; height: 3.4mm; border-radius: 50%; background: #fff; border: .7mm solid var(--accent); }
+.job header { display: flex; justify-content: space-between; align-items: baseline; gap: 4mm; }
+.job h3 { margin: 0; font-size: 10pt; }
+.job .when { font-size: 8pt; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.job .org { color: var(--muted); font-style: italic; }
+.job ul { margin: 1.2mm 0 0; padding-left: 4mm; }
+.job li { margin: .5mm 0; }
+.job li::marker { color: var(--accent); }
+.tags { display: flex; flex-wrap: wrap; gap: 1.2mm; margin-top: 1.5mm; }
+.tags span { font-size: 7pt; border: .5pt solid var(--line); border-radius: 99px; padding: .2mm 2mm; color: var(--muted); }
+aside section { break-inside: avoid; }
+.skill { margin-bottom: 2mm; }
+.skill .label { display: flex; justify-content: space-between; font-size: 8pt; }
+.bar { height: 1.6mm; background: #e7ecf1; border-radius: 1mm; overflow: hidden; margin-top: .6mm; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.langs { display: grid; grid-template-columns: auto 1fr; gap: 1mm 3mm; font-size: 8.5pt; }
+.dots { letter-spacing: .5mm; color: var(--accent); }
+.dots .off { color: #cdd5de; }
+aside ul { padding: 0; margin: 0; list-style: none; }
+aside li { padding: .8mm 0; border-bottom: .5pt dashed var(--line); font-size: 8.5pt; }
+.quote { margin-top: 6mm; font-style: italic; color: var(--muted); border-left: 1mm solid #99d5ce; padding: 1mm 0 1mm 3mm; break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="avatar" role="img" aria-label="Portrait"></div>
+  <div><h1>Jonas Albrecht</h1><div class="role">Senior Backend Engineer · Payments</div></div>
+  <div class="contact">Hamburg, Germany<br>+49 152 28817386<br>jonas.albrecht@example.org<br>git.example/jalbrecht</div>
+</div>
+<div class="layout">
+<main>
+<section>
+<h2>Experience</h2>
+<div class="timeline">
+  <article class="job"><header><h3>Staff Engineer, Ledger Platform</h3><span class="when">03/2023 – today</span></header>
+    <div class="org">Hanseatic Pay GmbH, Hamburg</div>
+    <ul><li>Led the migration of the double-entry ledger from a monolith to an event-sourced service handling 4,200 postings per second at peak.</li><li>Introduced idempotency keys and outbox processing across 14 services; duplicate payouts dropped to zero over 18 months.</li><li>Mentored six engineers; two were promoted to senior roles.</li></ul>
+    <div class="tags"><span>Kotlin</span><span>PostgreSQL</span><span>Kafka</span><span>Event sourcing</span></div></article>
+  <article class="job"><header><h3>Senior Software Engineer</h3><span class="when">06/2019 – 02/2023</span></header>
+    <div class="org">Nordbank Digital, Kiel</div>
+    <ul><li>Built the SEPA Instant gateway that settles 98.7 % of transfers within five seconds.</li><li>Designed the reconciliation jobs between core banking and card processing, saving four person-days of manual checks each month.</li><li>Ran the on-call rotation for the payments domain and wrote its runbooks.</li></ul>
+    <div class="tags"><span>Java</span><span>Spring</span><span>ISO 20022</span><span>Oracle</span></div></article>
+  <article class="job"><header><h3>Software Engineer</h3><span class="when">09/2016 – 05/2019</span></header>
+    <div class="org">Logistik Kontor AG, Bremen</div>
+    <ul><li>Wrote the route optimiser for the regional fleet (120 vans), cutting the distance driven by 11 %.</li><li>Moved the build from Ant to Gradle and the deployment to containers.</li></ul>
+    <div class="tags"><span>Java</span><span>OptaPlanner</span><span>Docker</span></div></article>
+  <article class="job"><header><h3>Working student, Data Engineering</h3><span class="when">04/2014 – 08/2016</span></header>
+    <div class="org">Elbe Analytics, Hamburg</div>
+    <ul><li>Maintained ETL pipelines for retail clients and automated their quality reports.</li><li>Built a dashboard of store footfall from Wi-Fi sensor data.</li></ul></article>
+</div>
+</section>
+<section>
+<h2>Education</h2>
+<div class="timeline">
+  <article class="job"><header><h3>M.Sc. Computer Science</h3><span class="when">2014 – 2016</span></header><div class="org">Universität Hamburg</div>
+    <ul><li>Thesis: Consistency models for distributed ledgers under network partitions (grade 1.3).</li></ul></article>
+  <article class="job"><header><h3>B.Sc. Business Informatics</h3><span class="when">2011 – 2014</span></header><div class="org">Hochschule Bremen</div>
+    <ul><li>Semester abroad at Aalto University, Helsinki.</li></ul></article>
+</div>
+</section>
+<section>
+<h2>Projects</h2>
+<div class="timeline">
+  <article class="job"><header><h3>iban-tools (open source)</h3><span class="when">since 2018</span></header>
+    <ul><li>A validation and formatting library for IBANs and BICs with 2.1 million downloads a month; maintained with three co-maintainers.</li></ul></article>
+  <article class="job"><header><h3>Talk: “Exactly once is a lie”</h3><span class="when">2024</span></header>
+    <ul><li>Given at JavaLand and code.talks about idempotent consumers and what they cost.</li></ul></article>
+</div>
+</section>
+<div class="quote">“Jonas turns vague requirements into systems that stay boring in production, which is the highest praise I know.” — Head of Engineering, Hanseatic Pay</div>
+</main>
+<aside>
+<section>
+<h2>Skills</h2>
+<div class="skill"><div class="label"><span>Kotlin / Java</span><span>Expert</span></div><div class="bar"><i style="width:95%"></i></div></div>
+<div class="skill"><div class="label"><span>PostgreSQL</span><span>Expert</span></div><div class="bar"><i style="width:90%"></i></div></div>
+<div class="skill"><div class="label"><span>Kafka</span><span>Advanced</span></div><div class="bar"><i style="width:80%"></i></div></div>
+<div class="skill"><div class="label"><span>Go</span><span>Intermediate</span></div><div class="bar"><i style="width:55%"></i></div></div>
+<div class="skill"><div class="label"><span>Terraform</span><span>Intermediate</span></div><div class="bar"><i style="width:50%"></i></div></div>
+</section>
+<section style="margin-top:6mm">
+<h2>Languages</h2>
+<div class="langs">
+  <span>German</span><span class="dots">●●●●●</span>
+  <span>English</span><span class="dots">●●●●<span class="off">●</span></span>
+  <span>Danish</span><span class="dots">●●●<span class="off">●●</span></span>
+  <span>Finnish</span><span class="dots">●<span class="off">●●●●</span></span>
+</div>
+</section>
+<section style="margin-top:6mm">
+<h2>Certificates</h2>
+<ul><li>AWS Solutions Architect – Professional (2024)</li><li>Certified Kubernetes Application Developer (2022)</li><li>iSAQB CPSA-F (2020)</li></ul>
+</section>
+<section style="margin-top:6mm">
+<h2>Interests</h2>
+<ul><li>Sailing on the Elbe</li><li>Board games, especially 18xx</li><li>Restoring old radios</li></ul>
+</section>
+</aside>
+</div>
+</body>
+</html>

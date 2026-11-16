@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Rechnung RE-2026-1187</title>
+<style>
+@font-face { font-family: "Source Sans Pro"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Source Sans Pro"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@font-face { font-family: "Source Sans Pro"; src: url(../../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+@page {
+  size: A4;
+  margin: 45mm 20mm 32mm 25mm;
+  @top-right { content: element(none); }
+  @bottom-left {
+    content: "Kranich Software GmbH\A Lindenallee 4\A 99084 Erfurt";
+    white-space: pre; font: 7pt/1.35 "Source Sans Pro", sans-serif; color: #555; vertical-align: top; padding-top: 4mm;
+  }
+  @bottom-center {
+    content: "Geschäftsführung: Dr. Ada Kranich\A Amtsgericht Jena HRB 512 004\A USt-IdNr. DE 318 990 427";
+    white-space: pre; font: 7pt/1.35 "Source Sans Pro", sans-serif; color: #555; vertical-align: top; padding-top: 4mm;
+  }
+  @bottom-right {
+    content: "Sparkasse Mittelthüringen\A IBAN DE02 8205 1000 0130 0001 20\A Seite " counter(page) " von " counter(pages);
+    white-space: pre; font: 7pt/1.35 "Source Sans Pro", sans-serif; color: #555; vertical-align: top; text-align: right; padding-top: 4mm;
+  }
+}
+@page :first { margin-top: 27mm; }
+:root { --brand: #0b6e4f; --muted: #6b7280; --rule: #d1d5db; }
+html { font: 9.5pt/1.45 "Source Sans Pro", sans-serif; color: #111827; }
+body { margin: 0; }
+.letterhead { display: flex; justify-content: space-between; align-items: flex-start; height: 18mm; }
+.letterhead .logo { font-weight: 700; font-size: 16pt; letter-spacing: -.01em; color: var(--brand); }
+.letterhead .logo small { display: block; font-size: 7.5pt; font-weight: 400; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.address-block { display: grid; grid-template-columns: 85mm 1fr; column-gap: 10mm; height: 45mm; }
+.sender-line { font-size: 6.5pt; color: var(--muted); border-bottom: .5pt solid var(--muted); padding-bottom: .5mm; margin-bottom: 3mm; white-space: nowrap; }
+.recipient { line-height: 1.35; }
+.info dl { display: grid; grid-template-columns: auto 1fr; gap: .4mm 4mm; margin: 0; font-size: 8.5pt; }
+.info dt { color: var(--muted); }
+.info dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+h1 { font-size: 13pt; margin: 0 0 4mm; }
+.intro { margin: 0 0 5mm; }
+table.items { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.items th { font-size: 8pt; font-weight: 600; text-align: left; color: var(--muted); border-bottom: 1pt solid #111827; padding: 1.5mm 1.5mm; }
+table.items td { padding: 2mm 1.5mm; border-bottom: .5pt solid var(--rule); vertical-align: top; }
+table.items .num { text-align: right; white-space: nowrap; }
+table.items .pos { width: 8mm; color: var(--muted); }
+table.items td small { display: block; color: var(--muted); font-size: 8pt; }
+table.items tbody tr:last-child td { border-bottom: 1pt solid #111827; }
+.totals { margin: 3mm 0 0 auto; width: 75mm; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.totals td { padding: 1mm 1.5mm; }
+.totals td + td { text-align: right; }
+.totals tr.grand td { font-weight: 700; font-size: 11pt; border-top: 1pt solid #111827; border-bottom: 3pt double #111827; padding-top: 1.5mm; }
+.pay { display: grid; grid-template-columns: 1fr 34mm; gap: 6mm; margin-top: 8mm; padding: 4mm; border: .75pt solid var(--rule); border-radius: 2mm; break-inside: avoid; background: #f9fafb; }
+.pay h2 { font-size: 10pt; margin: 0 0 2mm; }
+.pay p { margin: 0 0 1.5mm; }
+.pay .qr { width: 34mm; height: 34mm; }
+.pay .qr-caption { font-size: 7pt; color: var(--muted); text-align: center; margin-top: 1mm; }
+.iban { font-family: "Source Sans Pro", sans-serif; letter-spacing: .06em; word-spacing: .25em; font-variant-numeric: tabular-nums; }
+.notes { margin-top: 6mm; font-size: 8.5pt; color: #374151; }
+.notes p { margin: 0 0 2mm; }
+.reverse-charge { margin-top: 3mm; padding-left: 3mm; border-left: 2pt solid var(--brand); font-size: 8.5pt; }
+.closing { margin-top: 8mm; }
+</style>
+</head>
+<body>
+<header class="letterhead">
+  <div class="logo">Kranich<small>Software für Werkstätten</small></div>
+  <svg width="22mm" height="11mm" viewBox="0 0 44 22" aria-hidden="true"><path d="M2 20 L14 4 L22 14 L30 6 L42 20 Z" fill="none" stroke="#0b6e4f" stroke-width="2.2" stroke-linejoin="round"/></svg>
+</header>
+<section class="address-block">
+  <div>
+    <div class="sender-line">Kranich Software GmbH · Lindenallee 4 · 99084 Erfurt</div>
+    <div class="recipient">Autohaus Pfannenstiel GmbH &amp; Co. KG<br>Buchhaltung, z. Hd. Herrn Reinhold Pfannenstiel<br>Gewerbering Süd 17<br>07743 Jena</div>
+  </div>
+  <div class="info">
+    <dl>
+      <dt>Rechnungsnummer</dt><dd>RE-2026-1187</dd>
+      <dt>Rechnungsdatum</dt><dd>06.11.2026</dd>
+      <dt>Leistungszeitraum</dt><dd>01.11.–30.11.2026</dd>
+      <dt>Kundennummer</dt><dd>K-10077</dd>
+      <dt>Vertrag</dt><dd>WS-PRO-3 (jährlich)</dd>
+      <dt>Ihr Ansprechpartner</dt><dd>Lena Wüstefeld</dd>
+      <dt>Telefon</dt><dd>0361 06017 42-3</dd>
+    </dl>
+  </div>
+</section>
+
+<h1>Rechnung RE-2026-1187</h1>
+<p class="intro">Sehr geehrter Herr Pfannenstiel,<br>vielen Dank für Ihr Vertrauen. Für den Leistungszeitraum November 2026 berechnen wir Ihnen folgende Leistungen:</p>
+
+<table class="items">
+  <thead><tr><th class="pos">Pos.</th><th>Leistung</th><th class="num">Menge</th><th class="num">Einzelpreis</th><th class="num">USt.</th><th class="num">Betrag</th></tr></thead>
+  <tbody>
+    <tr><td class="pos">1</td><td>Werkstatt-Suite Pro, Grundlizenz<small>bis 3 Standorte, inkl. Updates und Support (Mo–Fr 8–18 Uhr)</small></td><td class="num">1</td><td class="num">249,00 €</td><td class="num">19 %</td><td class="num">249,00 €</td></tr>
+    <tr><td class="pos">2</td><td>Zusätzliche Arbeitsplätze<small>Annahme, Teilelager, Buchhaltung</small></td><td class="num">7</td><td class="num">19,00 €</td><td class="num">19 %</td><td class="num">133,00 €</td></tr>
+    <tr><td class="pos">3</td><td>Schnittstelle DATEV Rechnungswesen</td><td class="num">1</td><td class="num">29,00 €</td><td class="num">19 %</td><td class="num">29,00 €</td></tr>
+    <tr><td class="pos">4</td><td>SMS-Terminerinnerungen<small>612 Nachrichten à 0,079 €</small></td><td class="num">612</td><td class="num">0,079 €</td><td class="num">19 %</td><td class="num">48,35 €</td></tr>
+    <tr><td class="pos">5</td><td>Einrichtung Online-Terminbuchung (einmalig)<small>Konfiguration der Annahmezeiten, Ersatzwagen und Leistungskatalog von 64 Positionen</small></td><td class="num">4,5 h</td><td class="num">95,00 €</td><td class="num">19 %</td><td class="num">427,50 €</td></tr>
+    <tr><td class="pos">6</td><td>Rabatt Treuejahr 3 (10 % auf Pos. 1–2)</td><td class="num">1</td><td class="num">−38,20 €</td><td class="num">19 %</td><td class="num">−38,20 €</td></tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td>Nettobetrag</td><td>848,65 €</td></tr>
+  <tr><td>Umsatzsteuer 19 %</td><td>161,24 €</td></tr>
+  <tr class="grand"><td>Gesamtbetrag</td><td>1.009,89 €</td></tr>
+</table>
+
+<section class="pay">
+  <div>
+    <h2>Zahlung</h2>
+    <p>Bitte überweisen Sie den Gesamtbetrag bis zum <strong>20.11.2026</strong> ohne Abzug auf folgendes Konto:</p>
+    <p>Kranich Software GmbH<br>Sparkasse Mittelthüringen<br><span class="iban">DE02 8205 1000 0130 0001 20</span><br>BIC HELADEF1WEM</p>
+    <p>Verwendungszweck: <strong>RE-2026-1187 K-10077</strong></p>
+  </div>
+  <div>
+    <svg class="qr" viewBox="0 0 33 33" shape-rendering="crispEdges" role="img" aria-label="GiroCode"><rect width="33" height="33" fill="#fff"/><path d="M2 2h7v7H2zm1 1v5h5V3zm1 1h3v3H4zM24 2h7v7h-7zm1 1v5h5V3zm1 1h3v3h-3zM2 24h7v7H2zm1 1v5h5v-5zm1 1h3v3H4zM10 2h1v2h-1zm2 0h3v1h-3zm4 0h1v3h-1zm2 0h2v2h-2zm3 1h2v1h-2zM11 5h2v2h-2zm3 1h3v1h-3zm5 0h1v3h-1zm2 1h1v1h-1zM10 8h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zM2 10h3v1H2zm4 0h3v2H6zm5 0h2v1h-2zm3 0h4v1h-4zm6 0h2v2h-2zm4 0h3v1h-3zm4 0h3v2h-3zM3 12h2v2H3zm7 0h3v1h-3zm5 1h2v2h-2zm4 0h3v1h-3zm5 0h2v2h-2zm4 0h2v1h-2zM2 15h1v3H2zm3 0h3v1H5zm5 1h2v1h-2zm4 0h1v3h-1zm3 0h3v1h-3zm5 1h2v2h-2zm4 0h1v2h-1zm3 0h2v1h-2zM5 18h2v2H5zm4 0h3v1H9zm7 1h2v1h-2zm4 0h1v3h-1zm6 0h3v1h-3zM2 20h2v1H2zm8 1h2v2h-2zm4 0h3v1h-3zm8 1h2v1h-2zm3 0h1v2h-1zm3 0h2v1h-2zM10 24h1v3h-1zm3 0h2v1h-2zm4 0h3v2h-3zm5 0h1v1h-1zm3 1h3v1h-3zm-13 2h2v1h-2zm5 1h1v3h-1zm3 0h2v2h-2zm4 0h3v1h-3zm4 1h2v2h-2zM10 29h2v2h-2zm3 1h2v1h-2zm8 0h3v1h-3zm6 0h4v1h-4z"/></svg>
+    <div class="qr-caption">Mit Banking-App scannen</div>
+  </div>
+</section>
+
+<div class="notes">
+  <p>Die Lizenz verlängert sich um zwölf Monate, wenn sie nicht drei Monate vor Ablauf gekündigt wird. Es gelten unsere AGB in der Fassung vom 01.03.2026, abrufbar unter kranich-software.example/agb.</p>
+  <p>Bei Fragen zur Rechnung erreichen Sie uns unter buchhaltung@kranich-software.example.</p>
+  <div class="reverse-charge">Hinweis: Rechnungen an Unternehmen in anderen EU-Mitgliedstaaten stellen wir ohne Umsatzsteuer aus (Steuerschuldnerschaft des Leistungsempfängers).</div>
+</div>
+<p class="closing">Mit freundlichen Grüßen<br>Kranich Software GmbH</p>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Autumn workshop programme</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 14mm 15mm; }
+:root { --accent: oklch(0.58 0.15 160); --ink: #17201c; --muted: #5c6b64; --line: #dfe6e2; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 10pt/1.5 Inter, sans-serif; color: var(--ink); }
+h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 4px; text-wrap: balance; max-width: 30ch; }
+.lead { color: var(--muted); margin: 0 0 16px; text-wrap: pretty; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cards .wide { grid-column: span 2; }
+.cards .full { grid-column: 1 / -1; }
+.slot { container-type: inline-size; container-name: card; }
+.card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; height: 100%; }
+.card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.card .body { padding: 4cqi 5cqi; display: flex; flex-direction: column; gap: 4px; }
+.card h2 { font-size: clamp(11pt, 6cqi, 16pt); line-height: 1.2; margin: 0; text-wrap: balance; }
+.card .when { font-size: 8pt; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+.card p { margin: 0; color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.card .foot { margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; font-size: 8.5pt; }
+@container card (min-width: 300px) {
+  .card { grid-template-columns: 40% 1fr; grid-template-rows: auto; }
+  .card img { aspect-ratio: auto; height: 100%; min-height: 120px; }
+  .card p { -webkit-line-clamp: 4; }
+}
+@container card (min-width: 520px) {
+  .card { grid-template-columns: 30% 1fr; }
+  .card h2 { font-size: 16pt; }
+}
+.schedule { margin-top: 18px; display: grid; grid-template-columns: max-content 1fr max-content; column-gap: 14px; }
+.schedule > .row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding: 5px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.schedule > .row:first-child { font-weight: 700; border-bottom: 1.5px solid var(--ink); font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.schedule time { font-variant-numeric: tabular-nums; }
+.schedule .room { color: var(--muted); font-size: 9pt; }
+.speakers { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.speaker { display: flex; gap: 8px; align-items: center; }
+.speaker img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; }
+.speaker b { display: block; font-size: 9pt; }
+.speaker span { font-size: 8pt; color: var(--muted); }
+</style></head><body>
+<h1>Autumn workshop programme for teams that ship software every week</h1>
+<p class="lead">Three days in Utrecht, 18–20 November 2026. Each workshop has twelve seats; the evening talks are open to everyone. Prices include lunch, coffee and the printed handbook that goes with every session.</p>
+<div class="cards">
+  <div class="slot full"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Wed 18 Nov · 09:30</span><h2>Designing invoices that accountants love</h2><p>We take apart twenty real invoices from European companies and rebuild them step by step: what the law requires, what the tax adviser looks for first, and how to lay out line items, totals and payment details so that nobody has to call you. You leave with a template, a checklist and a set of test documents for your own invoicing code.</p><div class="foot"><span>Room Oudegracht</span><span>€ 490</span></div></div></article></div>
+  <div class="slot wide"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Wed 18 Nov · 14:00</span><h2>Print CSS in practice</h2><p>Page boxes, margins, running headers and footers, named pages, counters and the many ways a table can break across pages. Bring a document your application prints today; we fix it together and compare it with the browser.</p><div class="foot"><span>Room Neude</span><span>€ 390</span></div></div></article></div>
+  <div class="slot"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Thu 19 Nov · 09:30</span><h2>E-invoicing with ZUGFeRD and XRechnung</h2><p>Structured data inside a PDF/A-3 file: profiles, validation, and the mistakes that make a buyer's system reject an invoice. Hands-on with real validators and many sample files.</p><div class="foot"><span>Room Dom</span><span>€ 390</span></div></div></article></div>
+  <div class="slot"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Thu 19 Nov · 14:00</span><h2>Fonts and text shaping</h2><p>How a font turns into glyphs on a page: shaping, fallback, kerning and ligatures, bidirectional text and line breaking in many scripts, explained with examples.</p><div class="foot"><span>Room Dom</span><span>€ 290</span></div></div></article></div>
+  <div class="slot"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Fri 20 Nov · 09:30</span><h2>Accessible PDFs</h2><p>Tagged PDF, reading order, alternative text and PDF/UA: what screen readers need from your documents and how to test it without buying expensive tools.</p><div class="foot"><span>Room Neude</span><span>€ 290</span></div></div></article></div>
+  <div class="slot"><article class="card"><img src="../images/photo.jpg" alt=""><div class="body"><span class="when">Fri 20 Nov · 14:00</span><h2>Testing documents</h2><p>Snapshot tests for PDFs: comparing text positions and pixels, keeping fixtures small, and catching regressions before a customer does.</p><div class="foot"><span>Room Oudegracht</span><span>€ 290</span></div></div></article></div>
+</div>
+<div class="schedule">
+  <div class="row"><span>Time</span><span>Evening talk</span><span>Room</span></div>
+  <div class="row"><time>18:30</time><span>Why your PDF looks different on every printer</span><span class="room">Main hall</span></div>
+  <div class="row"><time>19:15</time><span>Twenty years of PDF/A, and what comes next</span><span class="room">Main hall</span></div>
+  <div class="row"><time>20:00</time><span>Drinks and demos</span><span class="room">Foyer</span></div>
+</div>
+<div class="speakers">
+  <div class="speaker"><img src="../images/photo.jpg" alt=""><div><b>Anouk de Vries</b><span>Print designer</span></div></div>
+  <div class="speaker"><img src="../images/photo.jpg" alt=""><div><b>Jonas Lindqvist</b><span>Tax software</span></div></div>
+  <div class="speaker"><img src="../images/photo.jpg" alt=""><div><b>Priya Raman</b><span>Accessibility</span></div></div>
+  <div class="speaker"><img src="../images/photo.jpg" alt=""><div><b>Marek Nowak</b><span>Fonts &amp; shaping</span></div></div>
+</div>
+</body></html>

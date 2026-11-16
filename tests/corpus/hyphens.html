@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Silbentrennung</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @page { size: A4; margin: 16mm; }
+  body { margin: 0; font: 10pt/1.45 Inter, sans-serif; color: #111827; display: flex; gap: 8mm; }
+  .column { width: 38mm; border-left: 2px solid #c7d2fe; padding-left: 2mm; }
+  h2 { font-size: 10pt; margin: 0 0 2mm; color: #4338ca; }
+  .auto { hyphens: auto; }
+  .justify { hyphens: auto; text-align: justify; }
+  .manual { hyphens: manual; }
+  .none { hyphens: none; }
+</style>
+</head>
+<body>
+  <div class="column auto"><h2>auto</h2><p>Die Umsatzsteuer-Identifikationsnummer steht auf jeder Rechnung. Rechnungsempfänger prüfen die Zahlungsbedingungen und Leistungszeiträume.</p></div>
+  <div class="column justify"><h2>auto, Blocksatz</h2><p>Die Umsatzsteuer-Identifikationsnummer steht auf jeder Rechnung. Rechnungsempfänger prüfen die Zahlungsbedingungen und Leistungszeiträume.</p></div>
+  <div class="column manual"><h2>manual (&amp;shy;)</h2><p>Die Umsatz&shy;steuer&shy;identifikations&shy;nummer steht auf jeder Rechnung. Rechnungs&shy;empfänger prüfen die Zahlungs&shy;bedingungen.</p></div>
+  <div class="column none"><h2>none</h2><p>Die Umsatz&shy;steuer&shy;identifikations&shy;nummer steht auf jeder Rechnung.</p></div>
+</body>
+</html>

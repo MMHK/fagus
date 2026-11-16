@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" class="fi">
+<head>
+<meta charset="utf-8">
+<title>Order #ORD-10492 · Admin</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@page { size: A4; margin: 12mm; }
+*, ::before, ::after { box-sizing: border-box; border: 0 solid #e5e7eb; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font: 14px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; color: #030712; background: #f9fafb; }
+.fi-layout { display: flex; }
+.fi-sidebar { width: 240px; flex: none; background: #fff; border-right-width: 1px; padding: 16px; }
+@media print { .fi-sidebar, .fi-topbar { display: none; } }
+.fi-main { flex: 1; min-width: 0; padding: 0 0 24px; }
+.fi-breadcrumbs { display: flex; gap: 8px; font-size: 14px; color: #6b7280; margin-bottom: 8px; }
+.fi-breadcrumbs svg { width: 16px; height: 16px; color: #9ca3af; }
+.fi-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.fi-header h1 { font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+.fi-btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 8px 12px; font: 600 14px/20px Inter; box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05); }
+.fi-btn.primary { background: #d97706; color: #fff; }
+.fi-btn.gray { background: #fff; color: #030712; box-shadow: 0 0 0 1px rgb(3 7 18 / .1); }
+.fi-btn.danger { background: #dc2626; color: #fff; }
+.fi-btn svg { width: 20px; height: 20px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.span-2 { grid-column: span 2 / span 2; }
+.fi-section { background: #fff; border-radius: 12px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05), 0 0 0 1px rgb(3 7 18 / .05); margin-bottom: 24px; }
+.fi-section-header { padding: 16px 24px; border-bottom-width: 1px; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; }
+.fi-section-header p { margin: 0; font-weight: 400; font-size: 14px; color: #6b7280; }
+.fi-section-content { padding: 24px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.fi-fo-field { display: grid; gap: 8px; }
+.fi-fo-field label { font-size: 14px; font-weight: 600; line-height: 24px; }
+.fi-fo-field label sup { color: #dc2626; font-weight: 600; }
+.fi-input-wrp { display: flex; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05), 0 0 0 1px rgb(3 7 18 / .1); overflow: hidden; }
+.fi-input-wrp .affix { display: flex; align-items: center; padding: 0 12px; color: #6b7280; border-right-width: 1px; background: #f9fafb; }
+.fi-input { flex: 1; min-width: 0; border: none; background: transparent; padding: 6px 12px; font: inherit; line-height: 24px; color: inherit; }
+.fi-select { appearance: none; flex: 1; border: none; background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 20px; padding: 6px 36px 6px 12px; font: inherit; line-height: 24px; }
+.fi-toggle { display: inline-flex; width: 44px; height: 24px; border-radius: 999px; background: #e5e7eb; padding: 2px; }
+.fi-toggle span { width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+.fi-toggle.on { background: #d97706; justify-content: flex-end; }
+.fi-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; line-height: 16px; box-shadow: inset 0 0 0 1px rgb(217 119 6 / .1); }
+.fi-badge.warning { background: #fffbeb; color: #b45309; }
+.fi-badge.success { background: #f0fdf4; color: #15803d; box-shadow: inset 0 0 0 1px rgb(22 163 74 / .2); }
+.fi-badge.info { background: #eff6ff; color: #1d4ed8; box-shadow: inset 0 0 0 1px rgb(37 99 235 / .2); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 600; padding: 12px 16px; background: #f9fafb; border-bottom-width: 1px; }
+td { padding: 12px 16px; border-bottom-width: 1px; vertical-align: top; }
+td.r, th.r { text-align: right; }
+.thumb { width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, #fde68a, #f59e0b); float: left; margin-right: 12px; }
+.muted { color: #6b7280; font-size: 13px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; }
+dt { color: #6b7280; }
+dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+dd.total { font-weight: 700; font-size: 16px; }
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { position: relative; padding: 0 0 16px 24px; }
+.timeline li::before { content: ""; position: absolute; left: 4px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #d97706; box-shadow: 0 0 0 3px #fef3c7; }
+.timeline li::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #e5e7eb; }
+.timeline li:last-child::after { display: none; }
+.timeline time { display: block; color: #6b7280; font-size: 12px; }
+textarea.fi-input { resize: vertical; min-height: 96px; }
+.repeater { display: grid; gap: 12px; }
+.repeater-item { border-radius: 8px; box-shadow: 0 0 0 1px rgb(3 7 18 / .1); padding: 12px; display: grid; grid-template-columns: 1fr 120px 32px; gap: 12px; align-items: center; }
+.icon-btn { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: #dc2626; }
+</style>
+</head>
+<body>
+<div class="fi-layout">
+<aside class="fi-sidebar"><b>Acme Shop</b><nav><p>Dashboard</p><p>Orders</p><p>Products</p><p>Customers</p></nav></aside>
+<main class="fi-main">
+<nav class="fi-breadcrumbs"><span>Orders</span><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg><span>ORD-10492</span><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg><span>Edit</span></nav>
+<header class="fi-header"><h1>Edit ORD-10492</h1><div style="display:flex;gap:12px"><button class="fi-btn gray"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a1 1 0 001 1h8a1 1 0 001-1v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a1 1 0 00-1-1H6a1 1 0 00-1 1zm2 0h6v3H7V4zm-1 9v-1h8v3H6v-2z"/></svg>Print invoice</button><button class="fi-btn danger">Delete</button></div></header>
+<div class="grid">
+<div class="span-2">
+  <section class="fi-section"><div class="fi-section-header">Order details <span class="fi-badge warning">Processing</span></div>
+  <div class="fi-section-content fields">
+    <div class="fi-fo-field"><label>Number<sup>*</sup></label><div class="fi-input-wrp"><input class="fi-input" value="ORD-10492" readonly></div></div>
+    <div class="fi-fo-field"><label>Customer<sup>*</sup></label><div class="fi-input-wrp"><select class="fi-select"><option>Dr. Mara Lindqvist</option></select></div></div>
+    <div class="fi-fo-field"><label>Status</label><div class="fi-input-wrp"><select class="fi-select"><option>New</option><option selected>Processing</option><option>Shipped</option></select></div></div>
+    <div class="fi-fo-field"><label>Currency</label><div class="fi-input-wrp"><span class="affix">€</span><input class="fi-input" value="EUR"></div></div>
+    <div class="fi-fo-field"><label>Shipping cost</label><div class="fi-input-wrp"><span class="affix">€</span><input class="fi-input" type="number" value="4.90" step="0.01"></div></div>
+    <div class="fi-fo-field"><label>Express delivery</label><div><span class="fi-toggle on"><span></span></span></div></div>
+    <div class="fi-fo-field" style="grid-column:1/-1"><label>Notes</label><div class="fi-input-wrp"><textarea class="fi-input" placeholder="Internal notes for the warehouse team…"></textarea></div></div>
+  </div></section>
+  <section class="fi-section"><div class="fi-section-header">Order items</div>
+  <table><thead><tr><th>Product</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Total</th></tr></thead>
+  <tbody>
+  <tr><td><span class="thumb"></span>Ceramic pour-over set<br><span class="muted">SKU CER-PO-02 · Sand</span></td><td class="r">2</td><td class="r">€34.50</td><td class="r">€69.00</td></tr>
+  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#bfdbfe,#3b82f6)"></span>Single-origin beans, Ethiopia Guji 1 kg<br><span class="muted">SKU BEA-ETH-1K</span></td><td class="r">1</td><td class="r">€28.90</td><td class="r">€28.90</td></tr>
+  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#d9f99d,#65a30d)"></span>Paper filters (100)<br><span class="muted">SKU FIL-100</span></td><td class="r">3</td><td class="r">€4.20</td><td class="r">€12.60</td></tr>
+  </tbody></table></section>
+  <section class="fi-section"><div class="fi-section-header">Gift messages <p>Printed on cards in the parcel</p></div>
+  <div class="fi-section-content repeater">
+    <div class="repeater-item"><div class="fi-input-wrp"><input class="fi-input" value="Happy birthday, Jonas!"></div><div class="fi-input-wrp"><select class="fi-select"><option>Card A</option></select></div><span class="icon-btn">×</span></div>
+    <div class="repeater-item"><div class="fi-input-wrp"><input class="fi-input" placeholder="Message"></div><div class="fi-input-wrp"><select class="fi-select"><option>Card B</option></select></div><span class="icon-btn">×</span></div>
+  </div></section>
+</div>
+<div>
+  <section class="fi-section"><div class="fi-section-header">Summary</div><div class="fi-section-content">
+  <dl><dt>Subtotal</dt><dd>€110.50</dd><dt>Shipping</dt><dd>€4.90</dd><dt>Discount</dt><dd>−€10.00</dd><dt>VAT (19%)</dt><dd>€18.33</dd><dt class="total" style="font-weight:700;color:#030712">Total</dt><dd class="total">€105.40</dd></dl>
+  </div></section>
+  <section class="fi-section"><div class="fi-section-header">Payment</div><div class="fi-section-content">
+  <p style="margin:0 0 8px"><span class="fi-badge success">Paid</span> <span class="fi-badge info">Visa •••• 4242</span></p>
+  <p class="muted" style="margin:0">Captured 06 Nov 2026, 14:12</p></div></section>
+  <section class="fi-section"><div class="fi-section-header">History</div><div class="fi-section-content">
+  <ul class="timeline"><li>Order placed<time>05 Nov 2026, 09:41</time></li><li>Payment captured<time>06 Nov 2026, 14:12</time></li><li>Picked and packed by K. Jansen<time>07 Nov 2026, 10:03</time></li><li>Label created (DHL)<time>07 Nov 2026, 10:20</time></li></ul>
+  </div></section>
+</div>
+</div>
+</main>
+</div>
+</body>
+</html>

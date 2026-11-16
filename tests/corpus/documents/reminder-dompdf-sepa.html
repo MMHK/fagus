@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Zahlungserinnerung 2026-11-0412</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: normal; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: bold; }
+/* Written for dompdf: margins in cm, a fixed header and footer in the page margins, a page
+   number from a counter, and .page_break for a new page. */
+@page { margin: 3.5cm 2cm 2.5cm 2.5cm; size: A4 portrait; }
+body { font-family: Inter, "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #222; }
+header { position: fixed; top: -2.6cm; left: 0; right: 0; height: 2cm; }
+footer { position: fixed; bottom: -1.8cm; left: 0; right: 0; height: 1.2cm; font-size: 7pt; color: #666; border-top: 0.5pt solid #999; padding-top: 2mm; }
+header table, footer table { width: 100%; border-collapse: collapse; }
+header td, footer td { vertical-align: top; padding: 0; }
+.logo { font-size: 16pt; font-weight: bold; color: #0b5394; }
+.logo small { display: block; font-size: 7.5pt; font-weight: normal; color: #666; }
+.page_break { page-break-before: always; }
+.addr { width: 85mm; height: 40mm; }
+.addr .back { font-size: 6.5pt; color: #777; border-bottom: 0.5pt solid #777; margin-bottom: 2mm; }
+table.meta { position: absolute; top: 0; right: 0; width: 60mm; border-collapse: collapse; font-size: 8pt; }
+table.meta td { padding: 1pt 0; }
+table.meta td.k { color: #666; }
+h2 { font-size: 12pt; margin: 6mm 0 4mm; }
+p { margin: 0 0 3mm; line-height: 1.45; }
+table.open { width: 100%; border-collapse: collapse; margin: 3mm 0 4mm; }
+table.open th { font-size: 8pt; text-align: left; border-bottom: 1pt solid #0b5394; padding: 1.5mm 2mm; color: #0b5394; }
+table.open td { padding: 1.5mm 2mm; border-bottom: 0.5pt solid #ccc; }
+table.open td.amount, table.open th.amount { text-align: right; }
+table.open tr.sum td { font-weight: bold; border-bottom: 1.5pt double #222; }
+.mandate { border: 0.75pt solid #0b5394; padding: 3mm 4mm; margin-top: 4mm; }
+.mandate table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.mandate td { padding: 1mm 0; }
+.mandate td.k { width: 45mm; color: #555; }
+.small { font-size: 7.5pt; color: #555; }
+.clear { clear: both; }
+.half { float: left; width: 48%; }
+.half + .half { margin-left: 4%; }
+.line { border-top: 0.5pt solid #333; margin-top: 14mm; padding-top: 1mm; font-size: 7.5pt; }
+</style>
+</head>
+<body>
+<header>
+  <table>
+    <tr>
+      <td class="logo">Stadtwerke Elmshorn<small>Energie · Wasser · Bäder</small></td>
+      <td style="text-align: right; font-size: 8pt; color: #555;">Kundenservice<br>Hafenstraße 22 · 25335 Elmshorn<br>Telefon 04121 04950-0</td>
+    </tr>
+  </table>
+</header>
+<footer>
+  <table>
+    <tr>
+      <td>Stadtwerke Elmshorn AöR<br>Vorstand: Dr. Birte Matthiesen</td>
+      <td>Sparkasse Elmshorn<br>IBAN DE21 2215 0000 0000 4711 08</td>
+      <td>Gläubiger-ID DE55SWE00000123456<br>USt-IdNr. DE 134 870 006</td>
+    </tr>
+  </table>
+</footer>
+
+<main>
+  <div style="position: relative;">
+    <div class="addr">
+      <div class="back">Stadtwerke Elmshorn · Hafenstraße 22 · 25335 Elmshorn</div>
+      Frau<br>Johanna Lüders<br>Ollnsstraße 141<br>25336 Elmshorn
+    </div>
+    <table class="meta">
+      <tr><td class="k">Datum</td><td>12.11.2026</td></tr>
+      <tr><td class="k">Kundennummer</td><td>2004 8817</td></tr>
+      <tr><td class="k">Vertragskonto</td><td>3100 5520 4471</td></tr>
+      <tr><td class="k">Verbrauchsstelle</td><td>Ollnsstraße 141</td></tr>
+      <tr><td class="k">Ansprechpartnerin</td><td>Frau Thiessen, -231</td></tr>
+    </table>
+  </div>
+
+  <h2>Zahlungserinnerung</h2>
+  <p>Sehr geehrte Frau Lüders,</p>
+  <p>sicher haben Sie es nur übersehen: Die folgenden Abschläge für Strom und Wasser sind noch offen. Die Lastschrift vom 15.10.2026 konnte nicht eingelöst werden, weil Ihre Bank das Mandat als <strong>nicht bekannt</strong> zurückgewiesen hat.</p>
+  <table class="open">
+    <thead><tr><th>Fällig</th><th>Beleg</th><th>Leistung</th><th class="amount">Betrag</th></tr></thead>
+    <tbody>
+      <tr><td>15.10.2026</td><td>AB-26-10</td><td>Abschlag Strom Oktober</td><td class="amount">74,00 €</td></tr>
+      <tr><td>15.10.2026</td><td>AB-26-10</td><td>Abschlag Wasser/Abwasser Oktober</td><td class="amount">38,00 €</td></tr>
+      <tr><td>15.10.2026</td><td>RL-26-1017</td><td>Rücklastschriftgebühr der Bank</td><td class="amount">3,00 €</td></tr>
+      <tr class="sum"><td colspan="3">Offener Betrag</td><td class="amount">115,00 €</td></tr>
+    </tbody>
+  </table>
+  <p>Bitte überweisen Sie den Betrag bis zum <strong>26.11.2026</strong>. Eine Mahngebühr berechnen wir für diese Erinnerung nicht.</p>
+  <p>Damit die Abschläge künftig wieder pünktlich eingezogen werden, prüfen Sie bitte das unten genannte SEPA-Lastschriftmandat. Hat sich Ihre Bankverbindung geändert, senden Sie uns einfach das beigefügte neue Mandat unterschrieben zurück.</p>
+
+  <div class="mandate">
+    <table>
+      <tr><td class="k">Mandatsreferenz</td><td><strong>SWE-2004-8817-0003</strong></td></tr>
+      <tr><td class="k">erteilt am</td><td>02.05.2022</td></tr>
+      <tr><td class="k">IBAN (bei uns hinterlegt)</td><td>DE07 2215 0000 •••• •••• 33</td></tr>
+      <tr><td class="k">Art</td><td>wiederkehrende Zahlung (RCUR)</td></tr>
+    </table>
+  </div>
+  <p style="margin-top: 5mm;">Mit freundlichen Grüßen<br>Ihre Stadtwerke Elmshorn</p>
+  <p class="small">Haben Sie bereits gezahlt? Dann betrachten Sie dieses Schreiben bitte als gegenstandslos.</p>
+
+  <div class="page_break"></div>
+  <h2>SEPA-Lastschriftmandat</h2>
+  <p class="small">Gläubiger-Identifikationsnummer DE55SWE00000123456 · Mandatsreferenz: <strong>SWE-2004-8817-0004</strong> (neu)</p>
+  <p>Ich ermächtige die Stadtwerke Elmshorn AöR, Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die von den Stadtwerken Elmshorn auf mein Konto gezogenen Lastschriften einzulösen.</p>
+  <p class="small">Hinweis: Ich kann innerhalb von acht Wochen, beginnend mit dem Belastungsdatum, die Erstattung des belasteten Betrages verlangen. Es gelten dabei die mit meinem Kreditinstitut vereinbarten Bedingungen.</p>
+  <div class="mandate">
+    <table>
+      <tr><td class="k">Kontoinhaber/in</td><td style="border-bottom: 0.5pt solid #999;">&nbsp;</td></tr>
+      <tr><td class="k">Straße, Hausnummer</td><td style="border-bottom: 0.5pt solid #999;">&nbsp;</td></tr>
+      <tr><td class="k">PLZ, Ort</td><td style="border-bottom: 0.5pt solid #999;">&nbsp;</td></tr>
+      <tr><td class="k">IBAN</td><td style="border-bottom: 0.5pt solid #999;">DE__ ____ ____ ____ ____ __</td></tr>
+      <tr><td class="k">BIC</td><td style="border-bottom: 0.5pt solid #999;">&nbsp;</td></tr>
+    </table>
+  </div>
+  <div class="half"><div class="line">Ort, Datum</div></div>
+  <div class="half"><div class="line">Unterschrift Kontoinhaber/in</div></div>
+  <div class="clear"></div>
+  <p class="small" style="margin-top: 8mm;">Bitte zurücksenden an: Stadtwerke Elmshorn, Kundenservice, Hafenstraße 22, 25335 Elmshorn oder per E-Mail an mandat@stadtwerke-elmshorn.example.</p>
+</main>
+</body>
+</html>

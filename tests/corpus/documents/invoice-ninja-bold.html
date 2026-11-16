@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rechnung 2026-0193</title>
+<style>
+@font-face { font-family: "Doc Sans"; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: "Doc Sans"; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 900; }
+@font-face { font-family: "Doc Sans"; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+
+:root {
+  --ink: #1c2530;
+  --accent: #d9822b;
+  --muted: #5d6670;
+  --rule: #dfe3e8;
+  --stripe: #f6f4f0;
+  --text-size: 12.5px;
+  --leading: 1.55;
+}
+@page { size: A4; margin: 0; }
+body {
+  margin: 0;
+  color: #20262d;
+  font-family: "Doc Sans", sans-serif;
+  font-size: var(--text-size);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  zoom: 80%;
+}
+p { margin: 0; }
+
+/* The page sits in one table cell; its header and footer rows keep a gap at the top and bottom. */
+.sheet { width: 100%; border-collapse: collapse; }
+.sheet > * > tr > td { padding: 0; }
+.sheet-gap { height: 12px; }
+
+.masthead {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  column-gap: 1.75rem;
+  padding: 2.75rem 3.25rem;
+  background: var(--ink);
+  color: #eef1f4;
+  line-height: var(--leading);
+}
+.masthead img { width: 70%; }
+.masthead [data-block] { display: flex; flex-direction: column; }
+.masthead [data-block="firm"] > :first-child { color: var(--accent); font-weight: 600; }
+
+.parties { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.75rem 3.25rem 0; }
+.recipient { border-left: 3px solid var(--accent); padding-left: 1.1rem; line-height: 1.5; }
+.doc-title { margin: 0 0 .6rem; color: var(--ink); font-size: 1.75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.recipient [data-field="name"] { font-weight: 600; }
+.recipient [data-field]:not([data-field="name"]) { color: var(--muted); }
+.facts { width: 36%; border-collapse: collapse; line-height: 1.5; }
+.facts th { padding: .1rem 1rem .1rem 0; color: var(--muted); font-weight: 400; text-align: left; white-space: nowrap; }
+.facts td { padding: .1rem 0; text-align: right; }
+.facts [data-row="open"] > * { color: var(--accent); font-weight: 700; }
+
+.status-stamp {
+  position: absolute;
+  top: 17.5rem;
+  left: 41%;
+  padding: .3rem 1rem;
+  border: 2px solid #b8322a;
+  border-radius: 3px;
+  color: #b8322a;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+  opacity: .8;
+}
+
+[data-part="lines"] {
+  width: calc(100% - 6.5rem);
+  margin: 2.5rem 3.25rem 1rem;
+  table-layout: fixed;
+  overflow-wrap: break-word;
+  border-collapse: collapse;
+}
+[data-part="lines"] th {
+  padding: .75rem .85rem;
+  background: #ece8e1;
+  border-bottom: 2px solid var(--accent);
+  font-size: .85em;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+[data-part="lines"] td { padding: .85rem; vertical-align: top; border-bottom: 1px solid var(--rule); }
+[data-part="lines"] tbody tr:nth-child(2n) { background: var(--stripe); }
+[data-col="item"] { width: 17%; }
+[data-col="desc"] { width: 33%; }
+[data-col^="price"], [data-col^="total"] { width: 15%; }
+[data-col^="qty"], [data-col^="tax"] { width: 10%; }
+td[data-col="item"] { color: var(--accent); font-weight: 700; }
+td[data-col="desc"] { white-space: pre-line; }
+[data-part="lines"] [data-col~="num"] { text-align: right; }
+
+.closing {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  column-gap: 3.5rem;
+  padding: .75rem 3.25rem 2.5rem;
+  break-inside: avoid;
+}
+.note-head { margin: 1rem 0 .3rem; font-size: 1em; font-weight: 700; }
+.note-head:first-child { margin-top: .5rem; }
+.note-body { color: var(--muted); line-height: 1.5; white-space: pre-line; }
+.sums > [data-sum] { display: grid; grid-template-columns: 1fr auto; column-gap: 1rem; padding: .35rem .9rem; }
+.sums > [data-sum]:empty { display: none; }
+.sums > [data-sum] > :last-child { text-align: right; }
+.sums > [data-sum="due"] { margin-top: .6rem; padding-top: .7rem; padding-bottom: .7rem; background: var(--ink); color: #fff; font-size: 1.25em; font-weight: 800; }
+.sums > [data-sum="due"] > :last-child { color: var(--accent); }
+
+.foot-band {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 1.25rem;
+  margin-top: .75rem;
+  padding: 1.75rem 3.25rem;
+  background: var(--ink);
+  color: #d5dbe1;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.foot-band h4 { margin: 0 0 .3rem; color: var(--accent); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<table class="sheet">
+  <thead><tr><td><div class="sheet-gap">&nbsp;</div></td></tr></thead>
+  <tbody>
+    <tr><td>
+      <div class="masthead">
+        <div>
+          <img src="../images/logo.png" alt="Fjord Digital logo">
+        </div>
+        <div data-block="firm">
+          <p>Fjord Digital GmbH</p>
+          <p>www.fjord-digital.example</p>
+          <p>USt-IdNr. DE 304 118 920</p>
+          <p>rechnungen@fjord-digital.example</p>
+          <p>+49 40 66969 198</p>
+        </div>
+        <div data-block="address">
+          <p>Speicherstadt, Block W</p>
+          <p>Kehrwieder 8</p>
+          <p>20457 Hamburg</p>
+          <p>Deutschland</p>
+        </div>
+      </div>
+
+      <div class="parties">
+        <div class="recipient">
+          <h4 class="doc-title">Rechnung</h4>
+          <p data-field="name">Weinhaus Ostermann KG</p>
+          <p data-field="contact">z. Hd. Frau Magdalena Ostermann-Lütjens</p>
+          <p data-field="street">Bergstraße 117</p>
+          <p data-field="city">55411 Bingen am Rhein</p>
+          <p data-field="country">Deutschland</p>
+          <p data-field="vat">USt-IdNr. DE 149 552 007</p>
+        </div>
+        <table class="facts">
+          <tbody>
+            <tr><th>Rechnungsnummer:</th><td>2026-0193</td></tr>
+            <tr><th>PO-Nummer:</th><td>OST/26/77</td></tr>
+            <tr><th>Rechnungsdatum:</th><td>06.11.2026</td></tr>
+            <tr><th>Fälligkeitsdatum:</th><td>06.12.2026</td></tr>
+            <tr><th>Gesamtbetrag:</th><td>14.253,82&nbsp;€</td></tr>
+            <tr data-row="open"><th>Offener Betrag:</th><td>12.253,82&nbsp;€</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="status-stamp">teilbezahlt</div>
+
+      <table data-part="lines">
+        <thead>
+          <tr>
+            <th data-col="item">Artikel</th>
+            <th data-col="desc">Beschreibung</th>
+            <th data-col="price num">Preis</th>
+            <th data-col="qty num">Menge</th>
+            <th data-col="tax num">Steuer</th>
+            <th data-col="total num">Summe</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-col="item">Shop-Relaunch</td>
+            <td data-col="desc">Umstellung des Weinshops auf Shopware 6.6
+inkl. Datenmigration von 1.840 Artikeln,
+Weinbergslagen als eigene Eigenschaft</td>
+            <td data-col="price num">7.800,00&nbsp;€</td>
+            <td data-col="qty num">1</td>
+            <td data-col="tax num">19%</td>
+            <td data-col="total num">7.800,00&nbsp;€</td>
+          </tr>
+          <tr>
+            <td data-col="item">Fotoproduktion</td>
+            <td data-col="desc">Freisteller und Stimmungsbilder, zwei Drehtage im Weingut</td>
+            <td data-col="price num">1.150,00&nbsp;€</td>
+            <td data-col="qty num">2</td>
+            <td data-col="tax num">19%</td>
+            <td data-col="total num">2.300,00&nbsp;€</td>
+          </tr>
+          <tr>
+            <td data-col="item">Hosting&shy;paket&shy;Business</td>
+            <td data-col="desc">Managed Hosting 12 Monate (11/2026–10/2027), Staging-Umgebung, tägliche Backups mit 30 Tagen Aufbewahrung, https://staging.weinhaus-ostermann.example/admin</td>
+            <td data-col="price num">89,00&nbsp;€</td>
+            <td data-col="qty num">12</td>
+            <td data-col="tax num">19%</td>
+            <td data-col="total num">1.068,00&nbsp;€</td>
+          </tr>
+          <tr>
+            <td data-col="item">Schulung</td>
+            <td data-col="desc">Redaktionsschulung (remote), 2 × 3 Stunden</td>
+            <td data-col="price num">135,00&nbsp;€</td>
+            <td data-col="qty num">6</td>
+            <td data-col="tax num">19%</td>
+            <td data-col="total num">810,00&nbsp;€</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="closing">
+        <div>
+          <h4 class="note-head">Hinweise</h4>
+          <div class="note-body">Vielen Dank für den Auftrag!
+Die Anzahlung vom 15.09.2026 über 2.000,00 € ist bereits verrechnet.</div>
+          <h4 class="note-head">Bedingungen</h4>
+          <div class="note-body">Zahlbar innerhalb von 30 Tagen ohne Abzug. Bei Zahlung per SEPA-Lastschrift wird der Betrag frühestens am Fälligkeitstag eingezogen.</div>
+        </div>
+        <div class="sums">
+          <div data-sum="discount"></div>
+          <div data-sum="net"><span>Zwischensumme</span><span>11.978,00&nbsp;€</span></div>
+          <div data-sum="vat"><span>USt. 19%</span><span>2.275,82&nbsp;€</span></div>
+          <div data-sum="paid"><span>Bezahlt</span><span>−2.000,00&nbsp;€</span></div>
+          <div data-sum="due"><span>Offener Betrag</span><span>12.253,82&nbsp;€</span></div>
+        </div>
+      </div>
+    </td></tr>
+  </tbody>
+  <tfoot><tr><td><div class="sheet-gap">&nbsp;</div></td></tr></tfoot>
+</table>
+
+<footer class="foot-band">
+  <div><h4>Bankverbindung</h4>Hamburger Sparkasse<br>IBAN DE12 2005 0550 1234 5678 90<br>BIC HASPDEHHXXX</div>
+  <div><h4>Kontakt</h4>Jonas Brekke<br>+49 40 66969 198<br>jonas@fjord-digital.example</div>
+  <div><h4>Registergericht</h4>Amtsgericht Hamburg HRB 158 220<br>Geschäftsführer: Jonas Brekke, Tilda Haugen</div>
+</footer>
+</body>
+</html>

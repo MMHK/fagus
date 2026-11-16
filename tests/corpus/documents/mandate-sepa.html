@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>SEPA-Lastschriftmandat</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 15mm 18mm; }
+html { font: 9.5pt/1.4 Inter, sans-serif; color: #111; }
+body { margin: 0; }
+h1 { font-size: 14pt; margin: 0; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5pt solid #111; padding-bottom: 2mm; margin-bottom: 4mm; }
+.head .creditor { text-align: right; font-size: 8pt; }
+fieldset { border: 0.75pt solid #777; border-radius: 1.5mm; margin: 0 0 4mm; padding: 2mm 4mm 3mm; }
+legend { font-weight: 700; padding: 0 1.5mm; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; }
+.row { display: flex; gap: 4mm; margin-top: 2mm; }
+.row label { display: block; font-size: 7.5pt; color: #444; }
+.field { flex: 1; }
+.field.small { flex: 0 0 25mm; }
+input[type=text], input[type=date], select, textarea { font: inherit; width: 100%; box-sizing: border-box; }
+input[type=text], input[type=date] { border: 0; border-bottom: 0.75pt solid #111; padding: 1mm 0.5mm 0.5mm; background: #f6f8fb; }
+textarea { border: 0.75pt solid #999; height: 14mm; resize: none; }
+select { padding: 0.5mm; }
+.iban { display: flex; gap: 1.2mm; margin-top: 1mm; }
+.iban input { width: 5.2mm; height: 6.5mm; padding: 0; text-align: center; border: 0.75pt solid #111; background: #fff; font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; }
+.iban span.gap { width: 1.5mm; }
+.choice { display: flex; gap: 8mm; margin-top: 1.5mm; }
+.choice label { display: inline-flex; align-items: center; gap: 1.5mm; font-size: 9pt; color: #111; }
+input[type=checkbox], input[type=radio] { margin: 0; width: 3.6mm; height: 3.6mm; accent-color: #1d4ed8; }
+.text { font-size: 8pt; text-align: justify; hyphens: auto; margin: 0 0 3mm; }
+.sign { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10mm; margin-top: 12mm; }
+.sign div { border-top: 0.75pt solid #111; padding-top: 1mm; font-size: 7.5pt; color: #444; }
+.ref { font-family: Inter, sans-serif; letter-spacing: .06em; }
+.hint { margin-top: 6mm; font-size: 7pt; color: #555; border-left: 1mm solid #1d4ed8; padding-left: 2mm; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>SEPA-Lastschriftmandat</h1>
+    <div>für wiederkehrende Zahlungen</div>
+  </div>
+  <div class="creditor">
+    <b>Turnverein Eintracht Lindenau e.&nbsp;V.</b><br>
+    Am Sportpark 2 · 04177 Leipzig<br>
+    Gläubiger-ID <span class="ref">DE98ZZZ09999999999</span>
+  </div>
+</div>
+
+<p class="text">Mandatsreferenz: <b class="ref">TVE-2026-00417</b> (wird separat mitgeteilt, falls leer).
+Ich ermächtige den Turnverein Eintracht Lindenau e.&nbsp;V., Zahlungen von meinem Konto mittels
+Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die vom Verein auf mein Konto
+gezogenen Lastschriften einzulösen. Hinweis: Ich kann innerhalb von acht Wochen, beginnend mit dem
+Belastungsdatum, die Erstattung des belasteten Betrages verlangen. Es gelten dabei die mit meinem
+Kreditinstitut vereinbarten Bedingungen.</p>
+
+<form action="#" method="post">
+<fieldset>
+  <legend>Kontoinhaber</legend>
+  <div class="row">
+    <div class="field"><label for="vorname">Vorname</label><input type="text" id="vorname" value="Johanna"></div>
+    <div class="field"><label for="nachname">Nachname</label><input type="text" id="nachname" value="Weißenfels"></div>
+  </div>
+  <div class="row">
+    <div class="field"><label for="strasse">Straße und Hausnummer</label><input type="text" id="strasse" value="Merseburger Straße 118"></div>
+    <div class="field small"><label for="plz">PLZ</label><input type="text" id="plz" value="04177"></div>
+    <div class="field"><label for="ort">Ort</label><input type="text" id="ort" value="Leipzig"></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Bankverbindung</legend>
+  <label>IBAN</label>
+  <div class="iban">
+    <input type="text" maxlength="1" value="D"><input type="text" maxlength="1" value="E"><span class="gap"></span>
+    <input type="text" maxlength="1" value="8"><input type="text" maxlength="1" value="9"><span class="gap"></span>
+    <input type="text" maxlength="1" value="3"><input type="text" maxlength="1" value="7"><input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="4"><span class="gap"></span>
+    <input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="4"><input type="text" maxlength="1" value="4"><span class="gap"></span>
+    <input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="5"><input type="text" maxlength="1" value="3"><input type="text" maxlength="1" value="2"><span class="gap"></span>
+    <input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="1"><input type="text" maxlength="1" value="3"><input type="text" maxlength="1" value="0"><span class="gap"></span>
+    <input type="text" maxlength="1" value="0"><input type="text" maxlength="1" value="0">
+  </div>
+  <div class="row">
+    <div class="field"><label for="bic">BIC</label><input type="text" id="bic" value="COBADEFFXXX"></div>
+    <div class="field"><label for="bank">Kreditinstitut</label><input type="text" id="bank" value="Commerzbank Leipzig"></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Beitrag</legend>
+  <div class="row">
+    <div class="field"><label for="abteilung">Abteilung</label>
+      <select id="abteilung"><option>Leichtathletik</option><option selected>Volleyball</option><option>Turnen</option></select></div>
+    <div class="field small"><label for="betrag">Betrag (€)</label><input type="text" id="betrag" value="18,50"></div>
+  </div>
+  <label style="margin-top: 2mm; display: block; font-size: 7.5pt; color: #444">Zahlungsweise</label>
+  <div class="choice">
+    <label><input type="radio" name="weise"> monatlich</label>
+    <label><input type="radio" name="weise" checked> vierteljährlich</label>
+    <label><input type="radio" name="weise"> jährlich</label>
+  </div>
+  <div class="choice">
+    <label><input type="checkbox" checked> Familienmitgliedschaft</label>
+    <label><input type="checkbox"> Ermäßigung (Nachweis liegt bei)</label>
+  </div>
+  <div class="row">
+    <div class="field"><label for="bemerkung">Bemerkung</label><textarea id="bemerkung">Beitrag bitte erst ab Januar 2027 einziehen.</textarea></div>
+  </div>
+</fieldset>
+</form>
+
+<div class="sign">
+  <div>Ort, Datum</div>
+  <div>Unterschrift Kontoinhaber/in</div>
+</div>
+
+<p class="hint">Bitte senden Sie das unterschriebene Mandat an die Geschäftsstelle. Eine Kopie
+per E-Mail genügt nicht, da das Mandat im Original vorliegen muss.</p>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Rechnung RE-2026-0042</title>
+<style>
+  /* Quittio's default template in standard CSS: running elements instead of htmlpageheader,
+     margin boxes instead of {PAGENO}/{nbpg}, positions relative to the page area. */
+  @font-face { font-family: Geist; src: url(fonts/Geist-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-Medium.ttf); font-weight: 500; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-SemiBold.ttf); font-weight: 600; }
+  @font-face { font-family: Geist; src: url(fonts/Geist-Bold.ttf); font-weight: 700; }
+
+  :root { --primary: #2741d9; --text: #15171c; --muted: #5f6470; --rule: #e6e8ec; }
+
+  /* Following pages start below their header; the first page with the letterhead. */
+  @page {
+    size: A4;
+    margin: 40mm 19mm 37mm 20mm;
+    @top-center { content: element(running); vertical-align: top; padding-top: 14.6mm; }
+    @bottom-center { content: element(footer); vertical-align: bottom; padding-bottom: 5.5mm; }
+  }
+  @page :first {
+    margin-top: 15mm;
+    @top-center { content: none; }
+  }
+
+  body { margin: 0; font-family: Geist, sans-serif; font-size: 9.75pt; color: var(--text); line-height: 1.45; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { vertical-align: top; padding: 0; line-height: 1.5; }
+  .muted { color: var(--muted); }
+  .right { text-align: right; }
+  .company { font-size: 16.5pt; font-weight: 700; color: var(--primary); line-height: 1.2; }
+
+  /* Letterhead down to the address field (DIN 5008 form B: 45 mm from the top). */
+  .letterhead { height: 30mm; }
+
+  /* The address field sits on the page, whatever the letterhead height: 45 mm from the top edge,
+     20 mm from the left edge, so 30 mm below and 0 mm right of the page area of the first page. */
+  .address { position: absolute; top: 30mm; left: 0; width: 85mm; height: 45mm; }
+  .sender-line { font-size: 9pt; color: var(--muted); border-bottom: 0.26mm solid #cdd0d6; padding-bottom: 1.2mm; line-height: 1.3; }
+  .address-lines { font-size: 10.5pt; line-height: 1.5; padding-top: 2.2mm; }
+
+  /* Fold and punch marks at the left edge of the sheet. */
+  .mark { position: absolute; left: -20mm; width: 4.2mm; border-top: 0.26mm solid #cdd0d6; }
+
+  .head { display: flex; }
+  .head .address-space { width: 108.6mm; height: 41.8mm; flex: none; }
+  .head .meta { flex: 1; }
+  .meta td { font-size: 9.4pt; padding-bottom: 0.75mm; line-height: 1.5; }
+  .meta td.label { color: var(--muted); padding-right: 4mm; }
+  .meta td.value { text-align: right; }
+
+  h1 { font-size: 13.5pt; color: var(--primary); font-weight: 600; margin: 0 0 5mm 0; line-height: 1.5; }
+
+  .lines th { font-size: 9pt; color: var(--muted); font-weight: 500; text-align: left; padding: 0 0 2mm 0; border-bottom: 0.26mm solid var(--text); }
+  .lines td { padding: 2.2mm 0 2.6mm 0; border-bottom: 0.26mm solid var(--rule); }
+  .lines .num { text-align: right; white-space: nowrap; }
+  .lines td.position, .lines td.quiet { color: var(--muted); }
+  .lines .name { font-weight: 500; }
+  .description { color: var(--muted); font-size: 9pt; }
+
+  .totals { width: 74.2mm; margin-left: auto; margin-top: 3.1mm; break-inside: avoid; }
+  .totals td { padding: 0.47mm 0; }
+  .totals tr.gap td { height: 2.2mm; padding: 0; line-height: 1; }
+  .totals td.label { color: var(--muted); }
+  .totals .grand td { border-top: 0.26mm solid var(--text); padding-top: 3.1mm; vertical-align: bottom; line-height: 1.2; }
+  .totals td.grand-label { font-size: 10.5pt; font-weight: 600; }
+  .totals .grand td.amount { font-size: 12.75pt; font-weight: 700; color: var(--primary); }
+
+  .section { margin-top: 8.3mm; break-inside: avoid; }
+  .section-title { font-size: 9pt; color: var(--primary); font-weight: 600; }
+  .payment td { font-size: 9.4pt; }
+  .payment td.terms { width: 77mm; padding-right: 6mm; }
+  .payment td.qr { width: 17mm; text-align: center; padding-left: 4mm; }
+  .payment td.section-title { font-size: 9pt; padding-bottom: 0.7mm; }
+  .qr-caption { font-size: 7.9pt; color: var(--muted); text-align: center; }
+
+  /* Running header of the following pages and the footer of every page. */
+  .running { position: running(running); display: flex; justify-content: space-between; }
+  .running-title { font-size: 11.25pt; font-weight: 700; color: var(--primary); }
+  .running-meta { font-size: 9pt; color: var(--muted); }
+  .footer { position: running(footer); }
+  .footer-columns { display: flex; border-top: 0.26mm solid var(--rule); }
+  .footer-columns div { width: 43.8mm; font-size: 7.9pt; color: var(--muted); padding: 3.4mm 3mm 0 0; line-height: 1.5; box-sizing: border-box; }
+  .footer-columns div:last-child { width: 39.6mm; }
+  .page-number { font-size: 7.9pt; color: var(--muted); text-align: center; padding-top: 6.9mm; }
+  .page-number::after { content: "Seite " counter(page) " von " counter(pages); }
+</style>
+</head>
+<body>
+
+<div class="running">
+  <div class="company">Muster GmbH</div>
+  <div class="right">
+    <div class="running-title">Rechnung RE-2026-0042</div>
+    <div class="running-meta">Kunde AG · Kundennummer K-10001</div>
+    <div class="running-meta">Rechnungsdatum 03.10.2026</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-columns">
+    <div>Muster GmbH<br>Hauptstraße 1<br>12345 Musterstadt</div>
+    <div>+49 123 456789<br>rechnung@muster.example</div>
+    <div>HRB 12345<br>Amtsgericht Musterstadt<br>Geschäftsführer: Max Muster</div>
+    <div>USt-IdNr. DE123456789<br>St.-Nr. 12/345/67890</div>
+  </div>
+  <div class="page-number"></div>
+</div>
+
+<div class="mark" style="top: 90mm;"></div>
+<div class="mark" style="top: 133.5mm; width: 6.3mm;"></div>
+<div class="mark" style="top: 195mm;"></div>
+
+<div class="address">
+  <div class="sender-line">Muster GmbH · Hauptstraße 1 · 12345 Musterstadt</div>
+  <div class="address-lines">Kunde AG<br>Bahnhofstraße 5<br>54321 Beispielstadt</div>
+</div>
+
+<div class="letterhead"><div class="company">Muster GmbH</div></div>
+
+<div class="head">
+  <div class="address-space"></div>
+  <table class="meta">
+    <tr><td class="label">Rechnungsnummer</td><td class="value">RE-2026-0042</td></tr>
+    <tr><td class="label">Rechnungsdatum</td><td class="value">03.10.2026</td></tr>
+    <tr><td class="label">Leistungsdatum</td><td class="value">30.09.2026</td></tr>
+    <tr><td class="label">Kundennummer</td><td class="value">K-10001</td></tr>
+    <tr><td class="label">Ihre Referenz</td><td class="value">PO-4711</td></tr>
+    <tr><td class="label">Ihre USt-IdNr.</td><td class="value">DE987654321</td></tr>
+  </table>
+</div>
+
+<h1>Rechnung</h1>
+
+<table class="lines">
+  <thead><tr>
+    <th style="width: 11.1mm;">Pos.</th>
+    <th style="width: 79.9mm;">Beschreibung</th>
+    <th class="num" style="width: 24mm;">Menge</th>
+    <th class="num" style="width: 27mm;">Einzelpreis</th>
+    <th class="num" style="width: 29mm;">Betrag</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td class="position">1</td>
+      <td><div class="name">Webentwicklung</div><div class="description">Umsetzung Kundenportal, Sprint 3</div></td>
+      <td class="num quiet">24 Std.</td>
+      <td class="num quiet">95,00 €</td>
+      <td class="num">2.280,00 €</td>
+    </tr>
+    <tr>
+      <td class="position">2</td>
+      <td><div class="name">Hosting Oktober</div><div class="description">Leistungszeitraum 01.10.–31.10.2026</div></td>
+      <td class="num quiet">1 Monat</td>
+      <td class="num quiet">29,00 €</td>
+      <td class="num">29,00 €</td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td class="label">Nettobetrag</td><td class="right">2.309,00 €</td></tr>
+  <tr><td class="label">USt. 19 %</td><td class="right">438,71 €</td></tr>
+  <tr class="gap"><td></td><td></td></tr>
+  <tr class="grand"><td class="grand-label">Gesamtbetrag</td><td class="right amount">2.747,71 €</td></tr>
+</table>
+
+<div class="section">
+  <table class="payment"><tr>
+    <td class="terms">
+      <table><tr><td class="section-title">Zahlung</td></tr></table>
+      Bitte bis zum 17.10.2026 überweisen.<br>
+      <span class="muted">2 % Skonto bis 10.10.2026: 2.692,76 €</span>
+    </td>
+    <td>
+      <table><tr><td class="section-title">Bankverbindung</td></tr></table>
+      DE02 1203 0000 0000 2020 51<br>
+      <span class="muted">BYLADEM1001 · Zweck: RE-2026-0042</span>
+    </td>
+    <td class="qr"><img src="girocode.png" style="width: 17mm; height: 17mm;"><div class="qr-caption">GiroCode</div></td>
+  </tr></table>
+</div>
+
+</body>
+</html>

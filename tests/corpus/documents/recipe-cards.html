@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Rezeptkarten Herbst</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 10mm; }
+html { font: 8.5pt/1.4 Inter, sans-serif; color: #2d2a26; }
+body { margin: 0; counter-reset: recipe; }
+.card { box-sizing: border-box; height: 135mm; margin-bottom: 7mm; border: .75pt solid #d8cfc4; border-radius: 3mm; padding: 6mm 7mm; position: relative;
+  break-inside: avoid; display: grid; grid-template-columns: 58mm 1fr; grid-template-rows: auto 1fr auto; gap: 3mm 7mm; counter-increment: recipe; counter-reset: step; }
+.card:nth-of-type(2n) { margin-bottom: 0; }
+.card::after { content: "Karte " counter(recipe); position: absolute; right: 7mm; bottom: 3mm; font-size: 6.5pt; color: #a59a8d; letter-spacing: .1em; text-transform: uppercase; }
+.card header { grid-column: 1 / -1; display: flex; align-items: flex-end; gap: 5mm; border-bottom: 1.2pt solid var(--tone); padding-bottom: 2.5mm; }
+.card header h2 { margin: 0; font-size: 15pt; line-height: 1.15; flex: 1; }
+.card header .kind { font-size: 7pt; text-transform: uppercase; letter-spacing: .18em; color: var(--tone); display: block; margin-bottom: 1mm; }
+.meta { display: flex; gap: 4mm; font-size: 7.5pt; color: #6f655b; white-space: nowrap; }
+.meta span b { display: block; color: #2d2a26; font-size: 9pt; }
+.side { grid-row: 2 / 4; }
+.side img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 2mm; display: block; margin-bottom: 3mm; }
+.side h3, .steps h3 { margin: 0 0 1.5mm; font-size: 8pt; text-transform: uppercase; letter-spacing: .12em; color: var(--tone); }
+.ingredients { list-style: none; margin: 0; padding: 0; }
+.ingredients li { display: grid; grid-template-columns: 15mm 1fr; padding: .6mm 0; border-bottom: .5pt dotted #d8cfc4; }
+.ingredients li b { font-variant-numeric: tabular-nums; text-align: right; padding-right: 2mm; font-weight: 700; }
+.ingredients li.group { display: block; border: 0; font-style: italic; color: #6f655b; padding-top: 1.5mm; }
+.steps ol { list-style: none; margin: 0; padding: 0; }
+.steps li { counter-increment: step; position: relative; padding-left: 7mm; margin-bottom: 2mm; text-align: justify; hyphens: auto; }
+.steps li::before { content: counter(step); position: absolute; left: 0; top: -.2mm; width: 4.6mm; height: 4.6mm; border-radius: 50%; background: var(--tone); color: #fff; font-weight: 700; font-size: 7pt; text-align: center; line-height: 4.6mm; }
+.tip { grid-column: 2; background: color-mix(in srgb, var(--tone) 12%, white); border-left: 1.5mm solid var(--tone); padding: 2mm 3mm; border-radius: 0 1.5mm 1.5mm 0; font-size: 7.8pt; }
+.tip::before { content: "Tipp: "; font-weight: 700; }
+.diet { display: inline-flex; gap: 1mm; margin-top: 2mm; }
+.diet span { font-size: 6.5pt; font-weight: 700; border: .75pt solid var(--tone); color: var(--tone); border-radius: 99px; padding: .2mm 1.6mm; }
+</style></head><body>
+
+<article class="card" style="--tone: #b45309">
+  <header><h2><span class="kind">Suppe</span>Kürbissuppe mit Ingwer und Kokos</h2>
+    <div class="meta"><span>Zeit<b>40 min</b></span><span>Portionen<b>4</b></span><span>kcal<b>310</b></span></div></header>
+  <div class="side"><img src="../images/photo.jpg" alt="">
+    <h3>Zutaten</h3>
+    <ul class="ingredients">
+      <li><b>1 kg</b>Hokkaido-Kürbis</li><li><b>2</b>Zwiebeln</li><li><b>30 g</b>Ingwer, frisch</li><li><b>800 ml</b>Gemüsebrühe</li><li><b>400 ml</b>Kokosmilch</li><li><b>2 EL</b>Kürbiskerne</li><li><b>1 TL</b>Currypulver</li><li><b></b>Salz, Pfeffer, Limette</li>
+    </ul>
+    <div class="diet"><span>vegan</span><span>glutenfrei</span></div>
+  </div>
+  <div class="steps"><h3>Zubereitung</h3><ol>
+    <li>Den Kürbis waschen, halbieren, die Kerne mit einem Löffel herauskratzen und das Fruchtfleisch samt Schale in etwa zwei Zentimeter große Würfel schneiden.</li>
+    <li>Zwiebeln und Ingwer schälen und fein würfeln. In einem großen Topf in etwas Öl glasig dünsten, das Currypulver kurz mitrösten.</li>
+    <li>Kürbiswürfel zugeben, mit der Brühe ablöschen und zugedeckt etwa zwanzig Minuten köcheln lassen, bis der Kürbis weich ist.</li>
+    <li>Die Kokosmilch einrühren, alles fein pürieren und mit Salz, Pfeffer und Limettensaft abschmecken.</li>
+    <li>Die Kürbiskerne ohne Fett in einer Pfanne rösten und über die Suppe streuen.</li>
+  </ol></div>
+  <p class="tip">Ein Klecks Chiliöl und ein paar Korianderblätter machen die Suppe zu einem Gericht für Gäste.</p>
+</article>
+
+<article class="card" style="--tone: #15803d">
+  <header><h2><span class="kind">Hauptgericht</span>Gnocchi mit Salbeibutter und Rosenkohl</h2>
+    <div class="meta"><span>Zeit<b>55 min</b></span><span>Portionen<b>3</b></span><span>kcal<b>540</b></span></div></header>
+  <div class="side"><img src="../images/photo.jpg" alt="" style="object-position: 0 100%">
+    <h3>Zutaten</h3>
+    <ul class="ingredients">
+      <li class="group">Für die Gnocchi</li>
+      <li><b>800 g</b>mehligkochende Kartoffeln</li><li><b>200 g</b>Mehl (Type 405)</li><li><b>1</b>Ei</li><li><b>1 Prise</b>Muskat</li>
+      <li class="group">Außerdem</li>
+      <li><b>300 g</b>Rosenkohl</li><li><b>80 g</b>Butter</li><li><b>12</b>Salbeiblätter</li><li><b>40 g</b>Parmesan</li>
+    </ul>
+    <div class="diet"><span>vegetarisch</span></div>
+  </div>
+  <div class="steps"><h3>Zubereitung</h3><ol>
+    <li>Die Kartoffeln in der Schale weich kochen, pellen und noch heiß durch die Presse drücken. Etwas ausdampfen lassen.</li>
+    <li>Mehl, Ei, Salz und Muskat zugeben und rasch zu einem glatten Teig verkneten. Nicht zu lange kneten, sonst wird der Teig klebrig.</li>
+    <li>Den Teig zu daumendicken Rollen formen, in zwei Zentimeter lange Stücke schneiden und mit einer Gabel ein Muster eindrücken.</li>
+    <li>Die Gnocchi portionsweise in siedendem Salzwasser garen, bis sie an die Oberfläche steigen, und mit einer Schaumkelle herausheben.</li>
+    <li>Den Rosenkohl halbieren und in der Hälfte der Butter goldbraun braten. Die übrige Butter mit dem Salbei aufschäumen, die Gnocchi darin schwenken.</li>
+    <li>Alles zusammen anrichten und mit frisch gehobeltem Parmesan bestreuen.</li>
+  </ol></div>
+  <p class="tip">Die Gnocchi lassen sich roh auf einem bemehlten Blech einfrieren und direkt aus dem Gefrierfach garen.</p>
+</article>
+
+<article class="card" style="--tone: #7c3aed">
+  <header><h2><span class="kind">Dessert</span>Zwetschgen-Crumble</h2>
+    <div class="meta"><span>Zeit<b>45 min</b></span><span>Portionen<b>6</b></span><span>kcal<b>380</b></span></div></header>
+  <div class="side"><img src="../images/photo.jpg" alt="" style="object-fit: contain; background: #f5f0ea">
+    <h3>Zutaten</h3>
+    <ul class="ingredients">
+      <li><b>1 kg</b>Zwetschgen</li><li><b>2 EL</b>Zucker</li><li><b>1 TL</b>Zimt</li><li><b>150 g</b>Mehl</li><li><b>100 g</b>kalte Butter</li><li><b>80 g</b>brauner Zucker</li><li><b>50 g</b>Haferflocken</li>
+    </ul>
+  </div>
+  <div class="steps"><h3>Zubereitung</h3><ol>
+    <li>Den Ofen auf 190 °C Ober- und Unterhitze vorheizen. Zwetschgen entsteinen, vierteln und mit Zucker und Zimt in eine Auflaufform geben.</li>
+    <li>Mehl, Butter, braunen Zucker und Haferflocken mit den Fingerspitzen zu groben Streuseln verreiben.</li>
+    <li>Die Streusel über die Früchte verteilen und etwa 30 Minuten goldbraun backen.</li>
+  </ol></div>
+  <p class="tip">Lauwarm mit Vanilleeis oder geschlagener Sahne servieren.</p>
+</article>
+
+<article class="card" style="--tone: #0e7490">
+  <header><h2><span class="kind">Brot</span>Dinkel-Walnuss-Brot ohne Kneten, über Nacht gegangen</h2>
+    <div class="meta"><span>Zeit<b>14 h</b></span><span>Stück<b>1</b></span><span>kcal<b>2.150</b></span></div></header>
+  <div class="side"><img src="../images/photo.jpg" alt="" style="object-position: 80% 20%">
+    <h3>Zutaten</h3>
+    <ul class="ingredients">
+      <li><b>500 g</b>Dinkelmehl (Type 630)</li><li><b>380 ml</b>lauwarmes Wasser</li><li><b>3 g</b>frische Hefe</li><li><b>10 g</b>Salz</li><li><b>100 g</b>Walnusskerne</li><li><b>1 EL</b>Honig</li>
+    </ul>
+    <div class="diet"><span>vegetarisch</span><span>laktosefrei</span></div>
+  </div>
+  <div class="steps"><h3>Zubereitung</h3><ol>
+    <li>Hefe und Honig im Wasser auflösen. Mehl und Salz in einer Schüssel mischen, das Hefewasser zugießen und mit einem Löffel verrühren, bis kein trockenes Mehl mehr zu sehen ist.</li>
+    <li>Die grob gehackten Walnüsse unterheben. Die Schüssel abdecken und den Teig 12 bis 14 Stunden bei Raumtemperatur gehen lassen.</li>
+    <li>Den Teig auf eine bemehlte Arbeitsfläche geben, von allen Seiten zur Mitte falten und mit dem Schluss nach unten in ein bemehltes Gärkörbchen legen. Eine Stunde gehen lassen.</li>
+    <li>Einen gusseisernen Topf mit Deckel im Ofen auf 250 °C vorheizen. Das Brot hineinstürzen, einschneiden und zugedeckt 30 Minuten backen.</li>
+    <li>Den Deckel abnehmen, die Temperatur auf 220 °C senken und das Brot weitere 15 bis 20 Minuten backen, bis es beim Klopfen auf den Boden hohl klingt.</li>
+    <li>Auf einem Gitter vollständig auskühlen lassen, bevor es angeschnitten wird.</li>
+  </ol></div>
+  <p class="tip">Statt Walnüssen schmecken auch geröstete Sonnenblumenkerne und eine Handvoll getrockneter Cranberrys.</p>
+</article>
+
+<article class="card" style="--tone: #be123c">
+  <header><h2><span class="kind">Getränk</span>Heißer Apfel-Punsch</h2>
+    <div class="meta"><span>Zeit<b>15 min</b></span><span>Gläser<b>6</b></span><span>kcal<b>140</b></span></div></header>
+  <div class="side"><img src="../images/photo.jpg" alt="">
+    <h3>Zutaten</h3>
+    <ul class="ingredients">
+      <li><b>1 l</b>naturtrüber Apfelsaft</li><li><b>250 ml</b>Früchtetee</li><li><b>1</b>Orange, unbehandelt</li><li><b>2</b>Zimtstangen</li><li><b>4</b>Nelken</li><li><b>2</b>Sternanis</li>
+    </ul>
+  </div>
+  <div class="steps"><h3>Zubereitung</h3><ol>
+    <li>Apfelsaft und Tee mit den Gewürzen in einem Topf erhitzen, aber nicht kochen lassen.</li>
+    <li>Die Orange in Scheiben schneiden, zugeben und zehn Minuten ziehen lassen. In vorgewärmte Gläser füllen.</li>
+  </ol></div>
+  <p class="tip">Für Erwachsene mit einem Schuss braunem Rum verfeinern.</p>
+</article>
+</body></html>

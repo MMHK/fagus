@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tax Invoice / कर बीजक</title>
+<style>
+/* latin */
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(../../webfonts/Inter-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+/* latin-ext: the rupee sign */
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(../../webfonts/Inter-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url(../../webfonts/Inter-700-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url(../../webfonts/Inter-700-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@page { size: A4; margin: 15mm 16mm 18mm;
+  @bottom-left { content: "GSTIN 27AAACR5055K1Z5 · CIN U72900MH2019PTC123456"; font: 7.5pt Inter, sans-serif; color: #64748b }
+  @bottom-right { content: "पृष्ठ " counter(page) " / " counter(pages); font: 7.5pt Inter, sans-serif; color: #64748b } }
+body { margin: 0; font: 9.5pt/1.5 Inter, sans-serif; color: #0f172a }
+.top { display: grid; grid-template-columns: 1fr auto; gap: 8mm; align-items: end; padding-bottom: 4mm; border-bottom: 2pt solid #ea580c }
+.co { font-size: 17pt; font-weight: 700; color: #9a3412; line-height: 1.2 }
+.co span { display: block; font-size: 12pt; font-weight: 400; color: #0f172a }
+.title { text-align: right }
+.title h1 { margin: 0; font-size: 15pt; letter-spacing: 0.04em; text-transform: uppercase }
+.title div { font-size: 12pt; color: #475569 }
+.meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm 6mm; margin: 5mm 0; font-size: 8.5pt }
+.meta b { display: block; color: #64748b; font-weight: 400 }
+.parties { display: flex; gap: 6mm; margin-bottom: 5mm }
+.parties > div { flex: 1; background: #fff7ed; border-radius: 2mm; padding: 3mm 4mm }
+.parties h2 { margin: 0 0 1mm; font-size: 8pt; text-transform: uppercase; color: #9a3412; letter-spacing: 0.06em }
+.parties p { margin: 0 }
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt }
+th { background: #9a3412; color: #fff; text-align: left; padding: 1.8mm 2mm; font-weight: 700; vertical-align: bottom }
+th small { display: block; font-weight: 400; opacity: 0.85 }
+td { padding: 1.8mm 2mm; border-bottom: 0.5pt solid #fed7aa; vertical-align: top }
+.r { text-align: right; font-feature-settings: "tnum" }
+td small { display: block; color: #64748b }
+.sum { margin-left: auto; width: 46%; margin-top: 4mm; border-collapse: collapse }
+.sum td { border: 0; padding: 1mm 2mm }
+.sum tr.total td { border-top: 1pt solid #0f172a; font-weight: 700; font-size: 11pt; padding-top: 2mm }
+.words { margin: 5mm 0 3mm; padding: 2.5mm 4mm; border-left: 3pt solid #ea580c; background: #f8fafc }
+.words p { margin: 0 }
+.foot { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8mm; margin-top: 6mm; font-size: 8pt }
+.foot h3 { font-size: 8.5pt; margin: 0 0 1mm }
+.foot ol { margin: 0; padding-left: 4.5mm }
+.sig { text-align: right; padding-top: 14mm; border-bottom: 0.5pt solid #94a3b8 }
+.sig + p { text-align: right; margin: 1mm 0 0 }
+</style></head>
+<body>
+<div class="top">
+  <div class="co">Rangoli Textiles Pvt. Ltd.<span lang="hi">रंगोली टेक्सटाइल्स प्राइवेट लिमिटेड</span></div>
+  <div class="title"><h1>Tax Invoice</h1><div lang="hi">कर बीजक</div></div>
+</div>
+<div class="meta">
+  <div><b>Invoice No. / बीजक संख्या</b>RT/2026-27/0912</div>
+  <div><b>Date / दिनांक</b>07-11-2026</div>
+  <div><b>Place of supply / आपूर्ति का स्थान</b>Maharashtra (27)</div>
+  <div><b>Due date / देय तिथि</b>07-12-2026</div>
+</div>
+<div class="parties">
+  <div><h2>Supplier / आपूर्तिकर्ता</h2><p>Rangoli Textiles Pvt. Ltd.<br>Plot 14, MIDC Bhiwandi<br>ठाणे, महाराष्ट्र 421302<br>GSTIN 27AAACR5055K1Z5</p></div>
+  <div><h2>Recipient / प्राप्तकर्ता</h2><p>श्री अरविंद कुमार शर्मा<br>Sharma Garments &amp; Co.<br>सदर बाज़ार, नई दिल्ली 110006<br>GSTIN 07AAFCS1234Q1Z8</p></div>
+</div>
+<table>
+  <thead><tr><th>#</th><th>Description<small>विवरण</small></th><th>HSN</th><th class="r">Qty<small>मात्रा</small></th><th class="r">Rate (₹)<small>दर</small></th><th class="r">Taxable value (₹)<small>कर योग्य मूल्य</small></th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Cotton saree, hand block print<small>सूती साड़ी, हाथ की छपाई</small></td><td>5208</td><td class="r">120</td><td class="r">1,450.00</td><td class="r">1,74,000.00</td></tr>
+    <tr><td>2</td><td>Silk dupatta, zari border<small>रेशमी दुपट्टा, ज़री किनारी</small></td><td>5007</td><td class="r">80</td><td class="r">2,275.00</td><td class="r">1,82,000.00</td></tr>
+    <tr><td>3</td><td>Kurta fabric, khadi (per metre)<small>कुर्ता कपड़ा, खादी (प्रति मीटर)</small></td><td>5208</td><td class="r">350</td><td class="r">310.00</td><td class="r">1,08,500.00</td></tr>
+    <tr><td>4</td><td>Packing &amp; forwarding<small>पैकिंग और अग्रेषण</small></td><td>9985</td><td class="r">1</td><td class="r">3,500.00</td><td class="r">3,500.00</td></tr>
+  </tbody>
+</table>
+<table class="sum">
+  <tr><td>Taxable value / कर योग्य मूल्य</td><td class="r">₹ 4,68,000.00</td></tr>
+  <tr><td>IGST 5% / एकीकृत जीएसटी</td><td class="r">₹ 23,400.00</td></tr>
+  <tr><td>Round off / पूर्णांकन</td><td class="r">₹ 0.00</td></tr>
+  <tr class="total"><td>Total / कुल राशि</td><td class="r">₹ 4,91,400.00</td></tr>
+</table>
+<div class="words">
+  <p><b>Amount in words:</b> Rupees Four Lakh Ninety-One Thousand Four Hundred only.</p>
+  <p lang="hi"><b>शब्दों में राशि:</b> चार लाख इक्यानवे हज़ार चार सौ रुपये मात्र।</p>
+</div>
+<div class="foot">
+  <div>
+    <h3>Terms / शर्तें</h3>
+    <ol>
+      <li>Payment within 30 days by NEFT/RTGS to HDFC Bank, A/c 50200012345678, IFSC HDFC0000123.</li>
+      <li lang="hi">निर्धारित तिथि के बाद भुगतान पर 18% वार्षिक ब्याज लगेगा।</li>
+      <li>Goods once sold will not be taken back. Subject to Bhiwandi jurisdiction.</li>
+      <li lang="hi">विवाद की स्थिति में भिवंडी न्यायालय का क्षेत्राधिकार मान्य होगा।</li>
+    </ol>
+  </div>
+  <div>
+    <h3>For Rangoli Textiles Pvt. Ltd.</h3>
+    <div class="sig"></div>
+    <p>Authorised signatory / अधिकृत हस्ताक्षरकर्ता</p>
+  </div>
+</div>
+</body></html>

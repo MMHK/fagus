@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>請求書 No. 2026-1107</title>
+<style>
+@page { size: A4; margin: 15mm 16mm 18mm; @bottom-center { content: counter(page) " / " counter(pages); font: 8pt "Hiragino Sans", sans-serif; color: #666; } }
+html { font: 9.5pt/1.7 "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif; color: #222; }
+body { margin: 0; }
+h1 { font-size: 22pt; font-weight: 600; letter-spacing: .6em; text-align: center; margin: 0 0 6mm; padding-bottom: 2mm; border-bottom: 2.5pt double #222; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8mm; }
+.to .name { font-size: 15pt; font-weight: 600; border-bottom: 1pt solid #222; padding: 0 12mm 0 0; display: inline-block; }
+.to .name small { font-size: 11pt; margin-left: 3mm; }
+.to p { margin: 3mm 0 0; }
+.meta { text-align: right; font-size: 9pt; }
+.from { position: relative; margin-top: 4mm; text-align: left; font-size: 9pt; line-height: 1.6; padding-right: 20mm; }
+.from b { font-size: 11pt; }
+.seal { position: absolute; right: 0; top: 2mm; width: 17mm; height: 17mm; border: 1.2pt solid #c8161d; border-radius: 50%; color: #c8161d;
+  writing-mode: vertical-rl; font: 600 8.5pt/1.1 "Hiragino Mincho ProN", serif; display: flex; align-items: center; justify-content: center; letter-spacing: .1em; }
+.amount { margin: 7mm 0 5mm; display: flex; align-items: baseline; gap: 6mm; border-bottom: 1.5pt solid #222; padding-bottom: 1mm; width: 105mm; }
+.amount span { font-size: 11pt; }
+.amount b { font-size: 20pt; font-weight: 600; margin-left: auto; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: .6pt solid #555; padding: 1.2mm 2mm; }
+thead th { background: #eef1f6; font-weight: 600; text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.c { text-align: center; }
+tr.blank td { height: 6mm; }
+.totals { width: 75mm; margin: 3mm 0 0 auto; }
+.totals th { background: #eef1f6; text-align: left; font-weight: 400; width: 40mm; }
+.totals tr.grand th, .totals tr.grand td { font-weight: 600; font-size: 11pt; }
+.box { margin-top: 6mm; border: .6pt solid #555; padding: 2mm 3mm; }
+.box h2 { font-size: 9.5pt; margin: 0 0 1mm; font-weight: 600; }
+.box p { margin: 0; text-align: justify; line-break: strict; }
+.note { font-size: 8pt; color: #555; margin-top: 3mm; }
+</style>
+</head>
+<body>
+<h1>請求書</h1>
+<div class="top">
+  <div class="to">
+    <div class="name">株式会社みなと商事<small>御中</small></div>
+    <p>〒231-0023 神奈川県横浜市中区山下町 12-3<br>経理部 ご担当 佐藤 花子 様</p>
+    <p>下記のとおりご請求申し上げます。</p>
+  </div>
+  <div class="meta">
+    請求日：2026年11月7日<br>
+    請求番号：INV-2026-1107<br>
+    登録番号：T1234567890123
+    <div class="from">
+      <b>合同会社さくらデザイン</b><br>
+      〒150-0001 東京都渋谷区神宮前 4-5-6<br>
+      TEL 03-0555-0123<br>
+      担当：山田 太郎
+      <div class="seal">さくら<br>之印</div>
+    </div>
+  </div>
+</div>
+
+<div class="amount"><span>ご請求金額（税込）</span><b>¥1,452,880</b></div>
+
+<table>
+  <thead><tr><th style="width:8mm">No.</th><th>品名・摘要</th><th style="width:16mm">数量</th><th style="width:12mm">単位</th><th style="width:24mm">単価</th><th style="width:28mm">金額</th></tr></thead>
+  <tbody>
+    <tr><td class="c">1</td><td>コーポレートサイト リニューアル デザイン一式（トップページ、下層ページ 12 テンプレート）</td><td class="n">1</td><td class="c">式</td><td class="n">680,000</td><td class="n">680,000</td></tr>
+    <tr><td class="c">2</td><td>コーディング（HTML/CSS、レスポンシブ対応）</td><td class="n">1</td><td class="c">式</td><td class="n">320,000</td><td class="n">320,000</td></tr>
+    <tr><td class="c">3</td><td>CMS 導入・初期設定（WordPress 6.x）</td><td class="n">1</td><td class="c">式</td><td class="n">150,000</td><td class="n">150,000</td></tr>
+    <tr><td class="c">4</td><td>撮影ディレクション（スタジオ撮影 半日）</td><td class="n">2</td><td class="c">回</td><td class="n">45,000</td><td class="n">90,000</td></tr>
+    <tr><td class="c">5</td><td>ロゴデータ修正※軽減税率対象外</td><td class="n">3</td><td class="c">点</td><td class="n">12,800</td><td class="n">38,400</td></tr>
+    <tr class="blank"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr class="blank"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><th>小計</th><td class="n">¥1,278,400</td></tr>
+  <tr><th>消費税（10%）</th><td class="n">¥127,840</td></tr>
+  <tr><th>立替金（交通費）</th><td class="n">¥46,640</td></tr>
+  <tr class="grand"><th>合計</th><td class="n">¥1,452,880</td></tr>
+</table>
+
+<div class="box">
+  <h2>お振込先</h2>
+  <p>みずほ銀行 渋谷支店（店番号 210）普通預金 1234567 口座名義：ド）サクラデザイン<br>
+  お支払期限：2026年12月31日（木）</p>
+</div>
+<div class="box">
+  <h2>備考</h2>
+  <p>誠に恐れ入りますが、振込手数料は貴社にてご負担くださいますようお願い申し上げます。本請求書は適格請求書（インボイス）の記載事項を満たしています。「立替金」は課税対象外のため、消費税の計算には含まれておりません。ご不明な点がございましたら、担当の山田までお気軽にお問い合わせください。今後とも何卒よろしくお願い申し上げます。</p>
+</div>
+<p class="note">※ 金額はすべて日本円で表示しています。端数は切り捨てとしています。</p>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Packing slip #1093</title>
+<style>
+@font-face { font-family: "Slip Sans"; font-weight: 400; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Slip Sans"; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+@font-face { font-family: "Slip Sans"; font-style: italic; src: url(../../fonts/Inter-Italic.ttf); }
+/* A packing slip as a hosted shop's order printer prints it: a header with the old -webkit-box
+   before flex, flex rows for addresses and items, square thumbnails and a dashed gift note */
+@page { size: 8.5in 11in; margin: 0.45in 0.55in; }
+body { margin: 0; color: #1f2124; font: 12.5px/1.45 "Slip Sans", system-ui, "Helvetica Neue", Arial, sans-serif; }
+p { margin: 0; }
+.slip { max-width: 7.4in; margin: 0 auto; }
+.caps { font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Header: the 2009 flexible box first, the standard one after it */
+.slip-head { display: -webkit-box; display: flex; -webkit-box-pack: justify; justify-content: space-between; -webkit-box-align: start; align-items: flex-start; }
+.store-name { -webkit-box-flex: 1; flex: 1 1 auto; font-size: 24px; line-height: 1.2; }
+.order-ref { width: 2.6in; color: #3a3d41; }
+
+/* Ship to and bill to side by side */
+.parties { display: flex; gap: 0.3in; margin: 26px 0 0; padding-bottom: 18px; border-bottom: 2px solid #dfe1e4; }
+.party { flex: 1 1 0; }
+.party-lines { margin-top: 8px; }
+
+/* Items */
+.items { margin: 22px 8px 0; }
+.items-caption { display: flex; justify-content: space-between; }
+.item { display: flex; align-items: center; gap: 18px; padding: 16px 0; break-inside: avoid; }
+.item + .item { border-top: 1px solid #d6d8db; }
+.item-thumb { flex: 0 0 56px; height: 56px; }
+.item-thumb img { display: block; width: 56px; height: 56px; object-fit: cover; border: 1px solid #dfe1e4; border-radius: 5px; }
+.item-text { flex: 1 1 0; min-width: 0; }
+.item-line { display: block; overflow-wrap: anywhere; }
+.item-opt, .item-code { font-size: 11.5px; color: #686c71; }
+.item-opt::before { content: "\2022\00a0"; }
+.item-qty { flex: 0 0 22%; text-align: right; }
+.tag-backorder { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; background: #fde0b4; color: #573f12; font-size: 10px; line-height: 17px; vertical-align: 1px; }
+.notice { margin: 4px 8px 0; padding-bottom: 18px; border-bottom: 2px solid #dfe1e4; }
+
+/* Delivery memo and gift message */
+.memo { margin-top: 24px; }
+.memo-text { margin-top: 8px; white-space: pre-wrap; }
+.gift { position: relative; margin-top: 20px; padding: 10px 14px; border: 1px dashed #898d92; border-radius: 7px; font-style: italic; }
+.gift::before { content: "Gift note"; position: absolute; left: 12px; top: -8px; padding: 0 5px; background: #fff; color: #686c71; font-size: 11px; font-style: normal; font-weight: 700; line-height: 14px; }
+
+/* Closing with a QR code */
+.closing { margin-top: 26px; text-align: center; }
+.closing p + p { margin-top: 18px; }
+.qr { display: block; width: 76px; height: 76px; margin: 0 auto 10px; }
+</style>
+</head>
+<body>
+<div class="slip">
+  <div class="slip-head">
+    <p class="store-name">Saltmarsh Candle Co.</p>
+    <div class="order-ref">
+      <p>Order #1093</p>
+      <p>November 5, 2026</p>
+    </div>
+  </div>
+  <div class="parties">
+    <div class="party">
+      <p class="caps">Ship to</p>
+      <p class="party-lines">Priya Raghunathan<br>Apartment 4B, The Wexford<br>2210 North Lincoln Park West<br>Chicago IL 60614<br>United States</p>
+    </div>
+    <div class="party">
+      <p class="caps">Bill to</p>
+      <p class="party-lines">Raghunathan &amp; Okafor Design Studio LLC<br>c/o Accounts Payable<br>401 North Michigan Avenue, Floor 12<br>Chicago IL 60611<br>United States</p>
+    </div>
+  </div>
+  <div class="items">
+    <div class="items-caption caps"><span>Items</span><span>Quantity</span></div>
+    <div class="item">
+      <div class="item-thumb"><img src="../images/photo.jpg" alt=""></div>
+      <div class="item-text">
+        <p><span class="item-line">Low Tide — Soy Candle, 8 oz</span><span class="item-line">Amber glass / Cedar lid</span></p>
+        <p class="item-code">SKU: SM-LT-08-AMB</p>
+      </div>
+      <p class="item-qty">2 of 2</p>
+    </div>
+    <div class="item">
+      <div class="item-thumb"><img src="../images/photo.jpg" alt=""></div>
+      <div class="item-text">
+        <p><span class="item-line">Harbor Fog Reed Diffuser Refill (refill only, reeds sold separately)<span class="tag-backorder">Backordered</span></span><span class="item-line item-opt">Scent strength: Strong</span></p>
+        <p class="item-code">SKU: SM-HF-RD-REFILL-250ML-STRONG</p>
+      </div>
+      <p class="item-qty">1 of 1</p>
+    </div>
+    <div class="item">
+      <div class="item-thumb"><img src="../images/photo.jpg" alt="" style="filter: grayscale(1)"></div>
+      <div class="item-text">
+        <p><span class="item-line">Wick Trimmer, brushed brass</span></p>
+        <p class="item-code">SKU: SM-ACC-WT-BR</p>
+      </div>
+      <p class="item-qty">1 of 1</p>
+    </div>
+    <div class="item">
+      <div class="item-thumb"></div>
+      <div class="item-text">
+        <p><span class="item-line">Gift wrapping</span><span class="item-line item-opt">Paper: Kraft with twine</span></p>
+      </div>
+      <p class="item-qty">1 of 1</p>
+    </div>
+  </div>
+  <p class="notice">There are other items from your order not included in this shipment.</p>
+  <div class="memo">
+    <p class="caps">Notes</p>
+    <p class="memo-text">Leave with the doorman if nobody answers.
+Fragile — glass inside.</p>
+  </div>
+  <div class="gift">Happy housewarming, Priya! Enjoy the quiet evenings by the lake. — Tomasz &amp; Ines</div>
+  <div class="closing">
+    <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><path d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2zM14 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 14h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM8 0h2v1H8zm3 1h2v2h-2zM8 3h1v3H8zm2 2h3v1h-3zM9 8h3v2H9zm4 1h2v1h-2zm3-1h3v1h-3zM0 8h2v2H0zm3 1h3v1H3zm5 3h1v2H8zm2 1h3v1h-3zm4 1h2v2h-2zm3-2h2v3h-2zM9 16h2v3H9zm3 2h3v1h-3zm4 1h3v2h-3z"/></svg>
+    <p>Thank you for shopping with us!</p>
+    <p><strong>Saltmarsh Candle Co.</strong><br>118 Harbor Street, Grand Haven MI 49417, United States<br>hello@saltmarsh.example<br>saltmarsh.example</p>
+  </div>
+</div>
+</body>
+</html>

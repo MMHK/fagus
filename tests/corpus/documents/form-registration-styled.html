@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event registration</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 16mm; }
+*, *::before, *::after { box-sizing: border-box; }
+:root { --brand: #7c3aed; --line: #d4d4d8; --muted: #71717a; accent-color: var(--brand); }
+body { font: 14px/1.5 Inter, sans-serif; color: #18181b; margin: 0; }
+input, select, textarea, button { font: inherit; color: inherit; }
+h1 { font-size: 24px; margin: 0 0 16px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+.full { grid-column: 1 / -1; }
+.label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+.input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: #fff; }
+.input:read-only { background: #f4f4f5; }
+.input:disabled { background: #fafafa; color: #a1a1aa; border-style: dashed; }
+.input::placeholder { color: #a1a1aa; font-style: italic; }
+select.input { appearance: none; padding-right: 32px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2371717a' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; }
+textarea.input { resize: none; min-height: 84px; }
+.check { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.check input[type=checkbox].custom { appearance: none; width: 18px; height: 18px; border: 2px solid var(--brand); border-radius: 4px; margin: 0; display: grid; place-content: center; }
+.check input[type=checkbox].custom:checked { background: var(--brand); }
+.check input[type=checkbox].custom:checked::before { content: ""; width: 10px; height: 10px; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); background: #fff; }
+.check input[type=radio].custom { appearance: none; width: 18px; height: 18px; border: 2px solid var(--line); border-radius: 50%; margin: 0; }
+.check input[type=radio].custom:checked { border: 6px solid var(--brand); }
+.native input { accent-color: #059669; }
+.big input[type=checkbox] { width: 22px; height: 22px; }
+input[type=range].slim { width: 100%; accent-color: #ea580c; }
+progress.bar { appearance: none; width: 100%; height: 10px; border: 0; border-radius: 5px; background: #e4e4e7; overflow: hidden; }
+progress.bar::-webkit-progress-bar { background: #e4e4e7; border-radius: 5px; }
+progress.bar::-webkit-progress-value { background: linear-gradient(90deg, #7c3aed, #db2777); border-radius: 5px; }
+meter.m { width: 100%; height: 12px; }
+.btn { border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 700; background: var(--brand); color: #fff; }
+.btn.secondary { background: #fff; color: #18181b; border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; }
+.summary { margin-top: 18px; padding: 12px 14px; border-radius: 10px; background: #f5f3ff; border: 1px solid #ddd6fe; }
+output { font-weight: 700; color: var(--brand); }
+</style>
+</head>
+<body>
+<h1>Register for DevConf 2027</h1>
+<form class="grid">
+  <div><span class="label">Full name</span><input class="input" value="Ada Lovelace"></div>
+  <div><span class="label">Company</span><input class="input" placeholder="Optional"></div>
+  <div><span class="label">Ticket number</span><input class="input" value="DC27-00491" readonly></div>
+  <div><span class="label">Discount code</span><input class="input" value="EXPIRED-10" disabled></div>
+  <div><span class="label">Ticket type</span><select class="input"><option>Standard — €249</option><option selected>Professional — €449</option></select></div>
+  <div><span class="label">Arrival</span><input class="input" type="date" value="2027-03-14"></div>
+  <div class="full"><span class="label">Dietary requirements</span><textarea class="input" placeholder="Tell us about allergies or preferences"></textarea></div>
+  <div>
+    <span class="label">Workshops</span>
+    <label class="check"><input class="custom" type="checkbox" checked> Rust for web services</label>
+    <label class="check"><input class="custom" type="checkbox"> Accessible design systems</label>
+    <label class="check"><input class="custom" type="checkbox" checked> Printing the web</label>
+  </div>
+  <div>
+    <span class="label">T-shirt size</span>
+    <label class="check"><input class="custom" type="radio" name="s"> Small</label>
+    <label class="check"><input class="custom" type="radio" name="s" checked> Medium</label>
+    <label class="check"><input class="custom" type="radio" name="s"> Large</label>
+  </div>
+  <div class="native">
+    <span class="label">Native with accent-color</span>
+    <label class="check"><input type="checkbox" checked> Code of conduct accepted</label>
+    <label class="check"><input type="radio" checked> Vegetarian</label>
+    <label class="check big"><input type="checkbox" checked> Large checkbox</label>
+  </div>
+  <div>
+    <span class="label">Experience level</span>
+    <input class="slim" type="range" min="1" max="5" value="2">
+    <span class="label" style="margin-top:10px">Profile</span>
+    <progress class="bar" value="65" max="100"></progress>
+    <span class="label" style="margin-top:10px">Seats left</span>
+    <meter class="m" min="0" max="500" low="100" high="400" optimum="500" value="72"></meter>
+  </div>
+  <div class="full summary">Total due: <output>€ 449.00</output> including VAT. Payment within 14 days.</div>
+  <div class="full" style="display:flex; gap:10px; justify-content:flex-end">
+    <button class="btn secondary" type="reset">Clear</button>
+    <button class="btn" disabled>Pay later</button>
+    <button class="btn">Complete registration</button>
+  </div>
+</form>
+</body>
+</html>

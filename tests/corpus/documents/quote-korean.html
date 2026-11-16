@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>견적서 KQ-2026-1107</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 18mm; @bottom-center { content: counter(page) " / " counter(pages); font: 8pt "Apple SD Gothic Neo", sans-serif; color: #777 } }
+body { margin: 0; font-family: "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif; font-size: 9.5pt; line-height: 1.6; color: #222; word-break: keep-all }
+h1 { text-align: center; font-size: 24pt; letter-spacing: 0.6em; margin: 0 0 6mm; padding-left: 0.6em; font-weight: 800 }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 5mm }
+.box { border: 1pt solid #333 }
+.box table { width: 100%; border-collapse: collapse }
+.box th { width: 22mm; background: #eef2f7; font-weight: 600; text-align: center; border-bottom: 0.5pt solid #999; border-right: 0.5pt solid #999; padding: 1.2mm }
+.box td { border-bottom: 0.5pt solid #999; padding: 1.2mm 2mm }
+.box tr:last-child th, .box tr:last-child td { border-bottom: 0 }
+.to { font-size: 13pt; font-weight: 700; border-bottom: 1.5pt solid #222; padding: 2mm 0; margin-bottom: 2mm }
+.stamp { display: inline-block; width: 12mm; height: 12mm; border: 1.5pt solid #c62828; border-radius: 50%; color: #c62828; text-align: center; line-height: 12mm; font-weight: 700; font-size: 8pt; vertical-align: middle; margin-left: 2mm }
+.amount { border: 1.5pt solid #222; padding: 3mm 4mm; display: flex; justify-content: space-between; align-items: baseline; font-size: 11pt; margin-bottom: 5mm; background: #fafafa }
+.amount b { font-size: 14pt; font-variant-numeric: tabular-nums }
+table.items { width: 100%; border-collapse: collapse; font-size: 9pt }
+.items th { background: #1f3b64; color: #fff; padding: 1.8mm 1.5mm; font-weight: 600; border: 0.5pt solid #1f3b64 }
+.items td { border: 0.5pt solid #bbb; padding: 1.6mm 1.5mm }
+.items td.n { text-align: right; font-variant-numeric: tabular-nums }
+.items td.c { text-align: center }
+.items tfoot td { background: #eef2f7; font-weight: 700 }
+.notes { margin-top: 6mm; border-top: 1pt solid #222; padding-top: 3mm }
+.notes h2 { font-size: 10.5pt; margin: 0 0 2mm }
+.notes ol { margin: 0; padding-left: 5mm }
+.notes li { text-align: justify; margin-bottom: 1mm }
+.en { color: #555; font-size: 8.5pt }
+</style></head>
+<body>
+<h1>견 적 서</h1>
+<div class="grid">
+  <div>
+    <div class="to">(주)한빛소프트 귀중</div>
+    <p style="margin:0">견적번호: KQ-2026-1107<br>견적일자: 2026년 11월 7일<br>유효기간: 견적일로부터 30일<br>담당자: 김민준 과장 (010-2345-6789)</p>
+    <p style="margin:2mm 0 0">아래와 같이 견적합니다.</p>
+  </div>
+  <div class="box"><table>
+    <tr><th>등록번호</th><td>214-86-12345</td></tr>
+    <tr><th>상호</th><td>주식회사 다온테크 <span class="stamp">인</span></td></tr>
+    <tr><th>대표자</th><td>박서연</td></tr>
+    <tr><th>주소</th><td>서울특별시 강남구 테헤란로 152, 12층</td></tr>
+    <tr><th>업태/종목</th><td>서비스 / 소프트웨어 개발</td></tr>
+    <tr><th>전화</th><td>02-555-0172</td></tr>
+  </table></div>
+</div>
+<div class="amount"><span>합계금액 (공급가액 + 부가세)</span><b>₩ 38,280,000</b><span>일금 삼천팔백이십팔만 원정</span></div>
+<table class="items">
+  <thead><tr><th>No.</th><th>품목</th><th>규격</th><th>수량</th><th>단가</th><th>공급가액</th><th>세액</th></tr></thead>
+  <tbody>
+    <tr><td class="c">1</td><td>클라우드 서버 구축</td><td>8 vCPU / 32 GB</td><td class="c">2</td><td class="n">4,500,000</td><td class="n">9,000,000</td><td class="n">900,000</td></tr>
+    <tr><td class="c">2</td><td>ERP 연동 모듈 개발</td><td>REST API</td><td class="c">1</td><td class="n">12,000,000</td><td class="n">12,000,000</td><td class="n">1,200,000</td></tr>
+    <tr><td class="c">3</td><td>데이터 이관 및 검증</td><td>약 120만 건</td><td class="c">1</td><td class="n">6,500,000</td><td class="n">6,500,000</td><td class="n">650,000</td></tr>
+    <tr><td class="c">4</td><td>사용자 교육</td><td>4시간 × 3회</td><td class="c">3</td><td class="n">800,000</td><td class="n">2,400,000</td><td class="n">240,000</td></tr>
+    <tr><td class="c">5</td><td>유지보수 (1년)</td><td>월 정기점검</td><td class="c">12</td><td class="n">350,000</td><td class="n">4,200,000</td><td class="n">420,000</td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="5" class="c">합 계</td><td class="n">34,100,000</td><td class="n">3,410,000</td></tr></tfoot>
+</table>
+<p class="en">VAT 10% included in the total. Prices in Korean won (KRW). 부가세 포함 금액: ₩ 37,510,000 + 배송비 ₩ 770,000.</p>
+<div class="notes">
+  <h2>특기사항</h2>
+  <ol>
+    <li>본 견적서의 유효기간은 발행일로부터 30일이며, 기간 경과 시 재견적이 필요합니다. 하드웨어 가격은 환율 변동에 따라 조정될 수 있습니다.</li>
+    <li>대금 지급 조건은 계약 시 선금 30%, 구축 완료 후 잔금 70%이며, 세금계산서 발행일로부터 30일 이내에 현금으로 지급합니다.</li>
+    <li>유지보수 기간 중 장애 발생 시 평일 기준 4시간 이내에 원격 지원을 제공하며, 현장 방문이 필요한 경우 익영업일 내에 방문합니다.</li>
+    <li>소프트웨어 라이선스 비용은 별도이며, 고객사가 보유한 라이선스를 사용하는 것을 원칙으로 합니다. ※ 상세 일정은 별첨 참조.</li>
+  </ol>
+</div>
+</body></html>

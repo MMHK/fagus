@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Help centre article</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 20mm 18mm; }
+body { font: 15px/1.55 Inter, sans-serif; color: #222; margin: 0; }
+h1 { font-size: 26px; margin: 0 0 6px; }
+.meta { color: #666; font-size: 13px; margin-bottom: 18px; }
+details { border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; margin: 0 0 10px; }
+details[open] { background: #fafafa; }
+summary { font-weight: 700; }
+details.plain summary { list-style: none; }
+details.plain summary::-webkit-details-marker { display: none; }
+details.plain summary::after { content: " +"; color: #999; }
+details.plain[open] summary::after { content: " −"; }
+details.custom > summary { list-style-type: "› "; }
+details.custom[open] > summary { list-style-type: "⌄ "; }
+details p { margin: 6px 0 0; }
+dialog { position: static; display: block; border: 2px solid #333; border-radius: 10px; padding: 16px 20px; margin: 20px 0; width: auto; }
+dialog h2 { margin: 0 0 8px; font-size: 18px; }
+dialog.modal-like { box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.note { padding: 10px 14px; border-left: 4px solid #2563eb; background: #eff6ff; margin: 14px 0; }
+kbd { font-family: inherit; font-size: 12px; border: 1px solid #bbb; border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: #f6f6f6; }
+mark { background: #fde68a; }
+abbr[title] { text-decoration: underline dotted; }
+code { font: inherit; color: #9a3412; }
+button { font: inherit; }
+</style>
+</head>
+<body>
+<h1>Resetting your workspace</h1>
+<div class="meta">Help centre · Updated <time datetime="2026-10-30">30 October 2026</time> · 4 min read</div>
+<p>If your workspace becomes slow or shows stale data, you can reset it. Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> to open the reset panel. The <abbr title="Single sign-on">SSO</abbr> session stays active.</p>
+<details open>
+  <summary>What does a reset remove?</summary>
+  <p>A reset removes cached files, local drafts and <mark>unsaved filters</mark>. Shared dashboards and comments are kept on the server.</p>
+</details>
+<details>
+  <summary>Can I undo a reset?</summary>
+  <p>No. This paragraph is hidden in print because the element is closed.</p>
+</details>
+<details class="plain" open>
+  <summary>Who can reset a team workspace?</summary>
+  <p>Only owners and administrators. Members can reset their personal workspace only.</p>
+</details>
+<details class="plain">
+  <summary>Does it affect integrations?</summary>
+  <p>Hidden.</p>
+</details>
+<details class="custom" open>
+  <summary>Custom markers with list-style-type</summary>
+  <p>The summary marker comes from <code>list-style-type</code> with a string.</p>
+</details>
+<details class="custom">
+  <summary>Closed custom marker</summary>
+  <p>Hidden.</p>
+</details>
+<dialog open>
+  <h2>Confirm reset</h2>
+  <p>This removes 128 MB of cached data from this device.</p>
+  <form method="dialog"><button>Cancel</button> <button>Reset now</button></form>
+</dialog>
+<dialog open class="modal-like" style="position: absolute; top: auto; left: auto; right: auto; margin: 10px 0 0; position: static">
+  <h2>Reset complete</h2>
+  <p>Your workspace was reset at 14:02. You may need to sign in again on other devices.</p>
+</dialog>
+<div class="note">Tip: closed <code>&lt;details&gt;</code> elements print only their summary, just as on screen.</div>
+<details name="faq" open><summary>Exclusive accordion item one</summary><p>Open content of the first item.</p></details>
+<details name="faq"><summary>Exclusive accordion item two</summary><p>Hidden.</p></details>
+<p>An unstyled default dialog follows, which is open and centred as Chrome lays out an open non-modal dialog:</p>
+<div style="position: relative; height: 140px; border: 1px dashed #aaa">
+<dialog open>Default dialog box with <b>bold</b> text.</dialog>
+</div>
+</body>
+</html>

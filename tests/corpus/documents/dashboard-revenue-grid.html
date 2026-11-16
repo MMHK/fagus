@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Revenue dashboard</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 600 700; }
+@page { size: A4 landscape; margin: 12mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 13px/1.4 Inter, sans-serif; color: #0f172a; background: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+header h1 { font-size: 20px; margin: 0; font-weight: 600; }
+.range { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
+.range span { padding: 4px 10px; border-right: 1px solid #cbd5e1; font-size: 12px; }
+.range span:last-child { border-right: 0; }
+.range .on { background: #0f172a; color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 2px rgb(15 23 42 / .06); }
+.kpi .label { color: #64748b; font-size: 12px; font-weight: 400; }
+.kpi .value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.kpi .delta { font-size: 12px; font-weight: 400; }
+.up { color: #16a34a; } .down { color: #dc2626; }
+.kpi svg { display: block; width: 100%; height: 34px; margin-top: 6px; }
+.main { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 12px; grid-template-areas: "chart side" "table side"; }
+.chart { grid-area: chart; }
+.side { grid-area: side; }
+.tbl { grid-area: table; }
+h2 { font-size: 14px; margin: 0 0 8px; font-weight: 600; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; border-bottom: 1px solid #e2e8f0; padding: 0 4px; }
+.bars div { flex: 1; background: linear-gradient(#6366f1, #a5b4fc); border-radius: 4px 4px 0 0; position: relative; }
+.bars div span { position: absolute; top: -16px; left: 0; right: 0; text-align: center; font-size: 10px; color: #475569; }
+.months { display: flex; gap: 6px; padding: 4px 4px 0; }
+.months span { flex: 1; text-align: center; font-size: 10px; color: #94a3b8; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 400; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 4px; border-bottom: 1px solid #e2e8f0; }
+td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
+td.num, th.num { text-align: right; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 400; }
+.pill.ok { background: #dcfce7; color: #166534; }
+.pill.warn { background: #fef9c3; color: #854d0e; }
+.pill.bad { background: #fee2e2; color: #991b1b; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; }
+.avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #fff; flex: none; }
+.list .who { flex: 1; min-width: 0; }
+.list .who small { display: block; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.donut { display: flex; gap: 14px; align-items: center; margin-top: 10px; }
+.legend div { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 3px 0; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.goal { margin-top: 10px; }
+.goal progress { width: 100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Revenue overview</h1>
+  <div class="range"><span>7d</span><span class="on">30d</span><span>90d</span><span>12m</span></div>
+</header>
+<section class="kpis">
+  <div class="card kpi"><div class="label">Monthly recurring revenue</div><div class="value">€84,210</div><div class="delta up">▲ 12.4% vs last month</div>
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline fill="none" stroke="#16a34a" stroke-width="2" vector-effect="non-scaling-stroke" points="0,24 10,22 20,23 30,18 40,19 50,14 60,15 70,10 80,11 90,6 100,4"/></svg></div>
+  <div class="card kpi"><div class="label">Active customers</div><div class="value">1,284</div><div class="delta up">▲ 3.1%</div>
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M0 20 L10 18 L20 21 L30 17 L40 16 L50 18 L60 13 L70 14 L80 12 L90 11 L100 9 L100 30 L0 30Z" fill="#dbeafe"/><polyline fill="none" stroke="#2563eb" stroke-width="2" vector-effect="non-scaling-stroke" points="0,20 10,18 20,21 30,17 40,16 50,18 60,13 70,14 80,12 90,11 100,9"/></svg></div>
+  <div class="card kpi"><div class="label">Churn rate</div><div class="value">2.3%</div><div class="delta down">▼ 0.4 pp</div>
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline fill="none" stroke="#dc2626" stroke-width="2" vector-effect="non-scaling-stroke" points="0,8 10,10 20,9 30,12 40,14 50,13 60,17 70,19 80,18 90,22 100,23"/></svg></div>
+  <div class="card kpi"><div class="label">Avg. revenue per user</div><div class="value">€65.58</div><div class="delta up">▲ 1.9%</div>
+    <svg viewBox="0 0 100 30"><g fill="#a78bfa"><rect x="2" y="18" width="8" height="12"/><rect x="14" y="14" width="8" height="16"/><rect x="26" y="16" width="8" height="14"/><rect x="38" y="10" width="8" height="20"/><rect x="50" y="12" width="8" height="18"/><rect x="62" y="8" width="8" height="22"/><rect x="74" y="6" width="8" height="24"/><rect x="86" y="3" width="8" height="27"/></g></svg></div>
+</section>
+<section class="main">
+  <div class="card chart">
+    <h2>Revenue by month</h2>
+    <div class="bars">
+      <div style="height:42%"><span>41k</span></div><div style="height:48%"><span>47k</span></div><div style="height:51%"><span>50k</span></div><div style="height:55%"><span>54k</span></div><div style="height:61%"><span>60k</span></div><div style="height:58%"><span>57k</span></div><div style="height:66%"><span>65k</span></div><div style="height:70%"><span>69k</span></div><div style="height:74%"><span>73k</span></div><div style="height:79%"><span>78k</span></div><div style="height:82%"><span>81k</span></div><div style="height:86%"><span>84k</span></div>
+    </div>
+    <div class="months"><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+  </div>
+  <div class="card side">
+    <h2>Top accounts</h2>
+    <ul class="list">
+      <li><span class="avatar" style="background:#f97316">NW</span><span class="who">Northwind Traders<small>Enterprise · renews 01/2027 with an extended support contract</small></span><b>€9,400</b></li>
+      <li><span class="avatar" style="background:#0ea5e9">CO</span><span class="who">Contoso Ltd<small>Business</small></span><b>€7,120</b></li>
+      <li><span class="avatar" style="background:#10b981">FA</span><span class="who">Fabrikam<small>Business</small></span><b>€5,860</b></li>
+      <li><span class="avatar" style="background:#8b5cf6">AD</span><span class="who">Adventure Works<small>Team</small></span><b>€3,210</b></li>
+      <li><span class="avatar" style="background:#ec4899">WW</span><span class="who">Wide World Importers<small>Team</small></span><b>€2,980</b></li>
+    </ul>
+    <h2 style="margin-top:12px">Plan mix</h2>
+    <div class="donut">
+      <svg width="90" height="90" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="6"/><circle cx="21" cy="21" r="15.9" fill="none" stroke="#6366f1" stroke-width="6" stroke-dasharray="48 52" stroke-dashoffset="25"/><circle cx="21" cy="21" r="15.9" fill="none" stroke="#22c55e" stroke-width="6" stroke-dasharray="30 70" stroke-dashoffset="77"/><circle cx="21" cy="21" r="15.9" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="22 78" stroke-dashoffset="47"/><text x="21" y="23" text-anchor="middle" font-size="6" font-family="Inter" font-weight="600">1,284</text></svg>
+      <div class="legend"><div><i style="background:#6366f1"></i>Enterprise 48%</div><div><i style="background:#22c55e"></i>Business 30%</div><div><i style="background:#f59e0b"></i>Team 22%</div></div>
+    </div>
+    <div class="goal"><h2>Q4 goal</h2><progress value="84" max="100"></progress> <small>84% of €100k</small></div>
+  </div>
+  <div class="card tbl">
+    <h2>Recent invoices</h2>
+    <table>
+      <thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th>Status</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>INV-2041</td><td>Northwind Traders</td><td>02 Nov 2026</td><td><span class="pill ok">Paid</span></td><td class="num">€9,400.00</td></tr>
+        <tr><td>INV-2040</td><td>Contoso Ltd</td><td>01 Nov 2026</td><td><span class="pill warn">Pending</span></td><td class="num">€7,120.00</td></tr>
+        <tr><td>INV-2039</td><td>Fabrikam</td><td>29 Oct 2026</td><td><span class="pill ok">Paid</span></td><td class="num">€5,860.00</td></tr>
+        <tr><td>INV-2038</td><td>Tailspin Toys</td><td>27 Oct 2026</td><td><span class="pill bad">Overdue</span></td><td class="num">€1,150.00</td></tr>
+        <tr><td>INV-2037</td><td>Adventure Works</td><td>25 Oct 2026</td><td><span class="pill ok">Paid</span></td><td class="num">€3,210.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</body>
+</html>

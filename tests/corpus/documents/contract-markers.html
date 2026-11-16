@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Software licence and support agreement</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 22mm 20mm 20mm 25mm;
+  @top-right { content: "Agreement No. SLA-2026-031"; font: 7.5pt Inter, sans-serif; color: #777; }
+  @bottom-center { content: counter(page) " / " counter(pages); font: 7.5pt Inter, sans-serif; color: #777; } }
+html { font: 9.5pt/1.5 Inter, sans-serif; color: #1a1a1a; }
+body { margin: 0; counter-reset: clause; }
+h1 { font-size: 15pt; text-align: center; margin: 0 0 1mm; letter-spacing: .02em; }
+.parties { text-align: center; color: #444; margin-bottom: 8mm; }
+.parties b { color: #1a1a1a; }
+ol.clauses { list-style: none; padding: 0; margin: 0; }
+ol.clauses > li { counter-increment: clause; margin-bottom: 4mm; }
+ol.clauses > li > h2 { font-size: 10.5pt; margin: 0 0 1.5mm; break-after: avoid; }
+ol.clauses > li > h2::before { content: "§ " counter(clause) "  "; white-space: pre; color: #8c1c13; }
+ol.sub { counter-reset: sub; list-style: none; padding-left: 9mm; margin: 0; }
+ol.sub > li { counter-increment: sub; position: relative; margin-bottom: 1.5mm; text-align: justify; hyphens: auto; }
+ol.sub > li::before { content: counter(clause) "." counter(sub); position: absolute; left: -9mm; width: 7.5mm; text-align: right; color: #555; font-variant-numeric: tabular-nums; }
+ol.alpha { list-style-type: lower-alpha; padding-left: 6mm; margin: 1mm 0; }
+ol.alpha li::marker { content: "(" counter(list-item, lower-alpha) ") "; color: #8c1c13; font-weight: 700; }
+ul.check { list-style: none; padding-left: 6mm; margin: 1mm 0; }
+ul.check li::marker { content: "✓  "; color: #2e7d32; }
+ul.dash { list-style-type: "–  "; padding-left: 6mm; margin: 1mm 0; }
+ul.dash li::marker { color: #8c1c13; }
+ol.roman { list-style: upper-roman; padding-left: 9mm; }
+ol.roman li::marker { font-weight: 700; color: #444; font-size: 85%; }
+dl.defs { display: grid; grid-template-columns: max-content 1fr; gap: 1mm 4mm; margin: 1mm 0 0; }
+dl.defs dt { font-weight: 700; } dl.defs dd { margin: 0; }
+.annex { break-before: page; }
+.annex h2 { font-size: 11pt; }
+table.fees { border-collapse: collapse; width: 100%; margin-top: 2mm; }
+table.fees td, table.fees th { border: .5pt solid #aaa; padding: 1.2mm 2mm; text-align: left; }
+table.fees td:last-child, table.fees th:last-child { text-align: right; }
+.signatures { display: flex; gap: 15mm; margin-top: 14mm; break-inside: avoid; }
+.signatures div { flex: 1; border-top: .5pt solid #333; padding-top: 1mm; font-size: 8pt; color: #444; }
+</style></head><body>
+<h1>Software Licence and Support Agreement</h1>
+<div class="parties">between <b>Bitwerk Solutions GmbH</b>, Hamburg (“Licensor”)<br>and <b>Stadtwerke Lüneburg GmbH</b>, Lüneburg (“Licensee”)</div>
+<ol class="clauses">
+<li><h2>Definitions</h2>
+<ol class="sub">
+<li>In this agreement the following terms have the meanings given below:
+<dl class="defs"><dt>Software</dt><dd>the metering data platform “MeterFlow” in the version stated in Annex 1, including updates supplied under this agreement;</dd><dt>Documentation</dt><dd>the user and administrator manuals in electronic form;</dd><dt>Business Day</dt><dd>Monday to Friday except public holidays in Lower Saxony;</dd><dt>Incident</dt><dd>any deviation of the Software from the Documentation that impairs its use.</dd></dl></li>
+<li>Headings are for convenience only and do not affect interpretation.</li>
+</ol></li>
+<li><h2>Grant of licence</h2>
+<ol class="sub">
+<li>The Licensor grants the Licensee a non-exclusive, non-transferable licence, limited in time to the term of this agreement, to use the Software for its own business purposes and those of its affiliated companies.</li>
+<li>The Licensee may
+<ol class="alpha"><li>install the Software on servers in its own data centres or with a hosting provider in the European Union;</li><li>make copies required for backup and disaster recovery;</li><li>connect up to 250,000 metering points (Annex 1 lists additional tiers).</li></ol></li>
+<li>The Licensee shall not decompile, sublicense or rent out the Software, except as permitted by mandatory law.</li>
+</ol></li>
+<li><h2>Support services</h2>
+<ol class="sub">
+<li>The Licensor provides the following services during the term:
+<ul class="check"><li>a service desk on Business Days from 07:00 to 18:00;</li><li>remedy of Incidents within the response times of Annex 2;</li><li>supply of updates and upgrades as they become generally available.</li></ul></li>
+<li>Not included are, in particular,
+<ul class="dash"><li>services required because the Licensee modified the Software;</li><li>on-site support, which is invoiced separately at the rates of Annex 1;</li><li>support of third-party software, operating systems and databases.</li></ul></li>
+</ol></li>
+<li><h2>Fees and payment</h2>
+<ol class="sub">
+<li>The annual licence and support fee is stated in Annex 1. It is due annually in advance and payable within 30 days of invoice.</li>
+<li>The Licensor may adjust the fee once per calendar year by notice of three months, at most by the change of the index of labour costs published by the Federal Statistical Office.</li>
+</ol></li>
+<li><h2>Term and termination</h2>
+<ol class="sub">
+<li>This agreement enters into force on 1 January 2027 and runs for an initial term of three years. It is extended by one year at a time unless terminated with six months' notice to the end of a term.</li>
+<li>The right of either party to terminate for good cause remains unaffected. Good cause exists for the Licensor in particular if
+<ol class="roman"><li>the Licensee is in default with payment of two annual fees;</li><li>the Licensee materially breaches clause 2.3 and does not cease to do so within 30 days of a written warning.</li></ol></li>
+</ol></li>
+<li><h2>Final provisions</h2>
+<ol class="sub">
+<li>Amendments must be made in writing. This also applies to this written form clause.</li>
+<li>German law applies. The courts of Hamburg have exclusive jurisdiction.</li>
+</ol></li>
+</ol>
+<div class="signatures"><div>Hamburg, date — Bitwerk Solutions GmbH</div><div>Lüneburg, date — Stadtwerke Lüneburg GmbH</div></div>
+<section class="annex">
+<h2>Annex 1 — Licence scope and fees</h2>
+<table class="fees"><tr><th>Item</th><th>Scope</th><th>Annual fee</th></tr>
+<tr><td>MeterFlow Core 8.2</td><td>up to 250,000 metering points</td><td>48,000.00 €</td></tr>
+<tr><td>Additional tier</td><td>per further 50,000 metering points</td><td>7,500.00 €</td></tr>
+<tr><td>Support “Business”</td><td>service desk, response times per Annex 2</td><td>9,600.00 €</td></tr>
+<tr><td>On-site day rate</td><td>per person and day, plus travel</td><td>1,280.00 €</td></tr></table>
+</section>
+</body></html>

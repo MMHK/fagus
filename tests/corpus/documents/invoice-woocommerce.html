@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Rechnung</title>
+<style type="text/css">
+@font-face { font-family: "Shop Sans"; font-weight: 400; src: url(../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: "Shop Sans"; font-weight: 700; src: url(../../fonts/Inter-Bold.ttf); }
+@font-face { font-family: "Shop Sans"; font-weight: 400; font-style: italic; src: url(../../fonts/Inter-Italic.ttf); }
+@font-face { font-family: "Shop Sans"; font-weight: 700; font-style: italic; src: url(../../fonts/Inter-BoldItalic.ttf); }
+/* An invoice as a dompdf template of a shop plugin prints it: tables for layout, a line height
+   of 100 % that every descendant inherits as a length, and a footer below the page area */
+@page { size: 210mm 297mm; margin: 12mm 18mm 28mm; }
+body { margin: 0; color: #111; font-family: "Shop Sans", sans-serif; font-size: 8.5pt; line-height: 100%; }
+table { border-collapse: collapse; }
+th, td { padding: 0; text-align: left; vertical-align: top; }
+.strong { font-weight: 700; }
+
+/* Letterhead */
+.masthead { width: 100%; margin-bottom: 9mm; }
+.masthead-logo img { width: auto; height: 26mm; }
+.masthead-sender { width: 38%; }
+.masthead-sender b { display: block; margin-bottom: 1mm; }
+.doc-title { margin: 0 0 6mm; font-size: 15pt; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* Addresses and order facts in one row */
+.parties { width: 100%; margin-bottom: 9mm; }
+.parties > tbody > tr > td { padding-right: 3mm; }
+.party-ship { width: 29%; }
+.facts-cell { width: 41%; }
+.facts th { padding: 0 3mm 0.6mm 0; font-weight: 400; }
+.facts td { padding-bottom: 0.6mm; }
+.contact { margin-top: 1mm; }
+
+/* Line items */
+.lines { width: 100%; margin-bottom: 6mm; }
+.lines > thead th { padding: 1.6mm 1.4mm; background: #262626; color: #fff; }
+.lines > tbody > tr > td { padding: 1.4mm; border-top: 0.75pt solid #bdbdbd; }
+.lines .col-qty, .lines .col-price { width: 18%; }
+.line-name { display: block; }
+.line-child > td { border-top: none !important; padding-top: 0.6mm; }
+.line-child > td:first-child { padding-left: 6mm; }
+.line-dropped { display: none; }
+/* attributes as a definition list of inline terms, one pair per line */
+.attrs { margin: 1.2mm 0 0; }
+.attrs dt, .attrs dd { display: inline; font-size: 6.5pt; color: #333; }
+.attrs dd { margin: 0 0 0 1mm; }
+.attrs dd::after { white-space: pre; content: "\A"; }
+/* chosen options as a list of a label and an inline paragraph */
+.opts { margin: 0.6mm 0 0 1mm; padding: 0; list-style-type: none; font-size: 6.5pt; }
+.opts > li { margin: 0 0 0.8mm; }
+.opts p { display: inline; margin: 0; }
+
+/* Remarks and sums below the items */
+.lines > tfoot > tr > td { padding: 0; border: none; }
+.remark { margin: 4mm 6mm 0 0; }
+.remark h4 { margin: 0 0 1mm; font-size: 8.5pt; }
+.remark p { margin: 0; }
+.sums { width: 100%; margin-top: 4mm; table-layout: fixed; }
+.sums > tbody > tr > * { width: 50%; padding: 1.4mm; border-bottom: 0.75pt solid #bdbdbd; }
+.sums > tbody > tr > th { font-weight: 700; }
+.sums .sum-grand > * { border-top: 1.5pt solid #111; border-bottom: 1.5pt solid #111; font-weight: 700; }
+.sums .sum-hidden { display: none; }
+.cur { padding-left: 0.12em; }
+.aside { font-size: 6.5pt; font-weight: 400; color: #4d4d4d; }
+
+/* Imprint: absolutely positioned under the bottom edge of the page area */
+.after-items { height: 6mm; }
+.imprint { position: absolute; left: 0; right: 0; bottom: -24mm; height: 20mm; padding-top: 1.5mm; border-top: 0.2mm solid #8a8a8a; text-align: center; }
+.page-no::before { content: counter(page); }
+</style>
+</head>
+<body class="doc-invoice">
+<table class="masthead">
+  <tr>
+    <td class="masthead-logo"><img src="../images/logo.png" alt="Bergkräuter Manufaktur"></td>
+    <td class="masthead-sender">
+      <b>Bergkräuter Manufaktur</b>
+      Inh. Veronika Strasser<br>Almweg 9<br>83727 Schliersee<br>USt-IdNr.: DE 291 440 718
+    </td>
+  </tr>
+</table>
+
+<h1 class="doc-title">Rechnung</h1>
+
+<table class="parties">
+  <tr>
+    <td class="party-bill">
+      Lukas Grießhaber<br>Hauptstraße 112<br>79104 Freiburg im Breisgau<br>Deutschland
+      <div class="contact">lukas.griesshaber@mail.example</div>
+      <div>0761 02933 015</div>
+    </td>
+    <td class="party-ship">
+      <div class="strong">Lieferadresse:</div>
+      Packstation 145<br>Postnummer 1029384756<br>79098 Freiburg im Breisgau<br>Deutschland
+    </td>
+    <td class="facts-cell">
+      <table class="facts">
+        <tr><th>Rechnungsnummer:</th><td>WC-2026-3381</td></tr>
+        <tr><th>Rechnungsdatum:</th><td>6. November 2026</td></tr>
+        <tr><th>Bestellnummer:</th><td>48812</td></tr>
+        <tr><th>Bestelldatum:</th><td>4. November 2026</td></tr>
+        <tr><th>Zahlungsart:</th><td>PayPal</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="lines">
+  <thead>
+    <tr><th>Produkt</th><th class="col-qty">Anzahl</th><th class="col-price">Preis</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <span class="line-name">Kräutertee „Almwiese“ lose, 250 g</span>
+        <dl class="attrs">
+          <dt>Artikelnummer:</dt><dd>BK-T-0250</dd>
+          <dt>Gewicht:</dt><dd>0,28 kg</dd>
+        </dl>
+        <ul class="opts"><li><b>Mahlgrad:</b> <p>fein geschnitten</p></li><li><b>Geschenkverpackung:</b> <p>ja (+2,50 €)</p></li></ul>
+      </td>
+      <td class="col-qty">2</td>
+      <td class="col-price"><span class="amt">27,80<span class="cur">&euro;</span></span></td>
+    </tr>
+    <tr class="line-bundle">
+      <td>
+        <span class="line-name">Probierset „Bergsommer“ (Bundle)</span>
+        <dl class="attrs"><dt>Artikelnummer:</dt><dd>BK-SET-07</dd></dl>
+      </td>
+      <td class="col-qty">1</td>
+      <td class="col-price"><span class="amt">34,90<span class="cur">&euro;</span></span></td>
+    </tr>
+    <tr class="line-child">
+      <td><span class="line-name">Pfefferminze, 50 g</span></td>
+      <td class="col-qty">1</td>
+      <td class="col-price"></td>
+    </tr>
+    <tr class="line-child">
+      <td><span class="line-name">Zitronenmelisse, 50 g</span></td>
+      <td class="col-qty">1</td>
+      <td class="col-price"></td>
+    </tr>
+    <tr class="line-child line-dropped">
+      <td><span class="line-name">Gratisprobe Bergkristallsalz</span></td>
+      <td class="col-qty">1</td>
+      <td class="col-price"></td>
+    </tr>
+    <tr>
+      <td>
+        <span class="line-name">Arnika-Massageöl mit Bio-Sonnenblumenöl und ätherischem Rosmarinöl, 100 ml – Glasflasche mit Pumpspender</span>
+        <dl class="attrs"><dt>Artikelnummer:</dt><dd>BK-OEL-100-ARN-PUMP</dd></dl>
+      </td>
+      <td class="col-qty">3</td>
+      <td class="col-price"><span class="amt">44,70<span class="cur">&euro;</span></span></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>
+        <div class="remark"><h4>Hinweise</h4><p>Vielen Dank für Ihre Bestellung! Bitte bewahren Sie diese Rechnung für Ihre Unterlagen auf.</p></div>
+        <div class="remark"><h4>Anmerkung des Kunden</h4><p>Bitte nicht klingeln, das Baby schläft ;-)</p></div>
+      </td>
+      <td colspan="2">
+        <table class="sums">
+          <tbody>
+            <tr><th>Zwischensumme</th><td><span class="amt">107,40<span class="cur">&euro;</span></span></td></tr>
+            <tr><th>Versand</th><td><span class="amt">4,90<span class="cur">&euro;</span></span>&nbsp;<small class="aside">via DHL Packstation</small></td></tr>
+            <tr class="sum-hidden"><th>Zahlungsart</th><td>PayPal</td></tr>
+            <tr class="sum-grand"><th>Gesamt</th><td><span class="amt">112,30<span class="cur">&euro;</span></span> <small class="aside">(enthält <span class="amt">17,93<span class="cur">&euro;</span></span> MwSt. 19 %)</small></td></tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="after-items"></div>
+
+<div class="imprint">
+  Bergkräuter Manufaktur · Almweg 9 · 83727 Schliersee · Kreissparkasse Miesbach-Tegernsee · IBAN DE47 7115 2570 0012 3456 78<br>
+  Seite <span class="page-no"></span>
+</div>
+</body>
+</html>

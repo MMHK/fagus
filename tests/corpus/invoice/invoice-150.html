@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Rechnung RE-2026-0042</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4; margin: 20mm 18mm 25mm 20mm;
+  @bottom-left { content: "Muster GmbH · Hauptstraße 1 · 12345 Musterstadt"; font: 7.5pt Inter, sans-serif; color: #6b7280; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 7.5pt Inter, sans-serif; color: #6b7280; } }
+:root { --accent: #2741d9; --muted: #6b7280; --line: #e5e7eb; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, sans-serif; font-size: 9.5pt; line-height: 1.45; color: #111827; }
+header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 6mm; border-bottom: 2px solid var(--accent); }
+.brand { display: flex; align-items: center; gap: 4mm; }
+.logo { width: 12mm; height: 12mm; border-radius: 3mm; background: var(--accent); color: #fff; font-weight: 700; font-size: 14pt; display: flex; align-items: center; justify-content: center; }
+.company { font-size: 15pt; font-weight: 700; color: var(--accent); }
+.badge { display: inline-block; padding: 1mm 3mm; border-radius: 99px; background: #eef2ff; color: var(--accent); font-weight: 700; font-size: 8pt; }
+.addresses { display: flex; justify-content: space-between; margin-top: 10mm; }
+.address .sender { font-size: 7pt; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 1mm; margin-bottom: 2mm; }
+.meta { display: grid; grid-template-columns: auto auto; column-gap: 6mm; row-gap: 1mm; font-size: 8.5pt; }
+.meta dt { color: var(--muted); } .meta dd { margin: 0; text-align: right; font-weight: 700; }
+h1 { font-size: 18pt; margin: 12mm 0 2mm; }
+p.intro { margin: 0 0 6mm; color: #374151; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: #f3f4f6; text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; color: #374151; padding: 2mm; }
+tbody td { padding: 2.2mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr { break-inside: avoid; }
+.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pos { color: var(--muted); width: 8mm; }
+.muted { color: var(--muted); font-size: 8pt; }
+.totals { margin-left: auto; width: 75mm; margin-top: 5mm; break-inside: avoid; }
+.totals div { display: flex; justify-content: space-between; padding: 1mm 0; }
+.totals .grand { border-top: 2px solid #111827; margin-top: 1mm; padding-top: 2mm; font-weight: 700; font-size: 11pt; }
+.note { margin-top: 10mm; padding: 4mm; border-left: 3px solid var(--accent); background: #f9fafb; break-inside: avoid; }
+</style></head>
+<body>
+<header>
+  <div class="brand"><div class="logo">M</div><div><div class="company">Muster GmbH</div><div class="muted">Webentwicklung und Beratung</div></div></div>
+  <div style="text-align:right"><span class="badge">ZUGFeRD 2.3 · EN 16931</span></div>
+</header>
+<section class="addresses">
+  <div class="address"><div class="sender">Muster GmbH · Hauptstraße 1 · 12345 Musterstadt</div>Kunde AG<br>z. Hd. Erika Beispiel<br>Bahnhofstraße 5<br>54321 Beispielstadt</div>
+  <dl class="meta"><dt>Rechnungsnummer</dt><dd>RE-2026-0042</dd><dt>Rechnungsdatum</dt><dd>01.11.2026</dd><dt>Leistungsdatum</dt><dd>30.09.2026</dd><dt>Kundennummer</dt><dd>K-1007</dd></dl>
+</section>
+<h1>Rechnung</h1>
+<p class="intro">Vielen Dank für Ihren Auftrag. Wir berechnen Ihnen folgende Leistungen:</p>
+<table>
+  <thead><tr><th>Pos.</th><th>Beschreibung</th><th class="num">Menge</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr></thead>
+  <tbody>
+<tr><td class="pos">1</td><td><strong>Webentwicklung Sprint 1</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">2</td><td><strong>Webentwicklung Sprint 2</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">3</td><td><strong>Webentwicklung Sprint 3</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">4</td><td><strong>Webentwicklung Sprint 4</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">5</td><td><strong>Webentwicklung Sprint 5</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">6</td><td><strong>Webentwicklung Sprint 6</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">7</td><td><strong>Webentwicklung Sprint 7</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">8</td><td><strong>Webentwicklung Sprint 8</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">9</td><td><strong>Webentwicklung Sprint 9</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">10</td><td><strong>Webentwicklung Sprint 10</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">11</td><td><strong>Webentwicklung Sprint 11</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">12</td><td><strong>Webentwicklung Sprint 12</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">13</td><td><strong>Webentwicklung Sprint 13</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">14</td><td><strong>Webentwicklung Sprint 14</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">15</td><td><strong>Webentwicklung Sprint 15</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">16</td><td><strong>Webentwicklung Sprint 16</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">17</td><td><strong>Webentwicklung Sprint 17</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">18</td><td><strong>Webentwicklung Sprint 18</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">19</td><td><strong>Webentwicklung Sprint 19</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">20</td><td><strong>Webentwicklung Sprint 20</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">21</td><td><strong>Webentwicklung Sprint 21</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">22</td><td><strong>Webentwicklung Sprint 22</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">23</td><td><strong>Webentwicklung Sprint 23</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">24</td><td><strong>Webentwicklung Sprint 24</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">25</td><td><strong>Webentwicklung Sprint 25</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">26</td><td><strong>Webentwicklung Sprint 26</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">27</td><td><strong>Webentwicklung Sprint 27</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">28</td><td><strong>Webentwicklung Sprint 28</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">29</td><td><strong>Webentwicklung Sprint 29</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">30</td><td><strong>Webentwicklung Sprint 30</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">31</td><td><strong>Webentwicklung Sprint 31</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">32</td><td><strong>Webentwicklung Sprint 32</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">33</td><td><strong>Webentwicklung Sprint 33</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">34</td><td><strong>Webentwicklung Sprint 34</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">35</td><td><strong>Webentwicklung Sprint 35</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">36</td><td><strong>Webentwicklung Sprint 36</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">37</td><td><strong>Webentwicklung Sprint 37</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">38</td><td><strong>Webentwicklung Sprint 38</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">39</td><td><strong>Webentwicklung Sprint 39</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">40</td><td><strong>Webentwicklung Sprint 40</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">41</td><td><strong>Webentwicklung Sprint 41</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">42</td><td><strong>Webentwicklung Sprint 42</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">43</td><td><strong>Webentwicklung Sprint 43</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">44</td><td><strong>Webentwicklung Sprint 44</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">45</td><td><strong>Webentwicklung Sprint 45</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">46</td><td><strong>Webentwicklung Sprint 46</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">47</td><td><strong>Webentwicklung Sprint 47</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">48</td><td><strong>Webentwicklung Sprint 48</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">49</td><td><strong>Webentwicklung Sprint 49</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">50</td><td><strong>Webentwicklung Sprint 50</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">51</td><td><strong>Webentwicklung Sprint 51</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">52</td><td><strong>Webentwicklung Sprint 52</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">53</td><td><strong>Webentwicklung Sprint 53</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">54</td><td><strong>Webentwicklung Sprint 54</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">55</td><td><strong>Webentwicklung Sprint 55</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">56</td><td><strong>Webentwicklung Sprint 56</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">57</td><td><strong>Webentwicklung Sprint 57</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">58</td><td><strong>Webentwicklung Sprint 58</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">59</td><td><strong>Webentwicklung Sprint 59</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">60</td><td><strong>Webentwicklung Sprint 60</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">61</td><td><strong>Webentwicklung Sprint 61</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">62</td><td><strong>Webentwicklung Sprint 62</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">63</td><td><strong>Webentwicklung Sprint 63</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">64</td><td><strong>Webentwicklung Sprint 64</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">65</td><td><strong>Webentwicklung Sprint 65</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">66</td><td><strong>Webentwicklung Sprint 66</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">67</td><td><strong>Webentwicklung Sprint 67</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">68</td><td><strong>Webentwicklung Sprint 68</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">69</td><td><strong>Webentwicklung Sprint 69</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">70</td><td><strong>Webentwicklung Sprint 70</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">71</td><td><strong>Webentwicklung Sprint 71</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">72</td><td><strong>Webentwicklung Sprint 72</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">73</td><td><strong>Webentwicklung Sprint 73</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">74</td><td><strong>Webentwicklung Sprint 74</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">75</td><td><strong>Webentwicklung Sprint 75</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">76</td><td><strong>Webentwicklung Sprint 76</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">77</td><td><strong>Webentwicklung Sprint 77</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">78</td><td><strong>Webentwicklung Sprint 78</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">79</td><td><strong>Webentwicklung Sprint 79</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">80</td><td><strong>Webentwicklung Sprint 80</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">81</td><td><strong>Webentwicklung Sprint 81</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">82</td><td><strong>Webentwicklung Sprint 82</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">83</td><td><strong>Webentwicklung Sprint 83</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">84</td><td><strong>Webentwicklung Sprint 84</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">85</td><td><strong>Webentwicklung Sprint 85</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">86</td><td><strong>Webentwicklung Sprint 86</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">87</td><td><strong>Webentwicklung Sprint 87</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">88</td><td><strong>Webentwicklung Sprint 88</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">89</td><td><strong>Webentwicklung Sprint 89</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">90</td><td><strong>Webentwicklung Sprint 90</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">91</td><td><strong>Webentwicklung Sprint 91</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">92</td><td><strong>Webentwicklung Sprint 92</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">93</td><td><strong>Webentwicklung Sprint 93</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">94</td><td><strong>Webentwicklung Sprint 94</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">95</td><td><strong>Webentwicklung Sprint 95</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">96</td><td><strong>Webentwicklung Sprint 96</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">97</td><td><strong>Webentwicklung Sprint 97</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">98</td><td><strong>Webentwicklung Sprint 98</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">99</td><td><strong>Webentwicklung Sprint 99</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">100</td><td><strong>Webentwicklung Sprint 100</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">101</td><td><strong>Webentwicklung Sprint 101</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">102</td><td><strong>Webentwicklung Sprint 102</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">103</td><td><strong>Webentwicklung Sprint 103</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">104</td><td><strong>Webentwicklung Sprint 104</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">105</td><td><strong>Webentwicklung Sprint 105</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">106</td><td><strong>Webentwicklung Sprint 106</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">107</td><td><strong>Webentwicklung Sprint 107</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">108</td><td><strong>Webentwicklung Sprint 108</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">109</td><td><strong>Webentwicklung Sprint 109</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">110</td><td><strong>Webentwicklung Sprint 110</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">111</td><td><strong>Webentwicklung Sprint 111</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">112</td><td><strong>Webentwicklung Sprint 112</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">113</td><td><strong>Webentwicklung Sprint 113</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">114</td><td><strong>Webentwicklung Sprint 114</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">115</td><td><strong>Webentwicklung Sprint 115</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">116</td><td><strong>Webentwicklung Sprint 116</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">117</td><td><strong>Webentwicklung Sprint 117</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">118</td><td><strong>Webentwicklung Sprint 118</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">119</td><td><strong>Webentwicklung Sprint 119</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">120</td><td><strong>Webentwicklung Sprint 120</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">121</td><td><strong>Webentwicklung Sprint 121</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">122</td><td><strong>Webentwicklung Sprint 122</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">123</td><td><strong>Webentwicklung Sprint 123</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">124</td><td><strong>Webentwicklung Sprint 124</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">125</td><td><strong>Webentwicklung Sprint 125</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">126</td><td><strong>Webentwicklung Sprint 126</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">127</td><td><strong>Webentwicklung Sprint 127</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">128</td><td><strong>Webentwicklung Sprint 128</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">129</td><td><strong>Webentwicklung Sprint 129</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">130</td><td><strong>Webentwicklung Sprint 130</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">131</td><td><strong>Webentwicklung Sprint 131</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">132</td><td><strong>Webentwicklung Sprint 132</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">133</td><td><strong>Webentwicklung Sprint 133</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">134</td><td><strong>Webentwicklung Sprint 134</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">135</td><td><strong>Webentwicklung Sprint 135</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">136</td><td><strong>Webentwicklung Sprint 136</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">137</td><td><strong>Webentwicklung Sprint 137</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">138</td><td><strong>Webentwicklung Sprint 138</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">139</td><td><strong>Webentwicklung Sprint 139</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">140</td><td><strong>Webentwicklung Sprint 140</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">141</td><td><strong>Webentwicklung Sprint 141</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">142</td><td><strong>Webentwicklung Sprint 142</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">143</td><td><strong>Webentwicklung Sprint 143</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">144</td><td><strong>Webentwicklung Sprint 144</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">145</td><td><strong>Webentwicklung Sprint 145</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">146</td><td><strong>Webentwicklung Sprint 146</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">147</td><td><strong>Webentwicklung Sprint 147</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">148</td><td><strong>Webentwicklung Sprint 148</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">149</td><td><strong>Webentwicklung Sprint 149</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+<tr><td class="pos">150</td><td><strong>Webentwicklung Sprint 150</strong><div class="muted">Kundenportal, Umsetzung und Tests</div></td><td class="num">2 Std.</td><td class="num">95,00 €</td><td class="num">190,00 €</td></tr>
+  </tbody>
+</table>
+<div class="totals">
+  <div><span>Nettobetrag</span><span>28,500.00 €</span></div>
+  <div><span>Umsatzsteuer 19 %</span><span>5,415.00 €</span></div>
+  <div class="grand"><span>Gesamtbetrag</span><span>33,915.00 €</span></div>
+</div>
+<div class="note">Bitte überweisen Sie den Betrag bis zum 15.11.2026 auf das Konto DE02 1203 0000 0000 2020 51 (BYLADEM1001).</div>
+</body></html>

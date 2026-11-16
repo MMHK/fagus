@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Inline layout</title>
+<style>
+@font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A5; margin: 10mm; }
+body { margin: 0; font: 10pt/1.5 Inter, sans-serif; color: #111; }
+p { margin: 0 0 4mm; width: 110mm; }
+a { color: #2563eb; text-decoration: underline; }
+code { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 4px; font-size: 9pt; }
+.mark { background: #fde68a; padding: 2px 0; }
+.wrap { border: 1px solid #e11d48; background: #ffe4e6; padding: 0 3px; }
+.big { font-size: 18pt; }
+.badge { display: inline-block; padding: 1mm 2.5mm; border-radius: 99px; background: #dbeafe; color: #1d4ed8; font-size: 8pt; font-weight: 700; }
+.card { display: inline-block; width: 30mm; padding: 2mm; border: 1px solid #94a3b8; font-size: 8pt; line-height: 1.3; }
+.top { vertical-align: top; } .bottom { vertical-align: bottom; } .middle { vertical-align: middle; }
+.nowrap { white-space: nowrap; background: #dcfce7; }
+.justify { text-align: justify; }
+.center { text-align: center; }
+.shift { position: relative; top: 3px; color: #e11d48; }
+.box { display: inline-block; width: 8mm; height: 8mm; background: #16a34a; }
+</style></head>
+<body>
+<p>Plain text with <strong>strong</strong>, <em>emphasis</em> and <a href="#">a link with <b>bold inside</b> it</a>, then <code>inline code</code> and <span class="mark">highlighted text</span>.</p>
+<p>An inline box that breaks: <span class="wrap">this bordered span runs across the end of the line and continues on the next one</span> and ends here.</p>
+<p>Super<sup>2</sup> and sub<sub>i</sub>, a <span class="big">big word</span> in the line, and x<span class="middle box"></span>middle.</p>
+<p>Badges: <span class="badge">Paid</span> <span class="badge">Overdue</span> next to text.</p>
+<p>Cards on the baseline <span class="card">An inline block with two lines of text</span> after.</p>
+<p>Aligned <span class="card top">vertical-align: top in the line</span> and <span class="card bottom">bottom</span> end.</p>
+<p class="justify">Justified text with <span class="nowrap">a span that does not wrap</span> stays readable even when the words of a long sentence are spread over the full width of the paragraph.</p>
+<p class="center">Centered with a <span class="shift">relative</span> span<br>and a forced line break.</p>
+</body></html>

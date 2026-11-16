@@ -1,0 +1,30 @@
+[package]
+name = "fagus-text"
+description = "Fonts, shaping and line breaking for Fagus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+# Parts follow Chromium (CHROMIUM-LICENSE) and HarfBuzz (HARFBUZZ-LICENSE); the font Inter
+# (fonts/Inter-LICENSE.txt). The hyphenation dictionaries each have their own license, listed in
+# hyphenation/LICENSE.txt and THIRD-PARTY-NOTICES.
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause AND MIT AND OFL-1.1"
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+harfrust.workspace = true
+skrifa.workspace = true
+unicode-linebreak.workspace = true
+icu_segmenter.workspace = true
+unicode-properties.workspace = true
+rustc-hash.workspace = true
+smallvec.workspace = true
+thiserror.workspace = true
+wuff.workspace = true
+fontdb.workspace = true
+brotli-decompressor.workspace = true

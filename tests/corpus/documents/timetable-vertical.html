@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Stundenplan 7b</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 10mm 12mm; }
+html { font: 8.5pt/1.25 Inter, sans-serif; color: #222; }
+body { margin: 0; }
+h1 { font-size: 16pt; margin: 0 0 1mm; }
+.sub { color: #666; margin-bottom: 4mm; display: flex; justify-content: space-between; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+th, td { border: 1px solid #9aa5b1; padding: 1.2mm 1.5mm; vertical-align: top; }
+thead th { background: #e4e7eb; font-size: 9pt; }
+thead th:first-child { width: 9mm; }
+thead th:nth-child(2) { width: 18mm; }
+th.period { writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; vertical-align: middle; background: #f5f7fa; font-weight: 700; white-space: nowrap; padding: 2mm 1mm; }
+td.time { font-size: 7.5pt; color: #52606d; white-space: nowrap; vertical-align: middle; text-align: center; }
+td .subj { font-weight: 700; display: block; }
+td .room { font-size: 7pt; color: #616e7c; }
+td .room::before { content: "Raum "; }
+.de { background: #fff3c4; } .ma { background: #dceefb; } .en { background: #e3f9e5; } .bio { background: #f0fcf9; }
+.ge { background: #fce8f3; } .sp { background: #ffe8d9; } .mu { background: #eae2f8; } .ku { background: #ffefe6; } .re { background: #f1f1f1; } .inf { background: #e0e8f9; }
+tr.break td { background: repeating-linear-gradient(45deg, #fafafa 0 3px, #eeeeee 3px 6px); text-align: center; color: #7b8794; font-size: 7pt; padding: .6mm; letter-spacing: .2em; text-transform: uppercase; }
+tr.break th { writing-mode: horizontal-tb; transform: none; font-size: 7pt; }
+.side { writing-mode: vertical-lr; text-orientation: mixed; position: fixed; right: -8mm; top: 0; bottom: 0; text-align: center; color: #9aa5b1; font-size: 7pt; letter-spacing: .3em; }
+.legend { display: flex; flex-wrap: wrap; gap: 2mm 5mm; margin-top: 3mm; font-size: 7.5pt; }
+.legend span::before { content: ""; display: inline-block; width: 3mm; height: 3mm; border: 1px solid #9aa5b1; margin-right: 1.2mm; vertical-align: -0.5mm; background: var(--c); }
+</style></head><body>
+<h1>Stundenplan Klasse 7b</h1>
+<div class="sub"><span>Gymnasium am Stadtpark · Schuljahr 2026/27 · gültig ab 2. November 2026</span><span>Klassenleitung: Frau Dr. Yilmaz</span></div>
+<table>
+<thead><tr><th></th><th>Zeit</th><th>Montag</th><th>Dienstag</th><th>Mittwoch</th><th>Donnerstag</th><th>Freitag</th></tr></thead>
+<tbody>
+<tr><th class="period" rowspan="2">Block 1</th><td class="time">07:55<br>08:40</td><td class="de"><span class="subj">Deutsch</span><span class="room">214</span></td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="en"><span class="subj">Englisch</span><span class="room">214</span></td><td class="bio"><span class="subj">Biologie</span><span class="room">B 02</span></td><td class="ge"><span class="subj">Geschichte</span><span class="room">214</span></td></tr>
+<tr><td class="time">08:45<br>09:30</td><td class="de"><span class="subj">Deutsch</span><span class="room">214</span></td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="en"><span class="subj">Englisch</span><span class="room">214</span></td><td class="bio"><span class="subj">Biologie</span><span class="room">B 02</span></td><td class="ge"><span class="subj">Geschichte</span><span class="room">214</span></td></tr>
+<tr class="break"><th></th><td colspan="6">Große Pause</td></tr>
+<tr><th class="period" rowspan="2">Block 2</th><td class="time">09:50<br>10:35</td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="sp"><span class="subj">Sport</span><span class="room">Halle 1</span></td><td class="de"><span class="subj">Deutsch</span><span class="room">214</span></td><td class="en"><span class="subj">Englisch</span><span class="room">214</span></td><td class="inf"><span class="subj">Informatik</span><span class="room">PC 3</span></td></tr>
+<tr><td class="time">10:40<br>11:25</td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="sp"><span class="subj">Sport</span><span class="room">Halle 1</span></td><td class="de"><span class="subj">Deutsch</span><span class="room">214</span></td><td class="mu"><span class="subj">Musik</span><span class="room">M 1</span></td><td class="inf"><span class="subj">Informatik</span><span class="room">PC 3</span></td></tr>
+<tr class="break"><th></th><td colspan="6">Pause</td></tr>
+<tr><th class="period" rowspan="2">Block 3</th><td class="time">11:40<br>12:25</td><td class="en"><span class="subj">Englisch</span><span class="room">214</span></td><td class="re"><span class="subj">Religion / Ethik</span><span class="room">212 / 213</span></td><td class="ku"><span class="subj">Kunst</span><span class="room">K 2</span></td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="de"><span class="subj">Deutsch</span><span class="room">214</span></td></tr>
+<tr><td class="time">12:30<br>13:15</td><td class="ge"><span class="subj">Geografie</span><span class="room">215</span></td><td class="re"><span class="subj">Religion / Ethik</span><span class="room">212 / 213</span></td><td class="ku"><span class="subj">Kunst</span><span class="room">K 2</span></td><td class="ma"><span class="subj">Mathematik</span><span class="room">108</span></td><td class="mu"><span class="subj">Musik</span><span class="room">M 1</span></td></tr>
+<tr class="break"><th></th><td colspan="6">Mittagspause · Mensa</td></tr>
+<tr><th class="period">Nachmittag</th><td class="time">14:00<br>15:30</td><td></td><td class="sp"><span class="subj">AG Schwimmen</span><span class="room">Stadtbad</span></td><td></td><td class="inf"><span class="subj">AG Robotik</span><span class="room">PC 3</span></td><td></td></tr>
+</tbody></table>
+<div class="legend"><span style="--c:#fff3c4">Sprachen (Deutsch)</span><span style="--c:#dceefb">Mathematik</span><span style="--c:#e3f9e5">Englisch</span><span style="--c:#f0fcf9">Naturwissenschaften</span><span style="--c:#fce8f3">Gesellschaftswissenschaften</span><span style="--c:#ffe8d9">Sport</span><span style="--c:#eae2f8">Musik</span><span style="--c:#ffefe6">Kunst</span><span style="--c:#e0e8f9">Informatik</span></div>
+<div class="side">Stand 30.10.2026 · Änderungen vorbehalten</div>
+</body></html>

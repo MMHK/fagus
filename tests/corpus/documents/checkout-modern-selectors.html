@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Checkout</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A5; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 12px/1.45 Inter, sans-serif; color: #222; }
+.hero { height: 20dvh; min-height: 18svh; max-height: 40lvh; background: linear-gradient(120deg, #312e81, #7c3aed); color: #fff; display: grid; place-items: center; border-radius: 10px; margin-bottom: 4vh; }
+.hero h1 { margin: 0; font-size: clamp(16px, 4vw, 28px); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.side { height: 30dvb; border: 1px dashed #aaa; border-radius: 8px; padding: 6px; font-size: 11px; }
+label { display: block; font-weight: 700; margin: 6px 0 2px; }
+input, select { font: inherit; width: 100%; padding: 4px 6px; border: 1px solid #bbb; border-radius: 5px; }
+input:required { border-left: 3px solid #f59e0b; }
+input:optional { border-style: dashed; }
+input:invalid { background: #fff7ed; }
+input:user-invalid { border-color: red; }
+input:focus-visible { outline: 3px solid red; }
+input:valid { background: #f0fdf4; }
+input:placeholder-shown { font-style: italic; }
+input:read-only { color: #888; }
+input:in-range { box-shadow: inset 0 0 0 1px #16a34a; }
+input:out-of-range { box-shadow: inset 0 0 0 2px #dc2626; }
+input[type=checkbox], input[type=radio] { width: auto; }
+input:indeterminate + span { color: #7c3aed; }
+input:default + span { text-decoration: underline; }
+:checked + span { font-weight: 700; }
+option:checked { color: #7c3aed; }
+.req::after { content: " *"; color: #dc2626; }
+button { font: inherit; }
+[popover] { border: 2px solid #7c3aed; padding: 8px; }
+[popover]:popover-open { background: yellow; }
+.inert-block { opacity: .9; }
+[inert] { color: #999; }
+dialog:not([open]) { display: block; }
+details:not([open]) > summary::after { content: " (closed)"; color: #999; }
+.has-error:has(input:invalid) label { color: #b91c1c; }
+p:empty { height: 6px; background: #eee; margin: 6px 0; }
+:is(h2, h3):where(.tight) { margin: 4px 0; }
+h2 { font-size: 14px; }
+.cq { container-type: inline-size; border: 1px solid #ccc; padding: 6px; border-radius: 6px; margin-top: 8px; }
+@container (min-width: 200px) { .cq p { color: #1d4ed8; font-weight: 700; } }
+.nest { color: #333; & b { color: #b45309; } &:hover b { color: red; } }
+</style>
+</head>
+<body>
+<div class="hero"><h1>Almost done, Sam!</h1></div>
+<div class="cols">
+<form>
+  <h2 class="tight">Contact</h2>
+  <div class="has-error"><label class="req">E-mail</label><input type="email" required value="not-an-email"></div>
+  <label>Phone</label><input type="tel" placeholder="optional">
+  <label class="req">Quantity (1–5)</label><input type="number" min="1" max="5" value="7" required>
+  <label>Seats</label><input type="number" min="1" max="5" value="3">
+  <label>Order ID</label><input value="A-2291" readonly>
+  <label>Code</label><input pattern="[A-Z]{4}" value="ab12">
+  <p></p>
+  <label><input type="checkbox" checked> <span>Save details</span></label>
+  <label><input type="radio" name="r" checked> <span>Standard</span></label>
+  <label><input type="radio" name="r"> <span>Express</span></label>
+  <select><option>One</option><option selected>Two</option></select>
+</form>
+<div>
+  <div class="side">Side panel 30dvb tall.<div class="nest">Nested <b>selector</b> text.</div></div>
+  <div popover id="tip">Popover content that is not shown.</div>
+  <div popover="manual" id="tip2" style="display:block;position:static">Popover forced visible by style.</div>
+  <section inert><h3 class="tight">Inert section</h3><p>Text in an inert section prints normally.</p><button>Inert button</button></section>
+  <dialog>Closed dialog shown with display:block.</dialog>
+  <details><summary>More info</summary>hidden</details>
+  <div class="cq"><p>Container query text.</p></div>
+</div>
+</div>
+</body>
+</html>

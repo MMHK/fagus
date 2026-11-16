@@ -1,0 +1,11 @@
+/target
+/tests/output
+/bench/results
+*.pdf
+!tests/corpus/**/*.pdf
+.DS_Store
+/vendor/
+/composer.lock
+/.phpunit.cache/
+/php/fagus/bin/fagus
+/php/fagus/bin/fagus.exe

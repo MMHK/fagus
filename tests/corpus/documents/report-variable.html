@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Quarterly figures</title>
+<style>
+/* A report set in one variable font: weights and optical sizes from its axes. */
+@font-face { font-family: "Inter Var"; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff") tech(variations); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: "Inter Auto"; src: url(../../webfonts/Inter-Variable-Latin.woff) format("woff"); }
+@page { size: A5; margin: 14mm 14mm 16mm }
+html { font: 9.5pt/1.45 "Inter Var"; color: #14181f }
+body { margin: 0 }
+h1 { font-size: 24pt; font-weight: 750; line-height: 1.1; margin: 0 0 1mm; letter-spacing: -0.01em }
+.kicker { font-size: 7.5pt; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: 0.06em; color: #5b6475; margin: 0 }
+.lead { font-size: 12pt; font-weight: 350; margin: 3mm 0 5mm; font-optical-sizing: none }
+h2 { font-size: 13pt; font-weight: 650; margin: 5mm 0 1.5mm; font-variation-settings: "opsz" 14 }
+p { margin: 0 0 2mm; hyphens: auto }
+.weights span { display: inline-block; width: 22%; font-size: 10pt }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-feature-settings: "zero", "cv11" }
+th { text-align: left; font-weight: 600; font-size: 8pt; border-bottom: 0.75pt solid #14181f; padding: 1mm 1.5mm }
+td { padding: 1mm 1.5mm; border-bottom: 0.5pt solid #dde1e8 }
+td + td, th + th { text-align: right }
+.up { color: #11713c } .down { color: #a12a2a }
+.note { font-size: 8pt; color: #5b6475; font-variant-numeric: diagonal-fractions }
+.note b { font-family: "Inter Auto"; font-weight: 800 }
+.code { font-feature-settings: "ss01", "case"; text-rendering: optimizeSpeed }
+</style></head>
+<body>
+<p class="kicker">Quarterly Report, Q3 2026</p>
+<h1>Steady growth across all regions</h1>
+<p class="lead">Revenue rose to 4.8 million euros, the third consecutive quarter of growth, while costs remained within the planned range.</p>
+<div class="weights"><span style="font-weight: 100">Thin 100</span><span style="font-weight: 250">Light 250</span><span style="font-weight: 450">Book 450</span><span style="font-weight: 900">Black 900</span></div>
+<h2>Revenue by region</h2>
+<table>
+  <thead><tr><th>Region</th><th>Q2 2026</th><th>Q3 2026</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr><td>North</td><td>1,204,000</td><td>1,318,500</td><td class="up">+9.5 %</td></tr>
+    <tr><td>South</td><td>980,100</td><td>1,011,000</td><td class="up">+3.2 %</td></tr>
+    <tr><td>East</td><td>1,410,800</td><td>1,388,000</td><td class="down">-1.6 %</td></tr>
+    <tr><td>West</td><td>1,040,000</td><td>1,106,600</td><td class="up">+6.4 %</td></tr>
+  </tbody>
+</table>
+<h2>Outlook</h2>
+<p>We expect the fourth quarter to follow the seasonal pattern of previous years: demand for the A-series peaks in November, and about 1/4 of annual service contracts renew in December. Order intake in October was 12 % above the same month last year.</p>
+<p class="note">Figures in euros, rounded. Changes compared with the previous quarter; about 3/4 of the revenue is recurring. <b>Preliminary</b> figures, subject to audit.</p>
+<p class="code">Reference codes: (Q3-2026) [REV-0815] {ID: 0O0}, audited.</p>
+</body></html>

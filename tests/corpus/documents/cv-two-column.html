@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Curriculum vitae — Mira Lindqvist</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Italic.ttf); font-style: italic; }
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html { font: 9.5pt/1.45 Inter, sans-serif; color: #1f2933; }
+body { margin: 0; }
+.cv { display: grid; grid-template-columns: 68mm 1fr; min-height: 297mm; }
+aside { background: #243b53; color: #d9e2ec; padding: 16mm 8mm 12mm 10mm; }
+main { padding: 16mm 14mm 12mm 10mm; }
+.photo { width: 34mm; height: 34mm; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 6mm; border: 1.2mm solid #486581; }
+aside h2 { font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: #9fb3c8; border-bottom: 1px solid #486581; padding-bottom: 1.5mm; margin: 7mm 0 3mm; }
+aside ul { list-style: none; padding: 0; margin: 0; }
+aside li { margin-bottom: 1.6mm; overflow-wrap: anywhere; }
+.skill { display: flex; justify-content: space-between; align-items: center; gap: 3mm; margin-bottom: 2mm; }
+.bar { flex: 0 0 22mm; height: 1.6mm; background: #334e68; border-radius: 1mm; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, #62b0e8, #b6e0fe); border-radius: inherit; }
+.dots { display: inline-flex; gap: 1mm; }
+.dots b { width: 2.2mm; height: 2.2mm; border-radius: 50%; background: #486581; }
+.dots b.on { background: #9fb3c8; }
+h1 { font-size: 26pt; line-height: 1.05; margin: 0; letter-spacing: -.02em; color: #102a43; }
+.role { font-size: 12pt; color: #486581; margin: 1mm 0 5mm; }
+.lead { color: #334e68; margin: 0 0 6mm; text-wrap: pretty; }
+main h2 { font-size: 11pt; color: #102a43; margin: 0 0 3mm; display: flex; align-items: center; gap: 3mm; }
+main h2::after { content: ""; flex: 1; height: 1px; background: #bcccdc; }
+.timeline { position: relative; margin: 0 0 6mm; padding-left: 6mm; }
+.timeline::before { content: ""; position: absolute; left: 1.4mm; top: 1.5mm; bottom: 1mm; width: .5mm; background: #bcccdc; }
+.entry { position: relative; margin-bottom: 4mm; break-inside: avoid; }
+.entry::before { content: ""; position: absolute; left: -6mm; top: 1.3mm; width: 3.3mm; height: 3.3mm; border-radius: 50%; background: #fff; border: .7mm solid #2680c2; }
+.entry header { display: flex; justify-content: space-between; align-items: baseline; gap: 4mm; }
+.entry h3 { font-size: 10pt; margin: 0; }
+.entry time { font-size: 8pt; color: #627d98; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.entry .org { color: #486581; font-style: italic; }
+.entry ul { margin: 1mm 0 0; padding-left: 4mm; }
+.entry li::marker { color: #2680c2; }
+.tags { display: flex; flex-wrap: wrap; gap: 1.5mm; margin-top: 1.5mm; }
+.tags span { font-size: 7.5pt; background: #dcEEFB; color: #0b69a3; padding: .3mm 2mm; border-radius: 99px; }
+</style></head><body>
+<div class="cv">
+<aside>
+  <img class="photo" src="../images/photo.jpg" alt="">
+  <h2>Contact</h2>
+  <ul><li>Södra Förstadsgatan 12<br>211 43 Malmö, Sweden</li><li>+46 70 174 06 42</li><li>mira.lindqvist@lindqvist.example</li><li>lindqvist.example/structural-engineering</li></ul>
+  <h2>Skills</h2>
+  <div class="skill"><span>Finite element analysis</span><span class="bar"><i style="width:92%"></i></span></div>
+  <div class="skill"><span>Timber structures</span><span class="bar"><i style="width:85%"></i></span></div>
+  <div class="skill"><span>BIM / Revit</span><span class="bar"><i style="width:70%"></i></span></div>
+  <div class="skill"><span>Python scripting</span><span class="bar"><i style="width:60%"></i></span></div>
+  <div class="skill"><span>Eurocode 5</span><span class="bar"><i style="width:88%"></i></span></div>
+  <h2>Languages</h2>
+  <div class="skill"><span>Swedish</span><span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b></span></div>
+  <div class="skill"><span>English</span><span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b></span></div>
+  <div class="skill"><span>German</span><span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></span></div>
+  <div class="skill"><span>Finnish</span><span class="dots"><b class="on"></b><b class="on"></b><b></b><b></b><b></b></span></div>
+  <h2>Certificates</h2>
+  <ul><li>Chartered Engineer (CEng), 2019</li><li>Passive House Designer, 2021</li></ul>
+</aside>
+<main>
+  <h1>Mira Lindqvist</h1>
+  <div class="role">Senior Structural Engineer — Mass Timber</div>
+  <p class="lead">Structural engineer with twelve years of experience in the design of multi-storey timber buildings, from early concept to site supervision. I enjoy turning ambitious architecture into buildable, economical structures and mentoring younger engineers.</p>
+  <h2>Experience</h2>
+  <div class="timeline">
+    <div class="entry"><header><h3>Lead structural engineer</h3><time>2021 – today</time></header><div class="org">Nordvik Ingenjörer AB, Malmö</div>
+      <ul><li>Led the structural design of an eleven-storey cross-laminated timber residential block (14,000 m²).</li><li>Introduced parametric connection design, cutting detailing time by a third.</li><li>Supervises a team of six engineers and two BIM coordinators.</li></ul>
+      <div class="tags"><span>CLT</span><span>Glulam</span><span>RFEM</span><span>Dynamo</span></div></div>
+    <div class="entry"><header><h3>Structural engineer</h3><time>2016 – 2021</time></header><div class="org">Holm &amp; Partners, Copenhagen</div>
+      <ul><li>Designed timber and hybrid structures for schools, sports halls and offices.</li><li>Performed vibration and fire resistance analyses for long-span timber floors.</li></ul></div>
+    <div class="entry"><header><h3>Graduate engineer</h3><time>2013 – 2016</time></header><div class="org">Byggkonsult Syd, Lund</div>
+      <ul><li>Calculations for steel and concrete frames, site visits and inspection reports.</li></ul></div>
+  </div>
+  <h2>Education</h2>
+  <div class="timeline">
+    <div class="entry"><header><h3>M.Sc. Structural Engineering</h3><time>2011 – 2013</time></header><div class="org">Lund University, Faculty of Engineering</div><p style="margin:1mm 0 0">Thesis: “Moment-resisting connections in glued laminated timber frames”, awarded the faculty prize.</p></div>
+    <div class="entry"><header><h3>B.Sc. Civil Engineering</h3><time>2008 – 2011</time></header><div class="org">Chalmers University of Technology, Gothenburg</div></div>
+  </div>
+  <h2>Selected projects</h2>
+  <div class="timeline">
+    <div class="entry"><header><h3>Kvarteret Lärkan, Malmö</h3><time>2023</time></header>Eleven storeys, CLT walls and slabs on a concrete podium; nominated for the Swedish Wood Award.</div>
+    <div class="entry"><header><h3>Ørestad school extension</h3><time>2019</time></header>Glulam portal frames with 24 m span and a green roof.</div>
+  </div>
+</main>
+</div>
+</body></html>

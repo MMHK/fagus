@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Ladeliste 06.11.2026</title>
+<style>
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../fonts/Inter-Bold.ttf); font-weight: 700; }
+@page { size: A4 landscape; margin: 12mm 12mm 14mm;
+  @bottom-left { content: "Spedition Saale-Elster GmbH · Ladeliste 2026-11-06"; font: 7pt Inter, sans-serif; color: #666; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 7pt Inter, sans-serif; color: #666; } }
+html { font: 8pt/1.3 Inter, sans-serif; color: #111; }
+body { margin: 0; }
+header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4mm; }
+h1 { font-size: 15pt; margin: 0; }
+header dl { display: grid; grid-template-columns: auto auto; gap: 0 4mm; margin: 0; font-size: 8pt; }
+header dt { color: #555; } header dd { margin: 0; font-weight: 700; text-align: right; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: #233; color: #fff; text-align: left; padding: 1.4mm 1.5mm; font-size: 7.5pt; }
+thead th.num { text-align: right; }
+td { padding: 1mm 1.5mm; border-bottom: .4pt solid #ccc; vertical-align: top; }
+td small { color: #555; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.mono { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+tr.group th { text-align: left; background: #e7eef0; padding: 1.6mm 1.5mm; font-size: 9pt; border-top: 1pt solid #233; }
+tr.group .veh { float: right; font-weight: 400; font-size: 7.5pt; color: #333; }
+tr.subtotal td { font-weight: 700; background: #f4f6f6; border-bottom: 1pt solid #233; }
+tr.group, tr.subtotal { break-inside: avoid; }
+tr.group { break-after: avoid; }
+tbody tr { break-inside: avoid; }
+tfoot td { font-weight: 700; font-size: 9pt; border-top: 1.5pt solid #111; border-bottom: 0; padding-top: 1.6mm; }
+.flag { display: inline-block; padding: 0 1.5mm; border-radius: 1mm; background: #dbeafe; color: #1e3a8a; font-size: 7pt; font-weight: 700; }
+.flag.warn { background: #fef3c7; color: #92400e; }
+.sign { display: flex; gap: 12mm; margin-top: 10mm; break-inside: avoid; }
+.sign div { flex: 1; border-top: .75pt solid #111; padding-top: 1mm; font-size: 7pt; color: #444; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Ladeliste</h1><div>Depot Leipzig-Radefeld · Verladung 06.11.2026</div></div>
+  <dl><dt>Touren</dt><dd>5</dd><dt>Packstücke</dt><dd>156</dd><dt>Gewicht</dt><dd>17.315,0 kg</dd></dl>
+</header>
+<table>
+  <colgroup><col style="width: 11mm"><col><col style="width: 44mm"><col style="width: 30mm"><col style="width: 14mm"><col style="width: 22mm"><col style="width: 26mm"></colgroup>
+  <thead><tr><th>Nr.</th><th>Empfänger</th><th>Sendungsnummer</th><th>Art</th><th class="num">Anz.</th><th class="num">kg</th><th>Hinweis</th></tr></thead>
+  <tbody class="tour">
+    <tr class="group"><th colspan="7">Tour 1 · Leipzig Nord<span class="veh">Fahrzeug LE-TR 401 · Abfahrt 6:00 Uhr</span></th></tr>
+    <tr><td class="num">1.01</td><td><b>Kita Regenbogen</b><br><small>Goethestraße 13</small></td><td class="mono">003404343503055453</td><td>Europalette</td><td class="num">3</td><td class="num">607,8</td><td></td></tr>
+    <tr><td class="num">1.02</td><td><b>Pflegeheim Lindenhof</b><br><small>Goethestraße 108</small></td><td class="mono">003404342823296038</td><td>Europalette</td><td class="num">1</td><td class="num">201,8</td><td></td></tr>
+    <tr><td class="num">1.03</td><td><b>Gasthaus Krone</b><br><small>Rosenweg 16</small></td><td class="mono">003404349790005680</td><td>Rollcontainer</td><td class="num">1</td><td class="num">138,1</td><td></td></tr>
+    <tr><td class="num">1.04</td><td><b>Kita Regenbogen</b><br><small>Industriestraße 31</small></td><td class="mono">003404341776213899</td><td>Karton</td><td class="num">5</td><td class="num">117,0</td><td></td></tr>
+    <tr><td class="num">1.05</td><td><b>Blumen Petersen</b><br><small>Bahnhofstraße 17</small></td><td class="mono">003404346644219119</td><td>Europalette</td><td class="num">3</td><td class="num">688,3</td><td></td></tr>
+    <tr><td class="num">1.06</td><td><b>Schreinerei Vogel</b><br><small>Am Markt 47</small></td><td class="mono">003404347550669089</td><td>Paket</td><td class="num">1</td><td class="num">17,4</td><td></td></tr>
+    <tr><td class="num">1.07</td><td><b>Schreinerei Vogel</b><br><small>Rosenweg 19</small></td><td class="mono">003404348546862847</td><td>Europalette</td><td class="num">3</td><td class="num">841,0</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">1.08</td><td><b>Buchhandlung Lesezeichen</b><br><small>Goethestraße 11</small></td><td class="mono">003404346642502604</td><td>Europalette</td><td class="num">3</td><td class="num">952,6</td><td></td></tr>
+    <tr><td class="num">1.09</td><td><b>Optik Sander</b><br><small>Kirchplatz 18</small></td><td class="mono">003404343852512026</td><td>Europalette</td><td class="num">2</td><td class="num">587,6</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">1.10</td><td><b>Schreinerei Vogel</b><br><small>Rosenweg 115</small></td><td class="mono">003404348166808862</td><td>Karton</td><td class="num">6</td><td class="num">75,9</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">1.11</td><td><b>Physiotherapie Mitte</b><br><small>Schillerstraße 44</small></td><td class="mono">003404348594502849</td><td>Europalette</td><td class="num">2</td><td class="num">388,3</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr class="subtotal"><td colspan="4">Summe Tour 1</td><td class="num">30</td><td class="num">4.615,8</td><td></td></tr>
+  </tbody>
+  <tbody class="tour">
+    <tr class="group"><th colspan="7">Tour 2 · Leipzig Süd<span class="veh">Fahrzeug LE-TR 402 · Abfahrt 7:30 Uhr</span></th></tr>
+    <tr><td class="num">2.01</td><td><b>Sportverein Grün-Weiß</b><br><small>Goethestraße 128</small></td><td class="mono">003404347654793745</td><td>Europalette</td><td class="num">1</td><td class="num">287,8</td><td></td></tr>
+    <tr><td class="num">2.02</td><td><b>Metzgerei Franke</b><br><small>Gartenweg 107</small></td><td class="mono">003404345113424221</td><td>Karton</td><td class="num">6</td><td class="num">150,6</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">2.03</td><td><b>Elektro Schulze GmbH</b><br><small>Lindenallee 60</small></td><td class="mono">003404343530266207</td><td>Paket</td><td class="num">1</td><td class="num">15,1</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">2.04</td><td><b>Bürobedarf Klein</b><br><small>Industriestraße 95</small></td><td class="mono">003404345526864997</td><td>Karton</td><td class="num">2</td><td class="num">40,5</td><td></td></tr>
+    <tr><td class="num">2.05</td><td><b>Metzgerei Franke</b><br><small>Goethestraße 102</small></td><td class="mono">003404348019220235</td><td>Rollcontainer</td><td class="num">4</td><td class="num">273,1</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">2.06</td><td><b>Pflegeheim Lindenhof</b><br><small>Am Markt 113</small></td><td class="mono">003404341225810525</td><td>Paket</td><td class="num">1</td><td class="num">11,5</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">2.07</td><td><b>Kita Regenbogen</b><br><small>Industriestraße 26</small></td><td class="mono">003404344755228983</td><td>Karton</td><td class="num">5</td><td class="num">18,2</td><td></td></tr>
+    <tr><td class="num">2.08</td><td><b>Autohaus Brenner</b><br><small>Schillerstraße 94</small></td><td class="mono">003404349494685091</td><td>Rollcontainer</td><td class="num">1</td><td class="num">69,2</td><td></td></tr>
+    <tr><td class="num">2.09</td><td><b>Kita Regenbogen</b><br><small>Bahnhofstraße 88</small></td><td class="mono">003404341099195379</td><td>Karton</td><td class="num">4</td><td class="num">94,9</td><td></td></tr>
+    <tr><td class="num">2.10</td><td><b>Kita Regenbogen</b><br><small>Industriestraße 7</small></td><td class="mono">003404346012407366</td><td>Karton</td><td class="num">6</td><td class="num">147,5</td><td></td></tr>
+    <tr class="subtotal"><td colspan="4">Summe Tour 2</td><td class="num">31</td><td class="num">1.108,4</td><td></td></tr>
+  </tbody>
+  <tbody class="tour">
+    <tr class="group"><th colspan="7">Tour 3 · Halle (Saale)<span class="veh">Fahrzeug HAL-TR 17 · Abfahrt 8:00 Uhr</span></th></tr>
+    <tr><td class="num">3.01</td><td><b>Café Morgenrot</b><br><small>Schillerstraße 58</small></td><td class="mono">003404341973838693</td><td>Paket</td><td class="num">2</td><td class="num">46,9</td><td></td></tr>
+    <tr><td class="num">3.02</td><td><b>Getränkemarkt Hoffmann</b><br><small>Hauptstraße 72</small></td><td class="mono">003404346773642615</td><td>Rollcontainer</td><td class="num">3</td><td class="num">226,5</td><td></td></tr>
+    <tr><td class="num">3.03</td><td><b>Blumen Petersen</b><br><small>Schillerstraße 21</small></td><td class="mono">003404346139813853</td><td>Paket</td><td class="num">1</td><td class="num">8,7</td><td></td></tr>
+    <tr><td class="num">3.04</td><td><b>Fahrradladen Speiche</b><br><small>Hauptstraße 123</small></td><td class="mono">003404343837193785</td><td>Karton</td><td class="num">6</td><td class="num">30,7</td><td></td></tr>
+    <tr><td class="num">3.05</td><td><b>Hotel Zur Post</b><br><small>Kirchplatz 46</small></td><td class="mono">003404346995080702</td><td>Rollcontainer</td><td class="num">6</td><td class="num">519,6</td><td></td></tr>
+    <tr><td class="num">3.06</td><td><b>Elektro Schulze GmbH</b><br><small>Lindenallee 33</small></td><td class="mono">003404343816889499</td><td>Europalette</td><td class="num">1</td><td class="num">321,8</td><td></td></tr>
+    <tr><td class="num">3.07</td><td><b>Buchhandlung Lesezeichen</b><br><small>Schillerstraße 40</small></td><td class="mono">003404343790331461</td><td>Paket</td><td class="num">1</td><td class="num">3,4</td><td></td></tr>
+    <tr><td class="num">3.08</td><td><b>Bürobedarf Klein</b><br><small>Am Markt 55</small></td><td class="mono">003404343152474070</td><td>Europalette</td><td class="num">2</td><td class="num">462,1</td><td></td></tr>
+    <tr><td class="num">3.09</td><td><b>Metzgerei Franke</b><br><small>Goethestraße 34</small></td><td class="mono">003404343154565813</td><td>Europalette</td><td class="num">3</td><td class="num">794,7</td><td></td></tr>
+    <tr><td class="num">3.10</td><td><b>Getränkemarkt Hoffmann</b><br><small>Kirchplatz 47</small></td><td class="mono">003404344114681390</td><td>Europalette</td><td class="num">1</td><td class="num">221,4</td><td></td></tr>
+    <tr><td class="num">3.11</td><td><b>Café Morgenrot</b><br><small>Industriestraße 124</small></td><td class="mono">003404346116620888</td><td>Europalette</td><td class="num">3</td><td class="num">580,9</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">3.12</td><td><b>Apotheke im Zentrum</b><br><small>Industriestraße 116</small></td><td class="mono">003404343199716799</td><td>Europalette</td><td class="num">1</td><td class="num">286,4</td><td></td></tr>
+    <tr><td class="num">3.13</td><td><b>Metzgerei Franke</b><br><small>Kirchplatz 130</small></td><td class="mono">003404349279877918</td><td>Paket</td><td class="num">6</td><td class="num">96,5</td><td></td></tr>
+    <tr><td class="num">3.14</td><td><b>Hotel Zur Post</b><br><small>Kirchplatz 36</small></td><td class="mono">003404342357122900</td><td>Rollcontainer</td><td class="num">1</td><td class="num">91,4</td><td></td></tr>
+    <tr><td class="num">3.15</td><td><b>Hotel Zur Post</b><br><small>Gartenweg 32</small></td><td class="mono">003404342572745251</td><td>Paket</td><td class="num">6</td><td class="num">114,5</td><td></td></tr>
+    <tr class="subtotal"><td colspan="4">Summe Tour 3</td><td class="num">43</td><td class="num">3.805,5</td><td></td></tr>
+  </tbody>
+  <tbody class="tour">
+    <tr class="group"><th colspan="7">Tour 4 · Dessau-Roßlau<span class="veh">Fahrzeug DE-TR 88 · Abfahrt 9:30 Uhr</span></th></tr>
+    <tr><td class="num">4.01</td><td><b>Gasthaus Krone</b><br><small>Bahnhofstraße 102</small></td><td class="mono">003404344575322645</td><td>Rollcontainer</td><td class="num">2</td><td class="num">278,4</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">4.02</td><td><b>Bürobedarf Klein</b><br><small>Industriestraße 104</small></td><td class="mono">003404342368056914</td><td>Karton</td><td class="num">4</td><td class="num">31,6</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">4.03</td><td><b>Metzgerei Franke</b><br><small>Kirchplatz 113</small></td><td class="mono">003404347974713680</td><td>Europalette</td><td class="num">2</td><td class="num">519,1</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">4.04</td><td><b>Gasthaus Krone</b><br><small>Bahnhofstraße 22</small></td><td class="mono">003404344345768511</td><td>Karton</td><td class="num">3</td><td class="num">12,0</td><td></td></tr>
+    <tr><td class="num">4.05</td><td><b>Bürobedarf Klein</b><br><small>Gartenweg 104</small></td><td class="mono">003404347745653836</td><td>Paket</td><td class="num">5</td><td class="num">129,9</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">4.06</td><td><b>Bäckerei am Markt</b><br><small>Lindenallee 109</small></td><td class="mono">003404343724896942</td><td>Europalette</td><td class="num">2</td><td class="num">810,4</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">4.07</td><td><b>Gasthaus Krone</b><br><small>Bahnhofstraße 68</small></td><td class="mono">003404349226695066</td><td>Europalette</td><td class="num">2</td><td class="num">365,5</td><td><span class="flag warn">Nachnahme</span></td></tr>
+    <tr><td class="num">4.08</td><td><b>Gasthaus Krone</b><br><small>Bahnhofstraße 42</small></td><td class="mono">003404349298937188</td><td>Karton</td><td class="num">1</td><td class="num">7,5</td><td></td></tr>
+    <tr><td class="num">4.09</td><td><b>Hotel Zur Post</b><br><small>Gartenweg 115</small></td><td class="mono">003404342075669243</td><td>Paket</td><td class="num">3</td><td class="num">35,0</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">4.10</td><td><b>Café Morgenrot</b><br><small>Industriestraße 49</small></td><td class="mono">003404347471166901</td><td>Rollcontainer</td><td class="num">2</td><td class="num">269,5</td><td></td></tr>
+    <tr><td class="num">4.11</td><td><b>Praxis Dr, Yilmaz</b><br><small>Am Markt 36</small></td><td class="mono">003404344594837551</td><td>Rollcontainer</td><td class="num">3</td><td class="num">415,7</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">4.12</td><td><b>Autohaus Brenner</b><br><small>Goethestraße 42</small></td><td class="mono">003404349465079824</td><td>Europalette</td><td class="num">1</td><td class="num">339,7</td><td></td></tr>
+    <tr class="subtotal"><td colspan="4">Summe Tour 4</td><td class="num">30</td><td class="num">3.214,3</td><td></td></tr>
+  </tbody>
+  <tbody class="tour">
+    <tr class="group"><th colspan="7">Tour 5 · Merseburg und Umland<span class="veh">Fahrzeug MQ-TR 12 · Abfahrt 10:00 Uhr</span></th></tr>
+    <tr><td class="num">5.01</td><td><b>Physiotherapie Mitte</b><br><small>Lindenallee 41</small></td><td class="mono">003404342389567515</td><td>Karton</td><td class="num">4</td><td class="num">12,4</td><td><span class="flag">Kühlware</span></td></tr>
+    <tr><td class="num">5.02</td><td><b>Schreinerei Vogel</b><br><small>Am Markt 92</small></td><td class="mono">003404345655274506</td><td>Paket</td><td class="num">1</td><td class="num">11,4</td><td></td></tr>
+    <tr><td class="num">5.03</td><td><b>Gasthaus Krone</b><br><small>Industriestraße 2</small></td><td class="mono">003404345912863388</td><td>Europalette</td><td class="num">2</td><td class="num">752,2</td><td></td></tr>
+    <tr><td class="num">5.04</td><td><b>Schreinerei Vogel</b><br><small>Gartenweg 60</small></td><td class="mono">003404347857170022</td><td>Europalette</td><td class="num">3</td><td class="num">1.229,5</td><td></td></tr>
+    <tr><td class="num">5.05</td><td><b>Buchhandlung Lesezeichen</b><br><small>Lindenallee 73</small></td><td class="mono">003404343171282226</td><td>Paket</td><td class="num">1</td><td class="num">23,6</td><td></td></tr>
+    <tr><td class="num">5.06</td><td><b>Optik Sander</b><br><small>Hauptstraße 59</small></td><td class="mono">003404348031376349</td><td>Europalette</td><td class="num">1</td><td class="num">190,0</td><td></td></tr>
+    <tr><td class="num">5.07</td><td><b>Physiotherapie Mitte</b><br><small>Industriestraße 13</small></td><td class="mono">003404346345343119</td><td>Europalette</td><td class="num">3</td><td class="num">922,6</td><td></td></tr>
+    <tr><td class="num">5.08</td><td><b>Pflegeheim Lindenhof</b><br><small>Industriestraße 138</small></td><td class="mono">003404347330173734</td><td>Europalette</td><td class="num">3</td><td class="num">918,7</td><td></td></tr>
+    <tr><td class="num">5.09</td><td><b>Gasthaus Krone</b><br><small>Am Markt 60</small></td><td class="mono">003404345624562559</td><td>Rollcontainer</td><td class="num">4</td><td class="num">510,6</td><td></td></tr>
+    <tr class="subtotal"><td colspan="4">Summe Tour 5</td><td class="num">22</td><td class="num">4.571,0</td><td></td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="4">Gesamt</td><td class="num">156</td><td class="num">17.315,0</td><td></td></tr></tfoot>
+</table>
+<div class="sign"><div>Verladen durch</div><div>Fahrer</div><div>Disposition</div></div>
+</body>
+</html>
