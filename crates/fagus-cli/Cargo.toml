@@ -9,6 +9,7 @@ publish.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation = "https://fagus.niklasforst.de/docs/cli"
 
 [lints]
 workspace = true

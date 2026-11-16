@@ -9,13 +9,17 @@
   <a href="#license"><img src="https://img.shields.io/packagist/l/nforst/fagus" alt="Licence"></a>
 </p>
 
+<p align="center">
+  <a href="https://fagus.niklasforst.de/docs"><strong>Documentation</strong></a>
+</p>
+
 # Fagus
 
 HTML and CSS to PDF for PHP and Laravel, without a browser.
 
 > **Status:** early development. It renders real invoices and reports (Quittio's invoice template,
 > Tailwind-style pages) like Chrome prints them, but the CSS coverage is still growing, and releases
-> before 1.0 may change the API. Design decisions are recorded in [docs/adr](docs/adr).
+> before 1.0 may change the API. Design decisions are recorded in [docs/adr](https://fagus.niklasforst.de/docs/adr).
 
 ```sh
 composer require nforst/fagus
@@ -66,8 +70,8 @@ publish the configuration if you want to change it:
 php artisan vendor:publish --tag=fagus-config
 ```
 
-[Getting started](docs/getting-started.md) walks through the first PDF;
-[Deployment](docs/deployment.md) covers Docker, Alpine, servers without access to GitHub and
+[Getting started](https://fagus.niklasforst.de/docs/getting-started) walks through the first PDF;
+[Deployment](https://fagus.niklasforst.de/docs/deployment) covers Docker, Alpine, servers without access to GitHub and
 binaries of your own.
 
 ## Usage
@@ -102,7 +106,7 @@ Fagus::view('invoices.show', $data)->pdfA('3b')->store('invoices/2026-0042.pdf',
 
 The page size, margins, headers and footers come from `@page` rules in the document, the PDF's
 title from `<title>` and its language from `<html lang>`, as in a browser. The packages describe
-everything else is in the [documentation](docs/README.md).
+everything else is in the [documentation](https://fagus.niklasforst.de/docs).
 
 ## Compared with other renderers
 
@@ -170,7 +174,7 @@ repository was archived in 2023 and whose WebKit dates from 2012; it is not meas
 - **Accessibility:** tagged by default, with the structure of the document (headings, paragraphs, lists, data tables, images with their alternative text, links) in reading order, headers, footers and decoration marked as artifacts; PDF/UA-1, also together with PDF/A-2a, PDF/A-3a or a Factur-X invoice.
 - **Frames:** an `<iframe>` (its `srcdoc`, else its `src`), and an `<object>` or `<embed>` whose resource is an HTML document, shows that document as Chrome prints it: laid out on a viewport as large as the frame's content box (which its media queries and viewport units see; its media type is still `print`), not paginated, cut off at the frame's edges, on a transparent canvas, with its own style sheets, fonts and images; text files and images show as Chrome's documents for them, and `frame-sizing: content-height` makes a frame as tall as a document that allows it (`<meta name=responsive-embedded-sizing>`). A frame's document loads like any other resource (a `data:` URL, the resources handed over, the caller's loader, a file inside the root), its relative URLs resolving against its own URL; scripts do not run. Frames nest at most 8 deep, and one render lays out at most 256 documents in frames with 8 MiB of markup together, so that frames that include themselves end.
 - **Diagnostics:** CSS that is ignored and resources that are missing are reported with their source position.
-- **Extensions** where CSS has no way, prefixed with `-fagus-`: carry-over rows with the running total where a table breaks (*Übertrag*), see [docs/extensions.md](docs/extensions.md).
+- **Extensions** where CSS has no way, prefixed with `-fagus-`: carry-over rows with the running total where a table breaks (*Übertrag*), see [Extensions](https://fagus.niklasforst.de/docs/extensions).
 
 ## Fonts and languages
 
@@ -203,9 +207,9 @@ Garamond sets no `fi` ligature in German).
 ## How it works
 
 The PHP package starts the `fagus` binary with the first document and talks to it through pipes
-([docs/protocol.md](docs/protocol.md)). The worker keeps running while the engine lives: under
+([worker protocol](https://fagus.niklasforst.de/docs/protocol)). The worker keeps running while the engine lives: under
 PHP-FPM it serves the documents of one request; in queue workers, under Octane (the Laravel
-integration warms the engine, see [Laravel](docs/laravel.md)) and in FrankenPHP's worker mode it serves every document. HTML, fonts and PDFs travel through the pipes as they are.
+integration warms the engine, see [Laravel](https://fagus.niklasforst.de/docs/laravel)) and in FrankenPHP's worker mode it serves every document. HTML, fonts and PDFs travel through the pipes as they are.
 
 The binary compresses the PDF on two threads of its own while it draws the pages, which makes large
 documents a few percent faster; `RAYON_NUM_THREADS` sets how many there are.
@@ -246,7 +250,7 @@ compresses on rayon's global pool.
 | `crates/fagus` | Public Rust API |
 | `crates/fagus-cli` | The `fagus` binary |
 | `crates/fagus-testkit` | Reference tests, image comparison, benchmarks |
-| `docs` | The [documentation](docs/README.md) |
+| `docs` | The [documentation](https://fagus.niklasforst.de/docs) |
 | `docs/adr` | Architecture decision records |
 | `docs/protocol.md` | The worker protocol between the binary and PHP |
 | `docs/releasing.md` | How a release reaches GitHub and Packagist |

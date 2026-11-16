@@ -17,7 +17,7 @@
     ],
     "type": "composer-plugin",
     "license": "MIT OR Apache-2.0",
-    "homepage": "https://github.com/nforst/fagus",
+    "homepage": "https://fagus.niklasforst.de",
     "support": {
         "issues": "https://github.com/nforst/fagus/issues",
         "source": "https://github.com/nforst/fagus"
