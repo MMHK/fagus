@@ -37,6 +37,19 @@ jobs:
           # The toolchain of rust-toolchain.toml, which the action's container does not have.
           rust-version: "1.99.1"
 
+  # docs/nav.yml lists every page of the documentation for fagus.niklasforst.de, and the links
+  # between the pages lead to pages and headings that exist.
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - run: php tools/check-docs.php
+
   # The packages start the binary, talk to it through pipes and install it on every platform the
   # release builds for.
   php:
