@@ -1,0 +1,37 @@
+# The pages of the documentation on fagus.niklasforst.de/docs, in navigation order: the website
+# reads their titles, groups and order from here. Every Markdown file in docs/ needs an entry, one
+# per line in this form (tools/check-docs.php checks it, also in CI):
+#
+#   - { page: getting-started, title: Getting started, group: Guide }
+#
+# page is the path of the file in docs/ without .md. A README is the page of its folder:
+# README is /docs, adr/README is /docs/adr, getting-started is /docs/getting-started.
+# group is the heading the page is listed under in the sidebar; the pages of a group follow each
+# other. parent puts a page below the page with that title. optional: true marks a page that AI
+# tools may skip (the section "Optional" of llms.txt). seo and description are the title (up to 60
+# characters) and the description (70 to 160) for search engines, in double quotes; without them
+# the website uses the title and the first paragraph of the page. Values with a comma or a colon
+# go in double quotes too.
+
+- { page: README, title: Overview, group: Guide, seo: "Fagus documentation: HTML and CSS to PDF for PHP", description: "Fagus turns HTML and CSS into PDF for PHP and Laravel, the way Chrome prints them, without a browser. Getting started, references and the PDF it writes." }
+- { page: getting-started, title: Getting started, group: Guide, seo: "Getting started: your first PDF in PHP or Laravel", description: "Requirements, installing the Composer package nforst/fagus and the first PDF in PHP and in Laravel. No browser, Node or Docker image to install." }
+- { page: php, title: PHP API, group: Guide, seo: "PHP API: documents, PDFs, the engine and diagnostics", description: "The PHP API of Fagus: the document builder, the PDF it renders to, the engine that runs the binary as a worker process, diagnostics and exceptions." }
+- { page: laravel, title: Laravel, group: Guide, seo: "Laravel: PDFs from Blade views", description: "The Laravel integration of Fagus: the facade, Blade views, inline and download responses, filesystem disks, queues, Octane and the configuration." }
+- { page: resources, title: Resources, group: Guide, seo: "Resources: images, stylesheets, fonts and frames", description: "Where images, style sheets, fonts and frames come from, and what Fagus never loads: no network access, no files outside the directory you allow, no scripts." }
+- { page: deployment, title: Deployment, group: Guide, seo: "Deployment: Docker, Alpine, CI and worker processes", description: "Install the fagus binary in CI and Docker builds, on Alpine, on servers without access to GitHub or from a build of your own; worker processes, speed, memory." }
+- { page: troubleshooting, title: Troubleshooting, group: Guide, seo: "Troubleshooting: errors, diagnostics and Chrome differences", description: "Error messages and what to do about them, diagnostics, differences from Chrome, and moving from Dompdf, mPDF, Browsershot or Snappy." }
+- { page: ai-assistants, title: Docs for AI assistants, group: Guide }
+- { page: css, title: CSS reference, group: Reference, seo: "CSS reference: what Fagus supports, compared with Chrome", description: "What Fagus supports of CSS, grouped by topic, where it differs from Chrome in print and what it does not support. Chrome 157 on Linux is the reference." }
+- { page: paged-media, title: Paged media, group: Reference, seo: "Paged media: page size, headers, footers, page numbers", description: "Page sizes and margins, headers and footers, page numbers, page breaks, tables across pages, tables of contents and print shop marks, all from CSS." }
+- { page: fonts, title: Fonts, group: Reference, seo: "Fonts: @font-face, font directories and system fonts", description: "The built-in font, font directories, @font-face, system fonts, fallback for missing characters, OpenType features and languages, and fonts in the PDF." }
+- { page: extensions, title: Extensions, group: Reference, seo: "Extensions: carry-over rows where a table breaks", description: "What Fagus adds where CSS has no way, prefixed with -fagus-: carry-over rows with the running total where a table breaks across pages (Übertrag)." }
+- { page: pdf, title: The PDF, group: Reference, seo: "The PDF: PDF/A, PDF/UA, ZUGFeRD and Factur-X", description: "Metadata, links and the outline, tagged and accessible PDF (PDF/UA), PDF/A, attachments, ZUGFeRD and Factur-X invoices, and reproducible output." }
+- { page: cli, title: Command line, group: Reference, seo: "Command line: HTML to PDF with the fagus binary", description: "The fagus binary renders HTML files to PDF on the command line, exactly as the PHP package does: options, exit codes, examples, threads and the worker." }
+- { page: rust, title: Rust library, group: Reference, seo: "Rust library: the Fagus engine as a crate", description: "Render PDFs inside a Rust program with the crate fagus, the engine the PHP package and the command line tool are built on, without a separate process." }
+- { page: protocol, title: Worker protocol, group: Internals, optional: true }
+- { page: releasing, title: Releasing, group: Internals, optional: true }
+- { page: adr/README, title: Architecture decisions, group: Internals, optional: true }
+- { page: adr/0001-record-architecture-decisions, title: 1. Record architecture decisions, group: Internals, parent: Architecture decisions, optional: true }
+- { page: adr/0002-rust-and-fragmentation-in-layout, title: 2. Rust core with fragmentation inside layout, group: Internals, parent: Architecture decisions, optional: true }
+- { page: adr/0003-css-parsing-and-own-selector-matching, title: "3. lightningcss for parsing, own selector matching and cascade", group: Internals, parent: Architecture decisions, optional: true }
+- { page: adr/0004-extensions-only-where-css-has-no-way, title: 4. Extensions only where CSS has no way, group: Internals, parent: Architecture decisions, optional: true }
