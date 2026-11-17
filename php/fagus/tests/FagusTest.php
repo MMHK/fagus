@@ -136,6 +136,39 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_writes_the_version_and_description_of_invoices(): void
+    {
+        $xml = '<rsm:CrossIndustryInvoice><ram:GuidelineSpecifiedDocumentContextParameter>'
+            .'<ram:ID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</ram:ID>'
+            .'</ram:GuidelineSpecifiedDocumentContextParameter></rsm:CrossIndustryInvoice>';
+        $bytes = Fagus::html('<p>Rechnung</p>')->facturX($xml, version: '3.0', description: 'XRechnung Invoice')->render()->bytes();
+        $this->assertStringContainsString('<fx:Version>3.0</fx:Version>', $bytes);
+        $this->assertStringContainsString('<fx:ConformanceLevel>XRECHNUNG</fx:ConformanceLevel>', $bytes);
+        $this->assertStringContainsString('/F(xrechnung.xml)', self::decoded($bytes));
+        $this->assertStringContainsString('/Desc(XRechnung Invoice)', self::decoded($bytes));
+
+        $bytes = Fagus::html('<p>Rechnung</p>')->facturX($xml)->render()->bytes();
+        $this->assertStringContainsString('<fx:Version>1.0</fx:Version>', $bytes, 'the default');
+        $this->assertStringContainsString('/Desc(Factur-X/ZUGFeRD invoice)', self::decoded($bytes));
+
+        [$header] = Fagus::html('<p>Rechnung</p>')->facturX($xml, InvoiceProfile::XRechnung, '3.0', 'XRechnung Invoice')->request(1);
+        $this->assertSame(['blob' => 1, 'profile' => 'xrechnung', 'version' => '3.0', 'description' => 'XRechnung Invoice'], $header['facturX']);
+        [$header] = Fagus::html('<p>Rechnung</p>')->facturX($xml)->request(1);
+        $this->assertSame(['blob' => 1], $header['facturX']);
+
+        try {
+            Fagus::html('<p>Rechnung</p>')->facturX($xml, version: ' ');
+            $this->fail('No exception for an empty version.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame('The invoice version must not be empty.', $exception->getMessage());
+        }
+
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('the invoice description contains control characters');
+        Fagus::html('<p>Rechnung</p>')->facturX($xml, description: "XRechnung\nInvoice")->render();
+    }
+
+    #[Test]
     public function it_writes_pdf_a(): void
     {
         $pdf = Fagus::html('<p>Archiv</p>')->pdfA(Conformance::PdfA2u)->render();

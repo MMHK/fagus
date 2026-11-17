@@ -42,6 +42,10 @@ final class Document
 
     private ?InvoiceProfile $profile = null;
 
+    private ?string $invoiceVersion = null;
+
+    private ?string $invoiceDescription = null;
+
     private ?DateTimeInterface $created = null;
 
     private bool $strict = false;
@@ -189,13 +193,29 @@ final class Document
     /**
      * Makes the PDF an electronic invoice of ZUGFeRD or Factur-X: the XML is attached under the
      * name its profile requires and described in the XMP metadata, and the PDF conforms to
-     * PDF/A-3. The profile is the one the XML declares unless it is given.
+     * PDF/A-3. The profile is the one the XML declares unless it is given. `$version` is the
+     * `Version` of the Factur-X XMP metadata ('1.0' by default), `$description` the description
+     * of the attached XML ('Factur-X/ZUGFeRD invoice' by default).
+     *
+     * @throws InvalidArgumentException for an empty version or description
      */
-    public function facturX(string $xml, ?InvoiceProfile $profile = null): self
-    {
+    public function facturX(
+        string $xml,
+        ?InvoiceProfile $profile = null,
+        ?string $version = null,
+        ?string $description = null,
+    ): self {
+        if ($version !== null && trim($version) === '') {
+            throw InvalidArgumentException::emptyInvoiceField('version');
+        }
+        if ($description !== null && trim($description) === '') {
+            throw InvalidArgumentException::emptyInvoiceField('description');
+        }
         $copy = clone $this;
         $copy->invoice = $xml;
         $copy->profile = $profile;
+        $copy->invoiceVersion = $version;
+        $copy->invoiceDescription = $description;
 
         return $copy;
     }
@@ -293,6 +313,12 @@ final class Document
             $header['facturX'] = ['blob' => $add($this->invoice)];
             if ($this->profile !== null) {
                 $header['facturX']['profile'] = $this->profile->value;
+            }
+            if ($this->invoiceVersion !== null) {
+                $header['facturX']['version'] = $this->invoiceVersion;
+            }
+            if ($this->invoiceDescription !== null) {
+                $header['facturX']['description'] = $this->invoiceDescription;
             }
         }
         if ($this->created !== null) {
