@@ -61,7 +61,7 @@ The header of `R`; fields other than `id` and `html` may be left out:
   "tagged": true,
   "accessible": false,
   "attachments": [{ "name": "data.csv", "mime": "text/csv", "relationship": "supplement", "description": "Rohdaten", "blob": 3 }],
-  "facturX": { "blob": 4, "profile": "en16931" },
+  "facturX": { "blob": 4, "profile": "en16931", "version": "1.0", "description": "Factur-X/ZUGFeRD invoice" },
   "created": "2026-11-02T12:00:00Z",
   "blobs": [5120, 812, 20431, 96, 4187]
 }
@@ -92,7 +92,10 @@ The header of `R`; fields other than `id` and `html` may be left out:
   the file by its `name`, as `fagus render --attach` does.
 - `facturX`: the invoice XML of a ZUGFeRD or Factur-X invoice; `profile` (`minimum`, `basicwl`,
   `basic`, `en16931`, `extended`, `xrechnung`) is read from the XML if left out (`en16931` if
-  the XML declares none).
+  the XML declares none). `version` is the `Version` of the Factur-X XMP metadata (`1.0` if left
+  out or `null`), `description` the description of the attached XML ("Factur-X/ZUGFeRD invoice"
+  if left out or `null`). An empty `version` or `description`, or one with control characters,
+  is answered with `E`.
 - `created`: the creation date, as `2026-11-02T12:00:00Z` or with an offset from UTC
   (`2026-11-02T13:00:00+01:00`), which the worker applies; the current time if left out. A date
   without an offset is taken as UTC.

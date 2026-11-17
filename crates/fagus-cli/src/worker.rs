@@ -181,6 +181,10 @@ struct FacturX {
     blob: usize,
     #[serde(default)]
     profile: Option<String>,
+    #[serde(default)]
+    version: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -402,6 +406,12 @@ where
                 crate::profile(profile).ok_or_else(|| format!("unknown profile `{profile}`"))?,
             ),
         };
+        if let Some(version) = invoice.version {
+            document = document.factur_x_version(version);
+        }
+        if let Some(description) = invoice.description {
+            document = document.factur_x_description(description);
+        }
     }
     if let Some(created) = request.created {
         document = document.created(date(&created).ok_or_else(|| format!("invalid date `{created}`"))?);
@@ -523,6 +533,43 @@ mod tests {
         let frames = frames(&output);
         let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
         assert_eq!(kinds, "HPPP", "{:?}", frames.last().map(|frame| &frame.header));
+    }
+
+    #[test]
+    fn sets_the_version_and_description_of_invoices() {
+        let xml: &[u8] = b"<rsm:CrossIndustryInvoice><ram:GuidelineSpecifiedDocumentContextParameter>\
+            <ram:ID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</ram:ID>\
+            </ram:GuidelineSpecifiedDocumentContextParameter></rsm:CrossIndustryInvoice>";
+        let mut input = Vec::new();
+        for (id, version, description) in [
+            (1, json!("3.0"), json!("XRechnung Invoice")),
+            (2, Value::Null, Value::Null),
+            (3, json!(""), Value::Null),
+        ] {
+            input.extend(frame(
+                RENDER,
+                &json!({
+                    "id": id,
+                    "html": 0,
+                    "facturX": { "blob": 1, "version": version, "description": description },
+                    "created": "2026-11-02T12:00:00Z",
+                }),
+                &[b"<p>Rechnung</p>", xml],
+            ));
+        }
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
+        assert_eq!(kinds, "HPPE");
+        let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
+        assert!(has(&frames[1].blobs[0], "<fx:Version>3.0</fx:Version>"));
+        assert!(has(&frames[2].blobs[0], "<fx:Version>1.0</fx:Version>"));
+        assert_eq!(
+            frames[3].header["message"],
+            "the document does not meet Factur-X: the invoice version is empty"
+        );
     }
 
     #[test]
