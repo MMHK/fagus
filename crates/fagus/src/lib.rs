@@ -60,6 +60,9 @@ pub enum Error {
 /// The memory is only reserved and used as the stack grows.
 const RENDER_STACK: usize = 64 << 20;
 
+/// The description of the attached invoice XML, unless another is given.
+const FACTUR_X_DESCRIPTION: &str = "Factur-X/ZUGFeRD invoice";
+
 /// A document to render.
 #[derive(Clone)]
 pub struct Document {
@@ -80,6 +83,12 @@ pub struct Document {
     factur_x: Option<FacturXProfile>,
     /// The profile the invoice XML declares, if any.
     declared_profile: Option<FacturXProfile>,
+    /// The `Version` of the Factur-X XMP metadata, if not the default.
+    factur_x_version: Option<String>,
+    /// The description of the attached invoice XML, if not the default.
+    factur_x_description: Option<String>,
+    /// Where the invoice XML lies in `attachments`.
+    factur_x_attachment: Option<usize>,
     created: Option<Date>,
     /// How deep the document lies in SVG images with HTML in them (see [`svg_document`]): 0
     /// for the document itself.
@@ -190,6 +199,9 @@ impl Document {
             attachments: Vec::new(),
             factur_x: None,
             declared_profile: None,
+            factur_x_version: None,
+            factur_x_description: None,
+            factur_x_attachment: None,
             created: None,
             svg_depth: 0,
             nesting: frames::Nesting::default(),
@@ -261,15 +273,65 @@ impl Document {
     #[must_use]
     pub fn factur_x_profile(mut self, xml: Vec<u8>, profile: FacturXProfile) -> Self {
         self.declared_profile = FacturXProfile::detect(&xml);
+        self.factur_x_attachment = Some(self.attachments.len());
         self.attachments.push(Attachment {
             name: profile.file_name().to_owned(),
             mime_type: "text/xml".to_owned(),
-            description: Some("Factur-X/ZUGFeRD invoice".to_owned()),
+            description: Some(
+                self.factur_x_description
+                    .clone()
+                    .unwrap_or_else(|| FACTUR_X_DESCRIPTION.to_owned()),
+            ),
             relationship: profile.relationship(),
             data: Arc::new(xml),
         });
         self.factur_x = Some(profile);
         self
+    }
+
+    /// Sets the `Version` that the Factur-X XMP metadata gives (`1.0` by default), for example
+    /// `3.0` for an invoice of XRechnung 3.0. It applies to the invoice of
+    /// [`Document::factur_x`], whether it is set before or after. Rendering fails if it is
+    /// empty or contains control characters.
+    #[must_use]
+    pub fn factur_x_version(mut self, version: impl Into<String>) -> Self {
+        self.factur_x_version = Some(version.into());
+        self
+    }
+
+    /// Sets the description of the attached invoice XML ("Factur-X/ZUGFeRD invoice" by
+    /// default). It applies to the invoice of [`Document::factur_x`], whether it is set before
+    /// or after. Rendering fails if it is empty or contains control characters.
+    #[must_use]
+    pub fn factur_x_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        if let Some(attachment) = self
+            .factur_x_attachment
+            .and_then(|index| self.attachments.get_mut(index))
+        {
+            attachment.description = Some(description.clone());
+        }
+        self.factur_x_description = Some(description);
+        self
+    }
+
+    /// What makes the version or description of the invoice unusable, if anything.
+    fn factur_x_problem(&self) -> Option<String> {
+        self.factur_x?;
+        let fields = [
+            ("version", &self.factur_x_version),
+            ("description", &self.factur_x_description),
+        ];
+        fields.into_iter().find_map(|(name, value)| {
+            let value = value.as_deref()?;
+            if value.trim().is_empty() {
+                Some(format!("the invoice {name} is empty"))
+            } else if value.chars().any(char::is_control) {
+                Some(format!("the invoice {name} contains control characters"))
+            } else {
+                None
+            }
+        })
     }
 
     /// Sets the directory that relative URLs (stylesheets, images, fonts) resolve against. Only
@@ -656,6 +718,13 @@ impl Engine {
 
 impl Inner {
     fn render(&self, input: &Document) -> Result<Output, Failure> {
+        if let Some(problems) = input.factur_x_problem() {
+            return Err(Error::Pdf(PdfError::Conformance {
+                standard: "Factur-X".to_owned(),
+                problems,
+            })
+            .into());
+        }
         let mut timings = Timings::default();
         let start = Instant::now();
         let document = if input.xhtml {
@@ -961,7 +1030,9 @@ impl Inner {
         let options = fagus_pdf::Options {
             conformance,
             attachments: input.attachments.clone(),
-            xmp: input.factur_x.map(factur_x_metadata),
+            xmp: input.factur_x.map(|profile| {
+                factur_x_metadata(profile, input.factur_x_version.as_deref().unwrap_or("1.0"))
+            }),
             links,
             bookmarks,
             structure,
@@ -2005,7 +2076,7 @@ fn inherited_svg_attributes(style: &fagus_style::ComputedStyle) -> [(&'static st
 
 /// The XMP of a Factur-X invoice: its properties and the PDF/A extension schema that declares
 /// them (Factur-X 1.0, §6.2.2; ZUGFeRD 2 uses the same).
-fn factur_x_metadata(profile: FacturXProfile) -> fagus_pdf::Extension {
+fn factur_x_metadata(profile: FacturXProfile, version: &str) -> fagus_pdf::Extension {
     const NAMESPACE: &str = "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#";
     let property = |name: &str, description: &str| {
         format!(
@@ -2020,10 +2091,11 @@ fn factur_x_metadata(profile: FacturXProfile) -> fagus_pdf::Extension {
             "<rdf:Description rdf:about=\"\" xmlns:fx=\"{NAMESPACE}\">\
              <fx:DocumentType>INVOICE</fx:DocumentType>\
              <fx:DocumentFileName>{}</fx:DocumentFileName>\
-             <fx:Version>1.0</fx:Version>\
+             <fx:Version>{}</fx:Version>\
              <fx:ConformanceLevel>{}</fx:ConformanceLevel>\
              </rdf:Description>",
             profile.file_name(),
+            xml_escaped(version),
             profile.level(),
         ),
         schemas: format!(
@@ -2047,6 +2119,22 @@ fn factur_x_metadata(profile: FacturXProfile) -> fagus_pdf::Extension {
             ),
         ),
     }
+}
+
+/// `text` with the characters that are markup in XML escaped.
+fn xml_escaped(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for character in text.chars() {
+        match character {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            character => out.push(character),
+        }
+    }
+    out
 }
 
 /// The diagnostics of the `style` attributes of a document: unknown properties and invalid
@@ -2662,6 +2750,79 @@ mod tests {
             &output.pdf,
             "<fx:ConformanceLevel>XRECHNUNG</fx:ConformanceLevel>"
         ));
+    }
+
+    #[test]
+    fn writes_the_version_and_description_given() {
+        // The defaults.
+        let document = Document::html("<p>Rechnung</p>")
+            .created(CREATED)
+            .factur_x(invoice("urn:cen.eu:en16931:2017"));
+        let pdf = engine().render(&document).expect("rendered").pdf;
+        assert!(contains(&pdf, "<fx:Version>1.0</fx:Version>"));
+        assert!(contains(&pdf, "/Desc(Factur-X/ZUGFeRD invoice)"));
+
+        // Set before and after the invoice.
+        let document = Document::html("<p>Rechnung</p>")
+            .created(CREATED)
+            .factur_x_version("3.0")
+            .factur_x(invoice(
+                "urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0",
+            ))
+            .factur_x_description("XRechnung Invoice");
+        let output = engine().render(&document).expect("rendered");
+        assert!(output.diagnostics.is_empty(), "{:?}", output.diagnostics);
+        assert!(contains(&output.pdf, "<fx:Version>3.0</fx:Version>"));
+        assert!(!contains(&output.pdf, "<fx:Version>1.0</fx:Version>"));
+        assert!(contains(&output.pdf, "/Desc(XRechnung Invoice)"));
+        assert!(!contains(&output.pdf, "Factur-X/ZUGFeRD invoice"));
+        let document = Document::html("<p>Rechnung</p>")
+            .created(CREATED)
+            .factur_x_description("Factur-X/ZUGFeRD Invoice")
+            .factur_x(invoice("urn:cen.eu:en16931:2017"));
+        let pdf = engine().render(&document).expect("rendered").pdf;
+        assert!(contains(&pdf, "/Desc(Factur-X/ZUGFeRD Invoice)"));
+
+        // Markup in the XMP and parentheses in the PDF string are escaped.
+        let document = Document::html("<p>Rechnung</p>")
+            .created(CREATED)
+            .factur_x(invoice("urn:cen.eu:en16931:2017"))
+            .factur_x_version("1.0 <&>\"'")
+            .factur_x_description("Rechnung ) ( \\ endobj");
+        let pdf = engine().render(&document).expect("rendered").pdf;
+        assert!(contains(
+            &pdf,
+            "<fx:Version>1.0 &lt;&amp;&gt;&quot;&apos;</fx:Version>"
+        ));
+        assert!(contains(&pdf, "/Desc(Rechnung \\) \\( \\\\ endobj)"));
+    }
+
+    #[test]
+    fn refuses_empty_invoice_versions_and_descriptions() {
+        let refused = |document: Document| match engine().render(&document) {
+            Err(error) => error.to_string(),
+            Ok(_) => panic!("rendered"),
+        };
+        let document = || Document::html("<p>Rechnung</p>").factur_x(invoice("urn:cen.eu:en16931:2017"));
+        assert_eq!(
+            refused(document().factur_x_version(" ")),
+            "the document does not meet Factur-X: the invoice version is empty"
+        );
+        assert_eq!(
+            refused(document().factur_x_description("")),
+            "the document does not meet Factur-X: the invoice description is empty"
+        );
+        assert_eq!(
+            refused(document().factur_x_version("3.0\u{0}")),
+            "the document does not meet Factur-X: the invoice version contains control characters"
+        );
+        assert_eq!(
+            refused(document().factur_x_description("XRechnung\nInvoice")),
+            "the document does not meet Factur-X: the invoice description contains control characters"
+        );
+        // Without an invoice, they have nothing to apply to.
+        let document = Document::html("<p>Brief</p>").factur_x_version("");
+        assert!(engine().render(&document).is_ok());
     }
 
     #[test]
