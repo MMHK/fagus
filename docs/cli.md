@@ -51,6 +51,8 @@ file as HTML.
 | `--attach <FILE>` | none | Attach a file; repeatable |
 | `--factur-x <FILE>` | none | Make a ZUGFeRD / Factur-X invoice with this XML |
 | `--profile <PROFILE>` | the XML's | The invoice profile: `minimum`, `basicwl`, `basic`, `en16931`, `extended` or `xrechnung` |
+| `--factur-x-version <VERSION>` | `1.0` | The `Version` of the Factur-X XMP metadata |
+| `--factur-x-description <TEXT>` | `Factur-X/ZUGFeRD invoice` | The description of the attached invoice XML |
 | `--created <DATE>` | now | The creation date, e.g. `2026-11-13T12:00:00Z` or `2026-11-13T14:00:00+02:00`, for reproducible files |
 | `--strict` | off | Fail on any diagnostic (not only warnings), without writing the PDF |
 | `--timings` | off | Print the page count and the time of each phase |
@@ -65,7 +67,8 @@ Some details of the command line:
 - `--attach` attaches the file under its file name, with the file name as description and the
   relationship `Supplement`. The MIME type comes from the extension: `xml` (`text/xml`), `pdf`,
   `csv`, `json`, `txt`, `png`, `jpg` and `jpeg`; any other file is `application/octet-stream`.
-- `--profile` only applies together with `--factur-x`.
+- `--profile`, `--factur-x-version` and `--factur-x-description` only apply together with
+  `--factur-x`.
 - `--created` reads the date, the time and an offset from UTC (`Z`, `+01:00`, `-0530`) and
   writes the date in UTC: `2026-11-13T12:00:00+02:00` becomes `2026-11-13T10:00:00Z`. A date
   without an offset is taken as UTC; a fraction of a second is dropped. Anything else after the

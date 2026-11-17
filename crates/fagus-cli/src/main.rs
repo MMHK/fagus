@@ -69,6 +69,12 @@ enum Command {
         /// The profile of the invoice XML (default: the one the XML declares).
         #[arg(long, value_parser = ["minimum", "basicwl", "basic", "en16931", "extended", "xrechnung"])]
         profile: Option<String>,
+        /// The `Version` of the Factur-X XMP metadata (default: 1.0).
+        #[arg(long)]
+        factur_x_version: Option<String>,
+        /// The description of the attached invoice XML (default: "Factur-X/ZUGFeRD invoice").
+        #[arg(long)]
+        factur_x_description: Option<String>,
         /// Fail on any diagnostic (CSS that is ignored, a missing resource, …), without writing
         /// the PDF.
         #[arg(long)]
@@ -176,6 +182,8 @@ fn main() -> Result<()> {
             attachments,
             factur_x,
             profile,
+            factur_x_version,
+            factur_x_description,
             strict,
             timings,
             repeat,
@@ -252,6 +260,12 @@ fn main() -> Result<()> {
                     None => document.factur_x(xml),
                     Some(profile) => document.factur_x_profile(xml, profile),
                 };
+                if let Some(version) = factur_x_version {
+                    document = document.factur_x_version(version);
+                }
+                if let Some(description) = factur_x_description {
+                    document = document.factur_x_description(description);
+                }
             }
             let mut durations = Vec::with_capacity(repeat);
             let mut result = None;
@@ -343,6 +357,34 @@ mod tests {
             .expect("help")
             .to_string();
         assert!(strict.starts_with("Fail on any diagnostic"), "{strict}");
+    }
+
+    #[test]
+    fn takes_the_version_and_description_of_invoices() {
+        let cli = Cli::try_parse_from([
+            "fagus",
+            "render",
+            "invoice.html",
+            "-o",
+            "invoice.pdf",
+            "--factur-x",
+            "xrechnung.xml",
+            "--factur-x-version",
+            "3.0",
+            "--factur-x-description",
+            "XRechnung Invoice",
+        ])
+        .expect("parsed");
+        let Command::Render {
+            factur_x_version,
+            factur_x_description,
+            ..
+        } = cli.command
+        else {
+            panic!("not render");
+        };
+        assert_eq!(factur_x_version.as_deref(), Some("3.0"));
+        assert_eq!(factur_x_description.as_deref(), Some("XRechnung Invoice"));
     }
 
     #[test]
