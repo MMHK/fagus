@@ -75,6 +75,8 @@ document can be rendered with variations.
 | `attach(Attachment)` | Attaches a file |
 | `factur_x(Vec<u8>)` | A ZUGFeRD / Factur-X invoice with this XML, its profile read from the XML |
 | `factur_x_profile(Vec<u8>, FacturXProfile)` | The same with the profile given |
+| `factur_x_version(impl Into<String>)` | The `Version` of the invoice's XMP metadata (default `1.0`), before or after `factur_x` |
+| `factur_x_description(impl Into<String>)` | The description of the attached invoice XML (default "Factur-X/ZUGFeRD invoice"), before or after `factur_x` |
 | `created(Date)` | The creation date (default: now), for reproducible output |
 
 What these options do to the PDF is described in [pdf.md](pdf.md), how resources are found in
@@ -155,7 +157,7 @@ yourself.
 
 | Variant | When |
 |---|---|
-| `Error::Pdf` | The document does not meet PDF/A or PDF/UA (the message lists every problem), or the PDF could not be written |
+| `Error::Pdf` | The document does not meet PDF/A or PDF/UA (the message lists every problem), the version or description of an invoice is empty or has control characters, or the PDF could not be written |
 | `Error::Font` | A font could not be read (also from `add_font_dir` and `add_font_data`) |
 | `Error::Internal(String)` | A bug in Fagus: rendering stopped with a panic, which the engine caught |
 

@@ -229,19 +229,22 @@ throws a `RenderException` ("the document does not meet PDF/A-2b: PDF/A-2 allows
 as attachments; attach `timesheet.csv` to a PDF/A-3 document instead"). Use PDF/A-3 for other
 files.
 
-### `facturX(string $xml, ?InvoiceProfile $profile = null): Document`
+### `facturX(string $xml, ?InvoiceProfile $profile = null, ?string $version = null, ?string $description = null): Document`
 
 Makes the PDF an electronic invoice of ZUGFeRD or Factur-X: the XML is attached under the name
 its profile requires (`factur-x.xml`, or `xrechnung.xml` for XRechnung), described in the XMP
 metadata, and the PDF conforms to PDF/A-3 (PDF/A-3b unless another PDF/A-3 level is chosen). The
 profile is the one the XML declares in its guideline parameter (EN 16931 if it declares none),
-unless `$profile` is given.
+unless `$profile` is given. `$version` is the `Version` of the XMP metadata (`'1.0'` by default),
+`$description` the description of the attached XML (`'Factur-X/ZUGFeRD invoice'` by default); an
+empty one throws an `InvalidArgumentException`.
 
 ```php
 use Fagus\InvoiceProfile;
 
 Fagus::html($html)->facturX($xml);                            // profile from the XML
 Fagus::html($html)->facturX($xml, InvoiceProfile::XRechnung); // profile given
+Fagus::html($html)->facturX($xml, version: '3.0', description: 'XRechnung Invoice');
 ```
 
 Diagnostics report a profile that differs from the XML's (`invoice.profile-mismatch`), an XML

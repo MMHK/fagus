@@ -5,6 +5,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- The `Version` of the Factur-X XMP metadata and the description of the attached invoice XML can be set, for example `3.0` and "XRechnung Invoice" for an XRechnung: `facturX($xml, version: …, description: …)` in PHP and Laravel, `Document::factur_x_version()` and `factur_x_description()` in Rust, `version` and `description` of `facturX` in the worker protocol, and `--factur-x-version` and `--factur-x-description` on the command line. The defaults stay `1.0` and "Factur-X/ZUGFeRD invoice".
+
 ## [0.1.0] - 2026-11-16
 
 The first release: a native engine that turns HTML and CSS into PDF the way Chrome prints them, with a PHP package and a Laravel integration on top. Releases before 1.0 may still change the API.

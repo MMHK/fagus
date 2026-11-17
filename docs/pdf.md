@@ -313,10 +313,12 @@ Fagus::html($html)->facturX($invoiceXml)->save('invoice.pdf');
 Fagus then:
 
 - attaches the XML as `factur-x.xml` (as `xrechnung.xml` for the XRechnung profile), with the MIME
-  type `text/xml`, the description "Factur-X/ZUGFeRD invoice" and the relationship `Alternative`
-  (`Data` for the profiles Minimum and Basic WL, whose XML is not a complete invoice);
+  type `text/xml`, the description "Factur-X/ZUGFeRD invoice" (unless you give another, see
+  below) and the relationship `Alternative` (`Data` for the profiles Minimum and Basic WL, whose
+  XML is not a complete invoice);
 - writes the Factur-X properties into the XMP metadata, with their PDF/A extension schema:
-  `DocumentType` `INVOICE`, `DocumentFileName`, `Version` `1.0` and `ConformanceLevel`;
+  `DocumentType` `INVOICE`, `DocumentFileName`, `Version` (`1.0` unless you give another) and
+  `ConformanceLevel`;
 - writes PDF/A-3b, or the PDF/A-3 level you chose with `pdfA()`. A PDF/A-2 level is raised to
   the PDF/A-3 level of the same letter, with the warning `pdf.conformance-raised` ("PDF/A-2b is
   written as PDF/A-3b because Factur-X attaches its XML, which only PDF/A-3 allows").
@@ -343,6 +345,27 @@ use Fagus\InvoiceProfile;
 
 Fagus::html($html)->facturX($xml, InvoiceProfile::XRechnung)->save('invoice.pdf');
 ```
+
+### The version and the description
+
+`version` sets the `Version` of the XMP metadata and `description` the description of the
+attached XML:
+
+```php
+Fagus::html($html)
+    ->facturX($xml, InvoiceProfile::XRechnung, version: '3.0', description: 'XRechnung Invoice')
+    ->save('invoice.pdf');
+```
+
+For the XRechnung profile, the Factur-X specification (1.07.2, which is ZUGFeRD 2.3.2, section
+7.7) describes `Version` as the major and minor version of the invoice data specification, that is
+of XRechnung. Fagus does not derive it from the XML: it writes `1.0` unless you give a version.
+
+An empty version or description is refused: `facturX()` throws an `InvalidArgumentException`. One
+with control characters fails at rendering ("the document does not meet Factur-X: the invoice
+description contains control characters"). On the command line the options are
+`--factur-x-version` and `--factur-x-description`, in Rust `factur_x_version()` and
+`factur_x_description()`.
 
 Fagus does not check the content of the XML, and it does not compare it with the HTML. Your
 application writes both from the same data; validate the result as described below.
