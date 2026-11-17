@@ -144,6 +144,15 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_passes_the_version_and_description_of_invoices_on(): void
+    {
+        $xml = (string) file_get_contents(__DIR__.'/../../../tests/corpus/invoice/factur-x.xml');
+        $bytes = Fagus::html('<p>Rechnung</p>')->facturX($xml, version: '1.0', description: 'Factur-X/ZUGFeRD Invoice')->render()->bytes();
+        $this->assertStringContainsString('<fx:Version>1.0</fx:Version>', $bytes);
+        $this->assertStringContainsString('/Desc(Factur-X/ZUGFeRD Invoice)', self::decoded($bytes));
+    }
+
+    #[Test]
     public function it_tags_pdfs_unless_configured_otherwise(): void
     {
         $tagged = fn (PendingPdf $pdf): bool => str_contains(self::decoded($pdf->render()->bytes()), '/StructTreeRoot');

@@ -82,9 +82,13 @@ final class PendingPdf implements Responsable
         return $this->with($this->document->attach($name, $data, $mime, $relationship, $description));
     }
 
-    public function facturX(string $xml, ?InvoiceProfile $profile = null): self
-    {
-        return $this->with($this->document->facturX($xml, $profile));
+    public function facturX(
+        string $xml,
+        ?InvoiceProfile $profile = null,
+        ?string $version = null,
+        ?string $description = null,
+    ): self {
+        return $this->with($this->document->facturX($xml, $profile, $version, $description));
     }
 
     public function created(DateTimeInterface $date): self
