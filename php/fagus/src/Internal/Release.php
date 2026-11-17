@@ -13,7 +13,7 @@ namespace Fagus\Internal;
 final class Release
 {
     /** The version of the binary. */
-    public const string VERSION = '0.1.0';
+    public const string VERSION = '0.2.0';
 
     /** The GitHub repository whose releases hold the binaries. */
     public const string REPOSITORY = 'nforst/fagus';
@@ -25,12 +25,12 @@ final class Release
      * @var array<string, string>
      */
     public const array BINARIES = [
-        'aarch64-apple-darwin' => '0d6cca221402da87d95d36ab0e2c8146b8dcdecc0dff09db839685bb8ee08b0d',
-        'aarch64-unknown-linux-gnu' => 'dce0b52b9a420a9d49cd178e7704eee9210bbc439319f70b76c77f9f52828ba4',
-        'aarch64-unknown-linux-musl' => '1a2fd8953276c002e9d54ebf367ab82c2a4d9b64a0836bd72d64bf757b6a91b0',
-        'x86_64-apple-darwin' => '1597b5212c99082e1ea77014fceafc936db88fb48fde47a7a66158910ae085f0',
-        'x86_64-pc-windows-msvc' => 'ca40aacfd70cfafaeae34c47ec3299277c60bb0c30b7483f72e1de74bb530b83',
-        'x86_64-unknown-linux-gnu' => 'c8eab7031f361883fc10463826a4c641db26a3f2e5be3001ccf37031e43aefe7',
-        'x86_64-unknown-linux-musl' => '8ab2c6df17e1c8277e71ce6909c22b40a3fe5fdec95efadcf07d01b4acf4d7e0',
+        'aarch64-apple-darwin' => '79a684b0139237c4e72e530f66816ffeb69137f2e9836d20987651201a665bf9',
+        'aarch64-unknown-linux-gnu' => '42efb1edbfd7101c46e29dc3639ee580e8c3e9e74de2cf5a5a7ec80467aed882',
+        'aarch64-unknown-linux-musl' => '81a47cecd61d627bfef38b010c94f78b5cde8907f4f4968c85c2bf9b0b3d981c',
+        'x86_64-apple-darwin' => '82cde22d5168f5d6e75c01b68f6aaac2006ed43d78e21f75ea2e6a2e1e949e91',
+        'x86_64-pc-windows-msvc' => 'a6dff9aed17e5f403037ebacf4fd8a1edcfbc5b0795b98f67527eeb6e74c1336',
+        'x86_64-unknown-linux-gnu' => '2147121ba5b4cf01c5e278db225b5cb81c174bbcbf0011f740d5b7adc1027861',
+        'x86_64-unknown-linux-musl' => 'f53f86e6bd49a2293d9f8c3c4e372a7ac1d5a1b464bfb0de82403fab6b22280d',
     ];
 }
