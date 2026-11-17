@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-17
+
 ### Added
 
 - The `Version` of the Factur-X XMP metadata and the description of the attached invoice XML can be set, for example `3.0` and "XRechnung Invoice" for an XRechnung: `facturX($xml, version: …, description: …)` in PHP and Laravel, `Document::factur_x_version()` and `factur_x_description()` in Rust, `version` and `description` of `facturX` in the worker protocol, and `--factur-x-version` and `--factur-x-description` on the command line. The defaults stay `1.0` and "Factur-X/ZUGFeRD invoice".
@@ -48,5 +50,6 @@ The first release: a native engine that turns HTML and CSS into PDF the way Chro
 - No network access and no scripts: resources come only from `data:` URLs, the caller and files inside the document's root directory.
 - Limits on nesting, grids, frames, images and the size of substituted values, so that hostile documents render in bounded time and memory, and a panic becomes an error instead of ending the caller. The engine has no `unsafe` code of its own.
 
-[Unreleased]: https://github.com/nforst/fagus/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nforst/fagus/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nforst/fagus/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nforst/fagus/releases/tag/v0.1.0

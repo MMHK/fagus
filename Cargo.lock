@@ -369,7 +369,7 @@ dependencies = [
 
 [[package]]
 name = "fagus"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus-css",
  "fagus-dom",
@@ -385,7 +385,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -397,7 +397,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-css"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cssparser",
  "fagus-dom",
@@ -410,7 +410,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-dom"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "html5ever",
  "markup5ever",
@@ -420,7 +420,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-layout"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus-css",
  "fagus-dom",
@@ -435,7 +435,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-paint"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus-dom",
  "fagus-layout",
@@ -446,7 +446,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-pdf"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus-css",
  "fagus-dom",
@@ -472,7 +472,7 @@ dependencies = [
 
 [[package]]
 name = "fagus-style"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus-css",
  "fagus-dom",
@@ -483,14 +483,14 @@ dependencies = [
 
 [[package]]
 name = "fagus-testkit"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fagus",
 ]
 
 [[package]]
 name = "fagus-text"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "brotli-decompressor",
  "fontdb",

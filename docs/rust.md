@@ -17,7 +17,7 @@ release tag (releases are tagged `v` and their version) or to a commit with `rev
 
 ```toml
 [dependencies]
-fagus = { git = "https://github.com/nforst/fagus", tag = "v0.1.0" }
+fagus = { git = "https://github.com/nforst/fagus", tag = "v0.2.0" }
 ```
 
 A checkout of the repository works as a path dependency:

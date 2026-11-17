@@ -77,7 +77,7 @@ Releases have binaries for Linux (x64, arm64, glibc and musl), macOS (x64, arm64
 ### The download failed
 
 ```text
-The fagus binary could not be downloaded from https://github.com/nforst/fagus/releases/download/v0.1.0/fagus-x86_64-unknown-linux-gnu. The server answered 404.
+The fagus binary could not be downloaded from https://github.com/nforst/fagus/releases/download/v0.2.0/fagus-x86_64-unknown-linux-gnu. The server answered 404.
 ```
 
 - **From a private fork**, downloads without a token fail with 404. Give Composer a token

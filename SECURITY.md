@@ -4,7 +4,7 @@ Fagus renders HTML and CSS that may come from untrusted sources. Security report
 
 ## Supported versions
 
-Security fixes go into the latest release. Before 1.0 that is the newest minor version (0.1.x at the moment); there are no fixes for older ones.
+Security fixes go into the latest release. Before 1.0 that is the newest minor version (0.2.x at the moment); there are no fixes for older ones.
 
 ## Reporting a vulnerability
 
