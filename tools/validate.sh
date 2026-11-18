@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Renders the corpus plain, as PDF/A (2a, 2b, 2u, 3a, 3b, 3u), as PDF/UA-1 and as Factur-X
+# Renders the corpus plain, as PDF/A (1b, 2a, 2b, 2u, 3a, 3b, 3u, 4, 4e, 4f), as PDF/UA-1 and as Factur-X
 # invoices, and checks the files: every one with `qpdf --check` (https://qpdf.sourceforge.io),
 # the PDF/A and PDF/UA files with veraPDF (https://verapdf.org) against the profile of the level
 # they were written for, and the invoices with Mustang (https://www.mustangproject.org).
@@ -128,7 +128,7 @@ else
 fi
 for page in "${pages[@]}"; do
   name=$(basename "$(dirname "$page")")-$(basename "$page" .html)
-  for variant in plain 2a 2b 2u 3a 3b 3u ua; do
+  for variant in plain 1b 2a 2b 2u 3a 3b 3u 4 4e 4f ua; do
     echo "$variant $name $page"
   done
 done > "$out/renders.txt"
@@ -207,7 +207,7 @@ summary+=("| qpdf --check | $total | $((total - qpdf_failed)) | $qpdf_failed |")
 
 # veraPDF, each set of files against the profile of its level, so that the identification in the
 # metadata must match it too.
-for flavour in 2a 2b 2u 3a 3b 3u ua1; do
+for flavour in 1b 2a 2b 2u 3a 3b 3u 4 4e 4f ua1; do
   label=$([[ $flavour == ua1 ]] && echo PDF/UA-1 || echo "PDF/A-$flavour")
   list=$out/files.$flavour
   if [[ ! -s $list ]]; then
