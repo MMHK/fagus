@@ -602,3 +602,53 @@ fn leaves_a_huge_srcdoc_empty() {
         output.diagnostics
     );
 }
+
+/// The font `font` with its table `tag` replaced by `table`, which is put at the end.
+fn with_table(mut font: Vec<u8>, tag: &[u8; 4], table: &[u8]) -> Vec<u8> {
+    let count = usize::from(u16::from_be_bytes([font[4], font[5]]));
+    let entry = (0..count)
+        .map(|index| 12 + 16 * index)
+        .find(|entry| &font[*entry..*entry + 4] == tag)
+        .expect("the table");
+    while !font.len().is_multiple_of(4) {
+        font.push(0);
+    }
+    let offset = u32::try_from(font.len()).expect("small");
+    let length = u32::try_from(table.len()).expect("small");
+    font[entry + 8..entry + 12].copy_from_slice(&offset.to_be_bytes());
+    font[entry + 12..entry + 16].copy_from_slice(&length.to_be_bytes());
+    font.extend_from_slice(table);
+    font
+}
+
+#[test]
+fn renders_text_in_a_font_whose_characters_map_to_glyphs_it_does_not_have() {
+    // A `cmap` of format 12 numbers glyphs with 32 bits: `A` to `Z` here map to glyphs past the
+    // 65,536 a font can have, which krilla could not write.
+    let mut cmap = Vec::new();
+    cmap.extend_from_slice(&[0, 0, 0, 1, 0, 3, 0, 10, 0, 0, 0, 12]);
+    cmap.extend_from_slice(&[0, 12, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 1]);
+    for value in [0x41u32, 0x5A, 70_000] {
+        cmap.extend_from_slice(&value.to_be_bytes());
+    }
+    renders_in_font(with_table(inter(), b"cmap", &cmap));
+}
+
+/// The font file of Inter, regular.
+fn inter() -> Vec<u8> {
+    std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../tests/fonts/Inter-Regular.ttf"
+    ))
+    .expect("Inter")
+}
+
+/// Renders text in `font`, loaded through `@font-face`.
+fn renders_in_font(font: Vec<u8>) {
+    let document = Document::html(
+        "<style>@font-face { font-family: F; src: url(f.ttf) } p { font-family: F }</style><p>ABC</p>",
+    )
+    .resource("f.ttf", font);
+    let output = Engine::new().render(&document);
+    assert!(output.is_ok(), "{:?}", output.err());
+}

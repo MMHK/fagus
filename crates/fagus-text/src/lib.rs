@@ -299,6 +299,7 @@ impl Face {
                     .flatten()
             })
             .map(harfrust::GlyphId::to_u32)
+            .filter(|glyph| *glyph < self.font.num_glyphs())
     }
 
     /// Whether the face has a glyph for a character. A space separator it lacks (an em, thin or
@@ -2683,7 +2684,7 @@ fn make_face(font: Font, data: Arc<Vec<u8>>, index: u32) -> Face {
     for code in 0..256u32 {
         if char::from_u32(code)
             .and_then(|character| charmap.map_unicode(character))
-            .is_some()
+            .is_some_and(|glyph| glyph.to_u32() < font.num_glyphs())
         {
             latin[(code / 64) as usize] |= 1 << (code % 64);
         }
@@ -3051,12 +3052,15 @@ fn shape_uncached(
     // Top to bottom the pen moves down (harfrust's advances are negative there, upward
     // positive); the glyphs keep their advance along the line in `x_advance`.
     let vertical = direction == Direction::TopToBottom;
+    // A `cmap` may map characters to glyphs past those the font has (format 12 numbers them
+    // with 32 bits): such a glyph is missing, drawn as `.notdef`.
+    let count = font.num_glyphs();
     let glyphs: Vec<ShapedGlyph> = buffer
         .glyph_infos()
         .iter()
         .zip(buffer.glyph_positions())
         .map(|(info, position)| ShapedGlyph {
-            id: info.glyph_id,
+            id: if info.glyph_id < count { info.glyph_id } else { 0 },
             cluster: info.cluster,
             x_advance: if vertical {
                 -position.y_advance as f32
