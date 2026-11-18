@@ -179,6 +179,29 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_writes_pdf_a_1_and_pdf_a_4(): void
+    {
+        $pdf = Fagus::html('<p>Archiv</p>')->pdfA(Conformance::PdfA1b)->render();
+        $this->assertStringStartsWith('%PDF-1.4', $pdf->bytes());
+        $this->assertStringContainsString('<pdfaid:part>1</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>', $pdf->bytes());
+
+        $pdf = Fagus::html('<p>Archiv</p>')->pdfA('4F')->render();
+        $this->assertStringStartsWith('%PDF-2.0', $pdf->bytes());
+        $this->assertStringContainsString('<pdfaid:part>4</pdfaid:part><pdfaid:rev>2020</pdfaid:rev><pdfaid:conformance>F</pdfaid:conformance>', $pdf->bytes());
+
+        try {
+            Fagus::html('<p style="opacity: 0.5">Archiv</p>')->pdfA('1b')->render();
+            $this->fail('No exception for transparency in PDF/A-1b.');
+        } catch (RenderException $exception) {
+            $this->assertStringContainsString('PDF/A-1 forbids transparency, which the document uses for `opacity`, first on page 1', $exception->getMessage());
+        }
+
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('the invoice must be PDF/A-3, not PDF/A-4f');
+        Fagus::html('<p>Rechnung</p>')->pdfA(Conformance::PdfA4f)->facturX('<x/>', InvoiceProfile::Extended)->render();
+    }
+
+    #[Test]
     public function it_writes_tagged_and_accessible_pdf(): void
     {
         $html = '<!doctype html><html lang="de"><title>Rechnung</title><h1>Rechnung</h1><p>Danke.</p>';
@@ -434,7 +457,7 @@ final class FagusTest extends TestCase
             $this->fail('No exception for an unknown level.');
         } catch (InvalidArgumentException $exception) {
             $this->assertInstanceOf(FagusException::class, $exception);
-            $this->assertSame("Unknown PDF/A level '4z'. The levels are '2b', '2u', '2a', '3b', '3u', '3a'.", $exception->getMessage());
+            $this->assertSame("Unknown PDF/A level '4z'. The levels are '1b', '2b', '2u', '2a', '3b', '3u', '3a', '4', '4e', '4f'.", $exception->getMessage());
         }
     }
 

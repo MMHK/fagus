@@ -132,7 +132,7 @@ final class Document
 
     /**
      * Writes the PDF as PDF/A. A level given as a string is a value of {@see Conformance}
-     * ('2b', '2u', '2a', '3b', '3u' or '3a', case-insensitive).
+     * ('1b', '2b', '2u', '2a', '3b', '3u', '3a', '4', '4e' or '4f', case-insensitive).
      *
      * @throws InvalidArgumentException for a string that is no level
      */
