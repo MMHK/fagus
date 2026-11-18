@@ -3,6 +3,8 @@
 A release consists of the `fagus` binary for every platform, attached to a GitHub release of `nforst/fagus`, and the Composer package `nforst/fagus`, which installs the binary of its release and accepts no other: `php/fagus/src/Internal/Release.php` lists the SHA-256 of each binary.
 
 1. **Prepare.** Set the version in `Cargo.toml` (`[workspace.package]`), move the entries under `[Unreleased]` in `CHANGELOG.md` to the new version, name a new minor version as the supported one in `SECURITY.md`, run `tools/notices.sh` (it rewrites `THIRD-PARTY-NOTICES` with the licenses of the crates the binary is built from; it needs `cargo install --locked cargo-about --features cli`) and commit.
+
+   Check the entries against [stability.md](stability.md) first. From 1.0 on, a minor release has nothing under *Removed* and no breaking change under *Changed*; everything it deprecates is under *Deprecated*, with its replacement. A major release removes only what a released minor version deprecated, and `UPGRADING.md` gets a section for it with every breaking change and what to do. A raised minimum (PHP, Laravel, Rust, glibc) is listed under *Changed*.
 2. **Build.** Run the workflow *Release* (`.github/workflows/release.yml`) on that commit with the version, for example `gh workflow run release.yml -f version=0.1.0`. It builds the binaries for Linux (x64 and arm64, glibc 2.17 and musl), macOS (x64 and arm64) and Windows (x64), checks that those the runners can run render a document, and attaches them with their sums (`SHA256SUMS`) to a draft release `v0.1.0`.
 3. **Pin.** Fetch the sums and write them into the PHP package:
 

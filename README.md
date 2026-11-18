@@ -18,8 +18,10 @@
 HTML and CSS to PDF for PHP and Laravel, without a browser.
 
 > **Status:** early development. It renders real invoices and reports (Quittio's invoice template,
-> Tailwind-style pages) like Chrome prints them, but the CSS coverage is still growing, and releases
-> before 1.0 may change the API. Design decisions are recorded in [docs/adr](https://fagus.niklasforst.de/docs/adr).
+> Tailwind-style pages) like Chrome prints them, but the CSS coverage is still growing. Until 1.0, a
+> minor release may change the API, listed in the [changelog](CHANGELOG.md); from 1.0 on, only a
+> major release does. [Stability](https://fagus.niklasforst.de/docs/stability) says what is covered
+> and how deprecations work. Design decisions are recorded in [docs/adr](https://fagus.niklasforst.de/docs/adr).
 
 ```sh
 composer require nforst/fagus
