@@ -136,6 +136,11 @@ Dompdf and mPDF cannot lay out, Fagus takes 2.5 ms for one page and 17.5 ms for 
 123 ms, WeasyPrint 134 and 715 ms. Chrome is measured from Node with Puppeteer; through Gotenberg
 an HTTP request comes on top. The scripts and documents are in [bench/compare](bench/compare).
 
+Memory, as the physical footprint of PHP and the worker together: 22 MB for the one-page invoice and
+60 MB for 40 pages; Chrome kept running takes 250 to 400 MB, WeasyPrint 74 to 191 MB. Four Fagus
+workers side by side render 224 ten-page PDFs a second, one Chrome with four tabs 24. The tables are
+in [bench/README.md](bench/README.md#memory-and-cpu-time-memory).
+
 ### Features
 
 | | Fagus | Chrome (Browsershot, Gotenberg) | WeasyPrint | Dompdf | mPDF |

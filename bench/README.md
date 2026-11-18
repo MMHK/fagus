@@ -1,6 +1,6 @@
 # Benchmarks
 
-Measurements that Fagus is held against. The [results of 2026-11-01](#results-of-2026-11-01) are at the end of this file; the comparison with the renderers PHP projects use today is in the [README](../README.md#compared-with-other-renderers).
+Measurements that Fagus is held against. Memory and processor time are in [Memory and CPU time](#memory-and-cpu-time-memory), the budgets of the plan in [Budgets](#budgets-memorybudgetspy); the [results of 2026-11-01](#results-of-2026-11-01) are at the end of this file; the comparison with the renderers PHP projects use today is in the [README](../README.md#compared-with-other-renderers).
 
 ## Against Dompdf, mPDF, Chrome and WeasyPrint (`compare/`)
 
@@ -27,6 +27,87 @@ The PDFs land in `out/`, for comparing them by eye. Results of 2026-11-14 on an 
 | Browsershot 5.5.0 | 611.2 | 600.9 | 649.8 | 750.9 | | |
 
 mPDF reads `size: A4` in `@page` wrongly (it then emits hundreds of empty pages), which is why the classic invoice gives the size in millimetres. mPDF does not load `@font-face` and sets the text in DejaVu Sans Condensed.
+
+## Memory and CPU time (`memory/`)
+
+The engines and invoices of `compare/`, with the memory and processor time of everything the renderer runs: PHP or Node and the processes they start (the Fagus worker, Chrome and its helpers). `driver.py` samples the process tree about every millisecond through `proc_pid_rusage` (macOS only) and sums the resident size (RSS) and the physical footprint of its processes. The footprint is what Activity Monitor shows as memory and what the system charges a process; RSS also counts the pages of the binary and of shared libraries and memory the allocator has handed back but the system has not reclaimed yet. Each engine renders each invoice in three new processes: one PDF, two seconds of rest, 20 more PDFs, three seconds of rest; the medians are reported. CPU time includes the time of helpers that have already ended.
+
+```sh
+cargo build --release -p fagus-cli && composer install   # in the repository
+(cd bench/compare && composer install && PUPPETEER_SKIP_DOWNLOAD=1 npm install)
+cd bench/memory
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+./run.sh                 # all engines, then four at once; the tables go to out/summary.md
+.venv/bin/python3 budgets.py   # Fagus alone: the budgets below
+```
+
+Results of 2026-11-18 on an Apple M2 Pro (10 cores, 32 GB), macOS 27, PHP 8.5, Node 26, Chrome 157, Python 3.13 with WeasyPrint 66.0, mPDF 8.3.1, Dompdf 3.1.6, Browsershot 5.5.0. Peak footprint of the whole process tree over all 21 PDFs (peak RSS in parentheses):
+
+| Engine | 1 page | 10 pages | 40 pages | modern CSS, 1 page | modern CSS, 10 pages |
+|---|--:|--:|--:|--:|--:|
+| Fagus (PHP and the worker) | 22 MB (48) | 33 MB (58) | 60 MB (90) | 22 MB (48) | 33 MB (58) |
+| Chrome, kept running (Node and Chrome) | 253 MB (826) | 305 MB (861) | 402 MB (956) | 259 MB (813) | 313 MB (868) |
+| Browsershot (PHP, Node and a Chrome per PDF) | 254 MB (807) | 286 MB (846) | 377 MB (936) | | |
+| mPDF | 74 MB (90) | 88 MB (104) | 79 MB (95) | | |
+| Dompdf | 36 MB (52) | 63 MB (79) | 301 MB (317) | | |
+| WeasyPrint | 74 MB (106) | 127 MB (174) | 191 MB (228) | 68 MB (99) | 127 MB (174) |
+
+Processor time per further PDF, all processes together, and of the first PDF of a new process including the start of PHP, Node or Python (milliseconds):
+
+| Engine | 1 page, first | 1 page | 10 pages | 40 pages | modern CSS, 1 page | modern CSS, 10 pages |
+|---|--:|--:|--:|--:|--:|--:|
+| Fagus | 69 | 3.7 | 20.0 | 70.6 | 4.2 | 20.3 |
+| Chrome, kept running | 1,196 | 163.4 | 210.9 | 332.3 | 162.9 | 214.1 |
+| Browsershot | 1,336 | 1,263.1 | 1,309.7 | 1,452.8 | | |
+| mPDF | 123 | 25.6 | 231.9 | 903.9 | | |
+| Dompdf | 130 | 48.5 | 353.3 | 2,695.1 | | |
+| WeasyPrint | 287 | 95.4 | 460.2 | 1,643.3 | 120.2 | 495.5 |
+
+Chrome uses 1.5 to 2 times as much processor time as wall time, spread over its helper processes; mPDF and Dompdf set the 10 and 40 pages on other page counts, as above. At rest after the 21 PDFs, the Fagus worker alone holds 10 MB (20 MB RSS) after the 1-page invoice and 31 MB (61 MB RSS) after the 40-page one, and uses no processor time; Chrome holds 161 MB (about 570 MB RSS) whatever it rendered and uses 13 to 22 ms of processor time per second while idle.
+
+Four at once, on the 10-page invoice (four PHP or Python processes; one Chrome with four tabs at a time):
+
+| Setup | Peak footprint (RSS) | PDFs per second | Processor time per PDF |
+|---|--:|--:|--:|
+| Fagus, 4 processes | 147 MB (250) | 224.3 | 20.3 ms |
+| Chrome, 1 browser, 4 tabs | 484 MB (1,400) | 24.2 | 190.0 ms |
+| mPDF, 4 processes | 304 MB (368) | 16.3 | 241.0 ms |
+| Dompdf, 4 processes | 255 MB (320) | 9.9 | 386.3 ms |
+| WeasyPrint, 4 processes | 395 MB (586) | 7.4 | 537.0 ms |
+| Browsershot, 4 processes | 898 MB (2,851) | 3.5 | 1,531.1 ms |
+
+## Budgets (`memory/budgets.py`)
+
+The budgets of the plan, measured on Fagus alone: the invoices of `compare/` with 3, 150 and 1,580 lines (classic) or 1,680 lines (modern CSS), which give 1, 10 and 100 pages. Render times come from `fagus render --repeat` (one warm engine, the median of 200, 50 or 10 renders; the median of three processes), peak memory from the kernel's peak footprint and `wait4`'s peak RSS of the fagus process, the start from Python starting `fagus worker` and speaking its protocol. The script waits for a load average below `MAX_LOAD` (4 by default) and records the load it measured under.
+
+Results of 2026-11-19 on the same Apple M2 Pro, macOS 27, at commit 36c4647 (Fagus 0.2.0), with other jobs on the machine; the load average of the last minute is given:
+
+| Budget | Target | Measured | Load |
+|---|--:|--:|--:|
+| Invoice with 1 page | ≤ 5 ms | 2.2 ms (modern CSS: 2.4 ms) | 1.1–1.4 |
+| Invoice with 10 pages | ≤ 35 ms | 16.0 ms (16.4 ms) | 1.1–2.0 |
+| Invoice with 100 pages | ≤ 300 ms | 172 ms (188 ms) | 1.1–2.0 |
+| Each further page (from 10 to 100 pages) | ≤ 3 ms | 1.7 ms (1.9 ms) | 1.1–2.0 |
+| Start of a new process until it is ready (`fagus worker` to its first message) | ≤ 3 ms | 3.3 ms, of which 1.8 ms start any process (`/usr/bin/true`) | 2.4 |
+| The same, until the first byte of a trivial PDF, minus the render | | 3.5 ms | 2.4 |
+| Invoice with 1 page, with the start of the process | ≤ 10 ms | `fagus render` 9.1 ms, the worker 8.5 ms, from PHP (new `Engine`) 8.4 ms | 2.3–2.4 |
+| Peak memory at 100 pages, one render | ≤ 64 MB | **98 MB** footprint, 127 MB RSS (modern CSS: 108 MB, 135 MB) | 1.8–1.9 |
+| Peak memory at 100 pages, 21 renders by one worker | ≤ 64 MB | **116 MB** footprint, 211 MB RSS (124 MB, 223 MB) | 1.9–10 |
+| Binary size (macOS, arm64) | ≤ 30 MB | 25.3 MB | |
+
+At 1 and 10 pages the peak is 9 and 20 MB footprint (19 and 30 MB RSS). The budget for memory at 100 pages is missed by half: the footprint grows steadily while the document is styled and laid out (about 0.7 MB per page of this invoice) and peaks while the PDF is written. With `MallocSpaceEfficient=1`, which hands freed memory back at once, the peak is still 85 MB, so most of it is memory in use, not memory the allocator keeps.
+
+### Memory a worker keeps
+
+After the 100-page invoice, a worker keeps a footprint of 52 MB (125 MB RSS) at rest, and it stays there when small documents follow; after 20 more 100-page invoices it keeps 107 MB (198 MB RSS). It is not the engine's caches: after one or after 60 renders of the 100-page invoice, `vmmap -summary` counts the same 3.4 MB in 19,400 allocations in use (fonts, stylesheets, shaped text, prepared images). The rest is free memory that macOS's allocator keeps for later: empty regions of its small allocations, and its cache of freed large allocations ("Malloc Large (empty)" in `vmmap`), which grows with every large document. In one worker that rendered the 100-page invoice again and again, the footprint at rest was 54 MB after 1 render, 119 MB after 20, 241 MB after 60 and 264 MB after 150; after 20 renders it fell from 108 to 84 MB within 30 seconds of rest and to 45 MB after four minutes. RSS is higher still, because it also counts freed pages the system has not taken back yet.
+
+| Setting in the worker's environment | At rest after 1 × 100 pages | After 20 × 100 pages | Peak |
+|---|--:|--:|--:|
+| none | 52 MB (125 MB RSS) | 107 MB (198 MB RSS) | 107 MB |
+| `MallocLargeCache=0` | 14 MB (120 MB RSS) | 12 MB (121 MB RSS) | 91 MB |
+| `MallocSpaceEfficient=1` | 6 MB (119 MB RSS) | 6 MB (119 MB RSS) | 86 MB |
+
+`MallocNanoZone=0`, `MallocMaxMagazines=1` and `RAYON_NUM_THREADS=1` change nothing. With either setting above, the render times differed by no more than the noise of the busy machine they were compared on (load 10 to 13). Linux, where Fagus runs in production, was not measured: glibc's allocator also keeps freed memory in its arenas (one per thread that allocates) and returns it only from the top of the heap or through `malloc_trim()`.
 
 ## Fagus
 
