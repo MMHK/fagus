@@ -45,7 +45,7 @@ file as HTML.
 | `--serif <FAMILY>` | none | The family used for `serif` |
 | `--monospace <FAMILY>` | none | The family used for `monospace` |
 | `--root <DIR>` | the input's directory | A larger directory the document may read files from, which contains the input's directory; URLs starting with `/` resolve against it |
-| `--pdfa <LEVEL>` | none | Write PDF/A: `2b`, `2u`, `2a`, `3b`, `3u` or `3a` |
+| `--pdfa <LEVEL>` | none | Write PDF/A: `1b`, `2b`, `2u`, `2a`, `3b`, `3u`, `3a`, `4`, `4e` or `4f` |
 | `--untagged` | off | Write a PDF without tags (the logical structure screen readers read) |
 | `--accessible` | off | Write PDF/UA-1; needs a title, a language and alternative text for images |
 | `--attach <FILE>` | none | Attach a file; repeatable |
@@ -106,7 +106,7 @@ before are printed too, ahead of the error.
 |---|---|
 | `0` | The PDF was written, or help or the version was printed |
 | `1` | Rendering failed: the input or a font directory could not be read, the document was refused (PDF/A, PDF/UA), `--strict` found diagnostics, `--created` is not a date, or the PDF could not be written. The reason goes to standard error, after `Error:` |
-| `2` | The command line is wrong: an unknown option, a missing `--output` or input, a value that is not allowed (`--pdfa 1b`) |
+| `2` | The command line is wrong: an unknown option, a missing `--output` or input, a value that is not allowed (`--pdfa 5b`) |
 
 ```text
 $ fagus render letter.html -o letter.pdf --accessible

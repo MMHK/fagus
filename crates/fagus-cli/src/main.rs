@@ -50,8 +50,8 @@ enum Command {
         /// Directory that the document may read files from (default: the input's directory).
         #[arg(long)]
         root: Option<PathBuf>,
-        /// Write PDF/A: 2b, 2u, 2a, 3b, 3u or 3a.
-        #[arg(long, value_parser = ["2b", "2u", "2a", "3b", "3u", "3a"])]
+        /// Write PDF/A: 1b, 2b, 2u, 2a, 3b, 3u, 3a, 4, 4e or 4f.
+        #[arg(long, value_parser = ["1b", "2b", "2u", "2a", "3b", "3u", "3a", "4", "4e", "4f"])]
         pdfa: Option<String>,
         /// Write a PDF without tags (the logical structure that screen readers read).
         #[arg(long)]
