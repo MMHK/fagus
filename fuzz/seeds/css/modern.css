@@ -1,0 +1,16 @@
+@layer base, top; @layer base { :root { --c: oklch(60% .2 30); --w: calc(100% - 2 * 1rem) } }
+@property --n { syntax: '<number>'; inherits: false; initial-value: 0 }
+@font-face { font-family: X; src: url(x.woff2) format(woff2), local(Inter); unicode-range: U+0-7F }
+@counter-style thumbs { system: cyclic; symbols: "👍"; suffix: " " }
+@supports (display: grid) and (not (display: inline-grid)) { .g { display: grid } }
+@media print and (min-width: 10cm) { body { color: rgb(0 0 0 / 50%) } }
+@container card (inline-size > 30em) { p { font-size: clamp(1rem, 2vw + 1px, 3rem) } }
+@scope (.card) to (.content) { :scope { border: 1px solid } }
+@page :left { margin-left: 3cm; @bottom-left { content: counter(page, thumbs) } }
+.a { & > .b { color: var(--c, red) } &:has(+ .c):not(.d, :nth-child(2n + 1 of .e)) { width: var(--w) } }
+h1:is(.x, #y)::before { content: "§" counter(h) ". "; counter-increment: h }
+p:lang(de)::first-letter { initial-letter: 3; float: left } li::marker { color: color-mix(in lch, red 30%, blue) }
+input[type="text" i]:placeholder-shown, a[href^="http"]:visited { text-decoration: underline wavy red 2px }
+.g { grid-template-columns: repeat(auto-fill, minmax(min(10px, 100%), 1fr)); anchor-name: --a }
+.p { position: absolute; position-anchor: --a; top: anchor(bottom); position-try-fallbacks: flip-block }
+@keyframes k { from { opacity: 0 } to { opacity: 1 } }
