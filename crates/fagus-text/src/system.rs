@@ -228,7 +228,7 @@ impl SystemFonts {
 
     fn load(&self, entry: &Entry) -> Option<Face> {
         let (data, index) = self.data(entry.id)?;
-        if !crate::color_tables_sound(&data, index) {
+        if !crate::face_sound(&data, index) {
             self.skip(&entry.family);
             return None;
         }

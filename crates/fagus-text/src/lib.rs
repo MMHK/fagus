@@ -1061,7 +1061,7 @@ impl FontDb {
         for index in 0.. {
             let blob: Arc<dyn AsRef<[u8]> + Send + Sync> = Arc::clone(&data) as _;
             let Some(font) = Font::new(blob, index) else { break };
-            if color_tables_sound(&data, index) {
+            if face_sound(&data, index) {
                 added.push(self.push(Arc::new(make_face(font, Arc::clone(&data), index))));
             }
         }
@@ -2528,7 +2528,7 @@ impl Face {
     /// `size-adjust` scales the face, and its overrides replace the font's ascent, descent and
     /// line gap (in proportion to the adjusted size, as in Chrome).
     pub fn from_rule(data: Arc<Vec<u8>>, index: u32, rule: &Descriptors) -> Option<Self> {
-        if !color_tables_sound(&data, index) {
+        if !face_sound(&data, index) {
             return None;
         }
         let blob: Arc<dyn AsRef<[u8]> + Send + Sync> = Arc::clone(&data) as _;
@@ -2580,10 +2580,17 @@ impl Face {
     }
 }
 
-/// Whether the color tables of face `index` of font data are sound (see
-/// [`palette::color_tables_sound`]): Chrome rejects fonts whose are not.
-fn color_tables_sound(data: &[u8], index: u32) -> bool {
-    skrifa::FontRef::from_index(data, index).is_ok_and(|font| palette::color_tables_sound(&font))
+/// Whether face `index` of font data is sound enough to use, as Chrome's font sanitizer
+/// requires: its size of the em square is within the 16 to 16,384 units that OpenType allows
+/// (glyphs are scaled by it, so 0 made every size infinite), and its color tables are sound
+/// (see [`palette::color_tables_sound`]).
+fn face_sound(data: &[u8], index: u32) -> bool {
+    use skrifa::raw::TableProvider;
+    skrifa::FontRef::from_index(data, index).is_ok_and(|font| {
+        font.head()
+            .is_ok_and(|head| (16..=16_384).contains(&head.units_per_em()))
+            && palette::color_tables_sound(&font)
+    })
 }
 
 fn make_face(font: Font, data: Arc<Vec<u8>>, index: u32) -> Face {

@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file. The format is b
 - Tagged PDF keeps empty table cells as `TD` and `TH` elements, so that every row of a table has the same number of columns, as PDF/UA-1 requires. A table with an empty cell, such as an empty header in its corner, failed veraPDF's checks 7.2-42 and 7.2-43.
 - Conic gradients drawn as images (in PDF/A, with more than 96 stops, and in boxes with `filter`) have the same pixels on macOS as on Linux. Their angles came from the system's `atan2f`, which on macOS differs in the last bit for about one pixel in six, so a few pixels came out one shade off and the files differed. The PDFs made on Linux stay the same.
 - A font whose `cmap` maps characters to glyphs it does not have (past its number of glyphs, which format 12 allows) no longer aborts the process when text is written in it: those characters count as missing from the font and fall back to other fonts, and a glyph that shaping still yields past the end is drawn as `.notdef`.
+- A font whose em square is not between 16 and 16,384 units, as OpenType requires, is rejected as Chrome rejects it: an `@font-face` rule falls back to the next source or font, and `add_font_data` (the worker's `F`) fails. One of 0 units made rendering stop with an internal error.
 
 ## [0.2.0] - 2026-11-17
 

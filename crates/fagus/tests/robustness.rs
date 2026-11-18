@@ -634,6 +634,24 @@ fn renders_text_in_a_font_whose_characters_map_to_glyphs_it_does_not_have() {
     renders_in_font(with_table(inter(), b"cmap", &cmap));
 }
 
+#[test]
+fn leaves_out_a_font_whose_em_square_has_no_size() {
+    // Glyphs are scaled by the size of the em square: krilla divided by 0 for the font's box.
+    let mut inter = inter();
+    let count = usize::from(u16::from_be_bytes([inter[4], inter[5]]));
+    let head = (0..count)
+        .map(|index| 12 + 16 * index)
+        .find(|entry| &inter[*entry..*entry + 4] == b"head")
+        .expect("the table");
+    let offset = u32::from_be_bytes(inter[head + 8..head + 12].try_into().expect("4 bytes")) as usize;
+    let mut table = inter[offset..offset + 54].to_vec();
+    table[18..20].copy_from_slice(&0u16.to_be_bytes());
+    inter = with_table(inter, b"head", &table);
+    renders_in_font(inter.clone());
+    let mut engine = Engine::new();
+    assert!(engine.add_font_data(inter).is_err());
+}
+
 /// The font file of Inter, regular.
 fn inter() -> Vec<u8> {
     std::fs::read(concat!(
