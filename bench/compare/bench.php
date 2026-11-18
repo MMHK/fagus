@@ -4,49 +4,13 @@
 //
 // Renders the document once in this new process, then <repeats> more times, and prints JSON with
 // the time of the first render and the median of the repeats in milliseconds. The PDF is written
-// to out/<engine>-<document>.pdf. Engines: fagus, dompdf, mpdf, browsershot.
+// to out/<engine>-<document>.pdf. Engines: fagus, dompdf, mpdf, browsershot (see engines.php).
 
 [, $engine, $file, $repeats] = $argv;
-$repo = dirname(__DIR__, 2);
-require __DIR__.'/vendor/autoload.php';
-require $repo.'/vendor/autoload.php';
+require __DIR__.'/engines.php';
 
 $file = realpath($file);
-$html = file_get_contents($file);
-$directory = dirname($file);
-$chrome = getenv('CHROME') ?: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-$render = match ($engine) {
-    'fagus' => (function () use ($html, $directory, $repo) {
-        $fagus = new Fagus\Engine($repo.'/target/release/fagus');
-
-        return fn () => Fagus\Fagus::html($html)->baseDirectory($directory)->render($fagus)->bytes();
-    })(),
-    'dompdf' => function () use ($html, $directory) {
-        $options = new Dompdf\Options();
-        $options->setChroot($directory);
-        $options->setFontCache(sys_get_temp_dir());
-        $dompdf = new Dompdf\Dompdf($options);
-        $dompdf->setBasePath($directory.'/');
-        $dompdf->loadHtml($html);
-        $dompdf->render();
-
-        return $dompdf->output();
-    },
-    'mpdf' => function () use ($html, $directory) {
-        $mpdf = new Mpdf\Mpdf(['tempDir' => sys_get_temp_dir().'/mpdf']);
-        $mpdf->SetBasePath($directory.'/');
-        $mpdf->WriteHTML($html);
-
-        return $mpdf->Output('', 'S');
-    },
-    'browsershot' => fn () => Spatie\Browsershot\Browsershot::htmlFromFilePath($file)
-        ->allowLocalFileAccess()
-        ->setChromePath($chrome)
-        ->setNodeModulePath(__DIR__.'/node_modules')
-        ->showBackground()
-        ->pdf(),
-};
+$render = renderer($engine, $file);
 
 $start = hrtime(true);
 $pdf = $render();
