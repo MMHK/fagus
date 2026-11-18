@@ -24,6 +24,7 @@ All notable changes to this project are documented in this file. The format is b
 - Conic gradients drawn as images (in PDF/A, with more than 96 stops, and in boxes with `filter`) have the same pixels on macOS as on Linux. Their angles came from the system's `atan2f`, which on macOS differs in the last bit for about one pixel in six, so a few pixels came out one shade off and the files differed. The PDFs made on Linux stay the same.
 - A font whose `cmap` maps characters to glyphs it does not have (past its number of glyphs, which format 12 allows) no longer aborts the process when text is written in it: those characters count as missing from the font and fall back to other fonts, and a glyph that shaping still yields past the end is drawn as `.notdef`.
 - A font whose em square is not between 16 and 16,384 units, as OpenType requires, is rejected as Chrome rejects it: an `@font-face` rule falls back to the next source or font, and `add_font_data` (the worker's `F`) fails. One of 0 units made rendering stop with an internal error.
+- Raster images in SVG images (`<image>` with a PNG, GIF or WebP) and the images that filters change are decoded only up to 200 megapixels, the limit of other images; larger ones are left out. A PNG of a few hundred bytes whose header claimed billions of pixels was decoded into a buffer of hundreds of gigabytes, which aborts the process where the system refuses that much memory.
 
 ## [0.2.0] - 2026-11-17
 

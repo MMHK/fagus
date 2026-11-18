@@ -406,10 +406,21 @@ fn gamma_table(gamma: f32) -> [u8; 256] {
     table
 }
 
+/// Whether an image of `width` × `height` pixels is small enough to decode: no larger than
+/// [`fagus_layout::MAX_PIXELS`], as other images. Images in SVG images are decoded without
+/// being probed first, and a header may claim any size: hundreds of gigabytes for a PNG of
+/// 200 bytes.
+fn decodable(width: impl Into<u64>, height: impl Into<u64>) -> bool {
+    width.into().saturating_mul(height.into()) <= fagus_layout::MAX_PIXELS
+}
+
 fn png(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     let mut decoder = png::Decoder::new(Cursor::new(data));
     decoder.set_transformations(png::Transformations::normalize_to_color8());
     let mut reader = decoder.read_info().ok()?;
+    if !decodable(reader.info().width, reader.info().height) {
+        return None;
+    }
     let gamma = significant_gamma(reader.info()).map(gamma_table);
     let mut buffer = vec![0; reader.output_buffer_size()?];
     let info = reader.next_frame(&mut buffer).ok()?;
@@ -459,8 +470,12 @@ fn jpeg(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     use zune_jpeg::zune_core::options::DecoderOptions;
     let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGBA);
     let mut decoder = zune_jpeg::JpegDecoder::new_with_options(Cursor::new(data), options);
-    let pixels = decoder.decode().ok()?;
+    decoder.decode_headers().ok()?;
     let (width, height) = decoder.dimensions()?;
+    if !decodable(width as u64, height as u64) {
+        return None;
+    }
+    let pixels = decoder.decode().ok()?;
     (decoder.output_colorspace() == Some(ColorSpace::RGBA)).then_some((width as u32, height as u32, pixels))
 }
 
@@ -489,6 +504,10 @@ fn cmyk_rgb(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     use zune_jpeg::zune_core::options::DecoderOptions;
     let mut decoder = zune_jpeg::JpegDecoder::new(Cursor::new(data));
     decoder.decode_headers().ok()?;
+    let (width, height) = decoder.dimensions()?;
+    if !decodable(width as u64, height as u64) {
+        return None;
+    }
     if !matches!(
         decoder.input_colorspace(),
         Some(ColorSpace::CMYK | ColorSpace::YCCK)
@@ -512,6 +531,9 @@ fn gif(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     options.set_color_output(gif::ColorOutput::RGBA);
     let mut decoder = options.read_info(Cursor::new(data)).ok()?;
     let (width, height) = (usize::from(decoder.width()), usize::from(decoder.height()));
+    if !decodable(decoder.width(), decoder.height()) {
+        return None;
+    }
     let frame = decoder.read_next_frame().ok()??;
     // The first frame, where it lies on the canvas.
     let mut pixels = vec![0_u8; width * height * 4];
@@ -538,6 +560,9 @@ fn gif(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
 fn webp(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     let mut decoder = image_webp::WebPDecoder::new(Cursor::new(data)).ok()?;
     let (width, height) = decoder.dimensions();
+    if !decodable(width, height) {
+        return None;
+    }
     let mut buffer = vec![0; decoder.output_buffer_size()?];
     decoder.read_image(&mut buffer).ok()?;
     let pixels = if decoder.has_alpha() {
@@ -556,6 +581,29 @@ fn webp(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn decodes_images_up_to_the_limit_of_other_images() {
+        assert!(decodable(20_000_u32, 10_000_u32));
+        assert!(!decodable(20_000_u32, 10_001_u32));
+        assert!(!decodable(u32::MAX, u32::MAX));
+        // A PNG of a few bytes that claims 200 × 788,529,252 pixels.
+        let mut png = b"\x89PNG\r\n\x1a\n".to_vec();
+        let mut chunk = |kind: &[u8], data: &[u8]| {
+            png.extend_from_slice(&(data.len() as u32).to_be_bytes());
+            let mut crc = flate2::Crc::new();
+            crc.update(kind);
+            crc.update(data);
+            png.extend_from_slice(kind);
+            png.extend_from_slice(data);
+            png.extend_from_slice(&crc.sum().to_be_bytes());
+        };
+        chunk(b"IHDR", &[0, 0, 0, 200, 47, 0, 0, 100, 8, 2, 0, 0, 0]);
+        chunk(b"IDAT", &[120, 1, 1, 0, 0, 255, 255, 0, 0, 0, 1]);
+        chunk(b"IEND", &[]);
+        assert!(png::Decoder::new(Cursor::new(&png)).read_info().is_ok());
+        assert!(rgba(&png, ImageFormat::Png).is_none());
+    }
 
     #[test]
     fn draws_cmyk_jpegs_without_a_profile_as_chrome() {

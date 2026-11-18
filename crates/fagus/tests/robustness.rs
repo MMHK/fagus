@@ -670,3 +670,14 @@ fn renders_in_font(font: Vec<u8>) {
     let output = Engine::new().render(&document);
     assert!(output.is_ok(), "{:?}", output.err());
 }
+
+#[test]
+fn leaves_out_an_image_in_svg_that_claims_billions_of_pixels() {
+    // A PNG of 258 bytes whose header gives 200 × 788,529,252 pixels: images in SVG were decoded
+    // without a limit on their size, into a buffer of 473 GB (which aborts the process where the
+    // system refuses to promise that much memory, as Linux does).
+    let png = "iVBORw0KGgoAAAANSUhEUgAAAMgvAABkCAIAAABM5OhcAAAAyUlEQVR42u3SMREAAAjEMEDm+xeCCSaGREKvnaTg2kiAsTAWxgJjYSyMBcbCWBgLjIWxMBYYC2NhLDAWxsJYYCyMhbHAWBgLY4GxMBbGAmNhLIwFxsJYGAuMhbEwFhgLY2EsMBbGwlhgLIyFscBYGAtBgbEwFsYCY2EsjAXGwlgYC4yFsTAWGAtjYSwwFsbCWGAsjIWxwFgYC2OBsTAWxgJjYSyMBcbCWBgLjIWxMBYYC2NhLIwFxsJYGAuMhbEwFhgLY2EsMBa/LUvcAdaljmuGAAAAAElFTkSuQmCC";
+    renders(&format!(
+        "<svg width=20 height=20><image width=20 height=20 href='data:image/png;base64,{png}'/></svg>"
+    ));
+}

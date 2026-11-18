@@ -6,7 +6,7 @@ use fagus_dom::NodeId;
 use rustc_hash::FxHashMap;
 
 /// The largest image Fagus accepts, in pixels: decoding a larger one could exhaust memory.
-const MAX_PIXELS: u64 = 200_000_000;
+pub const MAX_PIXELS: u64 = 200_000_000;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ImageFormat {

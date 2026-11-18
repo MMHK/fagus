@@ -71,7 +71,8 @@ pub use fragment::{
 };
 pub use frame::{FrameDocument, content_height, is_responsive, layout_viewport};
 pub use image::{
-    Image, ImageError, ImageFormat, Images, PathSegment, PixelFilter, SvgClip, SvgDocument, SvgReference,
+    Image, ImageError, ImageFormat, Images, MAX_PIXELS, PathSegment, PixelFilter, SvgClip, SvgDocument,
+    SvgReference,
 };
 pub use inline::{
     COMBINED_ROOM, StyleFonts, face_for, font_variations, hangable_punctuation, run_variations,
