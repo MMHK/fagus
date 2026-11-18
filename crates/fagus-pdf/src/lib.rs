@@ -649,7 +649,9 @@ fn attempt(
             let mut described: Vec<String> = Vec::new();
             for (problem, _) in &problems {
                 let message = match problem {
-                    krilla::configure::ValidationError::Transparency(_) => problems::transparency(&transparent),
+                    krilla::configure::ValidationError::Transparency(_) => {
+                        problems::transparency(&transparent)
+                    }
                     _ => problems::describe(problem, &name, &options.attachments, options.conformance),
                 };
                 if !described.contains(&message) {
