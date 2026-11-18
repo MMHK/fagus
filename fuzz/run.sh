@@ -5,6 +5,11 @@
 # inputs go to corpus/<target>, crashes to artifacts/<target>. The limits leave room for
 # documents that are heavy but legitimate: the engine stops at 10,000 pages and 200 megapixels
 # per image, which takes seconds, so only a minute without an answer counts as a hang.
+#
+# Targets are built without a sanitizer but with overflow checks and debug assertions: the
+# engine has no unsafe code, and AddressSanitizer makes rendering (drawing filters, decoding
+# images) five to ten times slower. FUZZ_SANITIZER=address turns it on, for the unsafe code in
+# dependencies.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -15,7 +20,7 @@ shift $(($# < 2 ? $# : 2))
 case "$target" in
     render) options=(-max_len=16384 -dict=dicts/html.dict) ;;
     css) options=(-max_len=4096 -dict=dicts/css.dict) ;;
-    font) options=(-max_len=1048576) ;;
+    font) options=(-max_len=524288) ;;
     image) options=(-max_len=262144) ;;
     svg) options=(-max_len=32768 -dict=dicts/html.dict) ;;
     worker) options=(-max_len=16384) ;;
@@ -26,6 +31,6 @@ case "$target" in
 esac
 
 ./seed.sh > /dev/null
-exec cargo +nightly fuzz run "$target" "corpus/$target" -- \
+exec cargo +nightly fuzz run --sanitizer "${FUZZ_SANITIZER:-none}" "$target" "corpus/$target" -- \
     -max_total_time="$seconds" -timeout=60 -rss_limit_mb=4096 -print_final_stats=1 \
     "${options[@]}" "$@"

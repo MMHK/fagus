@@ -12,6 +12,11 @@ on:
       seconds:
         description: Seconds to fuzz each target
         default: '600'
+      sanitizer:
+        description: Sanitizer (address checks the unsafe code in dependencies, but is slower)
+        type: choice
+        options: [none, address]
+        default: none
 
 permissions:
   contents: read
@@ -22,6 +27,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  FUZZ_SANITIZER: ${{ inputs.sanitizer || 'none' }}
 
 jobs:
   fuzz:
@@ -53,7 +59,7 @@ jobs:
       # Keeps the inputs that add coverage; the corpus would otherwise grow every night.
       - name: Minimize the corpus
         if: success()
-        run: cargo +nightly fuzz cmin ${{ matrix.target }} fuzz/corpus/${{ matrix.target }} -- -timeout=60 -rss_limit_mb=4096
+        run: cargo +nightly fuzz cmin --sanitizer "$FUZZ_SANITIZER" ${{ matrix.target }} fuzz/corpus/${{ matrix.target }} -- -timeout=60 -rss_limit_mb=4096
       - name: Save the corpus
         if: always()
         uses: actions/cache/save@v4
