@@ -546,3 +546,123 @@ fn aligns_the_cells_that_end_in_a_broken_row_grown_past_its_first_page_height() 
     let (_, c, _) = find(&pages[2], &document, "c").expect("c");
     assert_eq!(c, 20.0);
 }
+
+/// The widths of the horizontal pieces of collapsed borders that the tables on `page` draw, with
+/// the place of their middle from the top of the page.
+fn collapsed_lines(page: &Page) -> Vec<(f32, f32)> {
+    use crate::fragment::{Fragment, FragmentKind};
+    fn walk(fragment: &Fragment, top: f32, out: &mut Vec<(f32, f32)>) {
+        let y = top + fragment.rect.y.to_px();
+        if let FragmentKind::Box {
+            style, node: None, ..
+        } = &fragment.kind
+            && style.border_width.top > 0.0
+            && style.border_style.top.is_visible()
+        {
+            out.push((style.border_width.top, y + style.border_width.top / 2.0));
+        }
+        for child in &fragment.children {
+            walk(child, y, out);
+        }
+    }
+    let mut out = Vec::new();
+    for fragment in &page.fragments {
+        walk(fragment, 0.0, &mut out);
+    }
+    out
+}
+
+/// The widths of the horizontal collapsed borders on `page`, each once.
+fn collapsed_widths(page: &Page) -> Vec<f32> {
+    let mut widths: Vec<f32> = collapsed_lines(page)
+        .into_iter()
+        .map(|(width, _)| width)
+        .collect();
+    widths.sort_by(f32::total_cmp);
+    widths.dedup();
+    widths
+}
+
+#[test]
+fn collapses_borders_without_the_carry_over_rows_where_they_do_not_show() {
+    // The header's carry-over row (6px below it) shows only after the table broke, the
+    // footer's (5px above it) only before it ends: where they do not show, the head row's 2px
+    // border meets the first row, and the last row the 3px border of the total.
+    let table = |rows: usize| {
+        format!(
+            "<style>@page {{ size: 400px 300px; margin: 20px }} body {{ margin: 0; font: 14px/20px Inter }}
+             table {{ border-collapse: collapse; width: 100% }} td, th {{ padding: 0 }}
+             th {{ border-bottom: 2px solid }}
+             .carry {{ -fagus-repeat: at-break }}
+             thead .carry td {{ border-bottom: 6px solid red }}
+             tfoot .carry td {{ border-top: 5px solid lime }}
+             .sum td {{ border-top: 3px solid blue }}</style>
+             <table><thead><tr><th>Item</th></tr><tr class=carry><td>Brought forward</td></tr></thead>
+             <tfoot><tr class=carry><td>Carried over</td></tr><tr class=sum><td>Total</td></tr></tfoot>
+             <tbody>{}</tbody></table>",
+            "<tr><td>r</td></tr>".repeat(rows)
+        )
+    };
+    let (_, pages) = render_document(&table(30));
+    assert!(pages.len() > 2);
+    let last = pages.len() - 1;
+    assert_eq!(collapsed_widths(&pages[0]), [2.0, 3.0, 5.0]);
+    assert_eq!(collapsed_widths(&pages[1]), [2.0, 3.0, 5.0, 6.0]);
+    assert_eq!(collapsed_widths(&pages[last]), [2.0, 3.0, 6.0]);
+    // The line below the head row is drawn once, not again as the top of the first row.
+    let below_head = |page: &Page| {
+        collapsed_lines(page)
+            .into_iter()
+            .filter(|&(width, _)| (width - 2.0).abs() < 0.01)
+            .count()
+    };
+    assert_eq!(below_head(&pages[0]), 1);
+    // A table on one page shows neither.
+    let (_, pages) = render_document(&table(3));
+    assert_eq!(pages.len(), 1);
+    assert_eq!(collapsed_widths(&pages[0]), [2.0, 3.0]);
+}
+
+#[test]
+fn collapses_borders_without_a_carry_over_row_group_where_it_does_not_show() {
+    // A header that shows only after the table broke: on the first page, the table's 4px top
+    // border is that of the first row, not the 6px border below the header.
+    let (_, pages) = render_document(&format!(
+        "<style>@page {{ size: 400px 300px; margin: 20px }} body {{ margin: 0; font: 14px/20px Inter }}
+         table {{ border-collapse: collapse; width: 100%; border-top: 4px solid }} td {{ padding: 0 }}
+         thead {{ -fagus-repeat: at-break }} thead td {{ border-bottom: 6px solid red }}</style>
+         <table><thead><tr><td>Brought forward</td></tr></thead><tbody>{}</tbody></table>",
+        "<tr><td>r</td></tr>".repeat(30)
+    ));
+    assert!(pages.len() > 1);
+    let first = collapsed_lines(&pages[0]);
+    assert_eq!(first.iter().map(|&(width, _)| width).collect::<Vec<_>>(), [4.0]);
+    assert!(collapsed_widths(&pages[1]).contains(&6.0));
+}
+
+#[test]
+fn draws_the_borders_of_a_breaking_row_without_a_carry_over_row_above_it() {
+    // The first row breaks on the first page, where its cell draws its collapsed borders
+    // itself: its top border is the head row's 2px border, not the 6px one below the
+    // carry-over row, centered on the line as the table draws it.
+    let lines = "x<br>".repeat(30);
+    let (document, pages) = render_document(&format!(
+        "<style>@page {{ size: 400px 300px; margin: 20px }} body {{ margin: 0; font: 14px/20px Inter }}
+         table {{ border-collapse: collapse; width: 100% }} td, th {{ padding: 0 }}
+         th {{ border-bottom: 2px solid }}
+         .carry {{ -fagus-repeat: at-break }} .carry td {{ border-bottom: 6px solid red }}</style>
+         <table><thead><tr><th>Item</th></tr><tr class=carry><td>Brought forward</td></tr></thead>
+         <tbody><tr><td class=big>{lines}</td></tr></tbody></table>"
+    ));
+    assert!(pages.len() > 1);
+    let (_, top, cell) = find(&pages[0], &document, "big").expect("cell");
+    let crate::fragment::FragmentKind::Box { style, .. } = &cell.kind else {
+        panic!("a cell box");
+    };
+    assert_eq!(style.border_width.top, 2.0);
+    let head = collapsed_lines(&pages[0])
+        .into_iter()
+        .find(|&(width, _)| (width - 2.0).abs() < 0.01)
+        .map(|(_, middle)| middle);
+    assert_eq!(head, Some(top + 1.0));
+}

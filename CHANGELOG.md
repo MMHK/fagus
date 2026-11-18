@@ -5,6 +5,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Fixed
+
+- In tables with `border-collapse: collapse`, rows with `-fagus-repeat: at-break` no longer take part in the borders of pages where they do not show: on the table's first page the head row's bottom border meets the first row (it was replaced by the border of the carry-over row below it), on its last page the last row meets the footer. This also holds for a header or footer with `-fagus-repeat: at-break` on the row group and for rows that break across pages.
+
 ## [0.2.0] - 2026-11-17
 
 ### Added

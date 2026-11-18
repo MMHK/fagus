@@ -238,6 +238,29 @@ impl Collapsed {
     }
 }
 
+/// Which rows that show only where the table breaks (`-fagus-repeat: at-break`) a page of a
+/// table leaves out: those of the header on the table's first page, those of the footer on its
+/// last.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct Hiding {
+    header: bool,
+    footer: bool,
+}
+
+/// The collapsed borders of a table on pages that leave rows out (see [`Hiding`]): resolved as
+/// if those rows were not there, so that the rows around them share their own borders. The rows
+/// keep the heights they were laid out in.
+struct Without {
+    hiding: Hiding,
+    /// Whether each row is left out.
+    hidden: Vec<bool>,
+    /// As [`Laid::edges`], none for the cells of rows left out.
+    edges: Vec<Option<[Edge; 4]>>,
+    /// As [`Laid::borders`] and [`Laid::bottoms`], none for rows left out.
+    borders: Vec<Vec<Fragment>>,
+    bottoms: Vec<Vec<Fragment>>,
+}
+
 /// Restores the width that the percentage paddings of table cells referred to before a table
 /// was laid out (see [`Layouter::cell_basis_for`]).
 struct CellBasis<'l> {
@@ -685,6 +708,9 @@ pub(crate) struct Laid {
     /// The collapsed borders of each row's bottom line, from the row's top, for a row that the
     /// next one does not follow on the page.
     bottoms: Vec<Vec<Fragment>>,
+    /// The collapsed borders on pages that leave rows of the header or footer out, for each way
+    /// they can be left out (see [`Without`]).
+    without: Vec<Without>,
     /// Backgrounds of rows and row groups, without borders, by box.
     backgrounds: Vec<(BoxId, Arc<ComputedStyle>)>,
     /// The outer shadows of rows, by row: a style with nothing else (see [`row_shadow`]).
@@ -909,6 +935,127 @@ impl Layouter<'_> {
             }
         }
         collapsed
+    }
+
+    /// Whether `row` of a table shows only where the table breaks: `-fagus-repeat: at-break` on
+    /// it or its row group.
+    fn shows_at_break(&self, row: &Row) -> bool {
+        [row.id, row.group]
+            .iter()
+            .any(|&id| self.tree.get(id).style.repeat == Repeat::AtBreak)
+    }
+
+    /// The collapsed borders of table `table` with `grid` (its columns at `lines`, its rows
+    /// `heights` tall) for the pages that leave out rows of its header or footer that show only
+    /// where it breaks (see [`Without`]); pieces to draw only if the table is `visible`.
+    fn collapsed_without(
+        &self,
+        table: BoxId,
+        grid: &Grid,
+        lines: &[Au],
+        heights: &[Au],
+        visible: bool,
+    ) -> Vec<Without> {
+        let at_break: Vec<bool> = grid
+            .rows
+            .iter()
+            .map(|row| row.part != Part::Body && self.shows_at_break(row))
+            .collect();
+        let in_part =
+            |part: Part| (0..grid.rows.len()).any(|row| at_break[row] && grid.rows[row].part == part);
+        let (header, footer) = (in_part(Part::Header), in_part(Part::Footer));
+        [(true, false), (false, true), (true, true)]
+            .into_iter()
+            .filter(|&(hides_header, hides_footer)| (header || !hides_header) && (footer || !hides_footer))
+            .map(|(hides_header, hides_footer)| {
+                let hiding = Hiding {
+                    header: hides_header,
+                    footer: hides_footer,
+                };
+                let hidden: Vec<bool> = grid
+                    .rows
+                    .iter()
+                    .zip(&at_break)
+                    .map(|(row, &at_break)| {
+                        at_break
+                            && match row.part {
+                                Part::Header => hiding.header,
+                                Part::Footer => hiding.footer,
+                                Part::Body => false,
+                            }
+                    })
+                    .collect();
+                // The grid without the rows left out; cells that span them span one row less
+                // for each.
+                let mut kept = Vec::with_capacity(grid.rows.len());
+                let mut places = Vec::with_capacity(grid.rows.len());
+                for (row, &hidden) in grid.rows.iter().zip(&hidden) {
+                    places.push(kept.len());
+                    if !hidden {
+                        kept.push(*row);
+                    }
+                }
+                let mut slots = Vec::with_capacity(grid.cells.len());
+                let cells: Vec<Option<usize>> = grid
+                    .cells
+                    .iter()
+                    .map(|slot| {
+                        if hidden[slot.row] {
+                            return None;
+                        }
+                        let end = (slot.row + slot.rowspan).min(grid.rows.len());
+                        slots.push(Slot {
+                            row: places[slot.row],
+                            rowspan: (slot.row..end).filter(|&row| !hidden[row]).count().max(1),
+                            ..*slot
+                        });
+                        Some(slots.len() - 1)
+                    })
+                    .collect();
+                let reduced = Grid {
+                    rows: kept,
+                    cells: slots,
+                    columns: grid.columns,
+                    rtl: grid.rtl,
+                };
+                let collapsed = self.collapsed(table, &reduced);
+                let edges = cells
+                    .iter()
+                    .map(|slot| slot.map(|slot| collapsed.cell(&reduced.cells[slot])))
+                    .collect();
+                let (mut borders, mut bottoms) = (
+                    vec![Vec::new(); grid.rows.len()],
+                    vec![Vec::new(); grid.rows.len()],
+                );
+                if visible {
+                    let kept_heights: Vec<Au> = heights
+                        .iter()
+                        .zip(&hidden)
+                        .filter(|(_, hidden)| !**hidden)
+                        .map(|(&height, _)| height)
+                        .collect();
+                    let (reduced_borders, reduced_bottoms) = collapsed_pieces(
+                        &collapsed,
+                        &reduced,
+                        lines,
+                        &kept_heights,
+                        &mut self.collapsed_styles.borrow_mut(),
+                    );
+                    let rows = (0..grid.rows.len()).filter(|&row| !hidden[row]);
+                    for ((row, row_borders), row_bottoms) in rows.zip(reduced_borders).zip(reduced_bottoms) {
+                        borders[row] = row_borders;
+                        bottoms[row] = row_bottoms;
+                    }
+                }
+                Without {
+                    hiding,
+                    hidden,
+                    edges,
+                    borders,
+                    bottoms,
+                }
+            })
+            .collect()
     }
 
     /// The (min, max) width of every column, and the percentage and fixed width each column was
@@ -1946,6 +2093,17 @@ impl Layouter<'_> {
             ),
             _ => (Vec::new(), Vec::new()),
         };
+        let without = if collapse {
+            self.collapsed_without(
+                id,
+                &grid,
+                &lines,
+                &heights,
+                style.visibility == Visibility::Visible,
+            )
+        } else {
+            Vec::new()
+        };
 
         let mut backgrounds = Vec::new();
         let mut seen_groups = FxHashSet::default();
@@ -2103,6 +2261,7 @@ impl Layouter<'_> {
             edges: sides,
             borders,
             bottoms,
+            without,
             backgrounds,
             shadows,
             columns: column_parts,
@@ -2491,12 +2650,7 @@ impl Layouter<'_> {
             }
         };
         // Rows of the header and footer that show only where the table breaks.
-        let at_break = |row: usize| {
-            let grid_row = laid.grid.rows[row];
-            [grid_row.id, grid_row.group]
-                .iter()
-                .any(|&id| self.tree.get(id).style.repeat == Repeat::AtBreak)
-        };
+        let at_break = |row: usize| self.shows_at_break(&laid.grid.rows[row]);
         // Where the rows above end in the string log: before body row `index`, or after the
         // row's own assignments if its rest continues there.
         let end = self.table_end(id);
@@ -2544,6 +2698,10 @@ impl Layouter<'_> {
         // table is left, without a header (see `ends_past` below).
         let end_after_cover = start >= body.len()
             && matches!(token, Some(BreakToken::Table { covered: true, cells, .. }) if cells.is_empty());
+        // On the table's first page, the collapsed borders are those of the table without the
+        // header's rows that show only where it breaks; on its last, without the footer's.
+        let hides_header = !continuing && header.iter().any(|&row| at_break(row));
+        let hides_footer = footer.iter().any(|&row| at_break(row));
         let header: Vec<usize> = header
             .into_iter()
             .filter(|&row| (continuing || !at_break(row)) && !frame_only && !rest_alone && !end_after_cover)
@@ -2685,6 +2843,12 @@ impl Layouter<'_> {
             };
             // A repeated footer follows the rows that a break between them leaves on the page.
             let repeats = footer_height > Au::ZERO;
+            // Cells of rows that break draw their collapsed borders themselves, as the table
+            // draws them on the page: the closing footer follows the last rows where they end.
+            let hiding = Hiding {
+                header: hides_header,
+                footer: hides_footer && end + 1 == body.len(),
+            };
             // Rows that break need no spacing below them, nor the table's bottom border and
             // padding; if they end on the page after all, they need room for those.
             let split = |top: Au, cells: Option<(&[Option<BreakToken>], Au)>, at_top: bool| {
@@ -2711,7 +2875,7 @@ impl Layouter<'_> {
                             && (continuing || margin_top == Au::ZERO));
                 let rows = (room, at_top, flush);
                 let footer = repeats.then_some(footer_reserve);
-                let part = self.split_rows(&laid, group, rows, cells, footer)?;
+                let part = self.split_rows(&laid, group, rows, cells, footer, hiding)?;
                 // Below the last rows come the closing footer and the table's bottom border and
                 // padding (the spacing below them shrinks to fit, see below, unless the table
                 // has to end early); below others, the spacing ends with the page.
@@ -2726,7 +2890,8 @@ impl Layouter<'_> {
                     && caption_height + top + part.height + tail > limit
                 {
                     let room = limit - caption_height - top - tail;
-                    let earlier = self.split_rows(&laid, group, (Some(room), at_top, flush), cells, footer);
+                    let earlier =
+                        self.split_rows(&laid, group, (Some(room), at_top, flush), cells, footer, hiding);
                     if earlier.as_ref().is_none_or(|earlier| earlier.next.is_some()) {
                         return earlier;
                     }
@@ -3215,12 +3380,24 @@ impl Layouter<'_> {
         // Collapsed borders go over the cells: those of each row placed whole, and the bottom
         // line of a row that the next does not follow.
         let placed = placed.into_inner();
+        let without = laid.without(Hiding {
+            header: hides_header,
+            footer: hides_footer && !broken && !frame_only && !before_footer,
+        });
+        let (borders, bottoms) = without.map_or((&laid.borders, &laid.bottoms), |without| {
+            (&without.borders, &without.bottoms)
+        });
+        // A row is followed by the next on the page also where rows left out lie between them.
+        let left_out = |rows: Range<usize>| {
+            rows.into_iter()
+                .all(|row| without.is_some_and(|without| without.hidden[row]))
+        };
         for (position, &(row, top)) in placed.iter().enumerate() {
-            let followed = placed
-                .get(position + 1)
-                .is_some_and(|&(next, next_top)| next == row + 1 && next_top == top + laid.heights[row]);
-            let bottoms = if followed { None } else { laid.bottoms.get(row) };
-            for piece in laid.borders.get(row).into_iter().chain(bottoms).flatten() {
+            let followed = placed.get(position + 1).is_some_and(|&(next, next_top)| {
+                next > row && left_out(row + 1..next) && next_top == top + laid.heights[row]
+            });
+            let bottoms = if followed { None } else { bottoms.get(row) };
+            for piece in borders.get(row).into_iter().chain(bottoms).flatten() {
                 let mut piece = piece.clone();
                 piece.rect.y += top;
                 children.push(piece);
@@ -3576,7 +3753,8 @@ impl Layouter<'_> {
     /// starts), as in Chrome. `at_top` tells whether the rows start the page, `flush` whether
     /// nothing at all lies above them there (see [`Space::flush`]). `None` if the rows move to
     /// the next page, or cannot break. With `footer` (a footer repeats below the part, taking
-    /// that room), a part that breaks between the rows ends with them.
+    /// that room), a part that breaks between the rows ends with them. `hiding` tells which rows
+    /// of the header or footer the page leaves out (see [`Without`]).
     fn split_rows(
         &self,
         laid: &Laid,
@@ -3584,6 +3762,7 @@ impl Layouter<'_> {
         (room, at_top, flush): (Option<Au>, bool, bool),
         continued: Option<(&[Option<BreakToken>], Au)>,
         footer: Option<Au>,
+        hiding: Hiding,
     ) -> Option<Portion> {
         let ends_at_rows = footer.is_some();
         // Rows that go on from the page before in a table laid out without a page (in a cell
@@ -3690,8 +3869,18 @@ impl Layouter<'_> {
         if let Some(end) = end {
             portion.height = end;
         }
+        // The closing footer follows the rows only where they end on the page.
+        let without = laid.without(Hiding {
+            footer: hiding.footer && portion.next.is_none(),
+            ..hiding
+        });
         for (position, fragment) in &mut portion.fragments {
             let index = indexes[*position];
+            if let Some(without) = without
+                && let (Some(drawn), Some(edges)) = (&laid.edges[index], &without.edges[index])
+            {
+                redraw_collapsed(fragment, drawn, edges);
+            }
             fragment.rect.x = laid.cells[index].rect.x;
             if let Some(end) = end
                 && fragment.rect.y + fragment.rect.height > end + pieces[*position].outset.1
@@ -4548,7 +4737,45 @@ fn draw_collapsed(fragment: &mut Fragment, edges: &[Edge; 4]) {
     }
 }
 
+/// Gives the fragment of a cell that draws its collapsed borders `drawn` (see
+/// [`Laid::draw_collapsed`]) the top and bottom borders `edges` instead, where they differ, on a
+/// page that leaves rows next to the cell out (see [`Without`]). They are centered on the lines
+/// between the rows as the others are; the cell's content stays where it is.
+fn redraw_collapsed(fragment: &mut Fragment, drawn: &[Edge; 4], edges: &[Edge; 4]) {
+    if drawn[TOP].key() == edges[TOP].key() && drawn[BOTTOM].key() == edges[BOTTOM].key() {
+        return;
+    }
+    let FragmentKind::Box { style, sides, .. } = &mut fragment.kind else {
+        return;
+    };
+    let half = |edge: &Edge| Au::from_px(edge.used_width() / 2.0);
+    let mut redrawn = (**style).clone();
+    if sides.top {
+        let grows = half(&edges[TOP]) - half(&drawn[TOP]);
+        fragment.rect.y -= grows;
+        fragment.rect.height += grows;
+        for child in &mut fragment.children {
+            child.rect.y += grows;
+        }
+        redrawn.border_width.top = edges[TOP].used_width();
+        redrawn.border_style.top = edges[TOP].drawn_style();
+        redrawn.border_color.top = Some(edges[TOP].color);
+    }
+    if sides.bottom {
+        fragment.rect.height += half(&edges[BOTTOM]) - half(&drawn[BOTTOM]);
+        redrawn.border_width.bottom = edges[BOTTOM].used_width();
+        redrawn.border_style.bottom = edges[BOTTOM].drawn_style();
+        redrawn.border_color.bottom = Some(edges[BOTTOM].color);
+    }
+    *style = Arc::new(redrawn);
+}
+
 impl Laid {
+    /// The collapsed borders on a page that leaves rows out as `hiding` says, if it leaves any.
+    fn without(&self, hiding: Hiding) -> Option<&Without> {
+        self.without.iter().find(|without| without.hiding == hiding)
+    }
+
     /// Gives `fragment`, a copy of cell `index` as laid out, the cell's collapsed borders to draw
     /// (see [`draw_collapsed`]), in a style made once for the cell: a cell that goes on over
     /// thousands of pages would have a copy of it on each.

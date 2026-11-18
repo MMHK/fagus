@@ -42,4 +42,6 @@ A footer row without `-fagus-repeat` shows `string()` on every page, with the fi
 
 The table's columns are measured with the values at the end of the table, usually the widest totals. Keep carry-over rows to one line: their height is that of the row as measured.
 
+With `border-collapse: collapse`, the borders on each page are resolved as if the carry-over rows that do not show there were not in the table: on the first page, the bottom border of the head row meets the first row of the body; on the last page, the last row meets the rows of the footer that remain.
+
 [`tests/corpus/quittio/many-lines.html`](../tests/corpus/quittio/many-lines.html) shows Quittio's invoice with its carry-over rows.
