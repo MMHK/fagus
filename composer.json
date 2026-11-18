@@ -34,10 +34,12 @@
     },
     "require-dev": {
         "orchestra/testbench": "^11.0",
-        "phpunit/phpunit": "^12.0"
+        "phpunit/phpunit": "^12.0",
+        "spatie/laravel-pdf": "^2.0"
     },
     "suggest": {
-        "laravel/framework": "PDFs from Blade views, with a facade, responses and filesystem disks (Laravel 13)"
+        "laravel/framework": "PDFs from Blade views, with a facade, responses and filesystem disks (Laravel 13)",
+        "spatie/laravel-pdf": "Fagus as the `fagus` driver of laravel-pdf (^2.0)"
     },
     "conflict": {
         "laravel/framework": "<13.0"
