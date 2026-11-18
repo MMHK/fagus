@@ -84,8 +84,9 @@ What these options do to the PDF is described in [pdf.md](pdf.md), how resources
 
 The types they take:
 
-- `Conformance`: `PdfA2b`, `PdfA2u`, `PdfA2a`, `PdfA3b`, `PdfA3u`, `PdfA3a`.
-  `Conformance::from_level("3b")` parses a name, `name()` gives `"PDF/A-3b"`, `is_tagged()` says
+- `Conformance`: `PdfA1b`, `PdfA2b`, `PdfA2u`, `PdfA2a`, `PdfA3b`, `PdfA3u`, `PdfA3a`, `PdfA4`,
+  `PdfA4e`, `PdfA4f`. `Conformance::from_level("3b")` parses a name (`"4"` for PDF/A-4),
+  `name()` gives `"PDF/A-3b"`, `part()` the part of ISO 19005 (1 to 4), `is_tagged()` says
   whether the level requires tags.
 - `Attachment { name, mime_type, description: Option<String>, relationship, data: Arc<Vec<u8>> }`
   with `Relationship::{Source, Data, Alternative, Supplement, Unspecified}`. PDF/A-3 and PDF/UA

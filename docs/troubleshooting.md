@@ -198,10 +198,17 @@ The PDF cannot meet the PDF/A level that was asked for. PDF/A-2 allows only PDF/
 attachments; use PDF/A-3 (`pdfA('3b')`) for other files. See [pdf.md](pdf.md). The exception's
 `diagnostics()` hold what was found before the PDF was refused.
 
+```text
+the document does not meet PDF/A-1b: PDF/A-1 forbids transparency, which the document uses for `opacity` and translucent colors, first on page 1; PDF/A-2b and later allow it
+```
+
+PDF/A-1b allows no transparency. Replace what the message names with opaque colors and images,
+or write PDF/A-2b, which keeps it (see [pdf.md](pdf.md#pdfa-1b)).
+
 ### An unknown PDF/A level
 
 ```text
-Unknown PDF/A level '4z'. The levels are '2b', '2u', '2a', '3b', '3u', '3a'.
+Unknown PDF/A level '4z'. The levels are '1b', '2b', '2u', '2a', '3b', '3u', '3a', '4', '4e', '4f'.
 ```
 
 `pdfA()` got a string that is not a level. It throws a `Fagus\Exception\InvalidArgumentException`
@@ -262,7 +269,7 @@ first `<style>` element, the URL of a linked or imported stylesheet, the name gi
 | `font.missing-glyph` | No font has a glyph for some characters; they are drawn as empty boxes ([fonts.md](fonts.md)). |
 | `frame.limit` | The documents in frames reach their limit; later frames show nothing. |
 | `layout.too-many-pages` | The document reaches the limit of 10,000 pages; what follows is left out. |
-| `pdf.conformance-raised` | Factur-X needs PDF/A-3; a PDF/A-2 level was raised to the PDF/A-3 level of the same letter. |
+| `pdf.conformance-raised` | Factur-X needs PDF/A-3; a PDF/A-2 level was raised to the PDF/A-3 level of the same letter, PDF/A-1b to PDF/A-3b. |
 | `invoice.profile-mismatch` | The invoice XML declares another profile than the one given. |
 | `invoice.profile-unknown` | The invoice XML declares no Factur-X profile. |
 

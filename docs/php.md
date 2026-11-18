@@ -175,15 +175,17 @@ is kept; a second call replaces the first.
 
 ### `pdfA(Conformance|string $level = Conformance::PdfA3b): Document`
 
-Writes the PDF as PDF/A. `$level` is a `Conformance` case or its value: `'2b'`, `'2u'`, `'2a'`,
-`'3b'`, `'3u'` or `'3a'` (case-insensitive). Any other string throws a
-`Fagus\Exception\InvalidArgumentException` that lists the levels ("Unknown PDF/A level '4z'.
-The levels are '2b', '2u', '2a', '3b', '3u', '3a'."). The levels ending in `a` are tagged for
-accessibility. See [pdf.md](pdf.md).
+Writes the PDF as PDF/A. `$level` is a `Conformance` case or its value: `'1b'`, `'2b'`, `'2u'`,
+`'2a'`, `'3b'`, `'3u'`, `'3a'`, `'4'`, `'4e'` or `'4f'` (case-insensitive). Any other string
+throws a `Fagus\Exception\InvalidArgumentException` that lists the levels ("Unknown PDF/A level
+'4z'. The levels are '1b', '2b', '2u', '2a', '3b', '3u', '3a', '4', '4e', '4f'."). The levels
+ending in `a` are tagged for accessibility. PDF/A-1b refuses transparency, and neither PDF/A-1b
+nor PDF/A-4 goes with `accessible()`. See [pdf.md](pdf.md#write-pdfa).
 
 ```php
 Fagus::html($html)->pdfA();      // PDF/A-3b
 Fagus::html($html)->pdfA('2u');
+Fagus::html($html)->pdfA('4f');  // PDF 2.0, attachments allowed
 ```
 
 ### `tagged(bool $tagged = true): Document`
@@ -208,7 +210,8 @@ headings that start at `<h1>` and skip no level. Without them, `render()` throws
 the document does not meet PDF/UA-1: the document has no title (add a <title>); the image `logo.png` in line 12 has no alternative text (add `alt`, empty if it is decoration)
 ```
 
-`accessible()` also works together with PDF/A-2a, PDF/A-3a and Factur-X. See [pdf.md](pdf.md).
+`accessible()` also works together with PDF/A-2a, PDF/A-3a and Factur-X, but not with PDF/A-1b
+and PDF/A-4, which are based on other PDF versions than PDF/UA-1. See [pdf.md](pdf.md).
 
 ### `attach(string $name, string $data, string $mime = 'application/octet-stream', Relationship $relationship = Relationship::Unspecified, ?string $description = null): Document`
 
@@ -227,13 +230,14 @@ Fagus::html($html)
 PDF/A-2 allows only PDF/A files as attachments: with `pdfA('2b')` and a CSV attachment, `render()`
 throws a `RenderException` ("the document does not meet PDF/A-2b: PDF/A-2 allows only PDF/A files
 as attachments; attach `timesheet.csv` to a PDF/A-3 document instead"). Use PDF/A-3 for other
-files.
+files. PDF/A-4 refuses them the same way (use PDF/A-4f), and PDF/A-1b allows none.
 
 ### `facturX(string $xml, ?InvoiceProfile $profile = null, ?string $version = null, ?string $description = null): Document`
 
 Makes the PDF an electronic invoice of ZUGFeRD or Factur-X: the XML is attached under the name
 its profile requires (`factur-x.xml`, or `xrechnung.xml` for XRechnung), described in the XMP
-metadata, and the PDF conforms to PDF/A-3 (PDF/A-3b unless another PDF/A-3 level is chosen). The
+metadata, and the PDF conforms to PDF/A-3 (PDF/A-3b unless another PDF/A-3 level is chosen; a
+PDF/A-4 level throws a `RenderException`, as Factur-X requires PDF/A-3). The
 profile is the one the XML declares in its guideline parameter (EN 16931 if it declares none),
 unless `$profile` is given. `$version` is the `Version` of the XMP metadata (`'1.0'` by default),
 `$description` the description of the attached XML (`'Factur-X/ZUGFeRD invoice'` by default); an
@@ -248,7 +252,7 @@ Fagus::html($html)->facturX($xml, version: '3.0', description: 'XRechnung Invoic
 ```
 
 Diagnostics report a profile that differs from the XML's (`invoice.profile-mismatch`), an XML
-without a profile (`invoice.profile-unknown`) and a PDF/A-2 level raised to PDF/A-3
+without a profile (`invoice.profile-unknown`) and a PDF/A-1 or PDF/A-2 level raised to PDF/A-3
 (`pdf.conformance-raised`). See [pdf.md](pdf.md).
 
 ### `created(DateTimeInterface $date): Document`
@@ -464,15 +468,20 @@ foreach ($pdf->diagnostics() as $diagnostic) {
 
 | Case | Value | Level |
 |---|---|---|
+| `Conformance::PdfA1b` | `'1b'` | PDF/A-1b |
 | `Conformance::PdfA2b` | `'2b'` | PDF/A-2b |
 | `Conformance::PdfA2u` | `'2u'` | PDF/A-2u |
 | `Conformance::PdfA2a` | `'2a'` | PDF/A-2a |
 | `Conformance::PdfA3b` | `'3b'` | PDF/A-3b |
 | `Conformance::PdfA3u` | `'3u'` | PDF/A-3u |
 | `Conformance::PdfA3a` | `'3a'` | PDF/A-3a |
+| `Conformance::PdfA4` | `'4'` | PDF/A-4 |
+| `Conformance::PdfA4e` | `'4e'` | PDF/A-4e |
+| `Conformance::PdfA4f` | `'4f'` | PDF/A-4f |
 
-PDF/A-3 allows attachments of any type, as ZUGFeRD and Factur-X need. The levels ending in `a`
-are tagged for accessibility.
+PDF/A-1b is PDF 1.4 without transparency. PDF/A-3 allows attachments of any type, as ZUGFeRD and
+Factur-X need; PDF/A-4 is PDF 2.0, and PDF/A-4f allows attachments of any type too. The levels
+ending in `a` are tagged for accessibility.
 
 ## `InvoiceProfile`
 

@@ -5,13 +5,13 @@ bookmarks, tagged and accessible PDF, PDF/A, attachments and electronic invoices
 look is up to the HTML and CSS (see [css.md](css.md) and [paged-media.md](paged-media.md)); the
 methods of the document builder are described in [php.md](php.md).
 
-Every PDF Fagus writes is a PDF 1.7 file with:
+Every PDF Fagus writes is a PDF 1.7 file (PDF 1.4 for PDF/A-1b, PDF 2.0 for PDF/A-4) with:
 
 - the fonts the text uses, embedded as subsets;
 - the title, language, author, subject and keywords of the document;
 - links and the document outline (bookmarks) from the headings;
 - the logical structure for screen readers (tagged PDF), unless you turn it off;
-- compressed streams and object streams.
+- compressed streams and object streams (not in PDF/A-1b, which PDF 1.4 lacks them for).
 
 ```php
 use Fagus\Conformance;
@@ -215,17 +215,21 @@ Fagus::html($html)->pdfA(Conformance::PdfA3a)->accessible()->facturX($xml)->save
 
 ## Write PDF/A
 
-PDF/A (ISO 19005) is the standard for archiving. Fagus writes PDF/A-2 and PDF/A-3 in their
-levels b, u and a:
+PDF/A (ISO 19005) is the standard for archiving. Fagus writes PDF/A-1b, PDF/A-2 and PDF/A-3 in
+their levels b, u and a, and PDF/A-4 with its levels e and f:
 
 | Level | `Conformance` | Name | Requires |
 |---|---|---|---|
+| PDF/A-1b | `PdfA1b` | `'1b'` | PDF 1.4, no transparency, fonts embedded, colors defined |
 | PDF/A-2b | `PdfA2b` | `'2b'` | a reliable appearance: fonts embedded, colors defined |
 | PDF/A-2u | `PdfA2u` | `'2u'` | 2b, and all text mapped to Unicode |
 | PDF/A-2a | `PdfA2a` | `'2a'` | 2u, tagged, with a language and alternative text for images |
 | PDF/A-3b | `PdfA3b` | `'3b'` | like 2b, and allows attachments of any type |
 | PDF/A-3u | `PdfA3u` | `'3u'` | 3b, and all text mapped to Unicode |
 | PDF/A-3a | `PdfA3a` | `'3a'` | 3u, tagged, with a language and alternative text for images |
+| PDF/A-4 | `PdfA4` | `'4'` | PDF 2.0, all text mapped to Unicode |
+| PDF/A-4e | `PdfA4e` | `'4e'` | 4, for engineering documents (allows 3D content, which Fagus does not write) |
+| PDF/A-4f | `PdfA4f` | `'4f'` | 4, and allows attachments of any type |
 
 ```php
 use Fagus\Conformance;
@@ -239,6 +243,10 @@ Fagus::html($html)->pdfA()->save('archive.pdf');      // PDF/A-3b
 A name that is not a level throws a `Fagus\Exception\InvalidArgumentException` that lists the
 levels. On the command line, the flag is `--pdfa 3b`.
 
+Which level to choose: PDF/A-2b or PDF/A-3b where an archive only asks for PDF/A, PDF/A-3 for
+attachments and invoices, PDF/A-1b only for an archive that accepts nothing newer, and PDF/A-4
+for one that asks for PDF 2.0.
+
 What changes in a PDF/A file:
 
 - The XMP metadata names the part and level (`pdfaid`).
@@ -247,7 +255,8 @@ What changes in a PDF/A file:
 - Every character must have a glyph in a font. A character no font has (shown as an empty box
   in other PDFs) makes the document fail: ``Inter has no glyph for `☃`, and no other font has
   one``. The other checks of the written file are listed under PDF/UA above.
-- Transparency, blend modes and masks are kept: PDF/A-2 and PDF/A-3 allow them.
+- Transparency, blend modes and masks are kept: PDF/A-2, PDF/A-3 and PDF/A-4 allow them.
+  PDF/A-1 does not; see below.
 - What would need a PostScript function, which PDF/A forbids, is drawn another way: conic
   gradients become images, and repeating linear gradients are written out period by period (one
   with more than 2000 periods in its box becomes its average color). Blurred shadows are images
@@ -255,7 +264,8 @@ What changes in a PDF/A file:
 - PDF/A-2 allows only PDF/A files as attachments, which Fagus does not check, so it refuses
   every attachment: ``PDF/A-2 allows only PDF/A files as attachments; attach `timesheet.csv` to a
   PDF/A-3 document instead``. Use PDF/A-3, which requires a description for each attached file
-  (see below).
+  (see below). PDF/A-4 refuses them the same way (attach them to PDF/A-4f), and PDF/A-1 allows
+  none.
 - The levels a are tagged whatever `tagged()` says, and fail without a language or with an
   image without alternative text.
 
@@ -265,6 +275,64 @@ A document that does not meet the level is refused with a `RenderException`, as 
 the document does not meet PDF/A-3a: an image has no alternative text (add `alt`, empty for
 decoration); the document has no language (add `lang` to <html>)
 ```
+
+### PDF/A-1b
+
+PDF/A-1 (ISO 19005-1) is based on PDF 1.4. The file has a classic cross-reference table and no
+object streams, so it is somewhat larger. PDF/A-1 forbids transparency: no `opacity` below 1, no
+translucent colors, no images with transparent pixels, no blend modes, masks or soft shadows.
+Fagus draws what it can without transparency and refuses the rest:
+
+- Content that does not show (`opacity: 0`, a clip that encloses nothing) is clipped away instead
+  of drawn transparent.
+- `isolation` changes nothing where nothing is transparent, and is left out.
+- A PNG, GIF or WebP image with an alpha channel whose pixels are all opaque is embedded without
+  that channel. GIF images always have one in the PDF otherwise.
+- Everything else that is transparent is refused. Fagus does not flatten it onto what lies below
+  (which would mean drawing that, text included, as pixels) and does not leave it out.
+
+The message names what is transparent and the first page where it is:
+
+```text
+the document does not meet PDF/A-1b: PDF/A-1 forbids transparency, which the document uses for
+`opacity` (first on page 1), translucent colors (first on page 2) and images with transparent
+pixels (first on page 2); PDF/A-2b and later allow it
+```
+
+The causes are `opacity`, blend modes (`mix-blend-mode`, `background-blend-mode`), masks
+(`mask`), translucent colors (also in borders and backgrounds), text in translucent colors or
+color fonts (emoji), gradients with translucent colors, images with transparent pixels, SVG
+images with transparency, shadows (`box-shadow`, `text-shadow`; a blurred shadow always has
+transparent pixels) and filters (`filter`) drawn as pixels. Replace them with opaque colors and
+images, or write PDF/A-2b, which keeps them.
+
+PDF/A-1b goes with neither attachments (PDF/A-1 allows none) nor `accessible()`: PDF/UA-1 builds
+on PDF 1.7, and the PDF is refused with ``PDF/A-1b and PDF/UA-1 need different PDF versions and
+cannot be written together (PDF/UA-1 goes with PDF/A-2 and PDF/A-3)``. A Factur-X invoice is
+raised to PDF/A-3b (see below). The PDF is tagged unless `tagged(false)`; Fagus writes no PDF/A-1a.
+
+### PDF/A-4
+
+PDF/A-4 (ISO 19005-4:2020) is based on PDF 2.0. The file starts with `%PDF-2.0`, and the metadata
+is only in XMP: PDF 2.0 deprecates the document information dictionary, which PDF/A-4 forbids, so
+the title, author and dates are XMP properties alone. The XMP names `pdfaid:part` 4 and
+`pdfaid:rev` 2020, and `pdfaid:conformance` only for the levels e (`E`) and f (`F`). PDF/A-4 has
+no levels b, u or a: all text must be mapped to Unicode, and tagging is recommended (Fagus tags
+unless `tagged(false)`). As with the levels a, characters from the private use area (the icons of
+icon fonts) are refused, since they have no meaning as text.
+
+- PDF/A-4f allows attachments of any type, like PDF/A-3. The plain level allows only PDF/A files,
+  which Fagus does not check, and refuses attachments: ``PDF/A-4 allows only PDF/A files as
+  attachments; attach `timesheet.csv` to a PDF/A-4f document instead``.
+- PDF/A-4e is meant for engineering documents with 3D and rich media, which Fagus does not
+  write: the file is a PDF/A-4 file that says it is 4e.
+- Factur-X 1.07 (ZUGFeRD 2.3) requires PDF/A-3, so an invoice is not written as PDF/A-4, not even
+  PDF/A-4f: `facturX()` with a PDF/A-4 level fails with ``the invoice must be PDF/A-3, not
+  PDF/A-4f (choose 3b, 3u or 3a)``.
+- PDF/UA-1, which `accessible()` writes, builds on PDF 1.7. PDF/UA-2, which goes with PDF 2.0,
+  Fagus does not write yet, so `accessible()` with PDF/A-4 fails with ``PDF/A-4 and PDF/UA-1 need
+  different PDF versions and cannot be written together (PDF/UA-1 goes with PDF/A-2 and
+  PDF/A-3)``. For an accessible archive, use PDF/A-2a or PDF/A-3a with `accessible()`.
 
 ## Attach files
 
@@ -298,7 +366,7 @@ file name describes it, in PHP, in Laravel and on the command line alike.
 PDF/A-3 also requires a MIME type of the form `type/subtype`; ``the attached file `notes` has no
 valid MIME type (like `text/csv`), which PDF/A-3 requires`` names a file without one.
 
-Attachments work in plain PDF and in PDF/A-3, not in PDF/A-2. On the command line, `--attach
+Attachments work in plain PDF, in PDF/A-3 and in PDF/A-4f, not in PDF/A-1, PDF/A-2 and PDF/A-4. On the command line, `--attach
 file` attaches a file as a supplement, with its name as description and a MIME type from its
 extension (see [cli.md](cli.md)).
 
@@ -322,8 +390,10 @@ Fagus then:
   `DocumentType` `INVOICE`, `DocumentFileName`, `Version` (`1.0` unless you give another) and
   `ConformanceLevel`;
 - writes PDF/A-3b, or the PDF/A-3 level you chose with `pdfA()`. A PDF/A-2 level is raised to
-  the PDF/A-3 level of the same letter, with the warning `pdf.conformance-raised` ("PDF/A-2b is
-  written as PDF/A-3b because Factur-X attaches its XML, which only PDF/A-3 allows").
+  the PDF/A-3 level of the same letter, PDF/A-1b to PDF/A-3b, with the warning
+  `pdf.conformance-raised` ("PDF/A-2b is written as PDF/A-3b because Factur-X attaches its XML,
+  which only PDF/A-3 allows"). A PDF/A-4 level is refused: Factur-X 1.07 requires PDF/A-3 (see
+  [PDF/A-4](#pdfa-4)).
 
 ### The profile
 
@@ -592,7 +662,9 @@ check the result:
   A valid invoice reports `<summary status="valid"/>`.
 
 The repository's script `tools/validate.sh` renders every document of the test corpus as
-PDF/A-2b, 2u, 3b and 3a, as PDF/UA-1 and as Factur-X invoices, and checks them with both tools:
+PDF/A-1b, 2b, 2u, 3b, 3a, 4, 4e and 4f, as PDF/UA-1 and as Factur-X invoices, and checks them
+with both tools (documents that Fagus refuses for a level, such as those with transparency for
+PDF/A-1b, are left out of it):
 
 ```sh
 VERAPDF=/path/to/verapdf MUSTANG=/path/to/Mustang-CLI.jar tools/validate.sh /tmp/validate
