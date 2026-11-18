@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file. The format is b
 ### Added
 
 - `@page :nth(An+B)` and `:nth(An+B of name)` select pages by their number in the document or in each page group of a name, the pages of an element with a `page` name and a forced break before it (CSS Generated Content for Paged Media 3): `@page :nth(1 of chapter)` styles the first page of every chapter. `@page :first` stays the first page of the document.
+- A `fagus` driver for spatie/laravel-pdf 2, registered when that package is installed: `Pdf::view(...)->driver('fagus')`, or `LARAVEL_PDF_DRIVER=fagus` for every PDF. The format, paper size, orientation and margins become an `@page` rule that wins over the document's, the header and footer views become running elements in the page margins with `@pageNumber` and `@totalPages`, and documents start with the base directory, root and tagging of `config/fagus.php`. `scale()` and `pageRanges()` throw a `CouldNotGeneratePdf`.
 
 ### Changed
 

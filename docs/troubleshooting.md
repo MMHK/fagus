@@ -394,4 +394,7 @@ Chrome print the same in Fagus; what changes is everything around them:
 | `$snappy->getOutputFromHtml($html)` | `Fagus::html($html)->render()->bytes()` |
 | Assets loaded from the running site | files through `baseDirectory()`, or `resource()` and `resolver()` |
 
+With spatie/laravel-pdf, you can also keep the code as it is and switch to its `fagus` driver
+(see [laravel.md](laravel.md#use-fagus-with-spatielaravel-pdf)).
+
 Remove Chrome, Node, Puppeteer or wkhtmltopdf from the servers once nothing else needs them.

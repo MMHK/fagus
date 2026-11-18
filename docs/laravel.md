@@ -189,6 +189,108 @@ yourself does no harm.
 
 More on worker processes, memory and timeouts: [deployment.md](deployment.md#worker-processes).
 
+## Use Fagus with spatie/laravel-pdf
+
+An application that makes its PDFs with [spatie/laravel-pdf](https://github.com/spatie/laravel-pdf)
+(version 2) can render them with Fagus and keep its code. When both packages are installed, the
+service provider registers Fagus as laravel-pdf's `fagus` driver; there is nothing to configure.
+
+```sh
+composer require nforst/fagus spatie/laravel-pdf
+```
+
+Make it the driver of every PDF in `.env`, or choose it for single PDFs with `driver('fagus')`:
+
+```sh
+LARAVEL_PDF_DRIVER=fagus
+```
+
+```php
+use Spatie\LaravelPdf\Facades\Pdf;
+
+return Pdf::view('invoices.show', ['invoice' => $invoice])
+    ->driver('fagus')
+    ->format('a4')
+    ->margins(20, 15, 20, 15)
+    ->footerView('invoices.footer')
+    ->name("invoice-{$invoice->number}.pdf");
+```
+
+`save()`, `disk()`, `download()`, `inline()`, `base64()`, `saveQueued()`, `cache()`, mail
+attachments and `Pdf::fake()` belong to laravel-pdf and work as with any driver. The driver
+renders with the application's engine and starts every document with the `base_directory`, `root`
+and `tagged` of `config/fagus.php` (see [Configuration](#configuration)), so a view finds its
+images and fonts as with `Fagus::view()`. laravel-pdf's `@inlinedImage` works too: it writes the
+image into the view as a `data:` URL.
+
+### Page size and margins
+
+`format()`, `paperSize()`, `landscape()`, `portrait()` and `margins()` become an `@page` rule that
+the driver adds after the document's own stylesheets, as `stylesheet()` does:
+
+| laravel-pdf | `@page` |
+|---|---|
+| `format('a4')` | `size` with the dimensions laravel-pdf lists for the format: `letter`, `legal`, `tabloid`, `ledger` and `a0` to `a6`. Other names throw a `CouldNotGeneratePdf`. |
+| `paperSize(57, 500, 'mm')` | `size: 57mm 500mm` |
+| `landscape()`, `portrait()` | Turn the size of `format()` or `paperSize()`: landscape makes the page wider than tall. Alone, they write `size: landscape` or `size: portrait`, which turns the default page (A4), not a size the document sets. |
+| `margins(20, 15, 20, 15)` | `margin: 20mm 15mm 20mm 15mm` |
+
+The units are `px`, `in`, `cm` and `mm` (laravel-pdf's `Unit`), and `pt` and `pc`. Others throw a
+`CouldNotGeneratePdf`.
+
+**Precedence.** What the builder sets wins over the document's `@page` rule: the added rule comes
+later and has the same specificity. What the builder does not set adds nothing, so the document's
+`@page` rule applies. Rules of the document that select pages, such as `@page :first` or a named
+page, are more specific and still win on their pages.
+
+**Defaults.** Without `format()` and without a `size` in the document, the page is A4, where the
+Chrome-based drivers print Letter; call `format('letter')` for US paper. Without `margins()` and
+without a `margin` in the document, the margins are 28pt (about 1cm). See
+[paged-media.md](paged-media.md#set-the-page-size-and-margins).
+
+### Header and footer
+
+`headerView()`, `headerHtml()`, `footerView()` and `footerHtml()` become running elements: the
+driver puts the header and the footer at the start of the document's body and shows them in the
+`@top-center` and `@bottom-center` margin boxes of every page, as wide as the page between the left
+and right margins (see [paged-media.md](paged-media.md#put-html-in-the-header-and-footer)).
+laravel-pdf's `@pageNumber` and `@totalPages` show the page number and the number of pages.
+
+```blade
+{{-- resources/views/invoices/footer.blade.php --}}
+<div style="font-size: 8pt; text-align: right">Page @pageNumber of @totalPages</div>
+```
+
+Chrome renders the header and footer as documents of their own; Fagus renders them as part of the
+document:
+
+- They inherit the fonts and styles of the document. The explicit font size and the padding that
+  the Chrome-based drivers need are not needed.
+- Their `<style>` elements apply to the whole document: give their rules selectors that only match
+  the header and footer. A header or footer view that is a whole document (`<!doctype html>`,
+  `<head>`, `<body>`) is reduced to its content and styles.
+- They sit in the page margins: make the top and bottom margins high enough for them, with
+  `margins()` or the document's `@page` rule.
+
+For more than one header or footer, such as a different one on the first page, write the margin
+boxes in the document's CSS instead.
+
+### Other options
+
+| laravel-pdf | With the `fagus` driver |
+|---|---|
+| `tagged()` | Tags the PDF. Without it, the `tagged` key of the configuration decides; it is on by default. |
+| `documentOutline()` | Not needed: Fagus always writes the outline from the headings (see [pdf.md](pdf.md)). |
+| `meta()`, `encrypt()` | laravel-pdf writes them into the PDF after the driver, as for every driver. |
+| `scale()` | Throws a `CouldNotGeneratePdf`. Use the CSS property `zoom` instead, such as `html { zoom: 0.8 }`. `scale(1)` is accepted. |
+| `pageRanges()` | Throws a `CouldNotGeneratePdf`: Fagus renders every page. |
+| `waitUntilReady()` | laravel-pdf throws a `CouldNotGeneratePdf`, as Fagus runs no JavaScript. |
+| `withBrowsershot()`, `onLambda()` | Ignored, as laravel-pdf ignores them for every driver but Browsershot. |
+
+The driver discards the diagnostics. While you build a template, render it with `Fagus::view()` to
+see them (see [Diagnostics and errors](#diagnostics-and-errors)), and use `Fagus::view()` for what
+laravel-pdf has no option for: PDF/A, PDF/UA, Factur-X and attachments.
+
 ## Configuration
 
 Publish the configuration file to change it:
