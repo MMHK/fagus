@@ -61,19 +61,10 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
         for (position, object) in group.iter().enumerate() {
             write!(index, "{} {} ", object.number, data.len()).ok()?;
             let body = parse::trim(&pdf[object.body.clone()]);
-            match (Some(object.number) == root, body.strip_suffix(b">>")) {
-                (true, Some(open)) => {
-                    data.extend_from_slice(open);
-                    let text = std::str::from_utf8(body).ok()?;
-                    for (key, value) in catalog {
-                        if parse::entry(text, key).is_none() {
-                            data.extend_from_slice(key.as_bytes());
-                            data.extend_from_slice(value.as_bytes());
-                        }
-                    }
-                    data.extend_from_slice(b">>");
-                }
-                _ => data.extend_from_slice(body),
+            if Some(object.number) == root {
+                data.extend_from_slice(&with_entries(body, catalog)?);
+            } else {
+                data.extend_from_slice(body);
             }
             data.push(b'\n');
             entries[object.number as usize] = (2, u64::from(number), u16::try_from(position).ok()?);
@@ -138,6 +129,75 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
     .ok()?;
     out.extend_from_slice(&table);
     write!(out, "\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").ok()?;
+    Some(out)
+}
+
+/// The PDF as one revision with a cross-reference table, every object on its own, for PDF 1.4
+/// (PDF/A-1), which has neither object streams nor cross-reference streams; `None` if it is not
+/// a PDF this understands. Incremental updates are merged and `catalog` holds entries for the
+/// document catalog, as with [`compact`].
+pub(crate) fn classic(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
+    let references = parse::cross_references(pdf)?;
+    let root = parse::entry(&references.trailer, "/Root")
+        .and_then(|root| root.split_whitespace().next()?.parse::<u32>().ok());
+    let mut objects: Vec<Object> = Vec::with_capacity(references.offsets.len());
+    for (&number, &offset) in &references.offsets {
+        objects.push(parse::object(pdf, number, offset)?);
+    }
+    let header_end = objects.iter().map(|object| object.whole.start).min()?;
+    let header = &pdf[..header_end];
+    if !header.starts_with(b"%PDF-") {
+        return None;
+    }
+    let mut out = Vec::with_capacity(pdf.len());
+    out.extend_from_slice(header);
+    let size = objects.last()?.number as usize + 1;
+    let mut offsets: Vec<Option<usize>> = vec![None; size];
+    for object in &objects {
+        offsets[object.number as usize] = Some(out.len());
+        if object.data.is_none() && Some(object.number) == root {
+            let body = with_entries(parse::trim(&pdf[object.body.clone()]), catalog)?;
+            writeln!(out, "{} 0 obj", object.number).ok()?;
+            out.extend_from_slice(&body);
+            out.extend_from_slice(b"\nendobj\n");
+        } else {
+            out.extend_from_slice(&pdf[object.whole.clone()]);
+            out.push(b'\n');
+        }
+    }
+    let xref = out.len();
+    write!(out, "xref\n0 {size}\n").ok()?;
+    for (number, offset) in offsets.iter().enumerate() {
+        match offset {
+            Some(offset) => write!(out, "{offset:010} 00000 n\r\n").ok()?,
+            None if number == 0 => out.extend_from_slice(b"0000000000 65535 f\r\n"),
+            None => out.extend_from_slice(b"0000000000 00000 f\r\n"),
+        }
+    }
+    write!(out, "trailer\n<</Size {size}").ok()?;
+    for key in ["/Root", "/Info", "/ID"] {
+        if let Some(value) = parse::entry(&references.trailer, key) {
+            write!(out, "{key} {}", value.trim()).ok()?;
+        }
+    }
+    write!(out, ">>\nstartxref\n{xref}\n%%EOF\n").ok()?;
+    Some(out)
+}
+
+/// A dictionary with `entries` added where it has none of the key.
+fn with_entries(dictionary: &[u8], entries: &[(&str, &str)]) -> Option<Vec<u8>> {
+    let Some(open) = dictionary.strip_suffix(b">>") else {
+        return Some(dictionary.to_vec());
+    };
+    let text = std::str::from_utf8(dictionary).ok()?;
+    let mut out = open.to_vec();
+    for (key, value) in entries {
+        if parse::entry(text, key).is_none() {
+            out.extend_from_slice(key.as_bytes());
+            out.extend_from_slice(value.as_bytes());
+        }
+    }
+    out.extend_from_slice(b">>");
     Some(out)
 }
 
@@ -362,10 +422,57 @@ mod tests {
     }
 
     #[test]
+    fn writes_one_revision_with_a_cross_reference_table() {
+        for update in [false, true] {
+            let original = sample(update);
+            let entries = [("/ViewerPreferences", "<</DisplayDocTitle true>>")];
+            let rewritten = classic(&original, &entries).expect("rewritten");
+            // One revision, no streams of objects or cross references (PDF 1.4).
+            assert_eq!(
+                rewritten
+                    .windows(9)
+                    .filter(|window| window == b"startxref")
+                    .count(),
+                1
+            );
+            assert!(find(&rewritten, b"/ObjStm").is_none() && find(&rewritten, b"/XRef").is_none());
+            assert!(find(&rewritten, b"/Prev").is_none());
+            let references = cross_references(&rewritten).expect("cross-reference table");
+            let read = |pdf: &[u8], references: &parse::CrossReferences| -> BTreeMap<u32, Vec<u8>> {
+                references
+                    .offsets
+                    .iter()
+                    .map(|(&number, &offset)| {
+                        let object = object(pdf, number, offset).expect("object");
+                        (number, trim(&pdf[object.body]).to_vec())
+                    })
+                    .collect()
+            };
+            let mut expected = read(&original, &cross_references(&original).expect("table"));
+            for body in expected.values_mut() {
+                if find(body, b"/Type/Catalog").is_some() {
+                    *body = with_entries(body, &entries).expect("catalog");
+                }
+            }
+            assert_eq!(read(&rewritten, &references), expected);
+            for key in ["/Root", "/Info", "/ID"] {
+                assert!(entry(&references.trailer, key).is_some(), "{key}");
+            }
+            // Every entry of the table is 20 bytes long.
+            let table = find(&rewritten, b"\nxref\n").expect("xref") + 6;
+            let rows = &rewritten[table..rfind(&rewritten, b"trailer").expect("trailer")];
+            let rows = &rows[rows.iter().position(|byte| *byte == b'\n').expect("subsection") + 1..];
+            assert_eq!(rows.len() % 20, 0);
+            assert!(rows.chunks(20).all(|row| row.ends_with(b"\r\n")));
+        }
+    }
+
+    #[test]
     fn leaves_what_it_does_not_understand() {
         assert!(compact(b"%PDF-1.7\nnot really", &[]).is_none());
         let plain = sample(false);
         let broken = [&plain[..plain.len() - 30], b"startxref\n99999999\n%%EOF\n"].concat();
         assert!(compact(&broken, &[]).is_none());
+        assert!(classic(&broken, &[]).is_none());
     }
 }

@@ -318,6 +318,14 @@ impl Document {
     /// What makes the version or description of the invoice unusable, if anything.
     fn factur_x_problem(&self) -> Option<String> {
         self.factur_x?;
+        // Factur-X 1.07 and ZUGFeRD 2.3 require PDF/A-3. PDF/A-1 and PDF/A-2 levels are raised to
+        // it; PDF/A-4 is not a level below PDF/A-3 but a successor on PDF 2.0.
+        if let Some(conformance) = self.conformance.filter(|conformance| conformance.part() == 4) {
+            return Some(format!(
+                "the invoice must be PDF/A-3, not {} (choose 3b, 3u or 3a)",
+                conformance.name()
+            ));
+        }
         let fields = [
             ("version", &self.factur_x_version),
             ("description", &self.factur_x_description),
@@ -940,11 +948,16 @@ impl Inner {
             });
         }
 
-        // Factur-X attaches XML, which only PDF/A-3 allows.
+        // Factur-X attaches XML, which only PDF/A-3 allows (PDF/A-4 is refused above).
         let conformance = match (input.conformance, input.factur_x) {
             (None, Some(_)) => Some(Conformance::PdfA3b),
             (
-                Some(requested @ (Conformance::PdfA2b | Conformance::PdfA2u | Conformance::PdfA2a)),
+                Some(
+                    requested @ (Conformance::PdfA1b
+                    | Conformance::PdfA2b
+                    | Conformance::PdfA2u
+                    | Conformance::PdfA2a),
+                ),
                 Some(_),
             ) => {
                 let raised = match requested {
@@ -3173,6 +3186,199 @@ mod tests {
             error.to_string(),
             "the document does not meet PDF/A-3b: the attached file `daten.csv` has no \
              description, which PDF/A-3 and PDF/UA require"
+        );
+    }
+
+    /// A PNG of a red and a blue pixel with an alpha channel, both opaque.
+    const OPAQUE_PNG: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAADklEQVR42mP4z8AAQv8BD/kD/Zh51wAAAAAASUVORK5CYII=";
+
+    /// A PNG of one red pixel at half its opacity.
+    const TRANSLUCENT_PNG: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP4z8DQAAAEgQGA8wvcoAAAAABJRU5ErkJggg==";
+
+    /// A PNG of one red pixel, with 16 bits per component.
+    const SIXTEEN_BIT_PNG: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABEAIAAADA54+dAAAADUlEQVR42mP4/58BCAAK/AH/zJeXGQAAAABJRU5ErkJggg==";
+
+    #[test]
+    fn writes_pdf_a_1b_without_transparency() {
+        // What PDF/A-1 can take: hidden content, isolation and an image whose alpha channel is
+        // all opaque are drawn without transparency, an image of 16 bits per component (PDF 1.5)
+        // with 8.
+        let html = format!(
+            "<title>Archiv</title><p>Archiv</p><p style=\"opacity: 0\">verborgen</p>\
+             <div style=\"width: 0; height: 0; overflow: hidden\"><p>abgeschnitten</p></div>\
+             <div style=\"isolation: isolate\"><p>isoliert</p></div>\
+             <img src=\"{OPAQUE_PNG}\" alt=\"\"><img src=\"{SIXTEEN_BIT_PNG}\" alt=\"\">\
+             <p><a href=\"https://quittio.dev\">Link</a></p>"
+        );
+        let document = Document::html(&html)
+            .created(CREATED)
+            .conformance(Conformance::PdfA1b);
+        let output = engine().render(&document).expect("rendered");
+        let pdf = &output.pdf;
+        assert!(pdf.starts_with(b"%PDF-1.4\n"), "{:?}", &pdf[..9]);
+        assert!(contains(
+            pdf,
+            "<pdfaid:part>1</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>"
+        ));
+        // PDF 1.4 has no object streams and no cross-reference streams.
+        for forbidden in [
+            "/ObjStm",
+            "/XRef",
+            "/SMask",
+            "/Transparency",
+            "/BM",
+            "/CA ",
+            "/ca ",
+        ] {
+            assert!(!contains(pdf, forbidden), "{forbidden}");
+        }
+        assert!(contains(pdf, "\nxref\n0 "));
+        assert!(contains(pdf, "trailer\n<</Size "));
+        assert!(contains(pdf, "/ViewerPreferences<</DisplayDocTitle true>>"));
+        assert!(contains(pdf, "/StructTreeRoot"), "tagged unless told otherwise");
+        assert!(pdf.ends_with(b"%%EOF\n"));
+    }
+
+    #[test]
+    fn refuses_transparency_in_pdf_a_1b() {
+        let html = format!(
+            "<p style=\"color: rgb(0 0 0 / 50%)\">grau</p>\
+             <p style=\"break-before: page; opacity: 0.5\">halb</p><img src=\"{TRANSLUCENT_PNG}\" alt=\"\">"
+        );
+        let document = Document::html(&html)
+            .created(CREATED)
+            .conformance(Conformance::PdfA1b);
+        let error = engine().render(&document).expect_err("transparent");
+        assert!(
+            matches!(error, Error::Pdf(PdfError::Conformance { .. })),
+            "{error}"
+        );
+        assert_eq!(
+            error.to_string(),
+            "the document does not meet PDF/A-1b: PDF/A-1 forbids transparency, which the \
+             document uses for `opacity` (first on page 2), text in translucent colors or color \
+             fonts (first on page 1) and images with transparent pixels (first on page 2); \
+             PDF/A-2b and later allow it"
+        );
+        // PDF/A-2b keeps it.
+        engine()
+            .render(&document.clone().conformance(Conformance::PdfA2b))
+            .expect("PDF/A-2b");
+    }
+
+    #[test]
+    fn writes_pdf_a_4() {
+        for (conformance, level) in [
+            (Conformance::PdfA4, ""),
+            (Conformance::PdfA4e, "<pdfaid:conformance>E</pdfaid:conformance>"),
+            (Conformance::PdfA4f, "<pdfaid:conformance>F</pdfaid:conformance>"),
+        ] {
+            let document = Document::html("<title>Archiv</title><p>Archiv</p>")
+                .created(CREATED)
+                .conformance(conformance);
+            let pdf = engine().render(&document).expect("rendered").pdf;
+            assert!(pdf.starts_with(b"%PDF-2.0\n"));
+            assert!(contains(
+                &pdf,
+                &format!("<pdfaid:part>4</pdfaid:part><pdfaid:rev>2020</pdfaid:rev>{level}<xmpTPg:NPages>")
+            ));
+            // PDF/A-4 forbids the document information dictionary: the title is in XMP alone.
+            let tail = String::from_utf8_lossy(&pdf[pdf.len() - 400..]);
+            let trailer = &tail[tail.rfind("/Type/XRef").expect("cross-reference stream")..];
+            assert!(!trailer.contains("/Info"), "{}: {trailer}", conformance.name());
+            assert!(!contains(&pdf, "/Producer("), "{}", conformance.name());
+            assert!(contains(
+                &pdf,
+                "<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">Archiv"
+            ));
+            assert!(contains(&pdf, "<pdf:PDFVersion>2.0</pdf:PDFVersion>"));
+            assert_eq!(
+                contains(&pdf, "/EmbeddedFiles"),
+                conformance == Conformance::PdfA4f,
+                "{}",
+                conformance.name()
+            );
+        }
+        // PDF/A-4f takes attachments, PDF/A-4 and PDF/A-1b do not.
+        let document = Document::html("<p>Anhang</p>")
+            .created(CREATED)
+            .attach(Attachment {
+                name: "daten.csv".to_owned(),
+                mime_type: "text/csv".to_owned(),
+                description: Some("Daten".to_owned()),
+                relationship: Relationship::Supplement,
+                data: Arc::new(b"a;b".to_vec()),
+            });
+        let pdf = engine()
+            .render(&document.clone().conformance(Conformance::PdfA4f))
+            .expect("PDF/A-4f")
+            .pdf;
+        assert!(contains(&pdf, "/AFRelationship/Supplement"));
+        for (conformance, message) in [
+            (
+                Conformance::PdfA4,
+                "the document does not meet PDF/A-4: PDF/A-4 allows only PDF/A files as \
+                 attachments; attach `daten.csv` to a PDF/A-4f document instead",
+            ),
+            (
+                Conformance::PdfA1b,
+                "the document does not meet PDF/A-1b: PDF/A-1 allows no attachments; attach \
+                 `daten.csv` to a PDF/A-3 or PDF/A-4f document instead",
+            ),
+        ] {
+            let error = engine()
+                .render(&document.clone().conformance(conformance))
+                .expect_err("no attachments");
+            assert_eq!(error.to_string(), message);
+        }
+    }
+
+    #[test]
+    fn keeps_pdf_ua_1_to_pdf_a_2_and_3() {
+        let document = Document::html("<html lang=\"de\"><title>Brief</title><h1>Brief</h1>")
+            .created(CREATED)
+            .accessible();
+        for conformance in [Conformance::PdfA1b, Conformance::PdfA4, Conformance::PdfA4f] {
+            let error = engine()
+                .render(&document.clone().conformance(conformance))
+                .expect_err("PDF/UA-1 is PDF 1.7");
+            assert_eq!(
+                error.to_string(),
+                format!(
+                    "the PDF could not be written: {} and PDF/UA-1 need different PDF versions and \
+                     cannot be written together (PDF/UA-1 goes with PDF/A-2 and PDF/A-3)",
+                    conformance.name()
+                )
+            );
+        }
+        engine()
+            .render(&document.conformance(Conformance::PdfA3a))
+            .expect("PDF/A-3a and PDF/UA-1");
+    }
+
+    #[test]
+    fn keeps_factur_x_on_pdf_a_3() {
+        let document = Document::html("<p>Rechnung</p>")
+            .created(CREATED)
+            .factur_x(invoice("urn:cen.eu:en16931:2017"));
+        let output = engine()
+            .render(&document.clone().conformance(Conformance::PdfA1b))
+            .expect("raised");
+        assert_eq!(
+            output.diagnostics[0].message,
+            "PDF/A-1b is written as PDF/A-3b because Factur-X attaches its XML, which only PDF/A-3 allows"
+        );
+        assert!(contains(
+            &output.pdf,
+            "<pdfaid:part>3</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>"
+        ));
+        let error = engine()
+            .render(&document.conformance(Conformance::PdfA4f))
+            .expect_err("Factur-X requires PDF/A-3");
+        assert_eq!(
+            error.to_string(),
+            "the document does not meet Factur-X: the invoice must be PDF/A-3, not PDF/A-4f \
+             (choose 3b, 3u or 3a)"
         );
     }
 

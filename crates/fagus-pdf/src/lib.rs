@@ -150,6 +150,8 @@ impl Date {
 /// A PDF/A level the document conforms to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Conformance {
+    /// PDF/A-1b: archivable as PDF 1.4, without transparency.
+    PdfA1b,
     /// PDF/A-2b: archivable, with a reliable visual appearance.
     PdfA2b,
     /// PDF/A-2u: PDF/A-2b with all text in Unicode.
@@ -162,18 +164,29 @@ pub enum Conformance {
     PdfA3u,
     /// PDF/A-3a: PDF/A-3u, tagged for accessibility.
     PdfA3a,
+    /// PDF/A-4: archivable as PDF 2.0, with all text in Unicode.
+    PdfA4,
+    /// PDF/A-4e: PDF/A-4 for engineering documents (3D and rich media, which Fagus does not
+    /// write).
+    PdfA4e,
+    /// PDF/A-4f: PDF/A-4 with files of any type attached.
+    PdfA4f,
 }
 
 impl Conformance {
     /// The level named like `3b`.
     pub fn from_level(level: &str) -> Option<Self> {
         Some(match level {
+            "1b" => Self::PdfA1b,
             "2a" => Self::PdfA2a,
             "2b" => Self::PdfA2b,
             "2u" => Self::PdfA2u,
             "3a" => Self::PdfA3a,
             "3b" => Self::PdfA3b,
             "3u" => Self::PdfA3u,
+            "4" => Self::PdfA4,
+            "4e" => Self::PdfA4e,
+            "4f" => Self::PdfA4f,
             _ => return None,
         })
     }
@@ -181,12 +194,26 @@ impl Conformance {
     /// The name of the level, like `PDF/A-3b`.
     pub fn name(self) -> &'static str {
         match self {
+            Self::PdfA1b => "PDF/A-1b",
             Self::PdfA2a => "PDF/A-2a",
             Self::PdfA2b => "PDF/A-2b",
             Self::PdfA2u => "PDF/A-2u",
             Self::PdfA3a => "PDF/A-3a",
             Self::PdfA3b => "PDF/A-3b",
             Self::PdfA3u => "PDF/A-3u",
+            Self::PdfA4 => "PDF/A-4",
+            Self::PdfA4e => "PDF/A-4e",
+            Self::PdfA4f => "PDF/A-4f",
+        }
+    }
+
+    /// The part of ISO 19005 the level belongs to: 1 to 4.
+    pub fn part(self) -> u8 {
+        match self {
+            Self::PdfA1b => 1,
+            Self::PdfA2b | Self::PdfA2u | Self::PdfA2a => 2,
+            Self::PdfA3b | Self::PdfA3u | Self::PdfA3a => 3,
+            Self::PdfA4 | Self::PdfA4e | Self::PdfA4f => 4,
         }
     }
 
@@ -307,9 +334,18 @@ pub fn write(
     } else {
         &[]
     };
-    // Object streams make the PDF smaller; should that fail, the PDF stays as it is.
+    // Object streams make the PDF smaller; should that fail, the PDF stays as it is. PDF/A-1
+    // is PDF 1.4, which has none.
+    let rewritten = if options
+        .conformance
+        .is_some_and(|conformance| conformance.part() == 1)
+    {
+        compact::classic(&written.pdf, catalog)
+    } else {
+        compact::compact(&written.pdf, catalog)
+    };
     Ok(Written {
-        pdf: compact::compact(&written.pdf, catalog).unwrap_or(written.pdf),
+        pdf: rewritten.unwrap_or(written.pdf),
         ..written
     })
 }
@@ -325,6 +361,9 @@ pub(crate) fn write_uncompacted(
 ) -> Result<Written, PdfError> {
     let mut image_cache = ImageCache {
         interpolate: options.conformance.is_none(),
+        opaque: options
+            .conformance
+            .is_some_and(|conformance| conformance.part() == 1),
         images: FxHashMap::default(),
         strokes: FxHashMap::default(),
         sized: FxHashMap::default(),
@@ -395,24 +434,39 @@ fn attempt(
     let mut configuration = krilla::configure::ConfigurationBuilder::new();
     if let Some(conformance) = options.conformance {
         configuration = configuration.with_archival_validator(match conformance {
+            Conformance::PdfA1b => krilla::configure::Archival::A1_B,
             Conformance::PdfA2b => krilla::configure::Archival::A2_B,
             Conformance::PdfA2u => krilla::configure::Archival::A2_U,
             Conformance::PdfA2a => krilla::configure::Archival::A2_A,
             Conformance::PdfA3b => krilla::configure::Archival::A3_B,
             Conformance::PdfA3u => krilla::configure::Archival::A3_U,
             Conformance::PdfA3a => krilla::configure::Archival::A3_A,
+            Conformance::PdfA4 => krilla::configure::Archival::A4,
+            Conformance::PdfA4e => krilla::configure::Archival::A4E,
+            Conformance::PdfA4f => krilla::configure::Archival::A4F,
         });
     }
     if options.accessible {
         configuration = configuration.with_accessibility_validator(krilla::configure::Accessibility::UA1);
     }
-    // The standards Fagus writes share PDF 1.7, so they always go together.
-    settings.configuration = configuration.finish().map_err(|_| {
+    // PDF/UA-1 builds on PDF 1.7: krilla would write it with PDF/A-1b as PDF 1.4, without
+    // what PDF/UA-1 needs of PDF 1.5 and later (the scope of table header cells), and PDF/A-4
+    // is PDF 2.0.
+    let apart = || {
         PdfError::Write(format!(
-            "{} need different PDF versions and cannot be written together",
+            "{} need different PDF versions and cannot be written together (PDF/UA-1 goes with \
+             PDF/A-2 and PDF/A-3)",
             standards(options)
         ))
-    })?;
+    };
+    if options.accessible
+        && options
+            .conformance
+            .is_some_and(|conformance| conformance.part() == 1)
+    {
+        return Err(apart().into());
+    }
+    settings.configuration = configuration.finish().map_err(|_| apart())?;
     let mut document = Document::new_with(settings);
     let mut tagger = structure.map(|structure| tagging::Tagger::new(structure, pages));
     let mut font_cache = FontCache::new(pages, fonts);
@@ -456,7 +510,23 @@ fn attempt(
             width: page.width + 2.0 * around + 4.0,
             height: page.height + 2.0 * around + 4.0,
         };
+        // Without transparency (PDF/A-1), each item tells krilla where it is, for the message
+        // that names what is transparent; a group ends where it began.
+        let mut started = Vec::new();
+        let opaque = image_cache.opaque;
         let mut draw_item = |surface: &mut Surface<'_>, item: &Item| {
+            if opaque {
+                let location = match item {
+                    Item::Pop => started.pop(),
+                    _ => Some(problems::locate(index, item)),
+                };
+                if let Some(location) = location {
+                    surface.set_location(location);
+                }
+                if is_push(item) {
+                    started.push(problems::locate(index, item));
+                }
+            }
             draw(
                 surface,
                 item,
@@ -567,10 +637,21 @@ fn attempt(
     };
     let pdf = document.finish().map_err(|error| match error {
         krilla::error::KrillaError::Validation(problems) => {
-            // Each problem once, in the order found.
+            // Each problem once, in the order found; transparency (in PDF/A-1) in one message
+            // that says where it is.
+            let transparent: Vec<_> = problems
+                .iter()
+                .filter_map(|(problem, _)| match problem {
+                    krilla::configure::ValidationError::Transparency(location) => Some(*location),
+                    _ => None,
+                })
+                .collect();
             let mut described: Vec<String> = Vec::new();
             for (problem, _) in &problems {
-                let message = problems::describe(problem, &name, &options.attachments);
+                let message = match problem {
+                    krilla::configure::ValidationError::Transparency(_) => problems::transparency(&transparent),
+                    _ => problems::describe(problem, &name, &options.attachments, options.conformance),
+                };
                 if !described.contains(&message) {
                     described.push(message);
                 }
@@ -668,6 +749,20 @@ fn blend_mode(mode: fagus_style::values::BlendMode) -> krilla::blend::BlendMode 
     }
 }
 
+/// Whether an item starts a group that a [`Item::Pop`] ends.
+fn is_push(item: &Item) -> bool {
+    matches!(
+        item,
+        Item::PushOpacity(_)
+            | Item::PushBlend(_)
+            | Item::PushIsolated
+            | Item::PushMask(_)
+            | Item::PushTransform(_)
+            | Item::PushClip(..)
+            | Item::PushClipShape(_)
+    )
+}
+
 /// Whether an item starts a group that is drawn on its own, which krilla does for transparency
 /// (and for an empty clip, which Fagus draws as a fully transparent group).
 pub(crate) fn opens_group(item: &Item) -> bool {
@@ -677,6 +772,25 @@ pub(crate) fn opens_group(item: &Item) -> bool {
         Item::PushClipShape(shape) => shape_path(shape).is_none(),
         Item::PushBlend(_) | Item::PushIsolated | Item::PushMask(_) => true,
         _ => false,
+    }
+}
+
+/// Opens a group in which nothing shows: a fully transparent one, or, `opaque` (without
+/// transparency), one clipped to a square covered twice, which by the even-odd rule encloses
+/// nothing.
+fn hide(surface: &mut Surface<'_>, opaque: bool) {
+    let square = if opaque {
+        let mut builder = PathBuilder::new();
+        for _ in 0..2 {
+            builder.push_rect(Rect::from_xywh(0.0, 0.0, 1.0, 1.0).expect("a square"));
+        }
+        builder.finish()
+    } else {
+        None
+    };
+    match square {
+        Some(square) => surface.push_clip_path(&square, &FillRule::EvenOdd),
+        None => surface.push_opacity(NormalizedF32::ZERO),
     }
 }
 
@@ -875,6 +989,10 @@ struct ImageCache {
     /// Whether viewers may smooth the images of blurred shadows; PDF/A does not allow it.
     /// Without it, the PDF is a PDF/A, which also rules out PostScript functions.
     interpolate: bool,
+    /// Whether the PDF must do without transparency, as PDF/A-1 requires: what is hidden is
+    /// clipped away rather than drawn transparent, isolated groups are plain ones, and images
+    /// whose pixels are all opaque lose their alpha channel (see [`decode::flat`]).
+    opaque: bool,
     /// The images embedded so far, by their data, whether they are smoothed, and what their
     /// pixels go through (their filters, written out, and their padding).
     images: FxHashMap<(usize, bool, String), Option<Embedded>>,
@@ -950,6 +1068,24 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                     None => {}
                 }
             }
+            // PDF/A-1: an image whose pixels are all opaque goes without its alpha channel (one
+            // with transparent pixels keeps it, and is refused), and 16 bits become 8.
+            if cache.opaque
+                && matches!(
+                    image.format,
+                    ImageFormat::Png | ImageFormat::Gif | ImageFormat::Webp
+                )
+            {
+                let flat =
+                    cache
+                        .memo
+                        .get_or_prepare(&image.data, memo::Kind::Flat(image.format), None, || {
+                            memo::Prepared::Raster(decode::flat(&image.data, image.format))
+                        });
+                if let memo::Prepared::Raster(Some(raster)) = flat {
+                    return Some(Embedded::Raster(raster, Arc::clone(&image.data)));
+                }
+            }
             let kind = match image.format {
                 ImageFormat::Png => memo::Kind::Png(interpolate),
                 ImageFormat::Jpeg => memo::Kind::Jpeg(interpolate),
@@ -974,7 +1110,7 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                         None => krilla::image::Image::from_jpeg(data.into(), interpolate),
                     },
                     memo::Kind::Gif(_) => krilla::image::Image::from_gif(data.into(), interpolate),
-                    memo::Kind::Webp(_) | memo::Kind::Svg { .. } => {
+                    memo::Kind::Webp(_) | memo::Kind::Flat(_) | memo::Kind::Svg { .. } => {
                         krilla::image::Image::from_webp(data.into(), interpolate)
                     }
                 };
@@ -2189,10 +2325,13 @@ fn draw(
             }
             surface.set_stroke(None);
         }
+        Item::PushOpacity(opacity) if image_cache.opaque && *opacity <= 0.0 => hide(surface, true),
         Item::PushOpacity(opacity) => {
             surface.push_opacity(NormalizedF32::new(opacity.clamp(0.0, 1.0)).unwrap_or(NormalizedF32::ONE));
         }
         Item::PushBlend(mode) => surface.push_blend_mode(blend_mode(*mode)),
+        // Isolation changes nothing where nothing is transparent.
+        Item::PushIsolated if image_cache.opaque => surface.push_opacity(NormalizedF32::ONE),
         Item::PushIsolated => surface.push_isolated(),
         Item::PushMask(mask) => {
             // The mask's items, drawn where it applies, in a stream of their own.
@@ -2223,7 +2362,7 @@ fn draw(
             match clip_path(*rect, radii.as_ref()) {
                 Some(path) => surface.push_clip_path(&path, &FillRule::NonZero),
                 // Nothing is visible in an empty clip; the group keeps push and pop balanced.
-                None => surface.push_opacity(NormalizedF32::ZERO),
+                None => hide(surface, image_cache.opaque),
             }
         }
         Item::PushClipShape(shape) => {
@@ -2235,7 +2374,7 @@ fn draw(
             };
             match shape_path(shape) {
                 Some(path) => surface.push_clip_path(&path, &rule),
-                None => surface.push_opacity(NormalizedF32::ZERO),
+                None => hide(surface, image_cache.opaque),
             }
         }
         Item::Gradient { rect, gradient } => {
@@ -2960,9 +3099,33 @@ pub(crate) fn append_rounded_rect(builder: &mut impl Outline, rect: RectF, radii
 #[cfg(test)]
 mod tests {
     use super::{
-        BorderStyle, Date, RectF, centerline, chrome_sheet_side, dash_pattern, dash_rectangles,
+        BorderStyle, Conformance, Date, RectF, centerline, chrome_sheet_side, dash_pattern, dash_rectangles,
         fake_bold_width,
     };
+
+    #[test]
+    fn names_the_pdf_a_levels() {
+        for (level, name, part) in [
+            ("1b", "PDF/A-1b", 1),
+            ("2b", "PDF/A-2b", 2),
+            ("2u", "PDF/A-2u", 2),
+            ("2a", "PDF/A-2a", 2),
+            ("3b", "PDF/A-3b", 3),
+            ("3u", "PDF/A-3u", 3),
+            ("3a", "PDF/A-3a", 3),
+            ("4", "PDF/A-4", 4),
+            ("4e", "PDF/A-4e", 4),
+            ("4f", "PDF/A-4f", 4),
+        ] {
+            let conformance = Conformance::from_level(level).expect(level);
+            assert_eq!(conformance.name(), name);
+            assert_eq!(conformance.part(), part);
+            assert_eq!(conformance.is_tagged(), level.ends_with('a'));
+        }
+        for unknown in ["1a", "4b", "4u", "5", ""] {
+            assert_eq!(Conformance::from_level(unknown), None, "{unknown}");
+        }
+    }
 
     /// A PDF as text, its streams (and so its object streams) inflated where they are deflated.
     fn inflated(pdf: &[u8]) -> String {

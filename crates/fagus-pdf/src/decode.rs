@@ -255,6 +255,103 @@ pub(crate) fn rgba(data: &[u8], format: ImageFormat) -> Option<(u32, u32, Vec<u8
     }
 }
 
+/// A PNG, GIF or WebP image as PDF/A-1 can take it, where krilla would embed it otherwise: with
+/// 8 bits per component (PDF 1.4 has no 16), and without its alpha channel where all its pixels
+/// are opaque (PDF/A-1 forbids soft masks). `None` for other images and for gray PNGs with an
+/// ICC profile, which does not fit the decoded RGB pixels.
+pub(crate) fn flat(data: &[u8], format: ImageFormat) -> Option<Image> {
+    let (needed, icc) = match format {
+        ImageFormat::Png => {
+            let decoder = png::Decoder::new(Cursor::new(data));
+            let reader = decoder.read_info().ok()?;
+            let info = reader.info();
+            let gray = matches!(
+                info.color_type,
+                png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha
+            );
+            if gray && info.icc_profile.is_some() {
+                return None;
+            }
+            let alpha = matches!(
+                info.color_type,
+                png::ColorType::Rgba | png::ColorType::GrayscaleAlpha
+            ) || info.trns.is_some();
+            (
+                alpha || info.bit_depth == png::BitDepth::Sixteen,
+                info.icc_profile.as_ref().map(|icc| icc.to_vec()),
+            )
+        }
+        // krilla embeds every GIF with an alpha channel.
+        ImageFormat::Gif => (true, None),
+        ImageFormat::Webp => {
+            let mut decoder = image_webp::WebPDecoder::new(Cursor::new(data)).ok()?;
+            (decoder.has_alpha(), decoder.icc_profile().ok()?)
+        }
+        ImageFormat::Jpeg | ImageFormat::Svg => (false, None),
+    };
+    if !needed {
+        return None;
+    }
+    let (width, height, pixels) = rgba(data, format)?;
+    let mut color = Vec::with_capacity(pixels.len() / 4 * 3);
+    let mut alpha = Vec::with_capacity(pixels.len() / 4);
+    for [r, g, b, a] in pixels.as_chunks::<4>().0 {
+        color.extend([*r, *g, *b]);
+        alpha.push(*a);
+    }
+    if alpha.iter().all(|value| *value == 255) {
+        alpha.clear();
+    }
+    Image::from_custom(
+        FlatImage {
+            color,
+            alpha,
+            icc,
+            width,
+            height,
+        },
+        false,
+    )
+    .ok()
+}
+
+/// The RGB pixels of an image, with its alpha channel (empty where it is opaque) and the ICC
+/// profile its colors are in.
+#[derive(Clone, Hash)]
+struct FlatImage {
+    color: Vec<u8>,
+    alpha: Vec<u8>,
+    icc: Option<Vec<u8>>,
+    width: u32,
+    height: u32,
+}
+
+impl krilla::image::CustomImage for FlatImage {
+    fn color_channel(&self) -> &[u8] {
+        &self.color
+    }
+
+    fn alpha_channel(&self) -> Option<&[u8]> {
+        (!self.alpha.is_empty()).then_some(&self.alpha)
+    }
+
+    fn bits_per_component(&self) -> krilla::image::BitsPerComponent {
+        krilla::image::BitsPerComponent::Eight
+    }
+
+    fn size(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
+
+    fn icc_profile(&self) -> Option<&[u8]> {
+        self.icc.as_deref()
+    }
+
+    fn color_space(&self) -> krilla::image::ImageColorspace {
+        krilla::image::ImageColorspace::Rgb
+    }
+}
+
 /// A PNG whose `gAMA` chunk Chrome corrects its pixels for (see [`significant_gamma`]), as the
 /// sRGB pixels Chrome draws; `None` for other PNGs, which are embedded as they are.
 pub(crate) fn gamma_png(data: &[u8], interpolate: bool) -> Option<Image> {
