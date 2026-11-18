@@ -757,7 +757,7 @@ impl Inner {
         let references: Vec<&Stylesheet> = sheets.iter().map(AsRef::as_ref).collect();
         let first_page_rules = RuleSet::new(&references, &MediaEnvironment::default());
         let root_style = fagus_style::ComputedStyle::default();
-        let mut page = fagus_layout::page_box(&first_page_rules, &root_style, 0, None);
+        let mut page = fagus_layout::page_box(&first_page_rules, &root_style, 0, None, &[]);
         let environment = MediaEnvironment {
             width: page.content_width().to_px(),
             height: page.content_height().to_px(),
@@ -782,17 +782,17 @@ impl Inner {
         let names_pages = rules
             .page_rules()
             .iter()
-            .any(|rule| rule.selectors.iter().any(|selector| selector.name.is_some()));
-        let name = if names_pages {
-            fagus_layout::first_page_name(&document, &styled, &rules, &fonts)
+            .any(|rule| rule.selectors.iter().any(fagus_css::PageSelector::names_pages));
+        let (name, groups) = if names_pages {
+            fagus_layout::first_page(&document, &styled, &rules, &fonts)
         } else {
-            None
+            (None, Vec::new())
         };
         let root = document
             .document_element()
             .and_then(|root| styled.style(root))
             .map_or(&root_style, |root| &**root);
-        let first = fagus_layout::page_box(&rules, root, 0, name.as_deref());
+        let first = fagus_layout::page_box(&rules, root, 0, name.as_deref(), &groups);
         if first.viewport != page.viewport {
             let viewport = (first.viewport.0.to_px(), first.viewport.1.to_px());
             styled = fagus_style::compute_styles_with(
@@ -3743,8 +3743,20 @@ mod tests {
             .render(&Document::html(html).created(CREATED).tagged(false))
             .expect("rendered")
             .pdf;
-        let streams = streams(&pdf);
-        assert!(streams.contains("1 0 0 rg"), "50vw of the first page: {streams}");
+        let content = streams(&pdf);
+        assert!(content.contains("1 0 0 rg"), "50vw of the first page: {content}");
+        // As where `:nth()` selects the first page of the document or of its page group.
+        for selector in [":nth(1)", ":nth(1 of cover)"] {
+            let html = html
+                .replace("@page cover", &format!("@page {selector}"))
+                .replace("page: cover", "page: cover; break-before: page");
+            let pdf = engine()
+                .render(&Document::html(&html).created(CREATED).tagged(false))
+                .expect("rendered")
+                .pdf;
+            let content = streams(&pdf);
+            assert!(content.contains("1 0 0 rg"), "{selector}: {content}");
+        }
     }
 
     #[test]

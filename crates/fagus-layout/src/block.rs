@@ -5270,6 +5270,39 @@ impl<'a> Layouter<'a> {
         self.tree.page_name(id)
     }
 
+    /// The boxes on the page on which layout of box `id` resumes at `token`, from `id` down:
+    /// those that go on from the page before (`continued`) and those that start at the top of
+    /// the page (`started`), a box and its first in-flow children.
+    pub(crate) fn boxes_at_page_start(
+        &self,
+        id: BoxId,
+        token: Option<&BreakToken>,
+        continued: &mut Vec<BoxId>,
+        started: &mut Vec<BoxId>,
+    ) {
+        let Some(token) = token else {
+            let mut id = id;
+            loop {
+                started.push(id);
+                let (BoxKind::Block { children } | BoxKind::Flex { children }) = &self.tree.get(id).kind
+                else {
+                    return;
+                };
+                match self.in_flow(children).next() {
+                    Some(child) => id = child,
+                    None => return,
+                }
+            }
+        };
+        continued.push(id);
+        if let (BoxKind::Block { children }, BreakToken::Block { index, inner, .. }) =
+            (&self.tree.get(id).kind, token)
+            && let Some(&child) = children.get(*index)
+        {
+            self.boxes_at_page_start(child, inner.as_deref(), continued, started);
+        }
+    }
+
     /// The name of the page on which layout of box `id` resumes at `token`.
     pub(crate) fn page_name_at(&self, id: BoxId, token: Option<&BreakToken>) -> Option<&Arc<str>> {
         let Some(token) = token else {

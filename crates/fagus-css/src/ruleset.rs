@@ -6,7 +6,7 @@ use fagus_dom::{Document, NodeId};
 use lightningcss::properties::Property as LightningProperty;
 use lightningcss::rules::counter_style::CounterStyleRule;
 use lightningcss::rules::font_face::FontFaceRule;
-use lightningcss::rules::page::{PageMarginRule, PageSelector};
+use lightningcss::rules::page::PageMarginRule;
 use lightningcss::rules::property::PropertyRule;
 use lightningcss::rules::style::StyleRule;
 use lightningcss::rules::supports::SupportsCondition;
@@ -146,7 +146,7 @@ impl std::ops::Deref for MatchedRule<'_> {
 /// An `@page` rule.
 #[derive(Debug, Clone)]
 pub struct PageRuleData {
-    pub selectors: Vec<PageSelector<'static>>,
+    pub selectors: Vec<crate::PageSelector>,
     pub declarations: DeclarationBlock,
     pub margin_rules: Vec<PageMarginRule<'static>>,
     pub origin: Origin,
@@ -494,7 +494,7 @@ impl Builder<'_> {
                     let order = self.next_order();
                     self.layer_nodes.push(context.layer);
                     self.set.page_rules.push(PageRuleData {
-                        selectors: page.selectors.clone(),
+                        selectors: page.selectors.iter().map(crate::PageSelector::of).collect(),
                         declarations: page.declarations.clone(),
                         margin_rules: page.rules.clone(),
                         origin: context.origin,

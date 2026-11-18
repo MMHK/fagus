@@ -38,6 +38,7 @@ impl Stylesheet {
     /// reported as diagnostics.
     pub fn parse(css: &str, origin: Origin, source: &str) -> Self {
         let css = &*crate::flat_math(css);
+        let css = &*crate::encode_nth_pages(css);
         if crate::nests_too_deep(css) {
             return Self {
                 sheet: empty_sheet(source),
@@ -795,7 +796,7 @@ fn parse_sheet(css: &str, source: &str) -> Option<(StyleSheet<'static>, Vec<Diag
                 .filter(|warning| !known_pseudo_element(&warning.kind))
                 .map(|warning| {
                     let message = if in_nth_page_selector(css, warning.loc.as_ref()) {
-                        "`@page :nth()` is not supported, as in Chrome".to_owned()
+                        "invalid page selector with `:nth()`".to_owned()
                     } else {
                         warning.kind.to_string()
                     };
@@ -807,8 +808,8 @@ fn parse_sheet(css: &str, source: &str) -> Option<(StyleSheet<'static>, Vec<Diag
 }
 
 /// Whether a parse error at `location` in `css` lies in the selector of an `@page` rule with
-/// `:nth()`, which lightningcss does not know (CSS Generated Content for Paged Media; Chrome
-/// does not support it either and drops the rule).
+/// `:nth()` (CSS Generated Content for Paged Media 3, §3.1), which is left as it is (see
+/// [`crate::encode_nth_pages`]) where it is not valid.
 fn in_nth_page_selector(css: &str, location: Option<&lightningcss::error::ErrorLocation>) -> bool {
     let Some(location) = location else {
         return false;
@@ -1045,24 +1046,22 @@ mod tests {
     }
 
     #[test]
-    fn reports_page_selectors_with_nth_as_unsupported() {
+    fn keeps_page_selectors_with_nth_and_reports_invalid_ones() {
         let sheet = Stylesheet::parse(
-            "@page :first { margin: 1cm }\n@page :NTH(2n+1) { margin: 2cm }\n@page chapter:first, :nth(1) { margin: 3cm }\n@page :blank { margin: 4cm }",
+            "@page :first { margin: 1cm }\n@page :NTH(2n+1) { margin: 2cm }\n@page chapter:first, :nth(1 of chapter) { margin: 3cm }\n@page :nth(x) { margin: 4cm }\n@page :blank { margin: 5cm }",
             Origin::Author,
             "pages.css",
         );
         let found: Vec<String> = sheet.diagnostics().iter().map(ToString::to_string).collect();
-        assert_eq!(found.len(), 2, "{found:?}");
-        assert!(found[0].starts_with("pages.css:2:"), "{found:?}");
-        assert!(found[1].starts_with("pages.css:3:"), "{found:?}");
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].starts_with("pages.css:4:"), "{found:?}");
         assert!(
-            found.iter().all(|found| found.ends_with(
-                "warning[css.parse-error]: `@page :nth()` is not supported, as in Chrome; the rule or declaration is ignored"
-            )),
+            found[0].ends_with(
+                "warning[css.parse-error]: invalid page selector with `:nth()`; the rule or declaration is ignored"
+            ),
             "{found:?}"
         );
-        // `:first` and `:blank` are kept.
-        assert_eq!(sheet.len(), 2);
+        assert_eq!(sheet.len(), 4);
     }
 
     #[test]

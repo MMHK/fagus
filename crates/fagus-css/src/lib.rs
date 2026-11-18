@@ -16,6 +16,7 @@ pub mod matching;
 mod math_nesting;
 mod media;
 mod negative_basis;
+mod page_selector;
 pub mod paged;
 mod pattern;
 pub mod properties;
@@ -38,6 +39,7 @@ pub use guard::{guarded, parse_declarations};
 pub use lightningcss;
 pub use math_nesting::{MAX_MATH_NESTING, flat_math};
 pub use media::{ContainerSize, MediaEnvironment, asks_size, container_matches};
+pub use page_selector::{PageNth, PageSelector, encode_nth_pages};
 pub use quirks::author_css;
 pub use repair::{has_forbidden_negative, is_dense, repair_block, repair_property};
 pub use ruleset::{

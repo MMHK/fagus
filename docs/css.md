@@ -498,7 +498,6 @@ A short list of what Fagus does not do. Most of it is also absent in Chrome's pr
   animations print their state at time zero.
 - **Footnotes:** `float: footnote`, `@footnote`, `footnote-display`, `footnote-policy` and
   `float-reference` (see [Paged media](paged-media.md#footnotes)).
-- **Pages:** `@page :nth()` (see [Paged media](paged-media.md)).
 - **Layout:** `display: grid-lanes` (masonry), `display: run-in`, unprefixed `line-clamp`,
   `shape-inside`, `block-step`.
 - **Text:** `text-align: justify-all`, `-webkit-text-stroke`, `paint-order` for HTML text,

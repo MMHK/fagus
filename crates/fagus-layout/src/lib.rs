@@ -77,7 +77,7 @@ pub use inline::{
     COMBINED_ROOM, StyleFonts, face_for, font_variations, run_variations, text_font_style, used_font_size,
 };
 pub use math::alternative_text as formula_alternative_text;
-pub use page::{MAX_PAGES, PageBox, page_box};
+pub use page::{MAX_PAGES, PageBox, PageGroup, page_box};
 pub use shape::AlphaMask;
 pub use tree::transformed_text;
 pub use tree::{BoxId, BoxTree, Targets, embedded_image_url};
@@ -88,14 +88,14 @@ use fagus_style::{ComputedStyle, StyledDocument};
 use fagus_text::FontDb;
 
 /// The name of the first page of a styled document (the `page` its first in-flow content
-/// starts), if it names one. Chrome takes the viewport, which viewport units are relative to,
-/// from the page area of the first page.
-pub fn first_page_name(
+/// starts), if it names one, and the page groups it is in. Chrome takes the viewport, which
+/// viewport units are relative to, from the page area of the first page.
+pub fn first_page(
     document: &Document,
     styled: &StyledDocument,
     rules: &RuleSet,
     fonts: &FontDb,
-) -> Option<std::sync::Arc<str>> {
+) -> (Option<std::sync::Arc<str>>, Vec<PageGroup>) {
     let tree = BoxTree::build_with(
         document,
         styled,
@@ -105,8 +105,14 @@ pub fn first_page_name(
         Some(fonts),
         None,
     );
-    let root = tree.root?;
-    block::Layouter::new(&tree, fonts).start_page(root).cloned()
+    let Some(root) = tree.root else {
+        return (None, Vec::new());
+    };
+    let layouter = block::Layouter::new(&tree, fonts);
+    (
+        layouter.start_page(root).cloned(),
+        page::first_page_groups(&layouter, rules, root),
+    )
 }
 
 /// Lays out a styled document into pages.
@@ -4479,6 +4485,7 @@ mod tests {
     mod overflow_pages;
     mod padding_breaks;
     mod page_breaks;
+    mod page_groups;
     mod page_overflow;
     mod page_pieces;
     mod page_sides;

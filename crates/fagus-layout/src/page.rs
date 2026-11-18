@@ -2,9 +2,10 @@
 
 use std::sync::Arc;
 
+use fagus_css::PageSelector;
 use fagus_css::lightningcss::properties::Property;
 use fagus_css::lightningcss::properties::custom::{CustomPropertyName, Token, TokenOrValue};
-use fagus_css::lightningcss::rules::page::{PageMarginBox, PagePseudoClass, PageSelector};
+use fagus_css::lightningcss::rules::page::{PageMarginBox, PagePseudoClass};
 use fagus_css::{CascadeBand, PageRuleData, RuleSet};
 use fagus_style::values::{
     Content, ContentItem, LengthPercentage, LengthPercentageAuto, Size, StringWhich, TextAlign, VerticalAlign,
@@ -143,48 +144,92 @@ impl PageBox {
     }
 }
 
+/// A page group that a page is in (CSS Generated Content for Paged Media 3, §3.2): the pages of
+/// an element whose `page` is not `auto` and that has a forced break before it, from the page it
+/// starts on. Each element starts a group of its own.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PageGroup {
+    /// The page name of the element.
+    pub name: Arc<str>,
+    /// The page the element starts on (0-based).
+    pub start: usize,
+}
+
 /// What the pseudo-classes of page selectors match on a page.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct PageType {
-    /// Whether it is the first page of the document (`:first`).
-    first: bool,
+pub(crate) struct PageType<'a> {
+    /// The page's index in the document (0-based), for `:nth()`; `:first` matches index 0.
+    index: usize,
     /// Whether it is a left page (`:left`), else a right one (`:right`).
     left: bool,
     /// Whether it is a blank page inserted for a forced break to a left or right page
     /// (`:blank`).
     blank: bool,
+    /// The page groups the page is in, for `:nth()` of a page name.
+    groups: &'a [PageGroup],
 }
 
-impl PageType {
+impl<'a> PageType<'a> {
     /// Page `index` (0-based) of a document whose first page is a left page (`first_left`) or a
-    /// right one, blank or not.
-    fn of(index: usize, first_left: bool, blank: bool) -> Self {
+    /// right one, blank or not, in `groups`.
+    fn of(index: usize, first_left: bool, blank: bool, groups: &'a [PageGroup]) -> Self {
         Self {
-            first: index == 0,
+            index,
             left: index.is_multiple_of(2) == first_left,
             blank,
+            groups,
+        }
+    }
+
+    /// Whether `:nth()` matches the page (CSS Generated Content for Paged Media 3, §3): with a
+    /// page name after `of`, a page that is the nth of a page group of that name; on a selector
+    /// with a page name, the nth page of a page group of that name where the page is in one
+    /// (where "the `:nth()` selector is applied to a named page, and that named page is part of
+    /// a page-group, it selects the nth page in the page group"); else the nth page of the
+    /// document.
+    fn nth(self, nth: &fagus_css::PageNth, selector_name: Option<&str>) -> bool {
+        let in_groups = |name: &str| {
+            self.groups
+                .iter()
+                .filter(|group| &*group.name == name)
+                .map(|group| (self.index + 1).saturating_sub(group.start))
+                .collect::<Vec<_>>()
+        };
+        match (nth.of.as_deref(), selector_name) {
+            (Some(name), _) => in_groups(name).into_iter().any(|index| nth.matches(index)),
+            (None, Some(name)) if self.groups.iter().any(|group| &*group.name == name) => {
+                in_groups(name).into_iter().any(|index| nth.matches(index))
+            }
+            _ => nth.matches(self.index + 1),
         }
     }
 }
 
 /// Whether a page selector matches a page of type `page` with the page name `name`.
-fn matches(selector: &PageSelector<'_>, page: PageType, name: Option<&str>) -> bool {
+fn matches(selector: &PageSelector, page: PageType<'_>, name: Option<&str>) -> bool {
     selector
         .name
-        .as_ref()
-        .is_none_or(|selector_name| Some(selector_name.as_ref()) == name)
+        .as_deref()
+        .is_none_or(|selector_name| Some(selector_name) == name)
         && selector.pseudo_classes.iter().all(|pseudo| match pseudo {
-            PagePseudoClass::First => page.first,
+            PagePseudoClass::First => page.index == 0,
             PagePseudoClass::Right => !page.left,
             PagePseudoClass::Left => page.left,
             PagePseudoClass::Blank => page.blank,
             PagePseudoClass::Last => false,
         })
+        && selector
+            .nth
+            .iter()
+            .all(|nth| page.nth(nth, selector.name.as_deref()))
 }
 
 /// The specificity of the most specific selector of `rule` that matches the page, if one does
 /// (CSS Paged Media 3, §4.2: a page name, then `:first` and `:blank`, then `:left` and `:right`).
-fn specificity(rule: &PageRuleData, page: PageType, name: Option<&str>) -> Option<u32> {
+/// CSS Generated Content for Paged Media 3 leaves that of `:nth()` open (w3c/csswg-drafts#3524):
+/// as proposed there and as `WeasyPrint` ranks it, it counts as `:first`, and its page name after
+/// `of` as a page name.
+fn specificity(rule: &PageRuleData, page: PageType<'_>, name: Option<&str>) -> Option<u32> {
     if rule.selectors.is_empty() {
         return Some(0);
     }
@@ -192,24 +237,32 @@ fn specificity(rule: &PageRuleData, page: PageType, name: Option<&str>) -> Optio
         .iter()
         .filter(|selector| matches(selector, page, name))
         .map(|selector| {
-            let named = u32::from(selector.name.is_some());
-            let (first, sides) = selector
-                .pseudo_classes
-                .iter()
-                .fold((0, 0), |(first, sides), pseudo| match pseudo {
+            let count = |count: usize| u32::try_from(count).unwrap_or(u32::MAX).min(255);
+            let named = u32::from(selector.name.is_some())
+                + count(selector.nth.iter().filter(|nth| nth.of.is_some()).count());
+            let (first, sides) = selector.pseudo_classes.iter().fold(
+                (count(selector.nth.len()), 0),
+                |(first, sides), pseudo| match pseudo {
                     PagePseudoClass::First | PagePseudoClass::Blank => (first + 1, sides),
                     _ => (first, sides + 1),
-                });
-            (named << 16) | (first << 8) | sides
+                },
+            );
+            (named.min(255) << 16) | (first.min(255) << 8) | sides.min(255)
         })
         .max()
 }
 
-/// Computes the page box of page `page_index` (0-based), whose page name is `name`. Left-to-right
-/// documents start with a right page, right-to-left ones with a left page (CSS Paged Media 3,
-/// §4.3.2), as in Chrome.
-pub fn page_box(rules: &RuleSet, root: &ComputedStyle, page_index: usize, name: Option<&str>) -> PageBox {
-    let page = PageType::of(page_index, root.is_rtl(), false);
+/// Computes the page box of page `page_index` (0-based), whose page name is `name` and which is
+/// in the page groups `groups`. Left-to-right documents start with a right page, right-to-left
+/// ones with a left page (CSS Paged Media 3, §4.3.2), as in Chrome.
+pub fn page_box(
+    rules: &RuleSet,
+    root: &ComputedStyle,
+    page_index: usize,
+    name: Option<&str>,
+    groups: &[PageGroup],
+) -> PageBox {
+    let page = PageType::of(page_index, root.is_rtl(), false, groups);
     page_box_from(&matching_rules(rules, page, name), root)
 }
 
@@ -221,7 +274,7 @@ struct PageBoxes(std::cell::RefCell<FxHashMap<Vec<usize>, PageBox>>);
 
 impl PageBoxes {
     /// [`page_box`], from the boxes made before where the same rules match.
-    fn get(&self, rules: &RuleSet, root: &ComputedStyle, page: PageType, name: Option<&str>) -> PageBox {
+    fn get(&self, rules: &RuleSet, root: &ComputedStyle, page: PageType<'_>, name: Option<&str>) -> PageBox {
         let matching = matching_rules(rules, page, name);
         let key: Vec<usize> = matching
             .iter()
@@ -238,7 +291,7 @@ impl PageBoxes {
 
 /// The `@page` rules that match a page of type `page` with the page name `name`, in cascade
 /// order.
-fn matching_rules<'a>(rules: &'a RuleSet, page: PageType, name: Option<&str>) -> Vec<&'a PageRuleData> {
+fn matching_rules<'a>(rules: &'a RuleSet, page: PageType<'_>, name: Option<&str>) -> Vec<&'a PageRuleData> {
     let mut matching: Vec<(&PageRuleData, u32)> = rules
         .page_rules()
         .iter()
@@ -792,6 +845,89 @@ fn in_margin_box<T>(layouter: &Layouter<'_>, style: &ComputedStyle, lay_out: imp
     result
 }
 
+/// The page groups of the pages laid out so far (see [`PageGroup`]), kept where `@page` rules
+/// count the pages of groups with `:nth()`.
+struct PageGroups {
+    on: bool,
+    /// The page each element that makes a group starts on.
+    starts: FxHashMap<BoxId, usize>,
+    /// The groups of the last page with content, which the pages added below it are in too.
+    last: Vec<PageGroup>,
+}
+
+impl PageGroups {
+    fn new(tree: &BoxTree, rules: &RuleSet) -> Self {
+        let counts_groups = rules.page_rules().iter().any(|rule| {
+            rule.selectors
+                .iter()
+                .any(|selector| !selector.nth.is_empty() && selector.names_pages())
+        });
+        Self {
+            on: counts_groups && tree.names_pages(),
+            starts: FxHashMap::default(),
+            last: Vec::new(),
+        }
+    }
+
+    /// The groups of page `index` (0-based), where layout of the root box `root` resumes at
+    /// `token`: those of the elements it goes on in and, unless the page is `blank`, of those
+    /// that start at its top. An element makes a group where its `page` is not `auto` and a
+    /// forced break comes before it (CSS Generated Content for Paged Media 3, §3.2: "when the
+    /// page property is applied to an element that also has a forced break property applied, a
+    /// page group is created").
+    fn at(
+        &mut self,
+        layouter: &Layouter<'_>,
+        root: BoxId,
+        token: Option<&BreakToken>,
+        index: usize,
+        blank: bool,
+    ) -> Vec<PageGroup> {
+        if !self.on {
+            return Vec::new();
+        }
+        let (mut continued, mut started) = (Vec::new(), Vec::new());
+        layouter.boxes_at_page_start(root, token, &mut continued, &mut started);
+        if blank {
+            started.clear();
+        }
+        let tree = layouter.tree;
+        let mut groups = Vec::new();
+        for (id, starts_here) in continued
+            .into_iter()
+            .map(|id| (id, false))
+            .chain(started.into_iter().map(|id| (id, true)))
+        {
+            let Some(name) = &tree.get(id).style.page else {
+                continue;
+            };
+            if !tree.break_before(id).is_forced_page_break() {
+                continue;
+            }
+            // An element first met where it goes on from the page before started on that page
+            // (below its top, where a forced break does not apply, as in columns).
+            let start = *self.starts.entry(id).or_insert(if starts_here {
+                index
+            } else {
+                index.saturating_sub(1)
+            });
+            groups.push(PageGroup {
+                name: Arc::clone(name),
+                start,
+            });
+        }
+        if !blank {
+            self.last.clone_from(&groups);
+        }
+        groups
+    }
+}
+
+/// The page groups that the first page of the document laid out by `layouter` is in.
+pub(crate) fn first_page_groups(layouter: &Layouter<'_>, rules: &RuleSet, root: BoxId) -> Vec<PageGroup> {
+    PageGroups::new(layouter.tree, rules).at(layouter, root, None, 0, false)
+}
+
 /// Paginates the box tree, on page areas `1 / shrink` times as large as the page boxes have (see
 /// [`Page::scale`]). Returns the pages with the value of the page counter on each (see
 /// [`PageNumbering`]).
@@ -842,9 +978,9 @@ pub fn paginate(
     // starts with a forced break to a left page (CSS Paged Media 3, §4.3.2).
     let rtl = root.is_rtl();
     let first_left = forced_side(tree.break_before(root_box), rtl).unwrap_or(rtl);
-    let page_type = |index: usize, blank: bool| PageType::of(index, first_left, blank);
     // The page counter after the pages so far.
     let mut counter = PageNumbering::default();
+    let mut groups = PageGroups::new(tree, rules);
     loop {
         let name = layouter.page_name_at(root_box, token.as_ref()).cloned();
         // A forced break to a left or right page where the next page is on the other side
@@ -856,12 +992,13 @@ pub fn paginate(
             && let Some(left) = token
                 .as_ref()
                 .and_then(|token| side_at_break(tree, root_box, token, rtl))
-            && left != page_type(pages.len(), false).left
+            && left != PageType::of(pages.len(), first_left, false, &[]).left
         {
-            let page_box = shrunk(
-                made_boxes.get(rules, root, page_type(pages.len(), true), name.as_deref()),
-                shrink,
-            );
+            // (A blank page is in the page groups that go on across it, not in those that start
+            // after it.)
+            let in_groups = groups.at(&layouter, root_box, token.as_ref(), pages.len(), true);
+            let page_type = PageType::of(pages.len(), first_left, true, &in_groups);
+            let page_box = shrunk(made_boxes.get(rules, root, page_type, name.as_deref()), shrink);
             let (inline, block) = crate::writing::physical_size(
                 (page_box.content_width(), page_box.content_height()),
                 layouter.writing_mode(),
@@ -881,10 +1018,9 @@ pub fn paginate(
             page_boxes.push(page_box);
             continue;
         }
-        let page_box = shrunk(
-            made_boxes.get(rules, root, page_type(pages.len(), false), name.as_deref()),
-            shrink,
-        );
+        let in_groups = groups.at(&layouter, root_box, token.as_ref(), pages.len(), false);
+        let page_type = PageType::of(pages.len(), first_left, false, &in_groups);
+        let page_box = shrunk(made_boxes.get(rules, root, page_type, name.as_deref()), shrink);
         last_name.clone_from(&name);
         // (The counter goes on from this page once it is added.)
         let numbered = counter.number(&layouter, pages.len(), &page_box.style);
@@ -1167,7 +1303,7 @@ pub fn paginate(
                 made_boxes.get(
                     rules,
                     root,
-                    page_type(starts.len() + n, false),
+                    PageType::of(starts.len() + n, first_left, false, &groups.last),
                     last_name.as_deref(),
                 ),
                 shrink,
@@ -1231,7 +1367,12 @@ pub fn paginate(
             .collect();
         for (start, height) in extent {
             let page_box = shrunk(
-                made_boxes.get(rules, root, page_type(pages.len(), false), last_name.as_deref()),
+                made_boxes.get(
+                    rules,
+                    root,
+                    PageType::of(pages.len(), first_left, false, &groups.last),
+                    last_name.as_deref(),
+                ),
                 shrink,
             );
             counter = counter.number(&layouter, pages.len(), &page_box.style);
@@ -1374,7 +1515,12 @@ pub fn paginate(
             .max(reach_floor);
         while end < reach && pages.len() < MAX_PAGES && fragments < MAX_FRAGMENTS {
             let page_box = shrunk(
-                made_boxes.get(rules, root, page_type(pages.len(), false), last_name.as_deref()),
+                made_boxes.get(
+                    rules,
+                    root,
+                    PageType::of(pages.len(), first_left, false, &groups.last),
+                    last_name.as_deref(),
+                ),
                 shrink,
             );
             if page_box.content_height() <= Au::ZERO {
@@ -2660,7 +2806,7 @@ mod tests {
         let ua = Stylesheet::parse(fagus_style::USER_AGENT_CSS, Origin::UserAgent, "ua.css");
         let author = Stylesheet::parse(css, Origin::Author, "style");
         let rules = RuleSet::new(&[&ua, &author], &MediaEnvironment::default());
-        page_box(&rules, &ComputedStyle::default(), 0, None)
+        page_box(&rules, &ComputedStyle::default(), 0, None, &[])
     }
 
     /// The size of the first page with `@page { size: <size> }` after `100mm 150mm`, in
@@ -2688,7 +2834,7 @@ mod tests {
         };
         // The page context inherits the root's zoom, as in Chrome: its margins (and its margin
         // boxes) are zoomed, its size is not.
-        let page = page_box(&rules, &root, 0, None);
+        let page = page_box(&rules, &root, 0, None, &[]);
         assert_eq!((page.width, page.height), (px(400.0), px(300.0)));
         assert_eq!(page.margin, [px(30.0); 4]);
         assert_eq!(page.viewport, (px(340.0), px(240.0)));

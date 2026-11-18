@@ -98,7 +98,9 @@ page, as in Chrome.
 ```
 
 The more specific rule wins: a named page beats `:first` and `:blank`, which beat `:left` and
-`:right`.
+`:right`. `:first` is only ever the first page of the document, also in `@page chapter:first`; for
+the first page of each chapter, use `:nth()` (see
+[Style the first page of every section](#style-the-first-page-of-every-section)).
 
 ### Start chapters on a right page
 
@@ -126,8 +128,18 @@ This follows CSS Fragmentation and CSS Paged Media, as WeasyPrint does. Chrome t
 like `page` and inserts no blank page, and it ignores `@page :blank` rules, so a template that
 relies on them prints differently in Chrome.
 
-**Not supported:** `@page :nth()`, as in Chrome. The rule is ignored and reported as a
-`css.parse-error` diagnostic.
+### Select pages by number
+
+`:nth(An+B)` matches the pages of the document whose number (counting from 1, blank pages
+included) is `An+B` for some `n` of 0 or more, as in `:nth-child()`: `:nth(3)` is the third page,
+`:nth(2n)` every even page, `:nth(-n+2)` the first two.
+
+```css
+@page :nth(2) { margin-top: 30mm; }
+@page :nth(odd) { @bottom-right { content: counter(page); } }
+```
+
+It counts sheets, not the `page` counter, which `counter-reset` and `counter-set` may restart.
 
 ## Give sections pages of their own
 
@@ -167,6 +179,53 @@ bookmarks on the page turn with it.
   page-orientation: rotate-left;
 }
 ```
+
+## Style the first page of every section
+
+A page group is the run of pages of one element whose `page` is not `auto` and that has a forced
+break before it (`break-before: page`, `left`, `right`, `recto` or `verso`). `:nth(An+B of name)`
+counts the pages of each group of that page name, so `:nth(1 of chapter)` is the first page of
+every chapter:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page { margin: 20mm; @top-right { content: "Annual report"; } }
+  @page :nth(1 of chapter) {
+    margin-top: 60mm;
+    @top-right { content: none; }
+  }
+  .chapter { page: chapter; break-before: page; }
+</style>
+</head>
+<body>
+  <section class="chapter"><h1>Revenue</h1><!-- several pages --></section>
+  <section class="chapter"><h1>Outlook</h1><!-- several pages --></section>
+</body>
+</html>
+```
+
+- Each element starts a group of its own, also where the element before it has the same page
+  name. Without a forced break before it, an element makes no group: two of them in a row share
+  their pages.
+- A group holds every page of its element, also pages of other names inside it: in a chapter with
+  a landscape table on a page `wide` of its own, `:nth(3 of chapter)` is the third page of the
+  chapter even where that is a `wide` page. A page can be in several groups, of nested elements.
+- A blank page that a break to a left or right page inserts before the element is not in its
+  group; one inside the element is.
+- On a selector with a page name, `:nth()` without `of` counts the pages of that name's group
+  where the page is in one, else those of the document: `@page chapter:nth(1)` is the first page
+  of every chapter too. WeasyPrint counts the pages of the document there; write
+  `:nth(1 of chapter)` for a template that prints the same in both.
+- `:nth()` counts as much as `:first` for which rule wins, and the name after `of` as much as a
+  page name: `@page :nth(1 of chapter)` beats `@page chapter`. CSS Generated Content for Paged
+  Media leaves this open; WeasyPrint ranks them the same way.
+
+This follows CSS Generated Content for Paged Media 3. Chrome does not support `:nth()` and ignores
+these rules. An `:nth()` that is not valid (`:nth(x)`, `:nth(1 of)`) drops its rule with a
+`css.parse-error` diagnostic.
 
 ## Add a header and a footer
 
@@ -673,6 +732,7 @@ items they point to:
 | `target-counter()`, `target-text()`, `leader()` | not supported | supported |
 | `break-before: left`, `right`, `recto`, `verso` | like `page` | a blank page where needed |
 | `@page :blank` | rule ignored | matches the inserted blank pages |
+| `@page :nth()`, page groups | rule ignored | supported |
 | Running elements (`position: running()`) | not supported | supported |
 | Fonts | installed fonts of the machine | only the fonts you configure, unless system fonts are on (see [Fonts](fonts.md)) |
 | Texts of form controls | the language of Chrome's user interface | the control's `lang`, else the engine's `locale` |
