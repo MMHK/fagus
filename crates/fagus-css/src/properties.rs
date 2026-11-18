@@ -91,6 +91,7 @@ const KNOWN: &[&str] = &[
     "font-variant-position",
     "font-variation-settings",
     "frame-sizing",
+    "hanging-punctuation",
     "hyphenate-character",
     "hyphenate-limit-chars",
     "image-orientation",
@@ -220,13 +221,9 @@ mod tests {
         assert_eq!(classify("transition-duration"), PropertySupport::Ignored);
         assert_eq!(classify("mso-number-format"), PropertySupport::Ignored);
         assert_eq!(classify("colr"), PropertySupport::Unknown);
-        // Footnotes and hanging punctuation are not supported, as in Chrome.
-        for name in [
-            "footnote-display",
-            "footnote-policy",
-            "float-reference",
-            "hanging-punctuation",
-        ] {
+        assert_eq!(classify("hanging-punctuation"), PropertySupport::Known);
+        // Footnotes are not supported, as in Chrome.
+        for name in ["footnote-display", "footnote-policy", "float-reference"] {
             assert_eq!(classify(name), PropertySupport::Unknown, "{name}");
         }
     }

@@ -368,6 +368,33 @@ Turkish, and `math-auto`), `initial-letter`, `text-box-trim`, `text-box-edge` an
 **Not supported:** `text-align: justify-all` is invalid, as in Chrome; use `text-align: justify`
 with `text-align-last: justify`. `text-justify: distribute` is invalid.
 
+### Hanging punctuation
+
+`hanging-punctuation` lets punctuation at the edges of lines hang outside the line box, as CSS Text
+3 specifies it and Safari does it (Chrome does not support it):
+
+```css
+blockquote { hanging-punctuation: first last; }  /* quotes outside the text's edge */
+p { text-align: justify; hanging-punctuation: allow-end; }
+```
+
+- `first`: an opening bracket or quote (or an ideographic space) at the start of the first line of
+  a block hangs before it, in the `text-indent` if there is one.
+- `last`: a closing bracket or quote at the end of the last line of a block hangs after it.
+- `force-end`: a stop or comma (`,` `.` `、` `。` and their fullwidth, small and Arabic forms) at the
+  end of a line hangs.
+- `allow-end`: such a stop or comma hangs only where it would not fit on the line otherwise, as far
+  as it does not fit.
+
+A hanging mark takes no room on the line: the line breaks, aligns and is justified as if it were not
+there, and it does not count for the widths of boxes that size to their content. It reaches into the
+block's padding or margin without making the page shrink to fit; leave room for it there, since
+content past the page area is cut off at the page margins. At most one mark hangs at each edge of a
+line, and a mark hangs only at the very edge: not behind the padding or border of an inline box,
+and not where bidi reordering of mixed text moves it away from the edge. In right-to-left text,
+`first` hangs on the right and the end of the line is on the left; in vertical text, they hang above
+the top and below the bottom of the line.
+
 ### Decorations and emphasis
 
 **Works:** `text-decoration` with `-line`, `-style` (`solid`, `double`, `dotted`, `dashed`, `wavy`),
@@ -501,7 +528,7 @@ A short list of what Fagus does not do. Most of it is also absent in Chrome's pr
 - **Layout:** `display: grid-lanes` (masonry), `display: run-in`, unprefixed `line-clamp`,
   `shape-inside`, `block-step`.
 - **Text:** `text-align: justify-all`, `-webkit-text-stroke`, `paint-order` for HTML text,
-  `text-spacing`, `ruby-overhang`, `hanging-punctuation`, `@font-feature-values`.
+  `text-spacing`, `ruby-overhang`, `@font-feature-values`.
 - **Effects:** `backdrop-filter` (no filtering of the backdrop), `cross-fade()`, `element()` as an
   image.
 - **Images:** AVIF, JPEG XL, BMP, TIFF and ICO.

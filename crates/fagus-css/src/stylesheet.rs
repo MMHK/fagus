@@ -767,6 +767,18 @@ fn check_block(
                                     .to_owned(),
                             ))
                         }
+                        PropertySupport::Known
+                            if name.0.eq_ignore_ascii_case("hanging-punctuation")
+                                && !has_variables(&custom.value)
+                                && !is_wide_keyword(&custom.value)
+                                && crate::hanging::HangingPunctuation::from_tokens(&custom.value).is_none() =>
+                        {
+                            Some((
+                                "css.invalid-value",
+                                "invalid value for `hanging-punctuation`: it takes `none` or `first`, `last` and one of `force-end` and `allow-end`, each at most once"
+                                    .to_owned(),
+                            ))
+                        }
                         PropertySupport::Known => None,
                         PropertySupport::Ignored => return false,
                         PropertySupport::Unknown => {
@@ -1228,9 +1240,9 @@ mod tests {
     }
 
     #[test]
-    fn reports_footnotes_and_hanging_punctuation_as_unsupported() {
+    fn reports_footnotes_as_unsupported_and_invalid_hanging_punctuation() {
         let sheet = Stylesheet::parse(
-            "p { float: left; float: footnote; footnote-display: block; footnote-policy: line;\n  float-reference: page; hanging-punctuation: first; float: inline-end }",
+            "p { float: left; float: footnote; footnote-display: block; footnote-policy: line;\n  float-reference: page; hanging-punctuation: first; hanging-punctuation: first first; float: inline-end }",
             Origin::Author,
             "notes.css",
         );
@@ -1259,16 +1271,17 @@ mod tests {
                     "unknown property `float-reference`; the declaration is ignored"
                 ),
                 (
-                    "css.unknown-property",
-                    "unknown property `hanging-punctuation`; the declaration is ignored"
+                    "css.invalid-value",
+                    "invalid value for `hanging-punctuation`: it takes `none` or `first`, `last` and one of `force-end` and `allow-end`, each at most once; the declaration is ignored"
                 ),
             ]
         );
         let CssRule::Style(rule) = &sheet.sheet.rules.0[0] else {
             panic!("style rule")
         };
-        // The earlier `float: left` stays in force where `float: footnote` is dropped.
-        assert_eq!(rule.declarations.declarations.len(), 2);
+        // The earlier `float: left` stays in force where `float: footnote` is dropped, the
+        // earlier `hanging-punctuation` where the second is.
+        assert_eq!(rule.declarations.declarations.len(), 3);
     }
 
     #[test]

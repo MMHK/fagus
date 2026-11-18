@@ -12,6 +12,7 @@ mod diagnostics;
 mod flow_position;
 pub mod gradient;
 mod guard;
+pub mod hanging;
 pub mod matching;
 mod math_nesting;
 mod media;

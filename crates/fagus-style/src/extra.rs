@@ -561,6 +561,12 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
             }
         }
         "text-fit" => style.text_fit = text_fit(&tokens).unwrap_or(style.text_fit),
+        "hanging-punctuation" => {
+            let words: Option<Vec<&str>> = tokens.iter().map(|token| ident(token)).collect();
+            if let Some(value) = words.and_then(crate::values::HangingPunctuation::parse) {
+                style.hanging_punctuation = value;
+            }
+        }
         "text-autospace" if tokens.len() == 1 => {
             style.text_autospace = match keyword {
                 "normal" => true,

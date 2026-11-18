@@ -531,6 +531,9 @@ fn rejected(name: &str, tokens: &TokenList<'static>) -> bool {
     if lower == "text-fit" {
         return crate::extra::text_fit(&crate::extra::significant(tokens)).is_none();
     }
+    if lower == "hanging-punctuation" {
+        return crate::values::HangingPunctuation::from_tokens(tokens).is_none();
+    }
     let Some((_, valid)) = KEYWORDS
         .iter()
         .find(|(property, _)| name.eq_ignore_ascii_case(property))
@@ -3138,7 +3141,7 @@ fn is_inherited(id: &PropertyId<'_>) -> bool {
             | "font-synthesis-weight" | "font-synthesis-style" | "font-synthesis-small-caps" | "font-size-adjust"
             | "white-space-collapse" | "text-wrap-mode" | "text-wrap-style" | "text-wrap" | "image-orientation"
             | "ruby-position" | "ruby-align" | "text-box-edge" | "writing-mode" | "-webkit-writing-mode" | "text-orientation"
-            | "text-spacing-trim" | "text-autospace" | "text-fit"
+            | "text-spacing-trim" | "text-autospace" | "text-fit" | "hanging-punctuation"
     ))
 }
 
@@ -3540,6 +3543,7 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedStyle, style: &mut C
             "text-combine-upright" => copy!(text_combine_upright),
             "text-spacing-trim" => copy!(text_spacing_trim),
             "text-autospace" => copy!(text_autospace),
+            "hanging-punctuation" => copy!(hanging_punctuation),
             "text-fit" => copy!(text_fit),
             _ => {}
         },

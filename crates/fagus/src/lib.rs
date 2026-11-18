@@ -2614,6 +2614,34 @@ mod tests {
     }
 
     #[test]
+    fn does_not_shrink_pages_for_punctuation_that_hangs() {
+        // Hanging punctuation past the end of a line, or past the start of a right-to-left one,
+        // is ink overflow (CSS Text 3, §8.2): the page keeps its scale.
+        let mut fonts = FontDb::new();
+        fonts
+            .add_font_dir(Path::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../tests/fonts"
+            )))
+            .expect("fonts");
+        let page = "<style>@page { size: 600px 400px; margin: 50px } body { margin: 0; font: 20px Inter }
+                      p { margin: 0; text-align: right; hanging-punctuation: first force-end }";
+        for (style, content) in [
+            ("", "Ab cd."),
+            ("p { direction: rtl }", "\u{201C}Ab cd"),
+            (":root { writing-mode: vertical-rl }", "Ab cd."),
+        ] {
+            let html = format!("{page} {style}</style><p>{content}</p>");
+            let pages = shrunk_pages_in(&html, 1.0, &fonts);
+            let shrink = fagus_paint::content_shrink(&pages[0]);
+            assert!(shrink >= 1.0 - 1e-6, "{style}: {shrink}");
+            // Without hanging punctuation, nothing reaches past the page area either.
+            let plain = html.replace("hanging-punctuation: first force-end", "");
+            assert!(fagus_paint::content_shrink(&shrunk_pages_in(&plain, 1.0, &fonts)[0]) >= 1.0 - 1e-6);
+        }
+    }
+
+    #[test]
     fn shrinks_vertical_documents_by_the_length_of_their_lines() {
         let page = "<style>@page { size: 600px 400px; margin: 50px } body { margin: 0 }";
         let shrink = |mode: &str, content: &str| {

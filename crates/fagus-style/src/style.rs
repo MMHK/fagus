@@ -337,6 +337,8 @@ pub struct ComputedStyle {
     /// `text-autospace: normal` (inherited): a little space goes between ideographs and the
     /// letters and digits of other scripts. Chrome's initial value is `no-autospace`.
     pub text_autospace: bool,
+    /// `hanging-punctuation` (inherited).
+    pub hanging_punctuation: crate::values::HangingPunctuation,
     /// `text-fit` (inherited).
     pub text_fit: TextFit,
     /// The factor by which layout made `font_size` larger or smaller for `text-fit` (not a CSS
@@ -695,6 +697,7 @@ impl ComputedStyle {
             ruby_align: RubyAlign::SpaceAround,
             text_spacing_trim: TextSpacingTrim::Normal,
             text_autospace: false,
+            hanging_punctuation: crate::values::HangingPunctuation::default(),
             text_fit: TextFit::default(),
             text_fit_scale: 1.0,
             text_box_trim: TextBoxTrim::default(),
@@ -861,6 +864,7 @@ impl ComputedStyle {
             ruby_align: self.ruby_align,
             text_spacing_trim: self.text_spacing_trim,
             text_autospace: self.text_autospace,
+            hanging_punctuation: self.hanging_punctuation,
             text_fit: self.text_fit,
             text_box_edge: self.text_box_edge,
             list_style_type: self.list_style_type.clone(),

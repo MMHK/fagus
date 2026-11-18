@@ -613,6 +613,22 @@ pub fn content_shrink(page: &Page) -> f32 {
     }
 }
 
+/// The advance of the punctuation mark that may hang at the right or bottom end of a run, past
+/// spaces: its last glyph in visual order (`hanging-punctuation`). 0 where it is no such mark.
+fn hanging_mark(run: &fagus_layout::TextRun) -> f32 {
+    let mark = |glyph: &&Glyph| {
+        run.text
+            .get(glyph.cluster.0 as usize..glyph.cluster.1 as usize)
+            .and_then(|cluster| cluster.chars().next())
+    };
+    run.glyphs
+        .iter()
+        .rev()
+        .find(|glyph| !mark(glyph).is_none_or(char::is_whitespace))
+        .filter(|glyph| mark(glyph).is_some_and(fagus_layout::hangable_punctuation))
+        .map_or(0.0, |glyph| glyph.advance)
+}
+
 /// How far right and how far down the content of `page` reaches on it, as [`content_extent`]
 /// measures it.
 fn content_reach(page: &Page) -> (f32, f32) {
@@ -627,20 +643,22 @@ fn content_reach(page: &Page) -> (f32, f32) {
             outer[1] * inner[4] + outer[3] * inner[5] + outer[5],
         ]
     }
-    /// `line` is the right edge and the width of the line a fragment is in, if it is in one.
+    /// The right edge, the width and the bottom edge of a line.
+    type LineEdges = (f32, f32, f32);
+    /// `line` is the edges of the line a fragment is in, if it is in one.
     fn walk(
         fragment: &Fragment,
-        (origin, line): ((f32, f32), Option<(f32, f32)>),
+        (origin, line): ((f32, f32), Option<LineEdges>),
         matrix: [f32; 6],
         reach: &mut (f32, f32),
     ) {
         let rect = fragment.rect;
         let left = origin.0 + rect.x.to_px();
         let top = origin.1 + rect.y.to_px();
-        let (mut width, height) = (rect.width.to_px(), rect.height.to_px());
+        let (mut width, mut height) = (rect.width.to_px(), rect.height.to_px());
         // An inline box that goes on to the next line takes the spaces that hang at the end of
         // its line, which reach nowhere either: they do not take it past the line.
-        if let (FragmentKind::Box { style, .. }, Some((end, _))) = (&fragment.kind, line)
+        if let (FragmentKind::Box { style, .. }, Some((end, _, _))) = (&fragment.kind, line)
             && style.display == fagus_style::values::Display::INLINE
         {
             width = width.min((end - left).max(width - trailing_spaces(fragment)));
@@ -648,7 +666,7 @@ fn content_reach(page: &Page) -> (f32, f32) {
         // The right margin of a box in a horizontal line, left to right (of an inline box, on
         // the line where it ends), which the line's content reaches over.
         let margin = match (&fragment.kind, line) {
-            (FragmentKind::Box { style, sides, .. }, Some((_, line_width)))
+            (FragmentKind::Box { style, sides, .. }, Some((_, line_width, _)))
                 if !style.is_rtl()
                     && !style.writing_mode.is_vertical()
                     && (sides.right || style.display != fagus_style::values::Display::INLINE) =>
@@ -658,7 +676,7 @@ fn content_reach(page: &Page) -> (f32, f32) {
             _ => 0.0,
         };
         let line = match fragment.kind {
-            FragmentKind::Line { .. } => Some((left + width, width)),
+            FragmentKind::Line { .. } => Some((left + width, width, top + height)),
             FragmentKind::Box { ref style, .. } if style.display != fagus_style::values::Display::INLINE => {
                 None
             }
@@ -705,6 +723,18 @@ fn content_reach(page: &Page) -> (f32, f32) {
                 } else {
                     ((advance - spaces).max(0.0) * 64.0).ceil() / 64.0
                 };
+        }
+        // Punctuation that hangs past the end (or the start) of its line is ink overflow (CSS
+        // Text 3, §8.2): it reaches no further than the line.
+        if let (FragmentKind::Text(run), Some((end, _, bottom))) = (&fragment.kind, line)
+            && !run.style.hanging_punctuation.is_none()
+        {
+            let hanging = hanging_mark(run);
+            if run.style.writing_mode.is_vertical() {
+                height = height.min((bottom - top).max(height - hanging));
+            } else {
+                width = width.min((end - left).max(width - hanging));
+            }
         }
         let mut matrix = matrix;
         let mut clips = false;

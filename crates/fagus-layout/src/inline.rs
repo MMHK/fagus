@@ -33,6 +33,8 @@ use crate::units::{Au, Rect};
 
 mod context;
 mod fit;
+mod hanging;
+pub use hanging::may_hang as hangable_punctuation;
 mod initial_letter;
 pub(crate) use initial_letter::raised_lines;
 mod kerning;
@@ -1219,6 +1221,19 @@ fn flow_lines(
         if let Some(limit) = limits.get(lines.len()) {
             available = available.min(limit - line_indent - start_frames);
         }
+        // The boxes of the line's inline items, in the style of `::first-line` on the first.
+        let line_boxes: &[InlineBox] = match (&first_builder, &after_first) {
+            (Some(first_builder), Some(_)) => first_builder.boxes,
+            _ => boxes,
+        };
+        // An opening bracket or quote that hangs at the start of the first formatted line
+        // takes no room on it (CSS Text 3, §8.2).
+        let start_hang = if first_line {
+            hanging::start(queue.iter(), line_boxes)
+        } else {
+            0.0
+        };
+        available += start_hang;
         let mut current_width = 0.0;
         let mut since_break_width = 0.0;
         // The width of the part of the current inline item on the line so far.
@@ -1296,7 +1311,7 @@ fn flow_lines(
                             (left, right) = layouter.line_range(left_edge, right_edge, flow.1 + y, band);
                         }
                     }
-                    available = (right - left).to_px() - line_indent;
+                    available = (right - left).to_px() - line_indent + start_hang;
                     index += 1;
                     continue;
                 }
@@ -1350,7 +1365,7 @@ fn flow_lines(
                         index += 1;
                         break;
                     }
-                    available = (right - left).to_px() - line_indent;
+                    available = (right - left).to_px() - line_indent + start_hang;
                 } else {
                     waiting.push(float);
                 }
@@ -1411,6 +1426,26 @@ fn flow_lines(
                     + piece.hyphen
                     + broken_delta(piece);
                 let used = used - spacing::end_autospace(&queue, index);
+                // Punctuation that hangs at the end of the line takes no room on it.
+                let hang = if queue[index].hyphen == 0.0 && queue[index].broken.is_none() {
+                    hanging::end(queue.range(..=index).rev(), line_boxes)
+                } else {
+                    None
+                };
+                let hang = match hang {
+                    Some(hang) if hang.kind == hanging::EndKind::Close => {
+                        // A closing bracket or quote, at the end of the last formatted line.
+                        later.fill(&mut queue, usize::MAX);
+                        if hanging::nothing_after(queue.range(index + 1..)) {
+                            hang.width
+                        } else {
+                            0.0
+                        }
+                    }
+                    Some(hang) => hang.width,
+                    None => 0.0,
+                };
+                let used = used - hang;
                 let mut fits = used <= available + FIT_TOLERANCE;
                 // Closing punctuation that does not fit loses its blank half where it then fits
                 // and is the only character that does not.
@@ -1470,7 +1505,8 @@ fn flow_lines(
         // The pieces after the last break opportunity stay if they fit, or if nothing else does.
         if inside.is_none() && index >= queue.len() && end < queue.len() {
             let trailing = queue.back().map_or(0.0, |piece| piece.trailing_space);
-            if current_width + since_break_width - snap - trailing <= available + FIT_TOLERANCE {
+            let hang = hanging::end(queue.iter().rev(), line_boxes).map_or(0.0, |hang| hang.width);
+            if current_width + since_break_width - snap - trailing - hang <= available + FIT_TOLERANCE {
                 end = queue.len();
             } else {
                 inside = break_run(
@@ -1619,6 +1655,10 @@ fn flow_lines(
             }
         }
         let last = queue.is_empty() || forced;
+        let formatted = Formatted {
+            first: first_line,
+            last: later.pieces.is_empty() && hanging::nothing_after(queue.iter()),
+        };
         after_forced = forced;
         // The last line `line-clamp` shows ends with an ellipsis where more follows.
         let clamped = (!queue.is_empty() || layouter.clamp_follows.get())
@@ -1671,6 +1711,7 @@ fn flow_lines(
                 (right - left).to_px(),
                 line_indent,
                 (last, clamped),
+                formatted,
             )
         } else {
             line_builder.build(
@@ -1679,6 +1720,7 @@ fn flow_lines(
                 (right - left).to_px(),
                 line_indent,
                 (last, clamped),
+                formatted,
             )
         };
         line.text_scale = scale;
@@ -5028,6 +5070,14 @@ enum Child {
     },
 }
 
+/// Whether a line is the first formatted line of its paragraph and whether it is the last, for
+/// the punctuation that hangs at its edges (`hanging-punctuation`).
+#[derive(Clone, Copy, Debug, Default)]
+struct Formatted {
+    first: bool,
+    last: bool,
+}
+
 struct LineBuilder<'a> {
     fonts: &'a FontDb,
     container: &'a ComputedStyle,
@@ -5320,6 +5370,7 @@ impl LineBuilder<'_> {
         available: f32,
         indent: f32,
         (last, clamped): (bool, bool),
+        formatted: Formatted,
     ) -> Line {
         // The last line of a clamp ends with an ellipsis, cut to make room for it if need be.
         // As in Chrome, a line that was not cut is aligned without it, one that was with it.
@@ -5389,6 +5440,21 @@ impl LineBuilder<'_> {
             .sum();
         let content_width: f32 =
             pieces.iter().map(|piece| piece.width).sum::<f32>() - hanging + start_frames + end_frames;
+        // Punctuation that hangs at the start or the end of the line is not measured for its
+        // alignment or justification (CSS Text 3, §8.2): it stands outside the line box.
+        let start_hang = if formatted.first {
+            hanging::start(&pieces, self.boxes)
+        } else {
+            0.0
+        };
+        let end_hang = if cut || clamped || end_frames != 0.0 {
+            0.0
+        } else {
+            hanging::end(pieces.iter().rev(), self.boxes).map_or(0.0, |hang| {
+                hang.hanging(content_width - start_hang - (available - indent), formatted.last)
+            })
+        };
+        let content_width = content_width - start_hang - end_hang;
         let mut free = if cut {
             0.0
         } else {
@@ -5455,7 +5521,11 @@ impl LineBuilder<'_> {
                 _ => 0.0,
             }
         };
-        let offset = if rtl { aligned - hanging } else { indent + aligned };
+        let offset = if rtl {
+            aligned - hanging - end_hang
+        } else {
+            indent + aligned - start_hang
+        };
         let forced = pieces.iter().any(|piece| piece.forced_break_after);
         let quirk_boxes = self.quirk.then(|| self.quirk_boxes(&pieces, continuing));
         // A line with bidi text, or with inline boxes of right-to-left text, is put in the order
@@ -6756,11 +6826,13 @@ pub(crate) fn intrinsic_widths_in(
     (items, block): (&[InlineItem], Option<&ComputedStyle>),
     (wraps, indent): (Option<bool>, f32),
 ) -> (f32, f32) {
-    let (mut pieces, _) = shape_pieces(layouter, (items, None), Au::MAX, Purpose::Measure(wraps, block));
+    let (mut pieces, boxes) = shape_pieces(layouter, (items, None), Au::MAX, Purpose::Measure(wraps, block));
     let mut min_content: f32 = 0.0;
     let mut max_content: f32 = 0.0;
-    let mut word = indent;
-    let mut line = indent;
+    // Punctuation that hangs counts for neither intrinsic width (CSS Text 3, §8.2).
+    let start_hang = hanging::start(&pieces, &boxes);
+    let mut word = indent - start_hang;
+    let mut line = indent - start_hang;
     // Where the piece starts in the text of its style it belongs to (Blink's item), and that
     // style: Chrome measures a word for the min-content width between the places of its ends in
     // that text, each rounded up to layout units (`ShapeResult::CachedWidth`).
@@ -6899,24 +6971,45 @@ pub(crate) fn intrinsic_widths_in(
         } else {
             item_width = 0.0;
         }
-        if piece.break_after {
-            // A word that is shaped again where it breaks (see [`Broken`]) is as wide there as
-            // shaped again, and what follows that much narrower.
-            let delta = broken_delta(piece);
-            min_content = min_content.max(word - trailing + delta);
+        let (break_after, forced) = (piece.break_after, piece.forced_break_after);
+        // A word that is shaped again where it breaks (see [`Broken`]) is as wide there as
+        // shaped again, and what follows that much narrower.
+        let (delta, ends) = (broken_delta(piece), ends_hanging(piece));
+        if break_after {
+            let hang = unmeasured_end(&pieces, index, &boxes, false);
+            min_content = min_content.max(word - trailing + delta - hang);
             word = -delta;
             word_has_text = false;
         }
-        if piece.forced_break_after {
-            max_content = max_content.max(line - ends_hanging(piece) + floats);
+        if forced {
+            let hang = unmeasured_end(&pieces, index, &boxes, true);
+            max_content = max_content.max(line - ends - hang + floats);
             line = 0.0;
             (floats, previous_float) = (0.0, None);
         }
     }
     let trailing = pieces.last().map_or(0.0, ends_hanging);
-    min_content = min_content.max(word - last_trailing);
-    max_content = max_content.max(line - trailing + floats);
+    let (min_hang, max_hang) = match pieces.len().checked_sub(1) {
+        Some(last) => (
+            unmeasured_end(&pieces, last, &boxes, false),
+            unmeasured_end(&pieces, last, &boxes, true),
+        ),
+        None => (0.0, 0.0),
+    };
+    min_content = min_content.max(word - last_trailing - min_hang);
+    max_content = max_content.max(line - trailing - max_hang + floats);
     (min_content, max_content.max(min_content))
+}
+
+/// The width of the punctuation that hangs where a line breaks after piece `index` of `pieces`,
+/// which the min-content width (or with `max` the max-content width) leaves out (CSS Text 3,
+/// §8.2).
+fn unmeasured_end(pieces: &[Piece], index: usize, boxes: &[InlineBox], max: bool) -> f32 {
+    let Some(hang) = hanging::end(pieces[..=index].iter().rev(), boxes) else {
+        return 0.0;
+    };
+    let last_line = hang.kind != hanging::EndKind::Close || hanging::nothing_after(&pieces[index + 1..]);
+    hang.unmeasured(max, last_line)
 }
 
 /// The width of the spaces that hang at the end of `piece` where it ends a line of the

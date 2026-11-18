@@ -74,7 +74,8 @@ pub use image::{
     Image, ImageError, ImageFormat, Images, PathSegment, PixelFilter, SvgClip, SvgDocument, SvgReference,
 };
 pub use inline::{
-    COMBINED_ROOM, StyleFonts, face_for, font_variations, run_variations, text_font_style, used_font_size,
+    COMBINED_ROOM, StyleFonts, face_for, font_variations, hangable_punctuation, run_variations,
+    text_font_style, used_font_size,
 };
 pub use math::alternative_text as formula_alternative_text;
 pub use page::{MAX_PAGES, PageBox, PageGroup, page_box};
@@ -4495,6 +4496,7 @@ mod tests {
     mod grid_alignment;
     mod grid_leftovers;
     mod grid_sizing;
+    mod hanging_punctuation;
     mod inline_layout;
     mod invoice_templates;
     mod lanes_fallback;

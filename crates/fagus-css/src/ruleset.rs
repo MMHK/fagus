@@ -757,6 +757,9 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
         )),
         "text-wrap-style" => Some(keywords_in(&value, &["auto", "balance", "pretty", "stable"])),
         "text-wrap-mode" => Some(keywords_in(&value, &["wrap", "nowrap"])),
+        "hanging-punctuation" => {
+            Some(crate::hanging::HangingPunctuation::parse(value.split_ascii_whitespace()).is_some())
+        }
         // Not `footnote`, as in Chrome.
         "float" => Some(matches!(
             value.as_str(),
@@ -977,10 +980,15 @@ tr:has(input:checked) td { color: green }";
 @supports (text-wrap: sideways) or (text-wrap-mode: balance) { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
 
-        // Footnotes and hanging punctuation are not supported, as in Chrome.
+        // Footnotes are not supported, as in Chrome.
         let css = "#x { color: red }
 @supports (float: inline-start) { #x { color: green } }
-@supports (float: footnote) or (footnote-display: block) or (hanging-punctuation: first) { #x { color: blue } }";
+@supports (float: footnote) or (footnote-display: block) { #x { color: blue } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 2);
+        // Hanging punctuation is, with the values of CSS Text 3 (Chrome does not support it).
+        let css = "#x { color: red }
+@supports (hanging-punctuation: first allow-end last) { #x { color: green } }
+@supports (hanging-punctuation: force-end allow-end) { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
     }
 

@@ -5,6 +5,8 @@
 
 use std::sync::Arc;
 
+pub use fagus_css::hanging::{HangingEnd, HangingPunctuation};
+
 /// A color in sRGB, each channel between 0 and 1.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rgba {

@@ -672,6 +672,37 @@ mod tests {
     }
 
     #[test]
+    fn computes_hanging_punctuation() {
+        use values::{HangingEnd, HangingPunctuation};
+        let (document, styled) = styles(
+            "<div id=a><p id=b>x</p><p id=c>y</p></div><div id=d></div><div id=e></div>",
+            "#a { hanging-punctuation: last first }
+             #c { hanging-punctuation: allow-end; hanging-punctuation: force-end force-end }
+             #d { hanging-punctuation: force-end }
+             #e { hanging-punctuation: first; hanging-punctuation: initial }",
+        );
+        let style = |id: &str| by_id(&document, &styled, id).hanging_punctuation;
+        let first_last = HangingPunctuation {
+            first: true,
+            last: true,
+            ..HangingPunctuation::default()
+        };
+        assert_eq!(style("a"), first_last);
+        // Inherited.
+        assert_eq!(style("b"), first_last);
+        // A value that is not valid leaves the earlier declaration.
+        assert_eq!(
+            style("c"),
+            HangingPunctuation {
+                end: HangingEnd::Allow,
+                ..HangingPunctuation::default()
+            }
+        );
+        assert_eq!(style("d").end, HangingEnd::Force);
+        assert!(style("e").is_none());
+    }
+
+    #[test]
     fn computes_text_fit_as_chrome_parses_it() {
         use values::{TextFit, TextFitKind, TextFitTarget};
         let (document, styled) = styles(
