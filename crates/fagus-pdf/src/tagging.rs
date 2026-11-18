@@ -473,7 +473,12 @@ impl<'a> Tagger<'a> {
                 });
             }
             first[element] = earliest;
-            if !nodes.is_empty() {
+            // A table cell stays in its row without content, so that the rows of the table keep
+            // the same number of columns (PDF/UA-1, ISO 14289-1 7.2).
+            let cell = self.structure.elements.get(element).is_some_and(|element| {
+                matches!(element.role, Role::TableCell { .. } | Role::TableHeader { .. })
+            });
+            if !nodes.is_empty() || cell {
                 groups[element] = Some(nodes);
             }
         }
@@ -786,6 +791,39 @@ mod tests {
         assert_eq!(
             tree(&structure, &pages, &[]),
             "Table[THead[TH[c1.0]] TBody[TD[c0.0 c1.1]]]"
+        );
+    }
+
+    #[test]
+    fn keeps_empty_table_cells() {
+        let nodes = nodes();
+        let structure = structure(
+            vec![
+                (Role::Document, vec![1, 9]),
+                (Role::Table { summary: None }, vec![2]),
+                (Role::TableBody, vec![3, 6]),
+                (Role::TableRow, vec![4, 5]),
+                (
+                    Role::TableHeader {
+                        scope: Scope::Row,
+                        rows: 1,
+                        columns: 1,
+                    },
+                    vec![],
+                ),
+                (Role::TableCell { rows: 1, columns: 1 }, vec![]),
+                (Role::TableRow, vec![7, 8]),
+                (Role::TableCell { rows: 1, columns: 1 }, vec![]),
+                (Role::TableCell { rows: 1, columns: 1 }, vec![]),
+                // An element other than a cell without content is left out.
+                (Role::Paragraph, vec![]),
+            ],
+            &[(nodes[1], Owner::Element(5)), (nodes[2], Owner::Element(7))],
+        );
+        let page = vec![content(nodes[1], 0), rect(), content(nodes[2], 1), rect()];
+        assert_eq!(
+            tree(&structure, &[page], &[]),
+            "Table[TBody[TR[TH[] TD[c0.0]] TR[TD[c0.1] TD[]]]]"
         );
     }
 
