@@ -11,3 +11,26 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 - An incompatible change to the worker protocol raises `PROTOCOL` in `crates/fagus-cli/src/worker.rs` and `Engine::PROTOCOL` together, and only in a major release; compatible changes (new optional fields) keep the number.
 - Pull requests also run the [release gates](docs/releasing.md#release-gates): the corpus validated with veraPDF, qpdf and Mustang, rendered to the same bytes on every platform, and timed. After changes to the PDF output, run `tools/validate.sh --subset /tmp/fagus-validate` (it needs Java) and `tools/determinism.sh /tmp/fagus-determinism` locally.
 - The documentation is in `docs/` and is published on [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) (`main` under `/docs/next`). Every page needs an entry in `docs/nav.yml`; run `php tools/check-docs.php` after changing the pages, which also checks the links between them.
+
+## Fuzzing
+
+`fuzz/` has [cargo-fuzz](https://rust-fuzz.github.io/book/cargo-fuzz.html) targets for the parts that read untrusted input. It is a workspace of its own and needs a nightly toolchain, which the engine's build and tests do not:
+
+```sh
+rustup toolchain install nightly
+cargo install cargo-fuzz
+fuzz/run.sh render 600    # a target, and for how many seconds
+```
+
+| Target | Input |
+|---|---|
+| `render` | HTML, or XHTML when it starts with `<?xml`, rendered to PDF |
+| `css` | a style sheet, parsed and cascaded over a fixed document |
+| `font` | a font file (TrueType, OpenType, WOFF, WOFF2), shaped and used through `@font-face` |
+| `image` | an image (PNG, JPEG, GIF, WebP) used by a fixed document in several ways |
+| `svg` | an SVG image, used as a file and inline in HTML |
+| `worker` | the frames a caller sends `fagus worker` ([protocol](docs/protocol.md)) |
+
+`fuzz/run.sh` seeds `fuzz/corpus/<target>` from `fuzz/seeds` and the documents, style sheets, fonts and images of the tests (`fuzz/seed.sh`), then runs the target with its input size, dictionary, timeout and memory limits; options after the seconds go to libFuzzer. A crash, panic, timeout or running out of memory is saved in `fuzz/artifacts/<target>`; replay it with `cargo +nightly fuzz run <target> <file>` and shrink it with `cargo +nightly fuzz tmin <target> <file>`. A panic counts even where the engine would catch it and answer with an internal error. Fixes come with the shrunk input as a test, usually in `crates/fagus/tests/robustness.rs`. Corpora and artifacts stay out of the repository; only the small seeds in `fuzz/seeds` are committed.
+
+The workflow `fuzz.yml` runs every target for 10 minutes each night and on demand, keeps each corpus in the cache between runs and uploads crashes as artifacts.
