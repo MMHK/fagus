@@ -389,6 +389,29 @@ mod tests {
     }
 
     #[test]
+    fn ignores_content_that_combines_a_running_element_with_other_values() {
+        // `element()` cannot be combined with other values (CSS Generated Content for Paged
+        // Media 3, §1.2.1): such a declaration is invalid and the one before it holds; after
+        // `var()`, the box has no content.
+        let pages = render(
+            "<style>
+               @page {
+                 @top-left { content: 'before'; }
+                 @top-left { content: element(a) element(b); }
+                 @top-center { content: 'before'; }
+                 @top-center { content: element(a) ' – ' counter(page); }
+                 @top-right { --more: ' – '; content: element(b) var(--more); }
+                 @bottom-center { content: element(b); }
+               }
+               body { font-family: Inter }
+               .a { position: running(a); } .b { position: running(b); }
+             </style>
+             <div class=a>A</div><div class=b>B</div><p>Text</p>",
+        );
+        assert_eq!(margin_text(&pages[0]), "before|before|B|");
+    }
+
+    #[test]
     fn assigns_the_named_strings_of_row_groups_at_their_first_cell() {
         // The first row of the second group is anonymous; the group's string still counts, and
         // before the strings of its rows.

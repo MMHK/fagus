@@ -16,6 +16,45 @@ pub fn running_name(tokens: &TokenList<'_>) -> Option<String> {
     }
 }
 
+/// Whether a value of `content` (its tokens other than white space) uses `element()` in a way
+/// CSS Generated Content for Paged Media 3 does not allow, which makes the value invalid: with
+/// other values ("it cannot be combined with other possible values for the content property",
+/// §1.2.1), several times, or with arguments other than
+/// `<custom-ident> [, first | start | last | first-except]?`.
+pub fn misused_element(tokens: &[&TokenOrValue<'_>]) -> bool {
+    let is_element = |token: &TokenOrValue<'_>| matches!(token, TokenOrValue::Function(function) if function.name.0.eq_ignore_ascii_case("element"));
+    if !tokens.iter().any(|token| is_element(token)) {
+        return false;
+    }
+    let [TokenOrValue::Function(function)] = tokens else {
+        return true;
+    };
+    let custom_ident = |name: &str| {
+        !["initial", "inherit", "unset", "revert", "revert-layer", "default"]
+            .iter()
+            .any(|keyword| name.eq_ignore_ascii_case(keyword))
+    };
+    match significant(&function.arguments).as_slice() {
+        [TokenOrValue::Token(Token::Ident(name))] => !custom_ident(name),
+        [
+            TokenOrValue::Token(Token::Ident(name)),
+            TokenOrValue::Token(Token::Comma),
+            TokenOrValue::Token(Token::Ident(which)),
+        ] => {
+            !custom_ident(name)
+                || !["first", "start", "last", "first-except"]
+                    .iter()
+                    .any(|keyword| which.eq_ignore_ascii_case(keyword))
+        }
+        _ => true,
+    }
+}
+
+/// [`misused_element`] for a whole value of `content`.
+pub fn content_misuses_element(tokens: &TokenList<'_>) -> bool {
+    misused_element(&significant(tokens))
+}
+
 /// The line names of `subgrid` in `grid-template-columns` or `grid-template-rows`, which
 /// lightningcss does not parse: one list per `[…]`, in order, with `repeat(n, …)` written out;
 /// `None` if the value is not `subgrid`.

@@ -1916,7 +1916,8 @@ impl MarginContent {
         let Content::Items(items) = &style.content else {
             return None;
         };
-        // A running element takes the whole box.
+        // A running element takes the whole box: `element()` stands alone in `content` (CSS
+        // Generated Content for Paged Media 3), a value that combines it with others is invalid.
         if let Some((name, which)) = items.iter().find_map(|item| match item {
             ContentItem::Element { name, which } => Some((name, *which)),
             _ => None,

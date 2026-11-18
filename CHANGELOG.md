@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file. The format is b
 
 - `@page :nth(An+B)` and `:nth(An+B of name)` select pages by their number in the document or in each page group of a name, the pages of an element with a `page` name and a forced break before it (CSS Generated Content for Paged Media 3): `@page :nth(1 of chapter)` styles the first page of every chapter. `@page :first` stays the first page of the document.
 
+### Changed
+
+- A `content` value that combines `element()` with other values, such as `element(a) element(b)` or `element(title) " – " counter(page)`, is invalid, as CSS Generated Content for Paged Media 3 specifies: the declaration is ignored with a `css.invalid-value` diagnostic. Before, the margin box showed the first running element only.
+
 ### Fixed
 
 - In tables with `border-collapse: collapse`, rows with `-fagus-repeat: at-break` no longer take part in the borders of pages where they do not show: on the table's first page the head row's bottom border meets the first row (it was replaced by the border of the carry-over row below it), on its last page the last row meets the footer. This also holds for a header or footer with `-fagus-repeat: at-break` on the row group and for rows that break across pages.

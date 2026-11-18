@@ -682,6 +682,9 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
                 style.object_position = position;
             }
         }
+        // A value that combines `element()` with other values is invalid (CSS Generated Content
+        // for Paged Media 3), here at computed-value time, after `var()`: `content` is `normal`.
+        "content" if fagus_css::paged::misused_element(&tokens) => style.content = Content::Normal,
         "content" => style.content = content(&tokens),
         "counter-reset" => style.counter_reset = counters(&tokens, 0),
         "counter-increment" => style.counter_increment = counters(&tokens, 1),

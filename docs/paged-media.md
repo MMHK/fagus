@@ -403,6 +403,14 @@ A running element is laid out again on every page, with that page's number: a co
 content (`auto`) is as wide as "Page 10 of 12" on page 10. Chrome does not support running elements;
 it shows the element where it is in the document.
 
+`element()` stands alone in `content`: CSS Generated Content for Paged Media does not allow it
+together with other values. `content: element(logo) element(address)` and
+`content: element(title) " – " counter(page)` are invalid, so the declaration is ignored with a
+`css.invalid-value` diagnostic and the margin box keeps the `content` that applied before (with
+`var()`, it shows nothing). Put everything the box shows into one running element, with the page
+number in its generated content as in the footer above, or use the neighbouring margin boxes.
+WeasyPrint shows such combinations; Fagus follows the specification.
+
 ## Repeat a chapter title in the header
 
 Named strings copy text from the document into the margin boxes. `string-set` on an element sets

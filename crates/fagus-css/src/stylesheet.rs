@@ -713,6 +713,18 @@ fn check_block(
                         {
                             Some(("css.invalid-value", "invalid value for `float`".to_owned()))
                         }
+                        // `element()` stands alone (CSS Generated Content for Paged Media 3).
+                        PropertySupport::Known
+                            if name.0.eq_ignore_ascii_case("content")
+                                && !has_variables(&custom.value)
+                                && crate::paged::content_misuses_element(&custom.value) =>
+                        {
+                            Some((
+                                "css.invalid-value",
+                                "invalid value for `content`: `element()` cannot be combined with other values"
+                                    .to_owned(),
+                            ))
+                        }
                         PropertySupport::Known => None,
                         PropertySupport::Ignored => return false,
                         PropertySupport::Unknown => {
@@ -1043,6 +1055,38 @@ mod tests {
             panic!("style rule")
         };
         assert_eq!(rule.declarations.declarations.len(), 3);
+    }
+
+    #[test]
+    fn drops_content_that_combines_element_with_other_values() {
+        let sheet = Stylesheet::parse(
+            "@page {
+               @top-left { content: element(a) element(b) }
+               @top-center { content: element(a) ' – ' counter(page) }
+               @top-right { content: element(a, other) }
+               @bottom-left { content: element(a, last) }
+               @bottom-center { content: ELEMENT( a ) }
+               @bottom-right { content: element(a) var(--more) }
+             }",
+            Origin::Author,
+            "pages.css",
+        );
+        let found: Vec<(u32, &str)> = sheet
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| (diagnostic.line, diagnostic.message.as_str()))
+            .collect();
+        let message = "invalid value for `content`: `element()` cannot be combined with other values; the declaration is ignored";
+        assert_eq!(found, [(2, message), (3, message), (4, message)]);
+        let CssRule::Page(page) = &sheet.sheet.rules.0[0] else {
+            panic!("page rule")
+        };
+        let kept: Vec<usize> = page
+            .rules
+            .iter()
+            .map(|margin| margin.declarations.declarations.len())
+            .collect();
+        assert_eq!(kept, [0, 0, 0, 1, 1, 1]);
     }
 
     #[test]
