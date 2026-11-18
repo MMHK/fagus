@@ -20,6 +20,7 @@
 - { page: resources, title: Resources, group: Guide, seo: "Resources: images, stylesheets, fonts and frames", description: "Where images, style sheets, fonts and frames come from, and what Fagus never loads: no network access, no files outside the directory you allow, no scripts." }
 - { page: deployment, title: Deployment, group: Guide, seo: "Deployment: Docker, Alpine, CI and worker processes", description: "Install the fagus binary in CI and Docker builds, on Alpine, on servers without access to GitHub or from a build of your own; worker processes, speed, memory." }
 - { page: troubleshooting, title: Troubleshooting, group: Guide, seo: "Troubleshooting: errors, diagnostics and Chrome differences", description: "Error messages and what to do about them, diagnostics, differences from Chrome, and moving from Dompdf, mPDF, Browsershot or Snappy." }
+- { page: stability, title: Stability and upgrades, group: Guide, seo: "Stability: versions, deprecations and upgrades", description: "What the public API of Fagus is, what a release may change in the PDF it prints, how deprecations work and which PHP, Laravel and Rust versions it supports." }
 - { page: ai-assistants, title: Docs for AI assistants, group: Guide }
 - { page: css, title: CSS reference, group: Reference, seo: "CSS reference: what Fagus supports, compared with Chrome", description: "What Fagus supports of CSS, grouped by topic, where it differs from Chrome in print and what it does not support. Chrome 157 on Linux is the reference." }
 - { page: paged-media, title: Paged media, group: Reference, seo: "Paged media: page size, headers, footers, page numbers", description: "Page sizes and margins, headers and footers, page numbers, page breaks, tables across pages, tables of contents and print shop marks, all from CSS." }
@@ -35,3 +36,4 @@
 - { page: adr/0002-rust-and-fragmentation-in-layout, title: 2. Rust core with fragmentation inside layout, group: Internals, parent: Architecture decisions, optional: true }
 - { page: adr/0003-css-parsing-and-own-selector-matching, title: "3. lightningcss for parsing, own selector matching and cascade", group: Internals, parent: Architecture decisions, optional: true }
 - { page: adr/0004-extensions-only-where-css-has-no-way, title: 4. Extensions only where CSS has no way, group: Internals, parent: Architecture decisions, optional: true }
+- { page: adr/0005-public-api-and-deprecations, title: "5. Public API, semantic versioning and deprecations", group: Internals, parent: Architecture decisions, optional: true }
