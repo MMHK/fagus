@@ -275,6 +275,7 @@ fn drop_invalid_declarations(
             }
             CssRule::LayerBlock(layer) => drop_invalid_declarations(&mut layer.rules, source, diagnostics),
             CssRule::Page(page) => {
+                check_page_size(&mut page.declarations, page.loc, source, diagnostics);
                 check_block(&mut page.declarations, page.loc, source, diagnostics);
                 for margin in &mut page.rules {
                     check_block(&mut margin.declarations, margin.loc, source, diagnostics);
@@ -282,6 +283,47 @@ fn drop_invalid_declarations(
             }
             _ => {}
         }
+    }
+}
+
+/// Drops the declarations of `size` in an `@page` rule that Chrome does not take (a value with
+/// `var()` is checked once it is substituted), as Chrome drops them, and reports what is wrong
+/// with each: the page keeps the size that applied before.
+fn check_page_size(
+    block: &mut DeclarationBlock<'static>,
+    location: Location,
+    source: &str,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for declarations in [&mut block.declarations, &mut block.important_declarations] {
+        declarations.retain(|property| {
+            let Property::Custom(custom) = property else {
+                return true;
+            };
+            let CustomPropertyName::Unknown(name) = &custom.name else {
+                return true;
+            };
+            if !name.0.eq_ignore_ascii_case("size")
+                || has_variables(&custom.value)
+                || is_wide_keyword(&custom.value)
+            {
+                return true;
+            }
+            let Some(problem) = crate::page_size::page_size_problem(&custom.value) else {
+                return true;
+            };
+            diagnostics.push(Diagnostic {
+                severity: Severity::Warning,
+                code: "css.invalid-value",
+                message: format!(
+                    "invalid value for `size`: {problem}; the declaration is ignored and the page keeps the size that applied before"
+                ),
+                source: source.to_owned(),
+                line: location.line + 1,
+                column: location.column,
+            });
+            false
+        });
     }
 }
 
@@ -1087,6 +1129,56 @@ mod tests {
             .map(|margin| margin.declarations.declarations.len())
             .collect();
         assert_eq!(kept, [0, 0, 0, 1, 1, 1]);
+    }
+
+    #[test]
+    fn drops_and_reports_page_sizes_that_chrome_does_not_take() {
+        let sheet = Stylesheet::parse(
+            "@page { size: A5 }\n@page receipt {\n  size: 80mm auto;\n}\n@media print { @page :first { size: A6 landscape } }\n@page { size: 1px 2px 3px; size: var(--size); size: inherit; margin: 1cm }",
+            Origin::Author,
+            "pages.css",
+        );
+        let found: Vec<(&str, u32, &str)> = sheet
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| (diagnostic.code, diagnostic.line, diagnostic.message.as_str()))
+            .collect();
+        let ignored = "the declaration is ignored and the page keeps the size that applied before";
+        assert_eq!(
+            found,
+            [
+                (
+                    "css.invalid-value",
+                    2,
+                    &*format!(
+                        "invalid value for `size`: a page's height cannot follow its content; give both lengths, width and height, as in `80mm 200mm`; {ignored}"
+                    )
+                ),
+                (
+                    "css.invalid-value",
+                    5,
+                    &*format!(
+                        "invalid value for `size`: Chrome does not know the page size `A6`; write `148mm 105mm`; {ignored}"
+                    )
+                ),
+                (
+                    "css.invalid-value",
+                    6,
+                    &*format!(
+                        "invalid value for `size`: a page takes one length (a square) or two (width and height); {ignored}"
+                    )
+                ),
+            ]
+        );
+        assert_eq!(sheet.diagnostics()[0].source, "pages.css");
+        // The valid declarations stay, and those with `var()` or a CSS-wide keyword.
+        let kept = |rule: &CssRule<'static>| match rule {
+            CssRule::Page(page) => page.declarations.declarations.len(),
+            _ => panic!("page rule"),
+        };
+        assert_eq!(kept(&sheet.sheet.rules.0[0]), 1);
+        assert_eq!(kept(&sheet.sheet.rules.0[1]), 0);
+        assert_eq!(kept(&sheet.sheet.rules.0[3]), 3);
     }
 
     #[test]

@@ -3799,6 +3799,32 @@ mod tests {
     }
 
     #[test]
+    fn keeps_the_page_size_before_a_size_that_chrome_does_not_take_and_says_why() {
+        // `80mm auto` and `A6` are dropped as in Chrome: the page keeps 80mm by 200mm.
+        let output = engine()
+            .render_with_diagnostics(
+                &Document::html(
+                    "<style>@page { size: 80mm 200mm; margin: 4mm }\n@page { size: 80mm auto }\n@page { size: A6 }</style><p>Bon</p>",
+                )
+                .created(CREATED)
+                .tagged(false),
+            )
+            .expect("rendered");
+        let objects = String::from_utf8_lossy(&decoded(&output.pdf)).replace(' ', "");
+        assert!(objects.contains("/MediaBox[00227.04567.12]"), "{objects}");
+        let found: Vec<_> = output
+            .diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.code, diagnostic.line, diagnostic.message.as_str()))
+            .collect();
+        assert_eq!(found.len(), 2, "{found:?}");
+        assert_eq!((found[0].0, found[0].1), ("css.invalid-value", 2), "{found:?}");
+        assert!(found[0].2.contains("give both lengths"), "{found:?}");
+        assert_eq!((found[1].0, found[1].1), ("css.invalid-value", 3), "{found:?}");
+        assert!(found[1].2.contains("write `105mm 148mm`"), "{found:?}");
+    }
+
+    #[test]
     fn lays_shrunk_content_out_on_a_viewport_as_much_larger() {
         // A box 600px wide on a page area 400px wide shrinks the content to 2/3, laid out
         // again on a viewport of 600px: `50vw` is 300px there, a container as wide as the page

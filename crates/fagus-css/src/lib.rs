@@ -17,6 +17,7 @@ mod math_nesting;
 mod media;
 mod negative_basis;
 mod page_selector;
+pub mod page_size;
 pub mod paged;
 mod pattern;
 pub mod properties;

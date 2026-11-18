@@ -44,9 +44,10 @@ Fagus::html(file_get_contents('example.html'))->save('example.pdf');
   `calc()`, `min()`, `max()`, `clamp()`, `em` and viewport units work;
 - `auto`, the default page.
 
-Fagus parses `size` with Chrome's grammar: values Chrome does not accept keep the size that applied
-before, without a warning. `A6` is one of them, as are `80mm auto` and three lengths. For A6, write
-`size: 105mm 148mm`.
+Fagus parses `size` with Chrome's grammar: a value Chrome does not accept is ignored, and the page
+keeps the size that applied before, with a `css.invalid-value` warning that says why. `A6` is one of
+them (write `size: 105mm 148mm`, which the warning suggests), as are three lengths and `80mm auto`:
+a page's height cannot follow its content, so give both lengths.
 
 **Defaults.** A page without `size` is A4. Chrome takes the paper size of the printer or of the
 system's region (Letter in the United States). A server has neither, so Fagus uses A4, so that a
