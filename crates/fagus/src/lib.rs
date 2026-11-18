@@ -3318,6 +3318,30 @@ mod tests {
     }
 
     #[test]
+    fn tags_positioned_boxes_of_the_page_area_but_not_margin_boxes() {
+        // A layer as large as the sheet in a margin box (fold marks outside the page area) is a
+        // header artifact, whatever it holds; an address field positioned in the page area is
+        // content.
+        let html = "<html lang=de><style>
+               @page { size: A4; margin: 15mm 20mm; @top-left-corner { content: element(sheet) } }
+               body { margin: 0 } .sheet { position: running(sheet) }
+               .address { position: absolute; top: calc(45mm - 15mm); left: 0 }</style>
+             <div class=sheet><div style='position: relative; width: 210mm; height: 297mm'>\
+               <div style='position: absolute; top: 105mm'>Falz</div></div></div>
+             <div class=address>Kunde AG</div><p>Text</p>";
+        let pdf = engine()
+            .render(&Document::html(html).created(CREATED))
+            .expect("rendered")
+            .pdf;
+        let content = streams(&pdf);
+        assert_eq!(content.matches("<</MCID ").count(), 2, "{content}");
+        assert!(
+            content.contains("/Artifact<</Attached[/Top]/Subtype/Header/Type/Pagination>>BDC"),
+            "{content}"
+        );
+    }
+
+    #[test]
     fn writes_what_the_document_says_about_itself() {
         let html = "<head><title> Rechnung\n RE-1 </title><meta name=author content=\"Muster GmbH\">\
                     <meta name=Description content=\"Rechnung für Oktober\">\

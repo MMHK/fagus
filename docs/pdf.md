@@ -131,7 +131,9 @@ What Fagus tags:
 What Fagus marks as artifacts, content a reader skips:
 
 - backgrounds, borders and other decoration;
-- margin boxes (headers, footers, page numbers) and running elements;
+- margin boxes (headers, footers, page numbers) and running elements, whatever they hold: keep
+  content that a reader needs in the page area (see
+  [Paged media](paged-media.md#fill-the-whole-page));
 - the copies of repeated content: fixed boxes on every page after the first, table headers and
   footers repeated on later pages;
 - layout tables: tables without `<th>`, `<caption>`, `<thead>`, `<tfoot>`, `summary` or a

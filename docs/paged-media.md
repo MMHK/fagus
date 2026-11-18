@@ -668,7 +668,13 @@ the whole sheet, margins included.
   gradient on an element that fills the page instead.
 - A `position: fixed` element repeats on every page, placed relative to the page area, which makes
   watermarks easy. Marks in the page margins, such as fold marks, belong in a margin box
-  (`content: url(fold-mark.svg)`), since content outside the page area is cut off.
+  (`content: url(fold-mark.svg)`), since content outside the page area is cut off, as in Chrome and
+  as CSS Positioned Layout specifies.
+- In a tagged PDF, what margin boxes show is an artifact that screen readers skip (see
+  [PDF output](pdf.md#tagged-pdf)). Keep content that a reader needs in the page area: the address
+  field of a letter, 45mm from the top edge of the sheet, is
+  `position: absolute; top: calc(45mm - 15mm)` on a first page with a top margin of 15mm, and
+  stays in the document's structure where it is in the HTML.
 
 ## Prepare a document for a print shop
 
