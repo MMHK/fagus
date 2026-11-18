@@ -2,7 +2,7 @@
 
 A release consists of the `fagus` binary for every platform, attached to a GitHub release of `nforst/fagus`, and the Composer package `nforst/fagus`, which installs the binary of its release and accepts no other: `php/fagus/src/Internal/Release.php` lists the SHA-256 of each binary.
 
-1. **Prepare.** Set the version in `Cargo.toml` (`[workspace.package]`), move the entries under `[Unreleased]` in `CHANGELOG.md` to the new version, name a new minor version as the supported one in `SECURITY.md`, run `tools/notices.sh` (it rewrites `THIRD-PARTY-NOTICES` with the licenses of the crates the binary is built from; it needs `cargo install --locked cargo-about --features cli`) and commit.
+1. **Prepare.** Set the version in `Cargo.toml` (`[workspace.package]`), move the entries under `[Unreleased]` in `CHANGELOG.md` to the new version, name a new minor version as the supported one in `SECURITY.md`, run `tools/notices.sh` (it rewrites `THIRD-PARTY-NOTICES` with the licenses of the crates the binary is built from; it needs `cargo install --locked cargo-about --features cli`) and commit. Push the commit and wait until the workflows *CI* and *Release gates* have passed on it (`gh run list --commit "$(git rev-parse HEAD)"`); the [release gates](#release-gates) are the checks of the corpus that a release relies on.
 
    Check the entries against [stability.md](stability.md) first. From 1.0 on, a minor release has nothing under *Removed* and no breaking change under *Changed*; everything it deprecates is under *Deprecated*, with its replacement. A major release removes only what a released minor version deprecated, and `UPGRADING.md` gets a section for it with every breaking change and what to do. A raised minimum (PHP, Laravel, Rust, glibc) is listed under *Changed*.
 2. **Build.** Run the workflow *Release* (`.github/workflows/release.yml`) on that commit with the version, for example `gh workflow run release.yml -f version=0.1.0`. It builds the binaries for Linux (x64 and arm64, glibc 2.17 and musl), macOS (x64 and arm64) and Windows (x64), checks that those the runners can run render a document, and attaches them with their sums (`SHA256SUMS`) to a draft release `v0.1.0`.
@@ -15,8 +15,26 @@ A release consists of the `fagus` binary for every platform, attached to a GitHu
    ```
 
    This commit changes nothing but `Release.php`, so the binaries are those of the code it is tagged with.
-4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. Then run the corpus checks: `tools/validate.sh` and the comparison with Chrome.
+4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. The validation, the determinism and the speed of the corpus were checked by the release gates of the commit; what remains by hand is the comparison with Chrome.
 5. **Tag and publish.** Tag the pin commit `v0.1.0`, push the tag, then publish the draft release, which takes the existing tag. The Composer package is released with the same tag: Packagist reads `composer.json` at the root of this repository. [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) shows the documentation of the new tag within about ten minutes.
+
+## Release gates
+
+The workflow *Release gates* (`.github/workflows/gates.yml`) runs on every push to `main` and every pull request. It builds the binary on Linux x64, Linux arm64 and macOS arm64 and checks:
+
+- **PDF validation** (`tools/validate.sh`): every page of `tests/corpus` rendered plain, as PDF/A-2a, 2b, 2u, 3a, 3b and 3u, and as PDF/UA-1, and the invoices as Factur-X (PDF/A-3b, and PDF/A-3a with PDF/UA-1). Every file passes `qpdf --check`, every PDF/A and PDF/UA file passes veraPDF against the profile of its level, and every invoice passes Mustang. Pages that Fagus refuses for a level (characters the test fonts lack, images without alternative text) are listed and left out; any other failure to write a file fails the check.
+- **Determinism** (`tools/determinism.sh`): every page rendered plain, as PDF/UA-1 and as PDF/A-3u with a fixed `--created`, once in a new engine and once in a warm one, gives the same bytes both times; and the SHA-256 of every file is the same on all three platforms (job *same bytes on every platform*).
+- **Speed** (`tools/bench-smoke.py`): the benchmark invoice of `tools/gen.py` with 0, 3, 150 and 1,700 lines, and one page with the start of a new process, against three times the budgets (2.5 ms, 5 / 35 / 300 ms for 1 / 10 / 100 pages, 10 ms with the process start). That only catches gross regressions on a shared runner; the job summary shows the numbers, and [bench/README.md](../bench/README.md) measures properly.
+
+The scripts run locally too, after `cargo build --release -p fagus-cli`:
+
+```sh
+tools/validate.sh /tmp/fagus-validate         # Java 11 or later; --subset for about 20 pages
+tools/determinism.sh /tmp/fagus-determinism
+python3 tools/bench-smoke.py /tmp/fagus-bench
+```
+
+`tools/validate.sh` downloads veraPDF, Mustang and qpdf at the versions it names into `target/validate-tools` and checks them against their SHA-256; `VERAPDF`, `MUSTANG` and `QPDF` choose others. To update a tool, change its version and sum in the script.
 
 ## Composer
 
