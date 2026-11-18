@@ -1,0 +1,164 @@
+name: Release gates
+
+# The checks a release relies on (docs/releasing.md): the corpus validates as PDF/A, PDF/UA and
+# Factur-X, renders to the same bytes every time and on every platform, and the benchmark
+# invoices render without gross slowdowns.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: build (${{ matrix.name }})
+    strategy:
+      matrix:
+        include:
+          - { name: linux-x64, os: ubuntu-24.04 }
+          - { name: linux-arm64, os: ubuntu-24.04-arm }
+          - { name: macos-arm64, os: macos-15 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # With the components of rust-toolchain.toml, so that rustup does not add them during the
+      # build.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked -p fagus-cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fagus-${{ matrix.name }}
+          path: target/release/fagus
+          if-no-files-found: error
+          retention-days: 7
+
+  # tools/validate.sh: veraPDF for every PDF/A level and PDF/UA-1, qpdf --check for every file,
+  # Mustang for the Factur-X invoices. The tools are pinned and checked in the script.
+  validate:
+    name: PDF/A, PDF/UA, Factur-X
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FAGUS: ${{ github.workspace }}/bin/fagus
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: fagus-linux-x64
+          path: bin
+      - run: chmod +x bin/fagus
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: target/validate-tools
+          key: validate-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/validate.sh') }}
+      - run: tools/validate.sh validation
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: validation
+          path: |
+            validation/*.txt
+            validation/pdf
+          retention-days: 7
+
+  # tools/determinism.sh: every page rendered twice gives the same bytes; the sums of the files go
+  # to the job `same-bytes`, which compares the platforms.
+  determinism:
+    name: determinism (${{ matrix.name }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x64, os: ubuntu-24.04 }
+          - { name: linux-arm64, os: ubuntu-24.04-arm }
+          - { name: macos-arm64, os: macos-15 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      FAGUS: ${{ github.workspace }}/bin/fagus
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: fagus-${{ matrix.name }}
+          path: bin
+      - run: chmod +x bin/fagus
+      - run: tools/determinism.sh determinism
+      # The files too, so that those that differ between platforms can be compared.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: determinism-${{ matrix.name }}
+          path: |
+            determinism/SHA256SUMS
+            determinism/pdf
+          retention-days: 7
+
+  same-bytes:
+    name: same bytes on every platform
+    needs: determinism
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: determinism-*
+          path: determinism
+      - name: Compare the sums with those of Linux x64
+        run: |
+          status=0
+          reference=determinism/determinism-linux-x64/SHA256SUMS
+          for sums in determinism/*/SHA256SUMS; do
+            platform=$(basename "$(dirname "$sums")")
+            platform=${platform#determinism-}
+            # The files whose sum differs, or that only one platform has.
+            different=$(diff <(sort -k2 "$reference") <(sort -k2 "$sums") | sed -n 's/^[<>] [0-9a-f]* *//p' | sort -u)
+            if [ -n "$different" ]; then
+              status=1
+              echo "Different from Linux x64 on $platform:"
+              echo "$different"
+              {
+                echo "### Different from Linux x64 on $platform"
+                echo
+                echo "$different" | awk '{ print "- " $0 }'
+              } >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$platform: $(wc -l < "$sums") files, the same as on Linux x64"
+            fi
+          done
+          exit $status
+
+  # tools/bench-smoke.py: the benchmark invoices against three times the budgets, which only
+  # catches gross regressions on a shared runner. The numbers go into the job summary.
+  bench:
+    name: benchmark smoke test
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      FAGUS: ${{ github.workspace }}/bin/fagus
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: fagus-linux-x64
+          path: bin
+      - run: chmod +x bin/fagus
+      - run: python3 tools/bench-smoke.py bench-smoke
