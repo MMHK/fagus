@@ -2,6 +2,8 @@
 //! into the footnote area at the bottom of the page its call is on. The expected pages are those
 //! `WeasyPrint` 66 makes of the same documents, unless a test says otherwise.
 
+use std::fmt::Write as _;
+
 use super::render;
 use crate::fragment::{Fragment, FragmentKind, Page};
 
@@ -305,7 +307,10 @@ fn sets_inline_and_compact_footnotes_side_by_side() {
 fn puts_the_footnotes_below_the_content_of_a_page_that_grows() {
     // Twenty lines end 450px down; the footnote area follows them and the page grows to hold it
     // and the bottom margin, instead of placing the area at the end of the tallest page.
-    let lines: String = (1..20).map(|line| format!("<p>Line{line}</p>")).collect();
+    let lines = (1..20).fold(String::new(), |mut lines, line| {
+        let _ = write!(lines, "<p>Line{line}</p>");
+        lines
+    });
     let pages = paged(
         "@page { size: 400px 100px; -fagus-page-height: fit-content }",
         &format!("<p>Call<span class=note>Notetext</span></p>{lines}"),
