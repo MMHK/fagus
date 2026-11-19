@@ -1907,8 +1907,9 @@ impl Painter<'_> {
                 }
                 FragmentKind::Anonymous => self.inlines(child, child_x, child_y, in_line),
                 FragmentKind::Text(run) => {
+                    // The marker of a list item or of a footnote labels it.
                     if run.style.visibility == Visibility::Visible {
-                        self.tag_content(child, run.marker);
+                        self.tag_content(child, run.marker || run.style.footnote_marker);
                     }
                     let size = (child.rect.width.to_px(), child.rect.height.to_px());
                     // A marker outside a vertical line is a box of its own in Chrome, whose text

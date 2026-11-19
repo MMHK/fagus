@@ -193,6 +193,16 @@ impl<'a> Builder<'a> {
                 self.list_item(node, parent, style, &inner, lang);
                 return;
             }
+            // A footnote is a note where it is called, its marker a label (PDF/UA-1, §7.9).
+            _ if style.footnote => {
+                let mut note = Element::new(Role::Note);
+                note.language = lang.map(str::to_owned);
+                let note = self.push(parent, note);
+                self.push(note, Element::new(Role::Label));
+                self.own(node, note);
+                self.children(node, note, &inner);
+                return;
+            }
             "table" => {
                 if self.is_data_table(node, data) {
                     inner.table = Some(Table::Data);
@@ -537,6 +547,16 @@ mod tests {
             outline("<ol><li>Eins</li><li>Zwei</li></ol><ul style=\"list-style: square\"><li>A</li></ul>"),
             "Document[L(Decimal)[ListItem[Label ListBody] ListItem[Label ListBody]] \
              L(Square)[ListItem[Label ListBody]]]"
+        );
+    }
+
+    #[test]
+    fn makes_notes_of_footnotes_after_their_calls() {
+        assert_eq!(
+            outline(
+                "<p>Text<span style=\"float: footnote\">Note <em>with</em> <a href=\"#x\">a link</a></span>                  goes on.</p><aside style=\"float: footnote\"><p>Block</p></aside>"
+            ),
+            "Document[Paragraph[Note[Label Emphasis Link]] Note[Label Paragraph]]"
         );
     }
 

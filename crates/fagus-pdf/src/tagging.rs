@@ -95,6 +95,9 @@ pub enum Role {
     Label,
     /// The content of a list item.
     ListBody,
+    /// A footnote, after the text that calls it; its marker is a label. Each gets an ID, as
+    /// PDF/UA asks.
+    Note,
     Table {
         summary: Option<String>,
     },
@@ -276,12 +279,12 @@ impl<'a> Tagger<'a> {
         Ok(element)
     }
 
-    /// The label of the list item an element is in.
+    /// The label of the list item or the footnote an element is in.
     fn label(&self, mut element: usize) -> Option<usize> {
         let elements = &self.structure.elements;
         loop {
             let current = elements.get(element)?;
-            if current.role == Role::ListItem {
+            if matches!(current.role, Role::ListItem | Role::Note) {
                 return current.children.iter().copied().find(|&child| {
                     self.parents.get(child) == Some(&element)
                         && elements.get(child).is_some_and(|child| child.role == Role::Label)
@@ -570,6 +573,7 @@ fn kind(element: &Element) -> TagKind {
         Role::ListItem => Tag::LI.into(),
         Role::Label => Tag::Lbl.into(),
         Role::ListBody => Tag::LBody.into(),
+        Role::Note => Tag::Note.into(),
         Role::Table { summary } => Tag::Table.with_summary(summary.clone()).into(),
         Role::TableHead => Tag::THead.into(),
         Role::TableBody => Tag::TBody.into(),
@@ -882,6 +886,33 @@ mod tests {
             ),
             "L[LI[Lbl[c0.0] LBody[c0.1]]]"
         );
+    }
+
+    #[test]
+    fn puts_footnotes_into_notes_with_their_markers_as_labels() {
+        let nodes = nodes();
+        let structure = structure(
+            vec![
+                (Role::Document, vec![1]),
+                (Role::Paragraph, vec![2]),
+                (Role::Note, vec![3]),
+                (Role::Label, vec![]),
+            ],
+            &[(nodes[1], Owner::Element(1)), (nodes[2], Owner::Element(2))],
+        );
+        let page = vec![
+            content(nodes[1], 0),
+            rect(),
+            Item::Tag(Tag::Content {
+                node: nodes[2],
+                order: 1,
+                marker: true,
+            }),
+            rect(),
+            content(nodes[2], 2),
+            rect(),
+        ];
+        assert_eq!(tree(&structure, &[page], &[]), "P[c0.0 Note[Lbl[c0.1] c0.2]]");
     }
 
     #[test]

@@ -462,6 +462,9 @@ pub struct ComputedStyle {
     pub footnote_display: crate::values::FootnoteDisplay,
     /// `footnote-policy`.
     pub footnote_policy: crate::values::FootnotePolicy,
+    /// Whether this is the style of a `::footnote-marker`, whose text labels its footnote in a
+    /// tagged PDF.
+    pub footnote_marker: bool,
     /// `bookmark-level`: the level of the element's entry in the PDF outline (CSS GCPM 3, §5).
     pub bookmark_level: crate::values::BookmarkLevel,
     /// `bookmark-label`, when it is not the element's text.
@@ -778,6 +781,7 @@ impl ComputedStyle {
             footnote: false,
             footnote_display: crate::values::FootnoteDisplay::Block,
             footnote_policy: crate::values::FootnotePolicy::Auto,
+            footnote_marker: false,
             bookmark_level: crate::values::BookmarkLevel::Auto,
             bookmark_label: None,
             bookmark_closed: false,

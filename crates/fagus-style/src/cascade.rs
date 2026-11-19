@@ -1064,6 +1064,10 @@ pub fn compute_styles_with(
                     root_font_size,
                     viewport,
                 ) {
+                    let pseudo = ComputedStyle {
+                        footnote_marker: key == PseudoKey::FootnoteMarker,
+                        ..pseudo
+                    };
                     styled.pseudo.insert((element, key), Arc::new(pseudo));
                 }
             }
