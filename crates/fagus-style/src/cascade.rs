@@ -210,8 +210,9 @@ impl<'a> Declarations<'a> {
                     lightningcss::properties::CSSWideKeyword::Initial => Keyword::Initial,
                     _ => Keyword::Unset,
                 };
-                // `all` resets every property except custom properties.
-                let ids: Vec<_> = self.index.keys().cloned().collect();
+                // `all` resets every property except custom properties, `direction` and
+                // `unicode-bidi` (CSS Cascade 4, §3.2).
+                let ids: Vec<_> = self.index.keys().filter(|id| all_resets(id)).cloned().collect();
                 for id in ids {
                     self.set(id, Declared::Keyword(keyword));
                 }
@@ -236,6 +237,15 @@ impl<'a> Declarations<'a> {
             },
         }
     }
+}
+
+/// Whether the shorthand `all` sets a property: not `direction` and `unicode-bidi`, nor custom
+/// properties.
+fn all_resets(id: &PropertyId<'_>) -> bool {
+    !matches!(
+        id,
+        PropertyId::Direction | PropertyId::UnicodeBidi | PropertyId::Custom(CustomPropertyName::Custom(_))
+    )
 }
 
 /// How a declaration rolls the cascade back: `revert` to the origin before its own, as if
@@ -346,6 +356,7 @@ fn cascade_declarations<'a>(
                 .index
                 .keys()
                 .chain(earlier.index.keys())
+                .filter(|id| all_resets(id))
                 .cloned()
                 .collect(),
             Property::Unparsed(unparsed) => longhand_ids(&unparsed.property_id),

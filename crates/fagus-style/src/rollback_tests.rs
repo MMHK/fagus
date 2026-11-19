@@ -139,3 +139,20 @@ fn interpolates_registered_custom_properties_between_keyframes() {
     // `revert-layer` on a custom property outside animations.
     assert_eq!(width("layered"), Size::Length(LengthPercentage::Px(40.0)));
 }
+
+#[test]
+fn all_leaves_direction_and_unicode_bidi_alone() {
+    // WPT `all-prop-001`: `all: initial` after `direction: rtl; unicode-bidi: bidi-override`
+    // resets everything else.
+    let (document, styled) = styles(
+        r#"<div id="test"></div>"#,
+        "#test { direction: rtl; unicode-bidi: bidi-override; color: red; --x: 1 }
+        #test { all: initial }
+",
+    );
+    let style = by_id(&document, &styled, "test");
+    assert_eq!(style.direction, crate::values::Direction::Rtl);
+    assert_eq!(style.unicode_bidi, crate::values::UnicodeBidi::BidiOverride);
+    assert_eq!(style.color, Rgba::from_u8(0, 0, 0, 1.0));
+    assert!(style.custom_properties.contains_key("--x"));
+}
