@@ -1,8 +1,8 @@
 name: Release gates
 
 # The checks a release relies on (docs/releasing.md): the corpus validates as PDF/A, PDF/UA and
-# Factur-X, renders to the same bytes every time and on every platform, and the benchmark
-# invoices render without gross slowdowns.
+# Factur-X, renders to the same bytes every time and on every platform, looks like Chrome's print,
+# and the benchmark invoices render without gross slowdowns.
 on:
   push:
     branches: [main]
@@ -40,6 +40,16 @@ jobs:
         with:
           name: fagus-${{ matrix.name }}
           path: target/release/fagus
+          if-no-files-found: error
+          retention-days: 7
+      # The harness of the comparison with Chrome, from the crates just built.
+      - if: matrix.name == 'linux-x64'
+        run: cargo build --release --locked -p fagus-testkit
+      - if: matrix.name == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fagus-conformance-linux-x64
+          path: target/release/fagus-conformance
           if-no-files-found: error
           retention-days: 7
 
@@ -144,6 +154,46 @@ jobs:
             fi
           done
           exit $status
+
+  # tools/chrome-corpus.sh: every page of the corpus printed by Chrome for Testing (the version
+  # pinned in the script) and by Fagus, both drawn by pdftoppm; at least 95 % of the documents
+  # must match within the tolerance. The fonts of tests/fonts are installed so that Chrome has
+  # them as Fagus does.
+  chrome:
+    name: corpus against Chrome
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FAGUS_CONFORMANCE: ${{ github.workspace }}/bin/fagus-conformance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: fagus-conformance-linux-x64
+          path: bin
+      - run: chmod +x bin/fagus-conformance
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+      - name: Install the test fonts
+        run: |
+          mkdir -p ~/.local/share/fonts
+          cp tests/fonts/*.ttf ~/.local/share/fonts/
+          fc-cache -f
+      - uses: actions/cache@v4
+        with:
+          path: target/chrome
+          key: chrome-${{ runner.os }}-${{ hashFiles('tools/chrome-corpus.sh') }}
+      - run: tools/chrome-corpus.sh chrome-corpus
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chrome-corpus
+          path: |
+            chrome-corpus/results.txt
+            chrome-corpus/summary.md
+            chrome-corpus/chrome
+            chrome-corpus/fagus
+          retention-days: 7
 
   # tools/bench-smoke.py: the benchmark invoices against three times the budgets, which only
   # catches gross regressions on a shared runner. The numbers go into the job summary.

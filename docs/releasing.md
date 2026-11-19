@@ -17,7 +17,7 @@ A release consists of the `fagus` binary for every platform, attached to a GitHu
    With the binaries next to `SHA256SUMS`, the script checks each against its sum and with `gh attestation verify` against its attestation (built by `.github/workflows/release.yml` of this repository) before it pins anything.
 
    This commit changes nothing but `Release.php`, so the binaries are those of the code it is tagged with.
-4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. The validation, the determinism and the speed of the corpus were checked by the release gates of the commit; what remains by hand is the comparison with Chrome.
+4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. The validation, the determinism, the speed and the comparison of the corpus with Chrome were checked by the release gates of the commit; what remains by hand is a look at the documents that do not match Chrome, which the job summary lists.
 5. **Tag and publish.** Tag the pin commit `v0.1.0`, push the tag, then publish the draft release, which takes the existing tag. The Composer package is released with the same tag: Packagist reads `composer.json` at the root of this repository. [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) shows the documentation of the new tag within about ten minutes.
 
 ## Release gates
@@ -26,6 +26,7 @@ The workflow *Release gates* (`.github/workflows/gates.yml`) runs on every push 
 
 - **PDF validation** (`tools/validate.sh`): every page of `tests/corpus` rendered plain, encrypted (checked by qpdf with its password), as PDF/A-2a, 2b, 2u, 3a, 3b and 3u, and as PDF/UA-1, and the invoices as Factur-X (PDF/A-3b, and PDF/A-3a with PDF/UA-1). Every file passes `qpdf --check`, every PDF/A and PDF/UA file passes veraPDF against the profile of its level, and every invoice passes Mustang. Pages that Fagus refuses for a level (characters the test fonts lack, images without alternative text) are listed and left out; any other failure to write a file fails the check.
 - **Determinism** (`tools/determinism.sh`): every page rendered plain, as PDF/UA-1 and as PDF/A-3u with a fixed `--created`, once in a new engine and once in a warm one, gives the same bytes both times; and the SHA-256 of every file is the same on all three platforms (job *same bytes on every platform*).
+- **Chrome** (`tools/chrome-corpus.sh`): every page of `tests/corpus` printed by Chrome for Testing (the version the script pins, on Linux x64) and by Fagus, both drawn by `pdftoppm` at 50 dpi. A document matches when both have the same number of pages and on no page more than 0.5 % of the pixels differ beyond antialiasing; at least 95 % of the documents must match, leaving out those that use print features Chrome lacks (running elements, named strings, cross references, leaders, footnotes). The job summary lists those that do not; [compatibility.md](compatibility.md) describes the comparison.
 - **Speed** (`tools/bench-smoke.py`): the benchmark invoice of `tools/gen.py` with 0, 3, 150 and 1,700 lines, and one page with the start of a new process, against three times the budgets (2.5 ms, 5 / 35 / 300 ms for 1 / 10 / 100 pages, 10 ms with the process start). That only catches gross regressions on a shared runner; the job summary shows the numbers, and [bench/README.md](../bench/README.md) measures properly.
 
 The scripts run locally too, after `cargo build --release -p fagus-cli`:
@@ -34,6 +35,7 @@ The scripts run locally too, after `cargo build --release -p fagus-cli`:
 tools/validate.sh /tmp/fagus-validate         # Java 11 or later; --subset for about 20 pages
 tools/determinism.sh /tmp/fagus-determinism
 python3 tools/bench-smoke.py /tmp/fagus-bench
+CHROME=/path/to/chrome tools/chrome-corpus.sh /tmp/fagus-chrome   # pdftoppm; Linux x64 downloads Chrome
 ```
 
 `tools/validate.sh` downloads veraPDF, Mustang and qpdf at the versions it names into `target/validate-tools` and checks them against their SHA-256; `VERAPDF`, `MUSTANG` and `QPDF` choose others. To update a tool, change its version and sum in the script.
