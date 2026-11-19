@@ -16,8 +16,8 @@
 # CHROME names the Chrome binary. Without it, the script downloads Chrome for Testing at the
 # version below (Linux x64 only), checks its SHA-256 and keeps it in target/chrome, and gives
 # Chrome and Fagus the same fixed set of fonts (see set_up_fonts). With CHROME, Fagus renders with
-# tests/fonts and the fonts installed on the machine, as Chrome uses those. FAGUS_CONFORMANCE names a
-# harness binary built before (otherwise cargo builds it). The PDFs go to OUT_DIR/chrome and
+# tests/fonts and the fonts installed on the machine, as Chrome uses those. FAGUS_CONFORMANCE
+# names a harness binary built before (otherwise cargo builds it). The PDFs go to OUT_DIR/chrome and
 # OUT_DIR/fagus, the result of each document to OUT_DIR/results.txt, the summary to
 # OUT_DIR/summary.md (and the job summary on GitHub Actions) and the expectations this run would
 # write to OUT_DIR/expectations.txt; --update writes them into tools/chrome-expectations.txt.

@@ -100,7 +100,8 @@ animations; see the [CSS reference](css.md) for what Fagus supports.
 The documents of the corpus in `tests/corpus` (invoices, letters, reports, books, forms and
 pages exported from common tools and frameworks, in many scripts and languages) are printed by
 Chrome for Testing 157 on Linux and by Fagus, and both PDFs are drawn by the same rasterizer at
-50 dpi. A document matches when both have the same number of pages and on no page more than 0.5 %
+50 dpi. Both see the same fixed set of fonts: the test fonts, Liberation, DejaVu and one Noto
+family for each other script of the corpus. A document matches when both have the same number of pages and on no page more than 0.5 %
 of the pixels differ beyond antialiasing and glyphs a pixel apart. Documents that use print
 features Chrome does not have (running elements, named strings, cross references, leaders,
 footnotes, blank pages for left and right page breaks), Fagus' own layers, TIFF images or web
