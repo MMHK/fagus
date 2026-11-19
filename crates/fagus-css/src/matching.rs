@@ -58,6 +58,11 @@ pub enum PseudoElementKind {
     Column,
     /// `::column::scroll-marker`: the scroll marker of a column.
     ColumnScrollMarker,
+    /// `::footnote-call`: what stays in the text where a footnote's element was (CSS Generated
+    /// Content for Paged Media 3, §2.4).
+    FootnoteCall,
+    /// `::footnote-marker`: the number at the start of a footnote.
+    FootnoteMarker,
     /// Pseudo-elements without effect on print (`::selection`, `::backdrop`, …).
     Other,
 }
@@ -140,6 +145,12 @@ impl PseudoElementKind {
                 Self::ScrollMarkerGroup
             }
             PseudoElement::Custom { name } if name.eq_ignore_ascii_case("column") => Self::Column,
+            PseudoElement::Custom { name } if name.eq_ignore_ascii_case("footnote-call") => {
+                Self::FootnoteCall
+            }
+            PseudoElement::Custom { name } if name.eq_ignore_ascii_case("footnote-marker") => {
+                Self::FootnoteMarker
+            }
             PseudoElement::CustomFunction { name, arguments }
                 if name.eq_ignore_ascii_case("scroll-button") =>
             {

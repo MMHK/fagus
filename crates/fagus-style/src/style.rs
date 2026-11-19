@@ -455,6 +455,13 @@ pub struct ComputedStyle {
     pub string_set: Vec<(String, Vec<ContentItem>)>,
     /// `position: running(name)`.
     pub running: Option<Arc<str>>,
+    /// `float: footnote`: the element is a footnote, which goes into the footnote area of the
+    /// page its call is on (CSS Generated Content for Paged Media 3, §2). `float` is then `none`.
+    pub footnote: bool,
+    /// `footnote-display`.
+    pub footnote_display: crate::values::FootnoteDisplay,
+    /// `footnote-policy`.
+    pub footnote_policy: crate::values::FootnotePolicy,
     /// `bookmark-level`: the level of the element's entry in the PDF outline (CSS GCPM 3, §5).
     pub bookmark_level: crate::values::BookmarkLevel,
     /// `bookmark-label`, when it is not the element's text.
@@ -768,6 +775,9 @@ impl ComputedStyle {
             page: None,
             string_set: Vec::new(),
             running: None,
+            footnote: false,
+            footnote_display: crate::values::FootnoteDisplay::Block,
+            footnote_policy: crate::values::FootnotePolicy::Auto,
             bookmark_level: crate::values::BookmarkLevel::Auto,
             bookmark_label: None,
             bookmark_closed: false,
@@ -1006,9 +1016,12 @@ impl ComputedStyle {
         self.float != Float::None
     }
 
-    /// Whether the box is out of normal flow: absolutely positioned, fixed or running.
+    /// Whether the box is out of normal flow: absolutely positioned, fixed, running or a
+    /// footnote.
     pub fn is_out_of_flow(&self) -> bool {
-        matches!(self.position, Position::Absolute | Position::Fixed) || self.running.is_some()
+        matches!(self.position, Position::Absolute | Position::Fixed)
+            || self.running.is_some()
+            || self.footnote
     }
 
     /// Whether the box is positioned (any `position` but `static`).

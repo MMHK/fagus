@@ -521,9 +521,10 @@ impl Layouter<'_> {
                     let key = (layout_box.node, Arc::as_ptr(&layout_box.style) as usize);
                     self.stacking_owners.borrow_mut().insert(key, owner);
                 }
-                // Fixed boxes are placed above; running elements go to the page margins.
+                // Fixed boxes are placed above; running elements go to the page margins,
+                // footnotes to the footnote area.
                 let style = &self.tree.get(item.id).style;
-                if style.position == Position::Fixed || style.running.is_some() {
+                if style.position == Position::Fixed || style.running.is_some() || style.footnote {
                     continue;
                 }
                 let containing = &item.containing;

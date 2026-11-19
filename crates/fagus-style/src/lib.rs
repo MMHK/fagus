@@ -1641,6 +1641,37 @@ mod tests {
     }
 
     #[test]
+    fn styles_footnotes_with_their_calls_and_markers() {
+        let (document, styled) = styles(
+            "<p id=p>Text<span id=a>Note</span><span id=b>Not</span><span id=c>Kept</span></p>",
+            "span { float: footnote; font-size: 10px }
+             #a { footnote-display: inline; footnote-policy: line }
+             #b { position: absolute }
+             #c { float: left; float: footnote; float: none }
+             #a::footnote-call { color: red }",
+        );
+        let style = |id| by_id(&document, &styled, id);
+        let a = style("a");
+        assert!(a.footnote && a.float == values::Float::None);
+        assert_eq!(a.display, Display::BLOCK);
+        assert_eq!(a.footnote_display, values::FootnoteDisplay::Inline);
+        assert_eq!(a.footnote_policy, values::FootnotePolicy::Line);
+        // Absolutely positioned boxes do not float, nor are they footnotes.
+        assert!(!style("b").footnote);
+        assert!(!style("c").footnote);
+        assert!(!style("p").footnote);
+        let node = document.find("span").expect("span");
+        let call = styled.pseudo(node, PseudoKey::FootnoteCall).expect("call");
+        assert_eq!(call.color, Rgba::from_u8(255, 0, 0, 1.0));
+        assert_eq!(call.vertical_align, values::VerticalAlign::Super);
+        assert!(!call.footnote);
+        let marker = styled.pseudo(node, PseudoKey::FootnoteMarker).expect("marker");
+        assert!(matches!(&marker.content, values::Content::Items(items) if items.len() == 2));
+        let p = document.find("p").expect("p");
+        assert!(styled.pseudo(p, PseudoKey::FootnoteCall).is_none());
+    }
+
+    #[test]
     fn styles_scroll_markers_groups_and_buttons() {
         use fagus_css::matching::ScrollDirection;
         let (document, styled) = styles(

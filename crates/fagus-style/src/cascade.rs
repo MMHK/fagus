@@ -599,6 +599,10 @@ pub enum PseudoKey {
     ScrollButton(fagus_css::matching::ScrollDirection),
     /// `::column::scroll-marker` of a multi-column container, inheriting from the element.
     ColumnScrollMarker,
+    /// `::footnote-call` of a footnote, inheriting from the element.
+    FootnoteCall,
+    /// `::footnote-marker` of a footnote, inheriting from the element.
+    FootnoteMarker,
 }
 
 impl StyledDocument {
@@ -1011,6 +1015,8 @@ pub fn compute_styles_with(
             ) {
                 let pseudo = ComputedStyle {
                     before_of: (key == PseudoKey::Before).then_some(element),
+                    // Only elements are footnotes.
+                    footnote: false,
                     ..pseudo
                 };
                 // A `::before` or `::after` that is a list item has a marker too.
@@ -1037,6 +1043,29 @@ pub fn compute_styles_with(
                         .insert((element, marker_key), Arc::new(marker_style(marker, &pseudo)));
                 }
                 styled.pseudo.insert((element, key), Arc::new(pseudo));
+            }
+        }
+        // The call and the marker of a footnote (CSS Generated Content for Paged Media 3, §2.4),
+        // which the user agent stylesheet gives their content.
+        if style.footnote {
+            for (key, kind) in [
+                (PseudoKey::FootnoteCall, PseudoElementKind::FootnoteCall),
+                (PseudoKey::FootnoteMarker, PseudoElementKind::FootnoteMarker),
+            ] {
+                if let Some(pseudo) = compute_pseudo(
+                    document,
+                    rules,
+                    &pseudo_containers,
+                    (&expansions, &registry, &units, &ancestors),
+                    element,
+                    kind,
+                    &[],
+                    &style,
+                    root_font_size,
+                    viewport,
+                ) {
+                    styled.pseudo.insert((element, key), Arc::new(pseudo));
+                }
             }
         }
         // The first line and letter of a block container (CSS Pseudo-Elements 4, §2).
@@ -3033,7 +3062,20 @@ fn finish(style: &mut ComputedStyle, is_root: bool) {
             }
         }
     }
-    if is_root || style.float != Float::None || matches!(style.position, Position::Absolute | Position::Fixed)
+    // A footnote is an element in the flow, not the root (CSS GCPM 3, §2.1); it is laid out as
+    // a block in the footnote area, where `footnote-display` places its lines.
+    if style.footnote
+        && (is_root
+            || matches!(style.position, Position::Absolute | Position::Fixed)
+            || style.running.is_some()
+            || matches!(style.display, Display::None | Display::Contents))
+    {
+        style.footnote = false;
+    }
+    if is_root
+        || style.float != Float::None
+        || style.footnote
+        || matches!(style.position, Position::Absolute | Position::Fixed)
     {
         style.originally_inline = !is_root
             && matches!(
@@ -3431,7 +3473,12 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedStyle, style: &mut C
             "break-after" | "page-break-after" => copy!(break_after),
             "break-inside" | "page-break-inside" => copy!(break_inside),
             "content" => copy!(content),
-            "float" => copy!(float),
+            "float" => {
+                copy!(float);
+                copy!(footnote);
+            }
+            "footnote-display" => copy!(footnote_display),
+            "footnote-policy" => copy!(footnote_policy),
             "shape-outside" => copy!(shape_outside),
             "shape-margin" => copy!(shape_margin),
             "shape-image-threshold" => copy!(shape_image_threshold),

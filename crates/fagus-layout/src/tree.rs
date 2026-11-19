@@ -192,6 +192,10 @@ pub enum PageCounter {
     /// `counter(-fagus-previous-page)`, a Fagus extension: the number of the page before ("carried
     /// over from page 2").
     Previous,
+    /// `counter(footnote)` in the call or the marker of the footnote numbered `ordinal` (from 0,
+    /// in document order): `value` where no `@page` rule resets the counter, else counted from
+    /// the first footnote called on the page (see `Layouter::footnote_numbering`).
+    Footnote { value: i32, ordinal: u32 },
 }
 
 impl PageCounter {
@@ -313,6 +317,9 @@ pub struct BoxTree {
     pub(crate) formulas: FxHashMap<BoxId, Arc<crate::math::MathBox>>,
     /// The replaced boxes of the images in the `content` of page margin boxes, by URL.
     pub(crate) margin_images: FxHashMap<Arc<str>, BoxId>,
+    /// The boxes of footnotes (`float: footnote`), which go into the footnote area of the page
+    /// their call is on, with their numbers in document order (from 0).
+    pub(crate) footnotes: FxHashMap<BoxId, u32>,
 }
 
 impl BoxTree {
@@ -727,6 +734,10 @@ impl BoxTree {
                 parent: std::cell::Cell::default(),
                 anonymous_tables: RefCell::default(),
                 contents_parents: RefCell::default(),
+                has_footnotes: styled.all().any(|style| style.footnote),
+                footnote: std::cell::Cell::new(None),
+                next_footnote: std::cell::Cell::new(0),
+                footnote_element: std::cell::Cell::new(None),
             };
             builder.enter(root, style);
             let root_box = builder.block_level(&mut tree, root, Arc::clone(style));
@@ -1127,6 +1138,15 @@ struct Builder<'a> {
     /// The `display: contents` elements whose children are being collected, by style, with the
     /// style of the box their children go into, which anonymous tables take theirs from.
     contents_parents: RefCell<Vec<(Arc<ComputedStyle>, Arc<ComputedStyle>)>>,
+    /// Whether the document has footnotes, which count with the `footnote` counter from its
+    /// root.
+    has_footnotes: bool,
+    /// The number of the footnote whose call or marker is being built, and of the next.
+    footnote: std::cell::Cell<Option<u32>>,
+    next_footnote: std::cell::Cell<u32>,
+    /// The footnote whose box is being built, with its number: its content starts with its
+    /// marker.
+    footnote_element: std::cell::Cell<Option<(NodeId, u32)>>,
 }
 
 /// Where the first letter of a text lies, as byte offsets: the first typographic character unit
@@ -1920,6 +1940,14 @@ impl Builder<'_> {
             return;
         }
         if only.is_none() {
+            // A footnote starts with its marker (CSS Generated Content for Paged Media 3, §2.4).
+            if let Some((footnote, ordinal)) = self.footnote_element.get()
+                && footnote == element
+            {
+                let outer = self.footnote.replace(Some(ordinal));
+                self.pseudo(tree, element, PseudoKey::FootnoteMarker, false, out);
+                self.footnote.set(outer);
+            }
             self.pseudo(tree, element, PseudoKey::Before, false, out);
         }
         let details = self.details(element);
@@ -1978,6 +2006,10 @@ impl Builder<'_> {
             let strings_before = self.string_log.borrow().len();
             if child_style.display != Display::None {
                 self.enter(child, child_style);
+            }
+            if child_style.footnote {
+                self.footnote(tree, child, child_style, out);
+                continue;
             }
             if child_style.is_out_of_flow() && child_style.display != Display::None {
                 let id = self.block_level(tree, child, Arc::clone(child_style));
@@ -2270,8 +2302,20 @@ impl Builder<'_> {
         let depth = self.depth(element);
         let data = self.document.element(element);
         let mut counters = self.counters.borrow_mut();
+        let names = |directives: &[(String, i32)]| directives.iter().any(|(name, _)| name == "footnote");
+        // Footnotes count from the root (CSS Generated Content for Paged Media 3, §2.5), and
+        // each counts itself unless it says otherwise, as list items count `list-item`.
+        if self.has_footnotes
+            && self.document.document_element() == Some(element)
+            && !names(&style.counter_reset)
+        {
+            counters.reset("footnote", 0, depth);
+        }
         for (name, value) in &style.counter_reset {
             counters.reset(name, *value, depth);
+        }
+        if style.footnote && !names(&style.counter_increment) && !names(&style.counter_set) {
+            counters.increment("footnote", 1, depth);
         }
         // Lists and their items count `list-item` unless the element sets it itself, as Chrome
         // does instead of a user agent rule (CSS Lists 3, §4.6).
@@ -2908,6 +2952,38 @@ impl Builder<'_> {
         id
     }
 
+    /// A footnote (`float: footnote`, CSS Generated Content for Paged Media 3, §2): its box goes
+    /// into the footnote area of a page, and its call (`::footnote-call`) stays in its place, in
+    /// `out`, with the box's placeholder inside, which tells the page that the footnote is called
+    /// there and keeps the two on one line.
+    fn footnote(
+        &self,
+        tree: &mut BoxTree,
+        element: NodeId,
+        style: &Arc<ComputedStyle>,
+        out: &mut Vec<Collected>,
+    ) {
+        let ordinal = self.next_footnote.get();
+        self.next_footnote.set(ordinal.saturating_add(1));
+        let mut call = Vec::new();
+        let outer = self.footnote.replace(Some(ordinal));
+        self.pseudo(tree, element, PseudoKey::FootnoteCall, false, &mut call);
+        self.footnote.set(outer);
+        let outer = self.footnote_element.replace(Some((element, ordinal)));
+        let id = self.block_level(tree, element, Arc::clone(style));
+        self.footnote_element.set(outer);
+        tree.footnotes.insert(id, ordinal);
+        let placeholder = Collected::Inline(InlineItem::OutOfFlow(id));
+        match call
+            .iter()
+            .position(|item| matches!(item, Collected::Inline(InlineItem::Open { .. })))
+        {
+            Some(open) => call.insert(open + 1, placeholder),
+            None => call.insert(0, placeholder),
+        }
+        out.extend(call);
+    }
+
     /// Adds the box or inline items of the element's `::before` or `::after` to `out`. In a flex
     /// or grid container (`item`), the pseudo-element is an item like the element's children.
     fn pseudo(
@@ -3126,6 +3202,27 @@ impl Builder<'_> {
                         style: Arc::clone(style),
                     });
                 }
+                // The number of a footnote in its call or marker, which `@page` rules may count
+                // from each page.
+                ContentItem::Counter { name, style: format }
+                    if name == "footnote"
+                        && let Some(ordinal) = self.footnote.get() =>
+                {
+                    if !text.is_empty() {
+                        result.push(InlineItem::Text {
+                            text: std::mem::take(&mut text),
+                            style: Arc::clone(style),
+                        });
+                    }
+                    result.push(InlineItem::PageNumber {
+                        counter: PageCounter::Footnote {
+                            value: self.counters.borrow().value("footnote"),
+                            ordinal,
+                        },
+                        format: format.clone(),
+                        style: Arc::clone(style),
+                    });
+                }
                 ContentItem::TargetCounter {
                     target,
                     name,
@@ -3334,7 +3431,7 @@ impl Builder<'_> {
                         style: Arc::clone(child_style),
                     });
                 }
-                _ if child_style.is_out_of_flow() => {
+                _ if child_style.is_out_of_flow() && !child_style.footnote => {
                     self.flush_item_run(tree, style, &mut run, &mut children);
                     let id = self.block_level(tree, child, Arc::clone(child_style));
                     if child_style.position == Position::Fixed {
@@ -3348,12 +3445,14 @@ impl Builder<'_> {
                     let item_style = if child_style.display.is_block_level()
                         && !matches!(child_style.display, Display::Internal(_))
                         && !child_style.is_floating()
+                        && !child_style.footnote
                     {
                         Arc::clone(child_style)
                     } else {
                         Arc::new(ComputedStyle {
                             display: child_style.display.blockify(),
                             float: fagus_style::values::Float::None,
+                            footnote: false,
                             ..(**child_style).clone()
                         })
                     };

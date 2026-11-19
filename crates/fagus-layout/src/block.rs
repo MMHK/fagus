@@ -676,6 +676,11 @@ pub struct Layouter<'a> {
     /// The value of the page counter in the margin box being laid out, where it resets, sets or
     /// increments the counter of its own.
     pub(crate) margin_page_value: std::cell::Cell<Option<i32>>,
+    /// Where an `@page` rule resets the `footnote` counter for the page being laid out (or the
+    /// page the footnote being laid out is called on): the number of the first footnote called
+    /// on the page (from 0, in document order) and the value the counter is reset to. The
+    /// footnotes called there count from that value on.
+    pub(crate) footnote_numbering: std::cell::Cell<Option<(u32, i32)>>,
     /// Where `string()` in generated content takes its value from in the string log, while the
     /// rows of a table's header or footer are laid out for one page; `None` elsewhere.
     pub(crate) string_position: std::cell::Cell<Option<usize>>,
@@ -973,6 +978,7 @@ impl<'a> Layouter<'a> {
             page_number: std::cell::Cell::new((1, 0)),
             page_values: RefCell::default(),
             margin_page_value: std::cell::Cell::new(None),
+            footnote_numbering: std::cell::Cell::new(None),
             string_position: std::cell::Cell::new(None),
             inline_containing_height: std::cell::Cell::new(None),
             intrinsic_height: std::cell::Cell::new(None),

@@ -1,6 +1,104 @@
 //! Values of CSS Generated Content for Paged Media that lightningcss does not parse.
 
+use std::borrow::Cow;
+
 use lightningcss::properties::custom::{Token, TokenList, TokenOrValue};
+use lightningcss::rules::page::PageMarginRule;
+
+/// The custom property that [`encode_footnote_areas`] puts first in the declarations of each
+/// `@footnote` rule: its name holds a character of the private use area, which no property of a
+/// stylesheet has.
+const FOOTNOTE_AREA: &str = "--\u{E001}";
+
+/// Writes each `@footnote` rule inside an `@page` rule (CSS Generated Content for Paged Media 3,
+/// §2.2) as a margin rule that lightningcss takes, `@bottom-center`, with a declaration that
+/// tells it apart ([`is_footnote_area`]): lightningcss drops at-rules in `@page` that are not
+/// margin rules. The lines and the rest of the text keep their places.
+pub fn encode_footnote_areas(css: &str) -> Cow<'_, str> {
+    let found = css
+        .as_bytes()
+        .windows(9)
+        .any(|window| window.eq_ignore_ascii_case(b"@footnote"));
+    if !found {
+        return Cow::Borrowed(css);
+    }
+    let mut input = cssparser::ParserInput::new(css);
+    let mut parser = cssparser::Parser::new(&mut input);
+    // The byte ranges of the `@footnote` keywords, and where their blocks start.
+    let mut edits = Vec::new();
+    scan_footnotes(&mut parser, false, &mut edits);
+    if edits.is_empty() {
+        return Cow::Borrowed(css);
+    }
+    let mut out = String::with_capacity(css.len() + 32 * edits.len());
+    let mut at = 0;
+    for (start, end, block) in edits {
+        out.push_str(&css[at..start]);
+        out.push_str("@bottom-center");
+        out.push_str(&css[end..block]);
+        out.push_str(FOOTNOTE_AREA);
+        out.push_str(":1;");
+        at = block;
+    }
+    out.push_str(&css[at..]);
+    Cow::Owned(out)
+}
+
+/// Collects the edits of [`encode_footnote_areas`] in the rules `parser` reads: the `@footnote`
+/// rules directly in an `@page` rule (`in_page`), and those of the blocks inside.
+fn scan_footnotes(
+    parser: &mut cssparser::Parser<'_, '_>,
+    in_page: bool,
+    edits: &mut Vec<(usize, usize, usize)>,
+) {
+    use cssparser::Token;
+    let mut page = false;
+    let mut footnote: Option<(usize, usize)> = None;
+    loop {
+        let start = parser.position().byte_index();
+        let token = match parser.next_including_whitespace_and_comments() {
+            Ok(token) => token.clone(),
+            Err(_) => return,
+        };
+        match token {
+            Token::AtKeyword(name) if name.eq_ignore_ascii_case("page") => {
+                page = true;
+                footnote = None;
+            }
+            Token::AtKeyword(name) if in_page && name.eq_ignore_ascii_case("footnote") => {
+                footnote = Some((start, parser.position().byte_index()));
+            }
+            Token::CurlyBracketBlock => {
+                let block = parser.position().byte_index();
+                if let Some((start, end)) = footnote.take() {
+                    edits.push((start, end, block));
+                }
+                let inner_page = std::mem::take(&mut page);
+                let _ = parser.parse_nested_block(|inner| {
+                    scan_footnotes(inner, inner_page, edits);
+                    Ok::<(), cssparser::ParseError<'_, ()>>(())
+                });
+            }
+            Token::Semicolon => {
+                page = false;
+                footnote = None;
+            }
+            Token::WhiteSpace(_) | Token::Comment(_) => {}
+            // Only white space may come between `@footnote` and its block.
+            _ => footnote = None,
+        }
+    }
+}
+
+/// Whether a margin rule is an `@footnote` rule that [`encode_footnote_areas`] wrote.
+pub fn is_footnote_area(rule: &PageMarginRule<'_>) -> bool {
+    use lightningcss::properties::Property;
+    use lightningcss::properties::custom::CustomPropertyName;
+    rule.declarations.declarations.iter().any(|property| {
+        matches!(property, Property::Custom(custom)
+            if matches!(&custom.name, CustomPropertyName::Custom(name) if name.0.as_ref() == FOOTNOTE_AREA))
+    })
+}
 
 /// The name in `position: running(name)` (CSS GCPM 3, §2.1).
 pub fn running_name(tokens: &TokenList<'_>) -> Option<String> {
@@ -180,6 +278,25 @@ mod tests {
             Property::Unparsed(unparsed) => running_name(&unparsed.value),
             _ => None,
         }
+    }
+
+    #[test]
+    fn writes_footnote_rules_as_margin_rules() {
+        let css = "@page { margin: 1cm; @footnote { border-top: 1px solid } }\n@media print { @page :left { @FOOTNOTE\n{ padding: 2px } } }\n.a { --x: \"@footnote {\" }\n@footnote { color: red }";
+        let encoded = encode_footnote_areas(css);
+        assert_eq!(
+            encoded,
+            "@page { margin: 1cm; @bottom-center {--\u{E001}:1; border-top: 1px solid } }\n@media print { @page :left { @bottom-center\n{--\u{E001}:1; padding: 2px } } }\n.a { --x: \"@footnote {\" }\n@footnote { color: red }"
+        );
+        assert_eq!(encode_footnote_areas("p { color: red }"), "p { color: red }");
+        let sheet =
+            lightningcss::stylesheet::StyleSheet::parse(&encoded, ParserOptions::default()).expect("parses");
+        let lightningcss::rules::CssRule::Page(page) = &sheet.rules.0[0] else {
+            panic!("page rule");
+        };
+        assert_eq!(page.rules.len(), 1);
+        assert!(is_footnote_area(&page.rules[0]));
+        assert_eq!(page.rules[0].declarations.declarations.len(), 2);
     }
 
     #[test]

@@ -117,6 +117,11 @@ pub struct PageBox {
     pub insets: [f32; 4],
     /// Margin boxes with their style.
     pub margin_boxes: Vec<(PageMarginBox, Arc<ComputedStyle>)>,
+    /// The style of the footnote area (`@footnote`), which inherits from the page.
+    pub footnote: Arc<ComputedStyle>,
+    /// The value the page resets the `footnote` counter to (`counter-reset: footnote`), if it
+    /// does.
+    pub footnote_reset: Option<i32>,
     /// `bleed`, in pixels.
     pub bleed: f32,
     pub marks: PageMarks,
@@ -479,6 +484,15 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
         .map(|(kind, blocks)| (kind, Arc::new(style_from_declarations(&blocks, &style, A4))))
         .filter(|(_, style)| matches!(style.content, Content::Items(_)))
         .collect();
+    let footnote_blocks: Vec<&fagus_css::DeclarationBlock> =
+        matching.iter().flat_map(|rule| &rule.footnote_rules).collect();
+    let footnote = Arc::new(style_from_declarations(&footnote_blocks, &style, A4));
+    let footnote_reset = style
+        .counter_reset
+        .iter()
+        .rev()
+        .find(|(name, _)| name == "footnote")
+        .map(|&(_, value)| value);
 
     PageBox {
         // The page size rounded to layout units, as Chrome holds it: JIS-B5 is 257mm, 971.34
@@ -495,6 +509,8 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
         viewport,
         style: Arc::new(style),
         margin_boxes,
+        footnote,
+        footnote_reset,
         bleed,
         marks,
         orientation,
@@ -904,7 +920,52 @@ pub fn paginate(
     // The page counter after the pages so far.
     let mut counter = PageNumbering::default();
     let mut groups = PageGroups::new(tree, rules);
+    // The footnotes, and whether the content has ended with footnotes still waiting for pages.
+    let mut notes = crate::footnote::Footnotes::of(tree);
+    let mut content_done = false;
     loop {
+        // Pages for the footnotes left once the content has ended, which have the name of the
+        // last page, as pages added for positioned boxes have.
+        if content_done {
+            let Some(waiting) = notes.as_mut().filter(|notes| notes.waiting()) else {
+                break;
+            };
+            if pages.len() >= MAX_PAGES || fragments >= MAX_FRAGMENTS {
+                break;
+            }
+            let page_type = PageType::of(pages.len(), first_left, false, &groups.last);
+            let page_box = shrunk(
+                made_boxes.get(rules, root, page_type, last_name.as_deref()),
+                shrink,
+            );
+            counter = counter.number(&layouter, pages.len(), &page_box.style);
+            layouter.page_number.set((pages.len() + 1, 0));
+            layouter
+                .initial_containing_block
+                .set((page_box.content_width(), page_box.content_height()));
+            let (inline, block) = crate::writing::physical_size(
+                (page_box.content_width(), page_box.content_height()),
+                layouter.writing_mode(),
+            );
+            waiting.start_page(&layouter, page_box.footnote_reset);
+            let mut content = Fragment {
+                rect: Rect::new(Au::ZERO, Au::ZERO, inline, Au::ZERO),
+                kind: FragmentKind::Anonymous,
+                children: Children::new(),
+            };
+            if let Some(area) = waiting.only_notes(&layouter, &page_box.footnote, inline, block) {
+                place_footnote_area(&mut content, area, block);
+            }
+            let count = fragment_count(&content);
+            fragments += count;
+            counts.push(count);
+            marks.push(Marks::default());
+            logical.push((inline, block));
+            start += block;
+            pages.push(Page::new(content, &page_box, tree, shrink));
+            page_boxes.push(page_box);
+            continue;
+        }
         let name = layouter.page_name_at(root_box, token.as_ref()).cloned();
         // A forced break to a left or right page where the next page is on the other side
         // inserts a blank page (CSS Fragmentation 3, §3.1), which `@page :blank` matches and
@@ -995,10 +1056,29 @@ pub fn paginate(
                 mode.is_vertical(),
             ))
         };
-        layouter.page_overflow.set(pushed);
-        let outcome = (pushed < block)
-            .then(|| layouter.block_level(root_box, space, token.as_ref()))
-            .flatten();
+        // The content is laid out again where footnotes take room at the bottom of the page
+        // (see `footnote`), from the same state.
+        let after = layouter.after_forced_break.get();
+        let attempt = |room: Au| {
+            layouter.page_overflow.set(pushed);
+            layouter.after_forced_break.set(after);
+            layouter.forced_break.set(false);
+            let space = Space {
+                remaining: Some(room),
+                ..space
+            };
+            (pushed < block)
+                .then(|| layouter.block_level(root_box, space, token.as_ref()))
+                .flatten()
+        };
+        let room = block - pushed - moved;
+        let (outcome, area) = match notes.as_mut() {
+            Some(notes) if pushed < block => {
+                notes.start_page(&layouter, page_box.footnote_reset);
+                notes.fit(&layouter, &page_box.footnote, inline, room, &attempt)
+            }
+            _ => (attempt(room), None),
+        };
         // A page after a forced break may hold nothing but the margins kept there, where the
         // content below them does not fit: it comes on the next page, below truncated margins, as
         // in Chrome, so the same token goes on once more.
@@ -1006,6 +1086,30 @@ pub fn paginate(
         let outcome =
             outcome.filter(|outcome| pushed == Au::ZERO || outcome.token.as_ref() != token.as_ref());
         let Some(outcome) = outcome else {
+            // Footnotes moved from earlier pages take the whole page: the content goes on on
+            // the next.
+            if let Some(area) = area
+                && pages.len() < MAX_PAGES
+                && fragments < MAX_FRAGMENTS
+            {
+                let mut content = Fragment {
+                    rect: Rect::new(Au::ZERO, Au::ZERO, inline, Au::ZERO),
+                    kind: FragmentKind::Anonymous,
+                    children: Children::new(),
+                };
+                place_footnote_area(&mut content, area, block);
+                let count = fragment_count(&content);
+                fragments += count;
+                counts.push(count);
+                marks.push(Marks::default());
+                logical.push((inline, block));
+                start += block;
+                pages.push(Page::new(content, &page_box, tree, shrink));
+                page_boxes.push(page_box);
+                counter = numbered;
+                layouter.forced_break.set(layouter.after_forced_break.get());
+                continue;
+            }
             if pushed == Au::ZERO || pages.len() >= MAX_PAGES || fragments >= MAX_FRAGMENTS {
                 break;
             }
@@ -1064,6 +1168,8 @@ pub fn paginate(
         // box where the content ends on the page, below what ends on it where the content
         // breaks (at a forced break, or past the tallest page), or below the monolithic content
         // that reaches further.
+        // On a page that grows, the footnote area follows the content and the page grows with it.
+        let mut footnotes = area;
         let page_box = if grows {
             let root_end = if outcome.token.is_none() {
                 content.rect.y + content.rect.height + outcome.collapsed_bottom.resolve()
@@ -1072,10 +1178,17 @@ pub fn paginate(
             };
             let bottom = crate::monolithic::content_bottom(&content, Au::ZERO)
                 .map_or(root_end, |bottom| bottom.max(root_end));
-            shrunk(made.fitted(Au::from_px(bottom.to_px() * shrink)), shrink)
+            let extent = footnotes.as_ref().map_or(Au::ZERO, |area| area.extent);
+            if let Some(area) = footnotes.take() {
+                place_footnote_area(&mut content, area, bottom + extent);
+            }
+            shrunk(made.fitted(Au::from_px((bottom + extent).to_px() * shrink)), shrink)
         } else {
             page_box
         };
+        if let Some(area) = footnotes {
+            place_footnote_area(&mut content, area, block);
+        }
         let page_block =
             crate::writing::physical_size((page_box.content_width(), page_box.content_height()), mode).1;
         let count = fragment_count(&content);
@@ -1125,6 +1238,13 @@ pub fn paginate(
                     && fragments < MAX_FRAGMENTS =>
             {
                 token = Some(next);
+            }
+            // Footnotes left over get pages of their own.
+            None if notes.as_ref().is_some_and(crate::footnote::Footnotes::waiting)
+                && pages.len() < MAX_PAGES
+                && fragments < MAX_FRAGMENTS =>
+            {
+                content_done = true;
             }
             _ => break,
         }
@@ -1569,6 +1689,14 @@ pub fn paginate(
     }
     let numbers = layouter.page_values.take();
     (pages, numbers)
+}
+
+/// Puts a footnote area at the end of the page area, `block` long, into the content of the page.
+fn place_footnote_area(content: &mut Fragment, area: crate::footnote::Area, block: Au) {
+    let mut fragment = area.fragment;
+    fragment.rect.x -= content.rect.x;
+    fragment.rect.y += block - area.extent - content.rect.y;
+    content.children.push(fragment);
 }
 
 impl Page {

@@ -9,9 +9,9 @@ use crate::values::{
 };
 use crate::values::{
     BookmarkLevel, BorderCollapse, BorderStyle, BoxArea, BreakBetween, BreakInside, CalcNode, CaptionSide,
-    Clear, ColumnFill, ColumnSpan, Content, ContentItem, ContentTarget, EmptyCells, Float, LengthPercentage,
-    ListStyleType, MAX_COLUMNS, ObjectFit, OpticalSizing, Repeat, StringWhich, TableLayout,
-    UnderlinePosition,
+    Clear, ColumnFill, ColumnSpan, Content, ContentItem, ContentTarget, EmptyCells, Float, FootnoteDisplay,
+    FootnotePolicy, LengthPercentage, ListStyleType, MAX_COLUMNS, ObjectFit, OpticalSizing, Repeat,
+    StringWhich, TableLayout, UnderlinePosition,
 };
 use crate::values::{
     EAST_ASIAN_FEATURES, FontKerning, FontMetric, FontSizeAdjust, FontSynthesis, FontVariant,
@@ -114,11 +114,30 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
         }
         // The start of the inline axis is on the right in a right-to-left containing block.
         "float" => {
-            style.float = match (keyword, context.parent_rtl) {
-                ("left", _) | ("inline-start", false) | ("inline-end", true) => Float::Left,
-                ("right", _) | ("inline-end", false) | ("inline-start", true) => Float::Right,
-                ("none", _) => Float::None,
-                _ => style.float,
+            let (float, footnote) = match (keyword, context.parent_rtl) {
+                ("left", _) | ("inline-start", false) | ("inline-end", true) => (Float::Left, false),
+                ("right", _) | ("inline-end", false) | ("inline-start", true) => (Float::Right, false),
+                ("none", _) => (Float::None, false),
+                // A footnote does not float beside the text (CSS GCPM 3, §2.1).
+                ("footnote", _) => (Float::None, true),
+                _ => (style.float, style.footnote),
+            };
+            (style.float, style.footnote) = (float, footnote);
+        }
+        "footnote-display" => {
+            style.footnote_display = match keyword {
+                "block" => FootnoteDisplay::Block,
+                "inline" => FootnoteDisplay::Inline,
+                "compact" => FootnoteDisplay::Compact,
+                _ => style.footnote_display,
+            }
+        }
+        "footnote-policy" => {
+            style.footnote_policy = match keyword {
+                "auto" => FootnotePolicy::Auto,
+                "line" => FootnotePolicy::Line,
+                "block" => FootnotePolicy::Block,
+                _ => style.footnote_policy,
             }
         }
         "clear" => {

@@ -26,6 +26,8 @@
   @left-bottom { text-align: center; vertical-align: bottom; }
   @left-middle { text-align: center; vertical-align: middle; }
   @left-top { text-align: center; vertical-align: top; }
+  /* The footnote area (CSS Generated Content for Paged Media 3, §2.2), as in WeasyPrint. */
+  @footnote { margin-top: 1em; }
 }
 
 [hidden], area, base, basefont, datalist, head, link, meta, noembed, noframes, param, rp, script,
@@ -88,6 +90,15 @@ blockquote, figure { margin-inline: 40px; }
 dd { margin-inline-start: 40px; }
 dir, menu, ol, ul { padding-inline-start: 40px; }
 ol { list-style-type: decimal; }
+/* The call and the marker of a footnote (CSS Generated Content for Paged Media 3, §2.4), as in
+   WeasyPrint. */
+::footnote-call {
+  content: counter(footnote);
+  vertical-align: super;
+  font-size: smaller;
+  line-height: inherit;
+}
+::footnote-marker { content: counter(footnote) ". "; }
 /* Blink's `marker.css`; outside markers keep their spaces (`white-space: pre`, set in the
    cascade as Blink's `StyleAdjuster` does), inside markers take the item's. */
 ::marker {

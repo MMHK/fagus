@@ -2667,6 +2667,13 @@ fn generated_text(layouter: &Layouter<'_>, item: &InlineItem) -> Option<String> 
                     .unwrap_or_else(|| here.saturating_add(1)),
                 PageCounter::Previous if page > 1 => value_of(page - 1),
                 PageCounter::Previous => here.saturating_sub(1),
+                &PageCounter::Footnote { value, ordinal } => match layouter.footnote_numbering.get() {
+                    Some((first, start)) if ordinal >= first => {
+                        let after = i32::try_from(ordinal - first).unwrap_or(i32::MAX);
+                        start.saturating_add(after).saturating_add(1)
+                    }
+                    _ => value,
+                },
             };
             Some(number(value, format))
         }

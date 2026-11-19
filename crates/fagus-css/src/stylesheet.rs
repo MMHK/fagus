@@ -39,6 +39,7 @@ impl Stylesheet {
     pub fn parse(css: &str, origin: Origin, source: &str) -> Self {
         let css = &*crate::flat_math(css);
         let css = &*crate::encode_nth_pages(css);
+        let css = &*crate::paged::encode_footnote_areas(css);
         if crate::nests_too_deep(css) {
             return Self {
                 sheet: empty_sheet(source),
@@ -754,8 +755,8 @@ fn check_block(
                 )),
                 Property::Custom(custom) => match &custom.name {
                     CustomPropertyName::Unknown(name) => match crate::properties::classify(&name.0) {
-                        // Chrome does not take `float: footnote` (nor other values it does not
-                        // know) and drops the declaration.
+                        // `float` takes Chrome's values and `footnote` (CSS Generated Content
+                        // for Paged Media 3, §2.1); others drop the declaration.
                         PropertySupport::Known
                             if name.0.eq_ignore_ascii_case("float")
                                 && !has_variables(&custom.value)
@@ -763,6 +764,17 @@ fn check_block(
                                 && !is_float_keyword(&custom.value) =>
                         {
                             Some(("css.invalid-value", "invalid value for `float`".to_owned()))
+                        }
+                        PropertySupport::Known
+                            if let Some(keywords) = footnote_keywords(&name.0)
+                                && !has_variables(&custom.value)
+                                && !is_wide_keyword(&custom.value)
+                                && !is_one_of(&custom.value, keywords) =>
+                        {
+                            Some((
+                                "css.invalid-value",
+                                format!("invalid value for `{}`", name.0.to_ascii_lowercase()),
+                            ))
                         }
                         // `element()` stands alone (CSS Generated Content for Paged Media 3).
                         PropertySupport::Known
@@ -829,8 +841,28 @@ fn is_wide_keyword(tokens: &TokenList<'_>) -> bool {
     )
 }
 
-/// Whether the value is one of the keywords of `float` that Chrome takes.
+/// Whether the value is one of the keywords of `float`: those Chrome takes, and `footnote`.
 fn is_float_keyword(tokens: &TokenList<'_>) -> bool {
+    is_one_of(
+        tokens,
+        &["left", "right", "none", "inline-start", "inline-end", "footnote"],
+    )
+}
+
+/// The keywords of `footnote-display` and `footnote-policy` (CSS Generated Content for Paged
+/// Media 3, §2.3 and §2.6); `None` for other properties.
+fn footnote_keywords(name: &str) -> Option<&'static [&'static str]> {
+    if name.eq_ignore_ascii_case("footnote-display") {
+        Some(&["block", "inline", "compact"])
+    } else if name.eq_ignore_ascii_case("footnote-policy") {
+        Some(&["auto", "line", "block"])
+    } else {
+        None
+    }
+}
+
+/// Whether the value is one keyword of `keywords`, in any case.
+fn is_one_of(tokens: &TokenList<'_>, keywords: &[&str]) -> bool {
     use lightningcss::properties::custom::Token;
     let mut significant = tokens
         .0
@@ -839,7 +871,7 @@ fn is_float_keyword(tokens: &TokenList<'_>) -> bool {
     matches!(
         (significant.next(), significant.next()),
         (Some(TokenOrValue::Token(Token::Ident(ident))), None)
-            if matches!(ident.to_ascii_lowercase().as_str(), "left" | "right" | "none" | "inline-start" | "inline-end")
+            if keywords.iter().any(|keyword| ident.eq_ignore_ascii_case(keyword))
     )
 }
 
@@ -902,13 +934,14 @@ fn in_nth_page_selector(css: &str, location: Option<&lightningcss::error::ErrorL
 }
 
 /// Whether a warning is about a pseudo-element that lightningcss does not know but Fagus does
-/// (CSS Overflow 5's scroll markers and buttons), whose rules it keeps.
+/// (CSS Overflow 5's scroll markers and buttons, the footnote calls and markers of CSS
+/// Generated Content for Paged Media 3), whose rules it keeps.
 fn known_pseudo_element(kind: &lightningcss::error::ParserError<'_>) -> bool {
     use lightningcss::error::{ParserError, SelectorError};
     matches!(
         kind,
         ParserError::SelectorError(SelectorError::UnsupportedPseudoElement(name))
-            if ["scroll-marker", "scroll-marker-group", "scroll-button", "column"]
+            if ["scroll-marker", "scroll-marker-group", "scroll-button", "column", "footnote-call", "footnote-marker"]
                 .iter()
                 .any(|known| name.eq_ignore_ascii_case(known))
     )
@@ -1277,9 +1310,9 @@ mod tests {
     }
 
     #[test]
-    fn reports_footnotes_as_unsupported_and_invalid_hanging_punctuation() {
+    fn takes_footnotes_and_reports_invalid_hanging_punctuation() {
         let sheet = Stylesheet::parse(
-            "p { float: left; float: footnote; footnote-display: block; footnote-policy: line;\n  float-reference: page; hanging-punctuation: first; hanging-punctuation: first first; float: inline-end }",
+            "p { float: left; float: footnote; footnote-display: block; footnote-policy: line;\n  float-reference: page; footnote-display: list; footnote-policy: Block; hanging-punctuation: first; hanging-punctuation: first first; float: side }",
             Origin::Author,
             "notes.css",
         );
@@ -1292,33 +1325,29 @@ mod tests {
             messages,
             [
                 (
-                    "css.invalid-value",
-                    "invalid value for `float`; the declaration is ignored"
-                ),
-                (
-                    "css.unknown-property",
-                    "unknown property `footnote-display`; the declaration is ignored"
-                ),
-                (
-                    "css.unknown-property",
-                    "unknown property `footnote-policy`; the declaration is ignored"
-                ),
-                (
                     "css.unknown-property",
                     "unknown property `float-reference`; the declaration is ignored"
                 ),
                 (
                     "css.invalid-value",
+                    "invalid value for `footnote-display`; the declaration is ignored"
+                ),
+                (
+                    "css.invalid-value",
                     "invalid value for `hanging-punctuation`: it takes `none` or `first`, `last` and one of `force-end` and `allow-end`, each at most once; the declaration is ignored"
+                ),
+                (
+                    "css.invalid-value",
+                    "invalid value for `float`; the declaration is ignored"
                 ),
             ]
         );
         let CssRule::Style(rule) = &sheet.sheet.rules.0[0] else {
             panic!("style rule")
         };
-        // The earlier `float: left` stays in force where `float: footnote` is dropped, the
-        // earlier `hanging-punctuation` where the second is.
-        assert_eq!(rule.declarations.declarations.len(), 3);
+        // `float: left`, `float: footnote`, both footnote properties, `footnote-policy: Block`
+        // and the first `hanging-punctuation`.
+        assert_eq!(rule.declarations.declarations.len(), 6);
     }
 
     #[test]

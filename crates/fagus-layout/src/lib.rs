@@ -25,6 +25,7 @@ mod flex_balance;
 mod flex_column;
 mod flex_sizing;
 mod float;
+mod footnote;
 mod foreign;
 mod fragment;
 mod frame;
@@ -4488,6 +4489,7 @@ mod tests {
     mod float_shapes;
     mod flow_details;
     mod flow_tables;
+    mod footnotes;
     mod forced_breaks;
     mod fragmentation_choices;
     mod fragmentation_layout;

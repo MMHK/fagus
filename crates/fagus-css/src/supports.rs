@@ -193,7 +193,8 @@ const FUNCTIONAL_PSEUDO_CLASSES: &[&str] = &[
 ];
 
 /// The pseudo-elements Chrome knows without arguments (besides the parts of form controls that
-/// [`WEBKIT_PSEUDO_ELEMENTS`] lists).
+/// [`WEBKIT_PSEUDO_ELEMENTS`] lists), and those of footnotes (CSS Generated Content for Paged
+/// Media 3, §2.4), which Chrome does not know.
 const PSEUDO_ELEMENTS: &[&str] = &[
     "-internal-media-controls-overlay-cast-button",
     "-webkit-resizer",
@@ -213,6 +214,8 @@ const PSEUDO_ELEMENTS: &[&str] = &[
     "file-selector-button",
     "first-letter",
     "first-line",
+    "footnote-call",
+    "footnote-marker",
     "grammar-error",
     "interest-button",
     "marker",

@@ -90,6 +90,8 @@ const KNOWN: &[&str] = &[
     "font-variant-numeric",
     "font-variant-position",
     "font-variation-settings",
+    "footnote-display",
+    "footnote-policy",
     "frame-sizing",
     "hanging-punctuation",
     "hyphenate-character",
@@ -222,10 +224,10 @@ mod tests {
         assert_eq!(classify("mso-number-format"), PropertySupport::Ignored);
         assert_eq!(classify("colr"), PropertySupport::Unknown);
         assert_eq!(classify("hanging-punctuation"), PropertySupport::Known);
-        // Footnotes are not supported, as in Chrome.
-        for name in ["footnote-display", "footnote-policy", "float-reference"] {
-            assert_eq!(classify(name), PropertySupport::Unknown, "{name}");
-        }
+        assert_eq!(classify("footnote-display"), PropertySupport::Known);
+        assert_eq!(classify("footnote-policy"), PropertySupport::Known);
+        // Footnotes stay in the page they are called on.
+        assert_eq!(classify("float-reference"), PropertySupport::Unknown);
     }
 
     #[test]

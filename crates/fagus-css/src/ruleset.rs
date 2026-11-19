@@ -149,6 +149,9 @@ pub struct PageRuleData {
     pub selectors: Vec<crate::PageSelector>,
     pub declarations: DeclarationBlock,
     pub margin_rules: Vec<PageMarginRule<'static>>,
+    /// The declarations of its `@footnote` rules (CSS Generated Content for Paged Media 3,
+    /// §2.2), in order.
+    pub footnote_rules: Vec<DeclarationBlock>,
     pub origin: Origin,
     pub layer: u32,
     pub order: u32,
@@ -493,10 +496,16 @@ impl Builder<'_> {
                 CssRule::Page(page) => {
                     let order = self.next_order();
                     self.layer_nodes.push(context.layer);
+                    let (footnote_rules, margin_rules): (Vec<_>, Vec<_>) = page
+                        .rules
+                        .iter()
+                        .cloned()
+                        .partition(crate::paged::is_footnote_area);
                     self.set.page_rules.push(PageRuleData {
                         selectors: page.selectors.iter().map(crate::PageSelector::of).collect(),
                         declarations: page.declarations.clone(),
-                        margin_rules: page.rules.clone(),
+                        margin_rules,
+                        footnote_rules: footnote_rules.into_iter().map(|rule| rule.declarations).collect(),
                         origin: context.origin,
                         layer: 0,
                         order,
@@ -761,11 +770,12 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
         "hanging-punctuation" => {
             Some(crate::hanging::HangingPunctuation::parse(value.split_ascii_whitespace()).is_some())
         }
-        // Not `footnote`, as in Chrome.
         "float" => Some(matches!(
             value.as_str(),
-            "left" | "right" | "none" | "inline-start" | "inline-end"
+            "left" | "right" | "none" | "inline-start" | "inline-end" | "footnote"
         )),
+        "footnote-display" => Some(matches!(value.as_str(), "block" | "inline" | "compact")),
+        "footnote-policy" => Some(matches!(value.as_str(), "auto" | "line" | "block")),
         _ if crate::properties::classify(&name) == crate::properties::PropertySupport::Known => {
             Some(!value.is_empty())
         }
@@ -985,11 +995,12 @@ tr:has(input:checked) td { color: green }";
 @supports (text-wrap: sideways) or (text-wrap-mode: balance) { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
 
-        // Footnotes are not supported, as in Chrome.
+        // Footnotes are (CSS Generated Content for Paged Media 3), unlike in Chrome.
         let css = "#x { color: red }
 @supports (float: inline-start) { #x { color: green } }
-@supports (float: footnote) or (footnote-display: block) { #x { color: blue } }";
-        assert_eq!(winner(css, "<p id=x>", "x"), 2);
+@supports (float: footnote) and (footnote-display: block) and (footnote-policy: line) { #x { color: blue } }
+@supports (footnote-display: list) or (float-reference: page) { #x { color: yellow } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 3);
         // Hanging punctuation is, with the values of CSS Text 3 (Chrome does not support it).
         let css = "#x { color: red }
 @supports (hanging-punctuation: first allow-end last) { #x { color: green } }
@@ -1009,5 +1020,18 @@ tr:has(input:checked) td { color: green }";
         assert_eq!(set.page_rules().len(), 1);
         assert_eq!(set.page_rules()[0].margin_rules.len(), 1);
         assert_eq!(set.font_faces().len(), 1);
+
+        // `@footnote` rules are apart from the margin rules.
+        let sheet = Stylesheet::parse(
+            "@page { @footnote { border-top: 1px solid } @bottom-center { content: 'x' } }",
+            Origin::Author,
+            "test",
+        );
+        let set = RuleSet::new(&[&sheet], &MediaEnvironment::default());
+        assert_eq!(sheet.diagnostics(), []);
+        let rule = &set.page_rules()[0];
+        assert_eq!(rule.margin_rules.len(), 1);
+        assert_eq!(rule.footnote_rules.len(), 1);
+        assert_eq!(rule.footnote_rules[0].declarations.len(), 2);
     }
 }

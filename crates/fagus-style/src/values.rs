@@ -413,6 +413,32 @@ pub enum Position {
     Sticky,
 }
 
+/// `footnote-display` (CSS Generated Content for Paged Media 3, §2.3): how a footnote is laid
+/// out in the footnote area.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum FootnoteDisplay {
+    /// A block of its own.
+    #[default]
+    Block,
+    /// Inline, on the lines of the footnotes before and after it.
+    Inline,
+    /// Inline where it fits on one line with the footnotes beside it, else a block.
+    Compact,
+}
+
+/// `footnote-policy` (CSS Generated Content for Paged Media 3, §2.6): what happens where a
+/// footnote does not fit on the page of its call.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum FootnotePolicy {
+    /// The footnote moves to the next page; the call stays.
+    #[default]
+    Auto,
+    /// The line of the call moves to the next page with the footnote.
+    Line,
+    /// The block of the call moves to the next page with the footnote.
+    Block,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Float {
     #[default]
