@@ -212,7 +212,71 @@ impl PageCounter {
 }
 
 /// The named strings each element sets: names with their values.
-pub type NamedStrings = FxHashMap<NodeId, Vec<(Arc<str>, String)>>;
+pub type NamedStrings = FxHashMap<NodeId, Vec<(Arc<str>, StringValue)>>;
+
+/// The value of a named string, set by `string-set`: text, with the page counters in it
+/// (`counter(page)`, `counter(pages)`) left until the page of the element that sets it is known.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct StringValue(Vec<StringPart>);
+
+/// A part of a [`StringValue`].
+#[derive(Clone, Debug, PartialEq)]
+enum StringPart {
+    Text(String),
+    Page {
+        counter: PageCounter,
+        format: ListStyleType,
+    },
+}
+
+impl StringValue {
+    fn push_text(&mut self, text: &str) {
+        match self.0.last_mut() {
+            Some(StringPart::Text(last)) => last.push_str(text),
+            _ if text.is_empty() => {}
+            _ => self.0.push(StringPart::Text(text.to_owned())),
+        }
+    }
+
+    /// The text of the value, with each page counter given its value by `page`.
+    pub(crate) fn resolve(&self, page: impl Fn(PageCounter) -> i32, styles: &CounterStyles) -> String {
+        self.0
+            .iter()
+            .map(|part| match part {
+                StringPart::Text(text) => text.clone(),
+                StringPart::Page { counter, format } => counter_text(page(*counter), format, styles),
+            })
+            .collect()
+    }
+}
+
+/// The value of the page counter `counter` (other than that of footnotes, which is `here`) on
+/// page `page` (from 1) of `total`, where the values of the page counter on the pages are
+/// `values` (see `page::PageNumbering`) and its value on this page is `here`, or that of `values`.
+pub(crate) fn page_counter_value(
+    counter: PageCounter,
+    (page, total): (usize, usize),
+    values: &[i32],
+    here: Option<i32>,
+) -> i32 {
+    let value_of = |page: usize| {
+        page.checked_sub(1)
+            .and_then(|index| values.get(index))
+            .copied()
+            .unwrap_or_else(|| i32::try_from(page).unwrap_or(i32::MAX))
+    };
+    let here = here.unwrap_or_else(|| value_of(page));
+    match counter {
+        PageCounter::Page | PageCounter::Footnote { .. } => here,
+        PageCounter::Pages => i32::try_from(total).unwrap_or(i32::MAX),
+        PageCounter::Next => values
+            .get(page)
+            .copied()
+            .unwrap_or_else(|| here.saturating_add(1)),
+        PageCounter::Previous if page > 1 => value_of(page - 1),
+        PageCounter::Previous => here.saturating_sub(1),
+    }
+}
 
 /// The counters in scope at an element: their names and values from the outermost in.
 pub type CounterValues = Vec<(String, Vec<i32>)>;
@@ -250,7 +314,7 @@ pub struct BoxTree {
     pub(crate) leading_strings: FxHashMap<NodeId, Vec<NodeId>>,
     /// Every assignment to a named string, in document order: where `string()` in the content of
     /// an element finds its value.
-    pub(crate) string_log: Vec<(Arc<str>, String)>,
+    pub(crate) string_log: Vec<(Arc<str>, StringValue)>,
     /// For each table row, the length of [`Self::string_log`] before and after the row's own
     /// assignments; for each table, its length after the table.
     pub(crate) string_positions: FxHashMap<BoxId, (usize, usize)>,
@@ -420,13 +484,11 @@ impl BoxTree {
 
     /// The value of the named string `name` at `position` in the string log: the last one
     /// assigned before it, or nothing.
-    pub(crate) fn string_at(&self, name: &str, position: usize) -> &str {
-        let Some(positions) = self.string_index.get(name) else {
-            return "";
-        };
+    pub(crate) fn string_at(&self, name: &str, position: usize) -> Option<&StringValue> {
+        let positions = self.string_index.get(name)?;
         match positions.partition_point(|&assigned| assigned < position) {
-            0 => "",
-            count => self.string_log[positions[count - 1]].1.as_str(),
+            0 => None,
+            count => Some(&self.string_log[positions[count - 1]].1),
         }
     }
 
@@ -1140,7 +1202,7 @@ struct Builder<'a> {
     /// Named strings set by elements (`string-set`), evaluated when the element is entered.
     strings: RefCell<NamedStrings>,
     /// The same assignments in document order.
-    string_log: RefCell<Vec<(Arc<str>, String)>>,
+    string_log: RefCell<Vec<(Arc<str>, StringValue)>>,
     /// What the children being collected are in: a block container, an inline box, or a table,
     /// row group or row.
     parent: std::cell::Cell<Parent>,
@@ -2401,15 +2463,38 @@ impl Builder<'_> {
         }
         drop(counters);
         // Named strings take the values the element has here, its counters included.
-        if !style.string_set.is_empty() {
-            let values: Vec<(Arc<str>, String)> = style
-                .string_set
-                .iter()
-                .map(|(name, items)| (Arc::from(name.as_str()), self.content_text(element, items)))
-                .collect();
+        let values = self.string_values(element, style);
+        if !values.is_empty() {
             self.string_log.borrow_mut().extend(values.iter().cloned());
             self.strings.borrow_mut().insert(element, values);
         }
+    }
+
+    /// The values of the named strings `element` sets with `string-set`, taken where the box tree
+    /// has come to: the counters as they are there, the page counters left for the page the
+    /// element goes on.
+    fn string_values(&self, element: NodeId, style: &ComputedStyle) -> Vec<(Arc<str>, StringValue)> {
+        style
+            .string_set
+            .iter()
+            .map(|(name, items)| {
+                let mut value = StringValue::default();
+                for item in items {
+                    match item {
+                        ContentItem::Counter { name, style: format }
+                            if let Some(counter) = PageCounter::from_name(name) =>
+                        {
+                            value.0.push(StringPart::Page {
+                                counter,
+                                format: format.clone(),
+                            });
+                        }
+                        item => value.push_text(&self.content_text(element, std::slice::from_ref(item))),
+                    }
+                }
+                (Arc::from(name.as_str()), value)
+            })
+            .collect()
     }
 
     /// Applies the counter properties of a pseudo-element at `depth`.

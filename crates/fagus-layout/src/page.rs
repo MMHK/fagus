@@ -17,12 +17,13 @@ use fagus_text::FontDb;
 use rustc_hash::FxHashMap;
 
 use crate::block::{BreakToken, Layouter, Space};
+use crate::counter_style::CounterStyles;
 use crate::fragment::{
     Carried, Children, Fragment, FragmentKind, Page, PageMarks, PageOrientation, VisibleSides,
 };
 use crate::inline::{intrinsic_widths, layout_lines};
 use crate::positioned::{Flowing, PageFlow};
-use crate::tree::{BoxId, BoxTree, InlineItem, PageCounter, process_white_space};
+use crate::tree::{BoxId, BoxTree, InlineItem, PageCounter, StringValue, process_white_space};
 use crate::units::{Au, Rect};
 
 const MM: f32 = 96.0 / 25.4;
@@ -1696,8 +1697,10 @@ pub fn paginate(
     // second layout pass.
     let total = pages.len();
     let mut entry = Entry::default();
+    let values = layouter.page_values.borrow().clone();
     for (index, ((page, page_box), marks)) in pages.iter_mut().zip(&page_boxes).zip(&marks).enumerate() {
         layouter.page_number.set((index + 1, total));
+        let marks = &marks.counted((index + 1, total), &values, &tree.counter_styles);
         // The margin boxes are not shrunk: they go in the page box's own page area.
         let page_box = &PageBox {
             area: page_box.area_unshrunk,
@@ -1939,14 +1942,16 @@ struct Assignment<T> {
     at_start: bool,
 }
 
-/// What the content of a page assigns to named strings and running elements, in document order.
+/// What the content of a page assigns to named strings and running elements, in document order:
+/// the values of the named strings as elements set them (`StringValue`), or with the page
+/// counters in them counted (`String`).
 #[derive(Default)]
-struct Marks {
-    strings: Vec<Assignment<String>>,
+struct Marks<S = String> {
+    strings: Vec<Assignment<S>>,
     elements: Vec<Assignment<BoxId>>,
 }
 
-impl Marks {
+impl Marks<StringValue> {
     /// Collects the assignments in a page's fragments, before the placeholders of running
     /// elements are cleared. `content_seen` tells whether text or images came before.
     fn collect(&mut self, tree: &BoxTree, fragment: &Fragment, content_seen: &mut bool) {
@@ -1984,6 +1989,36 @@ impl Marks {
         }
         for child in &fragment.children {
             self.collect(tree, child, content_seen);
+        }
+    }
+
+    /// The assignments with the page counters in the values of named strings counted for page
+    /// `page` (from 1) of `total`, where the values of the page counter are `values`: those of
+    /// the page the element that sets the string is on, wherever the string shows (CSS GCPM 3,
+    /// §1.1.1).
+    fn counted(&self, (page, total): (usize, usize), values: &[i32], styles: &CounterStyles) -> Marks {
+        Marks {
+            strings: self
+                .strings
+                .iter()
+                .map(|assignment| Assignment {
+                    name: Arc::clone(&assignment.name),
+                    value: assignment.value.resolve(
+                        |counter| crate::tree::page_counter_value(counter, (page, total), values, None),
+                        styles,
+                    ),
+                    at_start: assignment.at_start,
+                })
+                .collect(),
+            elements: self
+                .elements
+                .iter()
+                .map(|assignment| Assignment {
+                    name: Arc::clone(&assignment.name),
+                    value: assignment.value,
+                    at_start: assignment.at_start,
+                })
+                .collect(),
         }
     }
 }

@@ -481,8 +481,11 @@ the string, `string()` shows it.
 ```
 
 `string-set` takes strings, `content()` (the element's text; also `content(before)`,
-`content(after)`, `content(first-letter)` and `content(marker)`), `attr()` and counters. `string()`
-takes a second argument for the case that the string is set several times on a page:
+`content(after)`, `content(first-letter)` and `content(marker)`), `attr()` and counters.
+`counter(page)` and `counter(pages)` in it are the number of the page the element is on and the page
+count: `string-set: chapter content() ", page " counter(page)` keeps the page where the chapter
+starts on the pages after it. `string()` takes a second argument for the case that the string is
+set several times on a page:
 
 | Value | Shows |
 |---|---|

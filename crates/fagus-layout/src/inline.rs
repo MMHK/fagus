@@ -2676,32 +2676,21 @@ fn generated_text(layouter: &Layouter<'_>, item: &InlineItem) -> Option<String> 
     let number = |value: i32, format| counter_text(value, format, &layouter.tree.counter_styles);
     match item {
         InlineItem::PageNumber { counter, format, .. } => {
-            let (page, total) = layouter.page_number.get();
-            // The values of the page counter, where pages reset, set or increment it.
-            let values = layouter.page_values.borrow();
-            let value_of = |page: usize| {
-                page.checked_sub(1)
-                    .and_then(|index| values.get(index))
-                    .copied()
-                    .unwrap_or_else(|| i32::try_from(page).unwrap_or(i32::MAX))
-            };
-            let here = layouter.margin_page_value.get().unwrap_or_else(|| value_of(page));
-            let value = match counter {
-                PageCounter::Page => here,
-                PageCounter::Pages => i32::try_from(total).unwrap_or(i32::MAX),
-                PageCounter::Next => values
-                    .get(page)
-                    .copied()
-                    .unwrap_or_else(|| here.saturating_add(1)),
-                PageCounter::Previous if page > 1 => value_of(page - 1),
-                PageCounter::Previous => here.saturating_sub(1),
-                &PageCounter::Footnote { value, ordinal } => match layouter.footnote_numbering.get() {
+            let value = match *counter {
+                PageCounter::Footnote { value, ordinal } => match layouter.footnote_numbering.get() {
                     Some((first, start)) if ordinal >= first => {
                         let after = i32::try_from(ordinal - first).unwrap_or(i32::MAX);
                         start.saturating_add(after).saturating_add(1)
                     }
                     _ => value,
                 },
+                // The values of the page counter, where pages reset, set or increment it.
+                counter => crate::tree::page_counter_value(
+                    counter,
+                    layouter.page_number.get(),
+                    &layouter.page_values.borrow(),
+                    layouter.margin_page_value.get(),
+                ),
             };
             Some(number(value, format))
         }
@@ -2711,7 +2700,26 @@ fn generated_text(layouter: &Layouter<'_>, item: &InlineItem) -> Option<String> 
         }
         InlineItem::NamedString { name, position, .. } => {
             let position = layouter.string_position.get().unwrap_or(*position);
-            Some(layouter.tree.string_at(name, position).to_owned())
+            // Page counters in the value count the page it shows on.
+            let values = layouter.page_values.borrow();
+            Some(
+                layouter
+                    .tree
+                    .string_at(name, position)
+                    .map_or_else(String::new, |value| {
+                        value.resolve(
+                            |counter| {
+                                crate::tree::page_counter_value(
+                                    counter,
+                                    layouter.page_number.get(),
+                                    &values,
+                                    None,
+                                )
+                            },
+                            &layouter.tree.counter_styles,
+                        )
+                    }),
+            )
         }
         _ => None,
     }

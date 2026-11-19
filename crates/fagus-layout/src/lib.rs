@@ -454,6 +454,28 @@ mod tests {
     }
 
     #[test]
+    fn counts_page_counters_in_named_strings_on_the_page_of_the_element() {
+        // The page counters take the values of the page the heading is on, also on the pages
+        // after it that show the string it set; the counter style applies.
+        let pages = render(
+            "<style>
+               @page { @top-left { content: string(chapter); } }
+               @page :nth(3) { counter-reset: page 10; }
+               body { font-family: Inter }
+               h2 { string-set: chapter content() ', ' counter(page) ' of ' counter(pages, upper-roman); }
+               .break { break-before: page; }
+             </style>
+             <h2>Eins</h2>
+             <p class=break>a</p>
+             <h2 class=break>Zwei</h2>",
+        );
+        assert_eq!(pages.len(), 3);
+        assert_eq!(margin_text(&pages[0]), "Eins, 1 of III|");
+        assert_eq!(margin_text(&pages[1]), "Eins, 1 of III|");
+        assert_eq!(margin_text(&pages[2]), "Zwei, 10 of III|");
+    }
+
+    #[test]
     fn breaks_and_sizes_named_pages() {
         let pages = render(
             "<style>
