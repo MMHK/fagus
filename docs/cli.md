@@ -59,6 +59,12 @@ file as HTML.
 | `--owner-password-file <FILE>` | none | Read the owner password from the first line of a file |
 | `--permissions <LIST>` | everything | What an encrypted PDF allows without the owner password, separated by commas: `print`, `print-low-quality`, `modify`, `copy`, `annotate`, `fill-forms`, `assemble`, or `none` |
 | `--created <DATE>` | now | The creation date, e.g. `2026-11-13T12:00:00Z` or `2026-11-13T14:00:00+02:00`, for reproducible files |
+| `--sign-p12 <FILE>` | none | Sign the PDF (PAdES) with the key and certificates of this PKCS#12 file; the password comes from `FAGUS_SIGN_PASSWORD` or `--sign-password-file` |
+| `--sign-password-file <FILE>` | none | A file whose first line is the password of the PKCS#12 file |
+| `--sign-name <NAME>` | none | The name of the signer, as the signature shows it |
+| `--sign-reason <TEXT>` | none | Why the document is signed |
+| `--sign-location <TEXT>` | none | Where the document is signed |
+| `--sign-contact <TEXT>` | none | How to reach the signer |
 | `--strict` | off | Fail on any diagnostic (not only warnings), without writing the PDF |
 | `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
 | `--timings` | off | Print the page count and the time of each phase |
@@ -69,7 +75,7 @@ file as HTML.
 | `-h`, `--help` | | Print help |
 
 The options mean what the methods of the PHP package mean; [pdf.md](pdf.md) describes PDF/A,
-PDF/UA, attachments, invoices and reproducible output in detail.
+PDF/UA, attachments, invoices, signatures and reproducible output in detail.
 
 Some details of the command line:
 
@@ -84,6 +90,12 @@ Some details of the command line:
   seconds makes the date invalid.
 - `--untagged` has no effect with `--accessible` or with `--pdfa 2a` and `3a`, which need tags.
 - With `--repeat`, the PDF of the last run is written.
+- `--sign-p12` takes the password from the environment variable `FAGUS_SIGN_PASSWORD`, or from
+  the first line of `--sign-password-file`, never from the command line, where other users of
+  the machine could see it. The signature's time is the creation date (`--created`, or now).
+  `--sign-name`, `--sign-reason`, `--sign-location`, `--sign-contact` and
+  `--sign-password-file` need `--sign-p12`. The command line does not timestamp signatures
+  ([pdf.md](pdf.md#sign-the-pdf)).
 - `--layout-json` writes the same JSON as the worker's `layout` ([protocol.md](protocol.md#layout)):
 
   ```sh
@@ -151,7 +163,7 @@ before are printed too, ahead of the error.
 | Code | Meaning |
 |---|---|
 | `0` | The PDF was written, or help or the version was printed |
-| `1` | Rendering failed: the input or a font directory could not be read, the document was refused (PDF/A, PDF/UA), `--strict` found diagnostics, `--created` is not a date, or the PDF could not be written. The reason goes to standard error, after `Error:` |
+| `1` | Rendering failed: the input or a font directory could not be read, the document was refused (PDF/A, PDF/UA), `--strict` found diagnostics, `--created` is not a date, the PKCS#12 file or its password is wrong, or the PDF could not be written or signed. The reason goes to standard error, after `Error:` |
 | `2` | The command line is wrong: an unknown option, a missing `--output` or input, a value that is not allowed (`--pdfa 5b`) |
 
 ```text
@@ -187,6 +199,14 @@ A ZUGFeRD / Factur-X invoice that is also accessible, with a fixed date:
 fagus render invoice.html -o invoice.pdf \
   --factur-x invoice.xml --pdfa 3a --accessible \
   --created 2026-11-01T08:00:00Z
+```
+
+A signed invoice, with the password of the PKCS#12 file in the environment:
+
+```sh
+FAGUS_SIGN_PASSWORD="$(cat /run/secrets/signing-password)" \
+  fagus render invoice.html -o invoice.pdf --pdfa 3b \
+  --sign-p12 /run/secrets/signing.p12 --sign-reason Rechnung --sign-location Berlin
 ```
 
 A check in a build job that fails on any ignored CSS or missing resource:

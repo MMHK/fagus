@@ -100,6 +100,8 @@ enum Command {
         #[command(flatten)]
         encryption: EncryptionArgs,
         #[command(flatten)]
+        sign: Sign,
+        #[command(flatten)]
         confinement: Confinement,
     },
     /// Renders documents for another program over standard input and output (docs/protocol.md).
@@ -314,6 +316,69 @@ impl Output {
     }
 }
 
+/// Options of the digital signature.
+#[derive(clap::Args)]
+#[allow(
+    clippy::struct_field_names,
+    reason = "the fields are named like their options"
+)]
+struct Sign {
+    /// Sign the PDF digitally with the key and certificates of this PKCS#12 file (.p12, .pfx).
+    /// The password comes from the environment variable `FAGUS_SIGN_PASSWORD` or from
+    /// `--sign-password-file`.
+    #[arg(long, value_name = "FILE")]
+    sign_p12: Option<PathBuf>,
+    /// A file whose first line is the password of the PKCS#12 file.
+    #[arg(long, value_name = "FILE", requires = "sign_p12")]
+    sign_password_file: Option<PathBuf>,
+    /// The name of the signer, as the signature shows it.
+    #[arg(long, requires = "sign_p12")]
+    sign_name: Option<String>,
+    /// Why the document is signed.
+    #[arg(long, requires = "sign_p12")]
+    sign_reason: Option<String>,
+    /// Where the document is signed.
+    #[arg(long, requires = "sign_p12")]
+    sign_location: Option<String>,
+    /// How to reach the signer.
+    #[arg(long, requires = "sign_p12")]
+    sign_contact: Option<String>,
+}
+
+impl Sign {
+    /// The signature these options ask for, if any.
+    fn signature(self) -> Result<Option<fagus::Signature>> {
+        let Some(path) = self.sign_p12 else {
+            return Ok(None);
+        };
+        let password = match &self.sign_password_file {
+            Some(file) => std::fs::read_to_string(file)
+                .with_context(|| format!("reading {}", file.display()))?
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .to_owned(),
+            None => std::env::var("FAGUS_SIGN_PASSWORD")
+                .context("--sign-p12 needs the password in FAGUS_SIGN_PASSWORD or --sign-password-file")?,
+        };
+        let data = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut signature = fagus::Signature::pkcs12(&data, &password)?;
+        if let Some(name) = self.sign_name {
+            signature = signature.name(name);
+        }
+        if let Some(reason) = self.sign_reason {
+            signature = signature.reason(reason);
+        }
+        if let Some(location) = self.sign_location {
+            signature = signature.location(location);
+        }
+        if let Some(contact) = self.sign_contact {
+            signature = signature.contact_info(contact);
+        }
+        Ok(Some(signature))
+    }
+}
+
 /// The message of `--strict` when the document has `count` diagnostics.
 fn strict_failure(count: usize) -> String {
     let noun = if count == 1 { "diagnostic" } else { "diagnostics" };
@@ -391,6 +456,7 @@ fn main() -> Result<()> {
             repeat,
             created,
             encryption,
+            sign,
             confinement,
         } => {
             confinement.limit()?;
@@ -480,6 +546,10 @@ fn main() -> Result<()> {
             // Before the sandbox: the password files may be anywhere.
             if let Some(encryption) = encryption.encryption()? {
                 document = document.encrypt(encryption);
+            }
+            // Before the sandbox: the PKCS#12 file and its password file may be anywhere.
+            if let Some(signature) = sign.signature()? {
+                document = document.sign(signature);
             }
             // Both outputs are opened before the sandbox, which does not let the process create
             // files.
@@ -758,6 +828,34 @@ mod tests {
             serde_json::json!([box_of(1, 30.0, 22.5)])
         );
         assert!(json["elements"][1].get("rows").is_none());
+    }
+
+    #[test]
+    fn takes_the_options_of_signatures() {
+        let cli = Cli::try_parse_from([
+            "fagus",
+            "render",
+            "invoice.html",
+            "-o",
+            "invoice.pdf",
+            "--sign-p12",
+            "signing.p12",
+            "--sign-reason",
+            "Rechnung",
+        ])
+        .expect("parsed");
+        let Command::Render { sign, .. } = cli.command else {
+            panic!("not render");
+        };
+        assert_eq!(
+            sign.sign_p12.as_deref(),
+            Some(std::path::Path::new("signing.p12"))
+        );
+        assert_eq!(sign.sign_reason.as_deref(), Some("Rechnung"));
+        // What the signature says needs a signature.
+        assert!(
+            Cli::try_parse_from(["fagus", "render", "a.html", "-o", "a.pdf", "--sign-reason", "x"]).is_err()
+        );
     }
 
     #[test]
