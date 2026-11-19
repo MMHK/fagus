@@ -63,6 +63,18 @@ return [
     'timeout' => 60,
 
     /*
+    | How much memory (megabytes, FAGUS_MEMORY_BUDGET) and time (seconds, FAGUS_TIME_LIMIT) one
+    | document may take, all its parts together. A document that needs more fails with a
+    | RenderException (diagnostic limit.memory or limit.time) and the worker goes on with the next.
+    | The memory is an estimate of what images, layout, fonts and resources hold, 2048 if null.
+    | The time limit is a tenth less than the timeout if null, so that the worker ends a document
+    | before it is stopped. 0 turns either off.
+    */
+    'memory_budget' => env('FAGUS_MEMORY_BUDGET'),
+
+    'time_limit' => env('FAGUS_TIME_LIMIT'),
+
+    /*
     | When the worker process is replaced by a new one, which takes 3 to 4 ms: after as many
     | documents (FAGUS_MAX_DOCUMENTS), or after a document that left it with more resident memory
     | than as many megabytes (FAGUS_MAX_MEMORY; as far as the system tells, on Linux and macOS).

@@ -74,6 +74,8 @@ The header of `R`; fields other than `id` and `html` may be left out:
   "created": "2026-11-02T12:00:00Z",
   "layout": true,
   "encryption": { "userPassword": "open sesame", "ownerPassword": "change me", "permissions": ["print", "copy"] },
+  "memoryBudget": 1073741824,
+  "timeLimit": 54000,
   "blobs": [5120, 812, 20431, 96, 4187]
 }
 ```
@@ -128,6 +130,14 @@ The header of `R`; fields other than `id` and `html` may be left out:
   `encryption` together with `conformance`, `facturX` or `accessible` are answered with `E`.
   Added in 0.3.0: an older worker ignores the field and writes the PDF unencrypted, which the
   caller notices by the missing `encrypted` in `P`.
+
+- `memoryBudget`: the memory budget of the document in bytes, `0` for none; the worker's
+  (`--memory-budget`, else 2 GiB) if left out or `null`. `timeLimit`: its time limit in
+  milliseconds, from when the worker has read `R`, including the time it waits for answers to
+  `?`; `0` for none, the worker's (`--time-limit`, else none) if left out or `null`. A document
+  that needs more is answered with `E`, with the diagnostic `limit.memory` or `limit.time`, and
+  the worker goes on with the next request ([cli.md](cli.md#limits) says what the budget counts).
+  Added in 0.3.0: an older worker ignores both.
 
 A request the worker cannot use (a missing data block, an unknown PDF/A level, relationship or
 profile, an invalid date) is answered with `E` and its reason, as is a document that does not
@@ -199,7 +209,8 @@ replace a worker that has grown by closing its input and starting a new one, as 
 does with `maxMemory` ([deployment.md](deployment.md#restart-workers)).
 
 The header of `E` for a render request has the same `rss` and `maxRss`, the `message` and a
-`diagnostics` array of the same form. For a document that could not be rendered (it does not
+`diagnostics` array of the same form. For a document that exceeded its memory budget or time
+limit, it holds one diagnostic, `limit.memory` or `limit.time`. For a document that could not be rendered (it does not
 meet PDF/A or PDF/UA, or the PDF could not be written), it holds the diagnostics found until
 then, which often explain the failure; for a request the worker cannot use, an `F` it cannot read
 and a message of an unknown type, it is empty.
@@ -292,3 +303,4 @@ than that ignores them:
 | `signed` | `P` | 0.3.0 |
 | `rss`, `maxRss` | `P`, `E` | 0.3.0 |
 | `sandbox` | `H` | 0.3.0 |
+| `memoryBudget`, `timeLimit` | `R` | 0.3.0 |

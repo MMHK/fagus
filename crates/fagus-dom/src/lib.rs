@@ -5,6 +5,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod budget;
 mod sink;
 mod svg;
 
@@ -149,14 +150,25 @@ pub struct Document {
 impl Document {
     /// Parses an HTML document. Parsing never fails: like browsers, html5ever repairs any input.
     pub fn parse_html(html: &str) -> Self {
-        sink::parse_html(html)
+        sink::parse_html(html).charged(html.len())
     }
 
     /// Parses an XHTML document as XML, as browsers do for `.xhtml` files: CDATA sections and
     /// empty-element tags work, nothing is implied, names are case-sensitive. Like
     /// [`Document::parse_html`], it never fails: malformed XML is repaired.
     pub fn parse_xhtml(xml: &str) -> Self {
-        sink::parse_xml(xml)
+        sink::parse_xml(xml).charged(xml.len())
+    }
+
+    /// Charges the document, parsed from `markup` bytes, to the budget of the render (see
+    /// [`budget`]): its nodes, and its text and attributes as about as large as the markup.
+    fn charged(self, markup: usize) -> Self {
+        budget::check_time_now();
+        budget::charge(
+            budget::Kind::Document,
+            (self.nodes.len() * size_of::<Node>() + markup) as u64,
+        );
+        self
     }
 
     pub fn node(&self, id: NodeId) -> &Node {

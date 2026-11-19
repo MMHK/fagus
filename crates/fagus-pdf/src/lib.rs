@@ -548,6 +548,10 @@ fn attempt(
     image_cache: &mut ImageCache,
     release: bool,
 ) -> Result<Vec<u8>, Failure> {
+    // krilla's surfaces must be finished before they are dropped: a budget or time that runs
+    // out while a page is drawn ends the render once the page is done (see
+    // `fagus_dom::budget::defer`).
+    let _deferred = fagus_dom::budget::defer();
     let fallback = Structure::default();
     let structure = options.structure.as_ref().or_else(|| {
         let tagged = options.accessible || options.conformance.is_some_and(Conformance::is_tagged);
@@ -618,6 +622,8 @@ fn attempt(
     }
     let mut appearances: Vec<forms::Appearance> = Vec::new();
     for index in 0..pages.len() {
+        fagus_dom::budget::check_time_now();
+        fagus_dom::budget::settle();
         let page = &pages[index];
         // Every page is written, so that page indices stay those of the layout. With bleed or
         // marks, the sheet is larger: the page is its trim box, inside its bleed box, with room
@@ -752,6 +758,7 @@ fn attempt(
             pages[index].items = Vec::new();
         }
     }
+    fagus_dom::budget::settle();
     // What the widgets show, each on a page of its own after the document's pages.
     for appearance in &appearances {
         let widget = &options.fields[appearance.field].widgets[appearance.widget];
@@ -1300,6 +1307,24 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
         .images
         .entry((Arc::as_ptr(&image.data) as usize, interpolate, filters))
         .or_insert_with(|| {
+            // The render ends after this page (see `attempt`): what is drawn is of no use.
+            if fagus_dom::budget::spent() {
+                return None;
+            }
+            fagus_dom::budget::check_time_now();
+            // Decoded, an image takes four bytes a pixel (an SVG image's pixels are charged where
+            // they are drawn). krilla decodes PNG, JPEG, GIF and WebP as it writes the PDF, one
+            // image after another, so they only need room; the pixels that Fagus decodes itself
+            // (BMP, TIFF, filtered images, PDF/A-1) are held until the PDF is written.
+            if image.format != ImageFormat::Svg {
+                let pad = 2.0 * f64::from(image.pad);
+                let bytes = ((f64::from(image.width) + pad) * (f64::from(image.height) + pad) * 4.0) as u64;
+                if filtered || cache.opaque || matches!(image.format, ImageFormat::Bmp | ImageFormat::Tiff) {
+                    fagus_dom::budget::charge(fagus_dom::budget::Kind::Images, bytes);
+                } else {
+                    fagus_dom::budget::ensure_room(fagus_dom::budget::Kind::Images, bytes);
+                }
+            }
             if filtered {
                 // A shadow of an image that cannot be decoded is none; other filters leave it
                 // as it is. An SVG image is drawn as pixels to be filtered.

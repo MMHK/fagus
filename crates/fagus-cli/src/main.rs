@@ -105,6 +105,8 @@ enum Command {
         #[command(flatten)]
         sign: Sign,
         #[command(flatten)]
+        limits: LimitArgs,
+        #[command(flatten)]
         confinement: Confinement,
     },
     /// Renders documents for another program over standard input and output (docs/protocol.md).
@@ -135,6 +137,8 @@ enum Command {
         /// the fonts; the files of documents outside it cannot be read (default: every file).
         #[arg(long = "allow-read", value_name = "DIR")]
         allow_read: Vec<PathBuf>,
+        #[command(flatten)]
+        limits: LimitArgs,
         #[command(flatten)]
         confinement: Confinement,
     },
@@ -216,6 +220,39 @@ impl EncryptionArgs {
         }
         Ok(Some(encryption))
     }
+}
+
+/// The memory budget and the time limit of each document (docs/cli.md#limits).
+#[derive(clap::Args)]
+struct LimitArgs {
+    /// The memory budget of a document in MiB: one that needs more fails with `limit.memory`
+    /// (default: 2048; 0 for none).
+    #[arg(long, value_name = "MIB")]
+    memory_budget: Option<u64>,
+    /// The time limit of a document in seconds: one that takes longer fails with `limit.time`
+    /// (default: none).
+    #[arg(long, value_name = "SECONDS", value_parser = seconds)]
+    time_limit: Option<std::time::Duration>,
+}
+
+impl LimitArgs {
+    fn limits(&self) -> fagus::Limits {
+        let mut limits = fagus::Limits::new().time(self.time_limit);
+        if let Some(mib) = self.memory_budget {
+            limits = limits.memory((mib > 0).then(|| mib.saturating_mul(1 << 20)));
+        }
+        limits
+    }
+}
+
+/// A positive number of seconds, such as `30` or `2.5`.
+fn seconds(value: &str) -> Result<std::time::Duration, String> {
+    value
+        .parse::<f64>()
+        .ok()
+        .filter(|seconds| *seconds > 0.0)
+        .and_then(|seconds| std::time::Duration::try_from_secs_f64(seconds).ok())
+        .ok_or_else(|| format!("`{value}` is not a positive number of seconds"))
 }
 
 /// The sandbox and the limits of a process (docs/cli.md#sandbox).
@@ -461,12 +498,14 @@ fn main() -> Result<()> {
             created,
             encryption,
             sign,
+            limits,
             confinement,
         } => {
             confinement.limit()?;
             let html =
                 std::fs::read_to_string(&input).with_context(|| format!("reading {}", input.display()))?;
             let mut engine = fagus::Engine::new();
+            engine.set_limits(limits.limits());
             for directory in &font_dirs {
                 engine
                     .add_font_dir(directory)
@@ -641,10 +680,12 @@ fn main() -> Result<()> {
             serif,
             monospace,
             allow_read,
+            limits,
             confinement,
         } => {
             confinement.limit()?;
             let mut engine = fagus::Engine::new();
+            engine.set_limits(limits.limits());
             for directory in &font_dirs {
                 engine
                     .add_font_dir(directory)
@@ -671,6 +712,24 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn takes_the_limits_of_documents() {
+        let limits = |arguments: &[&str]| {
+            let cli = Cli::try_parse_from(["fagus", "worker"].iter().chain(arguments)).expect("parsed");
+            let Command::Worker { limits, .. } = cli.command else {
+                panic!("not worker");
+            };
+            limits.limits()
+        };
+        assert_eq!(limits(&[]), fagus::Limits::new());
+        let given = limits(&["--memory-budget", "512", "--time-limit", "2.5"]);
+        assert_eq!(given.memory_budget(), Some(512 << 20));
+        assert_eq!(given.time_limit(), Some(std::time::Duration::from_millis(2500)));
+        assert_eq!(limits(&["--memory-budget", "0"]).memory_budget(), None);
+        assert!(Cli::try_parse_from(["fagus", "worker", "--time-limit", "0"]).is_err());
+        assert!(Cli::try_parse_from(["fagus", "worker", "--time-limit", "-1"]).is_err());
+    }
 
     #[test]
     fn counts_diagnostics_in_strict_mode() {

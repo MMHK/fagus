@@ -864,6 +864,7 @@ pub(crate) fn lines_in_flow(
     (start, spacer): ((usize, usize), Option<crate::annotation::Spacer>),
     flow: (Au, Au),
 ) -> Vec<Line> {
+    fagus_dom::budget::check_time();
     let mut fitting = fit::Fitting::of(layouter, styles.0, content.0);
     // A `consistent` fit is measured on all lines of the paragraph, laid out without it.
     if matches!(fitting, fit::Fitting::Consistent(_)) {
@@ -4557,6 +4558,7 @@ pub(crate) struct ShapedRun {
 /// faces that have its characters: the text of a `MathML` token element, which Chrome lays out
 /// as a line of its own. The runs stand in the order they go on the page, left to right.
 pub(crate) fn shape_line(fonts: &FontDb, style: &Arc<ComputedStyle>, text: &str) -> Vec<ShapedRun> {
+    fagus_dom::budget::check_time();
     let Some(face) = face_for(fonts, style) else {
         return Vec::new();
     };

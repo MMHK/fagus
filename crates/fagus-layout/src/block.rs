@@ -1062,6 +1062,7 @@ impl<'a> Layouter<'a> {
     /// Lays out a block-level box. `None` means the box does not fit in the remaining space and
     /// has to move to the next page.
     pub fn block_level(&self, id: BoxId, space: Space, token: Option<&BreakToken>) -> Option<Outcome> {
+        fagus_dom::budget::check_time();
         let style = &self.tree.get(id).style;
         let _whole = self.enter_box(style);
         // The lines of a box with a formatting context of its own do not count for the

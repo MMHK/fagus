@@ -72,6 +72,20 @@ fn unloaded_for_margins(tree: &BoxTree, fonts: &FontDb, pages: &[Page]) -> Optio
     fonts.with_unloaded(|id| used.get(id.index()).copied().unwrap_or(true))
 }
 
+/// What a fragment is charged to the budget of the render (see [`fagus_dom::budget`]): itself
+/// and about as much again for what it points to (its children, the glyphs of its text).
+const FRAGMENT_BYTES: u64 = 2 * size_of::<Fragment>() as u64;
+
+/// What the fragments of `pages` are charged to the budget of the render, in bytes.
+pub fn held_by(pages: &[Page]) -> u64 {
+    let fragments: usize = pages
+        .iter()
+        .flat_map(|page| &page.fragments)
+        .map(fragment_count)
+        .sum();
+    fragments as u64 * FRAGMENT_BYTES
+}
+
 /// How many fragments a fragment tree holds, itself included.
 fn fragment_count(fragment: &Fragment) -> usize {
     let mut count = 0;
@@ -894,6 +908,9 @@ pub fn paginate(
     // The fragments of all pages, and of each page's content.
     let mut fragments = 0;
     let mut counts = Vec::new();
+    // The fragments of the pages so far, charged to the budget of the render while they are
+    // laid out (the caller charges the pages it keeps).
+    let mut held = fagus_dom::budget::hold(fagus_dom::budget::Kind::Layout, 0);
     // How far monolithic content of the pages before (an image, a line taller than a page)
     // reaches into this page: as in Chrome, which lays the page areas end to end, the content
     // that follows starts below it (Blink's monolithic overflow), on later pages where it
@@ -958,6 +975,8 @@ pub fn paginate(
             }
             let count = fragment_count(&content);
             fragments += count;
+            held.add(count as u64 * FRAGMENT_BYTES);
+            fagus_dom::budget::check_time_now();
             counts.push(count);
             marks.push(Marks::default());
             logical.push((inline, block));
@@ -1100,6 +1119,8 @@ pub fn paginate(
                 place_footnote_area(&mut content, area, block);
                 let count = fragment_count(&content);
                 fragments += count;
+                held.add(count as u64 * FRAGMENT_BYTES);
+                fagus_dom::budget::check_time_now();
                 counts.push(count);
                 marks.push(Marks::default());
                 logical.push((inline, block));
@@ -1196,6 +1217,8 @@ pub fn paginate(
             crate::writing::physical_size((page_box.content_width(), page_box.content_height()), mode).1;
         let count = fragment_count(&content);
         fragments += count;
+        held.add(count as u64 * FRAGMENT_BYTES);
+        fagus_dom::budget::check_time_now();
         counts.push(count);
         let mut page_marks = Marks::default();
         page_marks.collect(tree, &content, &mut false);

@@ -81,6 +81,9 @@ struct Render {
     attachments: Vec<Attachment>,
     factur_x: Option<FacturX>,
     created: Option<Word>,
+    /// A memory budget in KiB and a time limit in milliseconds, each at least 1 (the engine's
+    /// limits otherwise, see `fagus_fuzz::LIMITS`).
+    limits: Option<(u16, u16)>,
     blobs: Vec<Vec<u8>>,
     /// Other fields, of any value.
     extra: Vec<(String, Scalar)>,
@@ -220,6 +223,10 @@ impl Render {
             "created",
             self.created.as_ref().map(|date| date.of(DATES)),
         );
+        if let Some((kib, milliseconds)) = self.limits {
+            map.insert("memoryBudget".to_owned(), Value::from((u64::from(kib) + 1) << 10));
+            map.insert("timeLimit".to_owned(), Value::from(u64::from(milliseconds) + 1));
+        }
         for (key, value) in &self.extra {
             map.entry(key.clone()).or_insert_with(|| value.value());
         }
@@ -279,7 +286,8 @@ fuzz_target!(|data: &[u8]| {
             stream(&messages)
         }
     };
-    let engine = fagus::Engine::new();
+    let mut engine = fagus::Engine::new();
+    engine.set_limits(fagus_fuzz::LIMITS);
     // The worker ends with an error on a frame it cannot read; that is how it should end.
     let _ = worker::serve(engine, io::Cursor::new(input), io::sink());
 });

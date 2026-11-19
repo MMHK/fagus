@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Fagus\Binary;
 use Fagus\Conformance;
+use Fagus\Diagnostic;
 use Fagus\Document;
 use Fagus\Engine;
 use Fagus\Exception\EngineException;
@@ -485,7 +486,8 @@ final class FagusTest extends TestCase
         if (PHP_OS_FAMILY === 'Windows') {
             $this->markTestSkipped('PHP cannot wait for pipes with a time limit on Windows.');
         }
-        $engine = new Engine(self::$binary, [self::FONTS], timeout: 0.2);
+        // Without a time limit in the worker, which would end the document first.
+        $engine = new Engine(self::$binary, [self::FONTS], timeout: 0.2, timeLimit: 0);
         $html = str_repeat('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>', 100_000);
         $start = microtime(true);
 
@@ -498,6 +500,24 @@ final class FagusTest extends TestCase
         // Stopped at once rather than waited for until it has rendered the document.
         $this->assertLessThan(2.0, microtime(true) - $start);
         $this->assertSame(1, Document::html('<p>Weiter</p>')->render($engine)->pages(), 'a new worker takes over');
+    }
+
+    #[Test]
+    public function it_ends_documents_past_their_limits_and_keeps_the_worker(): void
+    {
+        $long = '<style>p { border: 1px solid }</style>'.str_repeat('<p>Lorem ipsum dolor sit amet.</p>', 20_000);
+        foreach ([
+            'limit.memory' => new Engine(self::$binary, [self::FONTS], memoryBudget: 1),
+            'limit.time' => new Engine(self::$binary, [self::FONTS], timeLimit: 0.05),
+        ] as $code => $engine) {
+            try {
+                Document::html($long)->render($engine);
+                $this->fail("No {$code}.");
+            } catch (RenderException $exception) {
+                $this->assertSame([$code], array_map(static fn (Diagnostic $diagnostic): string => $diagnostic->code, $exception->diagnostics()));
+            }
+            $this->assertSame(1, Document::html('<p>Weiter</p>')->render($engine)->pages(), 'the worker goes on');
+        }
     }
 
     #[Test]

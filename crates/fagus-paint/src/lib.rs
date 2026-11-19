@@ -537,6 +537,13 @@ fn paint_pages(
             document::expand(&mut items, fonts, images);
             // What the clip hides entirely is not drawn at all, as in Chrome.
             cull::cull_hidden(&mut items, fonts, cull::page_bounds(width, height, page.bleed));
+            // The list is held until the PDF is written (an estimate: an item and as much again
+            // for what it points to).
+            fagus_dom::budget::charge(
+                fagus_dom::budget::Kind::Painting,
+                (items.len() * 2 * size_of::<Item>()) as u64,
+            );
+            fagus_dom::budget::check_time_now();
             PageList {
                 width,
                 height,

@@ -92,7 +92,7 @@ pub(crate) fn pixels(
     };
     let tree = crate::svg::parse_tree(document.as_bytes(), &options).ok()?;
     drop(document);
-    let mut filtered = Pixmap::new(grid.width, grid.height)?;
+    let (mut filtered, _held) = crate::raster::pixmap(grid.width, grid.height)?;
     crate::svg::render(
         &tree,
         grid.transform().pre_translate(bounds.x, bounds.y),

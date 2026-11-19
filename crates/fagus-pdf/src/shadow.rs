@@ -286,7 +286,7 @@ pub(crate) fn text_shadow(
         .min(MAX_PIXELS / bounds.height.max(1.0));
     let width = (bounds.width * scale).ceil().max(1.0) as u32;
     let height = (bounds.height * scale).ceil().max(1.0) as u32;
-    let mut pixmap = tiny_skia::Pixmap::new(width, height)?;
+    let (mut pixmap, _held) = crate::raster::pixmap(width, height)?;
     let paint = tiny_skia::Paint {
         shader: tiny_skia::Shader::SolidColor(tiny_skia::Color::BLACK),
         anti_alias: true,
@@ -401,7 +401,7 @@ fn blurred_outline(
         .min(MAX_PIXELS / bounds.height.max(1.0));
     let width = (bounds.width * scale).ceil().max(1.0) as u32;
     let height = (bounds.height * scale).ceil().max(1.0) as u32;
-    let mut pixmap = tiny_skia::Pixmap::new(width, height)?;
+    let (mut pixmap, _held) = crate::raster::pixmap(width, height)?;
     let mut builder = tiny_skia::PathBuilder::new();
     for segment in shape {
         match *segment {

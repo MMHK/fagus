@@ -83,7 +83,7 @@ pub use inline::{
     text_font_style, used_font_size,
 };
 pub use math::alternative_text as formula_alternative_text;
-pub use page::{MAX_PAGES, PageBox, PageGroup, page_box};
+pub use page::{MAX_PAGES, PageBox, PageGroup, held_by, page_box};
 pub use shape::AlphaMask;
 pub use tree::forms::control_mark;
 pub use tree::transformed_text;

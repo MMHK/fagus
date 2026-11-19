@@ -255,7 +255,10 @@ new Engine(timeout: 120.0);   // in Laravel: 'timeout' => 120 in config/fagus.ph
 ```
 
 The limit applies to each answer, not to the whole document: time spent in your resolver
-callback does not count. There is no timeout on Windows. For requests, keep the timeout below the
+callback does not count. There is no timeout on Windows. Inside the worker, each document has a
+time limit of its own, a tenth less than the timeout unless `timeLimit` says otherwise: a
+document that takes longer in all ends with a `RenderException` (`limit.time`), and the worker
+stays ([php.md](php.md#limits)). For requests, keep the timeout below the
 limits of PHP-FPM (`request_terminate_timeout`) and of your web server, or render long documents
 in a queue.
 
@@ -271,10 +274,13 @@ Fagus is meant to render HTML, CSS, fonts and images from people you do not trus
   network, programs or writing files. `Engine::sandbox()` says whether it is in force (`on`,
   `partial` where the kernel lacks Landlock or seccomp, `off` elsewhere). In containers,
   Docker's and Podman's default seccomp profiles allow what the sandbox needs.
-- **Limit memory and time.** The engine bounds each part of a document, not the whole: give the
-  worker a memory limit (a container's, or `--memory-limit` when you start the binary yourself)
-  and keep the `timeout`. A worker that is ended for its memory is replaced with the next
-  document.
+- **Limit memory and time.** Each document has a memory budget (2048 MB unless `memoryBudget`
+  says otherwise) and a time limit (a tenth less than `timeout`); a document that exceeds one
+  ends with a `RenderException` and the worker goes on ([php.md](php.md#limits)). Set the
+  budget to what your workers can spare, and still give the worker a memory limit of the system
+  (a container's, or `--memory-limit` when you start the binary yourself) above it: the budget is
+  an estimate of the large parts, not the process's memory. A worker that is ended for its
+  memory is replaced with the next document.
 
 ## Verify the binary
 

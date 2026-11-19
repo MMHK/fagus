@@ -160,6 +160,29 @@ final class EngineTest extends TestCase
         new Engine(maxDocuments: 0);
     }
 
+    #[Test]
+    public function it_refuses_negative_budgets(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("The engine's timeLimit must be at least 0 or null, not -1.");
+        new Engine(timeLimit: -1.0);
+    }
+
+    #[Test]
+    public function it_passes_its_limits_with_each_document(): void
+    {
+        $limits = static fn (Engine $engine): array => FakeWorker::limits(Document::html('<p>x</p>')->render($engine)->bytes());
+
+        // A time limit a tenth less than the timeout, the worker's memory budget.
+        $this->assertEquals(['timeLimit' => 54000], $limits(new Engine($this->fake())));
+        $this->assertEquals(['timeLimit' => 9000], $limits(new Engine($this->fake(), timeout: 10.0)));
+        $this->assertEquals(
+            ['timeLimit' => 2500, 'memoryBudget' => 512 * 1024 * 1024],
+            $limits(new Engine($this->fake(), memoryBudget: 512, timeLimit: 2.5)),
+        );
+        $this->assertEquals(['timeLimit' => 0, 'memoryBudget' => 0], $limits(new Engine($this->fake(), memoryBudget: 0, timeLimit: 0.0)));
+    }
+
     /**
      * Renders `$count` documents and returns the process and the number of each in its process.
      *

@@ -151,6 +151,21 @@ The worker was stopped; the next document starts a new one. Raise the timeout
 queue, or find what makes it slow with `$pdf->timings()` on a smaller version of it. Windows
 has no timeout.
 
+### The document exceeded its limits
+
+```text
+the document needs more memory than its budget of 2.0 GiB (table cells 1.8 GiB, styles 156 MiB, document tree 15 MiB)
+the document took longer than its time limit of 54.0 s
+```
+
+The document needed more memory or time than one document may take ([php.md](php.md#limits),
+[cli.md](cli.md#limits)), so it was not rendered: the engine throws a `RenderException` whose
+diagnostics hold `limit.memory` or `limit.time`, and the worker goes on with the next document.
+The message names what held most of the memory. Large images count with four bytes a pixel
+whatever their file size: scale them down before they go into the document. If the document is
+expected to be this large or slow, raise `memoryBudget` or `timeLimit` (`memory_budget`,
+`time_limit` in Laravel, `--memory-budget` and `--time-limit` on the command line).
+
 ### A font directory does not exist
 
 ```text
@@ -308,6 +323,8 @@ first `<style>` element, the URL of a linked or imported stylesheet, the name gi
 | `font.missing-glyph` | No font has a glyph for some characters; they are drawn as empty boxes ([fonts.md](fonts.md)). |
 | `frame.limit` | The documents in frames reach their limit; later frames show nothing. |
 | `layout.too-many-pages` | The document reaches the limit of 10,000 pages; what follows is left out. |
+| `limit.memory` | The document needs more memory than its budget and is not rendered (severity `error`; [The document exceeded its limits](#the-document-exceeded-its-limits)). |
+| `limit.time` | The document took longer than its time limit and is not rendered (severity `error`). |
 | `pdf.layers-unsupported` | PDF/A-1 has no layers: what `-fagus-layer` puts on one is printed as if it had none ([extensions.md](extensions.md#layers-that-show-on-screen-or-in-print)). |
 | `pdf.layer-shown` | PDF/A and PDF/UA do not let layers depend on printing: a layer with `screen` or `print` shows in both. |
 | `pdf.conformance-raised` | Factur-X needs PDF/A-3; a PDF/A-2 level was raised to the PDF/A-3 level of the same letter, PDF/A-1b to PDF/A-3b. |

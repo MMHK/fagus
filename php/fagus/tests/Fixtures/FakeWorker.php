@@ -37,11 +37,21 @@ final class FakeWorker
      */
     public static function parse(string $pdf): array
     {
-        if (preg_match('/^%PDF-fake pid=(\d+) n=(\d+)$/', $pdf, $match) !== 1) {
+        if (preg_match('/^%PDF-fake pid=(\d+) n=(\d+)(\n.*)?$/s', $pdf, $match) !== 1) {
             throw new RuntimeException("Not a PDF of the fake worker: {$pdf}");
         }
 
         return [(int) $match[1], (int) $match[2]];
+    }
+
+    /**
+     * The limits of the request that the stand-in answered with `$pdf` (`memoryBudget`, `timeLimit`).
+     *
+     * @return array<string, int|float>
+     */
+    public static function limits(string $pdf): array
+    {
+        return (array) json_decode(explode("\n", $pdf, 2)[1] ?? '{}', true);
     }
 
     /**
@@ -61,7 +71,8 @@ final class FakeWorker
                 foreach ($settings['memory'] as $field => $values) {
                     $reply[$field] = $values[min($documents, count($values)) - 1];
                 }
-                self::write($output, 'P', $reply, ['%PDF-fake pid='.getmypid()." n={$documents}"]);
+                $limits = array_intersect_key($header, ['memoryBudget' => true, 'timeLimit' => true]);
+                self::write($output, 'P', $reply, ['%PDF-fake pid='.getmypid()." n={$documents}\n".json_encode($limits)]);
             } elseif ($kind === 'F') {
                 self::write($output, 'K', ['faces' => 1]);
             } else {

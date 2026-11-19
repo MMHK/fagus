@@ -45,6 +45,8 @@ final class FagusServiceProvider extends ServiceProvider
                 // A binary of another release than the package, for example, goes to the log.
                 onWarning: static fn (string $message) => $app->make('log')->warning($message),
                 sandbox: (bool) ($config['sandbox'] ?? true),
+                memoryBudget: self::limit($config['memory_budget'] ?? null),
+                timeLimit: isset($config['time_limit']) && $config['time_limit'] !== '' ? (float) $config['time_limit'] : null,
             );
         });
 

@@ -13,7 +13,7 @@ use lightningcss::stylesheet::StyleAttribute;
 use lightningcss::traits::IntoOwned;
 use lightningcss::values::color::CssColor;
 use lightningcss::values::length::LengthValue;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::background;
 use crate::compute::{self, Context};
@@ -567,6 +567,8 @@ fn rejected(name: &str, tokens: &TokenList<'static>) -> bool {
 pub struct StyledDocument {
     styles: Vec<Option<Arc<ComputedStyle>>>,
     pseudo: FxHashMap<(NodeId, PseudoKey), Arc<ComputedStyle>>,
+    /// The styles, charged to the budget of the render while they live.
+    held: fagus_dom::budget::Held,
 }
 
 /// The pseudo-elements with their own style.
@@ -927,6 +929,11 @@ struct RootFont {
     line_height: f32,
 }
 
+/// What a style handle holds in memory, in its `Arc` (two counts and the handle), for the budget.
+const HANDLE: u64 = (2 * size_of::<usize>() + size_of::<ComputedStyle>()) as u64;
+/// What the values of a style hold in memory, in their `Arc`, for the budget.
+const VALUES: u64 = (2 * size_of::<usize>() + size_of::<ComputedValues>()) as u64;
+
 /// Like [`compute_styles_in`], with the fonts of the document, whose metrics font-relative
 /// lengths (`ex`, `ch`, `cap`, `ic`, `lh`) refer to.
 pub fn compute_styles_with(
@@ -939,6 +946,10 @@ pub fn compute_styles_with(
     let mut styled = StyledDocument {
         styles: vec![None; document.len()],
         pseudo: FxHashMap::default(),
+        held: fagus_dom::budget::hold(
+            fagus_dom::budget::Kind::Styles,
+            (document.len() * size_of::<Option<Arc<ComputedStyle>>>()) as u64,
+        ),
     };
     let registry = Registry::new(rules.property_rules());
     let mut expansions = Expansions::new(rules);
@@ -969,7 +980,13 @@ pub fn compute_styles_with(
         .collect();
     stack.reverse();
     let scroll = ScrollPseudos::of(rules);
+    // The values charged to the budget, by their address: elements whose styles share values
+    // hold them once. The styles of the elements live as long as `styled`, so no address is
+    // reused while styles are computed.
+    let mut charged: FxHashSet<usize> = FxHashSet::default();
     while let Some((element, parent, chain)) = stack.pop() {
+        fagus_dom::budget::check_time();
+        let pseudos = styled.pseudo.len();
         let is_root = document.document_element() == Some(element);
         let containers = Containers {
             chain: &chain,
@@ -992,6 +1009,12 @@ pub fn compute_styles_with(
         );
         let style = Arc::new(style);
         shared.classes.insert(Arc::as_ptr(&style) as usize, class);
+        // Each element holds a handle of its own, and its values if no element before it has
+        // the same.
+        styled.held.add(HANDLE);
+        if charged.insert(std::ptr::from_ref::<ComputedValues>(&style) as usize) {
+            styled.held.add(VALUES);
+        }
         if is_root {
             root_font_size = RootFont {
                 size: style.font_size / style.zoom,
@@ -1362,6 +1385,9 @@ pub fn compute_styles_with(
                 stack.push((child, Arc::clone(&style), Arc::clone(&chain)));
             }
         }
+        // The styles of the element's pseudo-elements, each built for it.
+        let pseudos = styled.pseudo.len() - pseudos;
+        styled.held.add(pseudos as u64 * (HANDLE + VALUES));
         styled.styles[element.index()] = Some(style);
     }
     propagate_overflow(document, &mut styled);

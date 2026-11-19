@@ -34,7 +34,12 @@ pub fn guarded<T>(parse: impl FnOnce() -> T) -> Option<T> {
     let outer = QUIET.with(|quiet| quiet.replace(true));
     let result = catch_unwind(AssertUnwindSafe(parse));
     QUIET.with(|quiet| quiet.set(outer));
-    result.ok()
+    match result {
+        Ok(value) => Some(value),
+        // A document whose budget ran out stops rendering (see `fagus_dom::budget`).
+        Err(payload) if fagus_dom::budget::is_exceeded(&*payload) => std::panic::resume_unwind(payload),
+        Err(_) => None,
+    }
 }
 
 /// Parses the declarations of a `style` attribute (or any declaration list), leaving out those

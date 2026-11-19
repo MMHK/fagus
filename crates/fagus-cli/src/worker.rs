@@ -170,6 +170,12 @@ struct Request {
     encryption: Option<Encryption>,
     #[serde(default)]
     signature: Option<SignatureRequest>,
+    /// The memory budget in bytes (0 for none), if not the worker's.
+    #[serde(default)]
+    memory_budget: Option<u64>,
+    /// The time limit in milliseconds (0 for none), if not the worker's.
+    #[serde(default)]
+    time_limit: Option<f64>,
 }
 
 /// The digital signature of a render request.
@@ -465,14 +471,18 @@ where
     R: Read + Send + 'static,
     W: Write + Send + 'static,
 {
-    let document = document(channel, frame).map_err(|message| (message, Vec::new()))?;
+    let document = document(channel, frame, engine.limits()).map_err(|message| (message, Vec::new()))?;
     engine
         .render_with_diagnostics(&document)
         .map_err(|failure| (failure.error.to_string(), failure.diagnostics))
 }
 
 /// The document of a render request.
-fn document<R, W>(channel: &Arc<Mutex<Channel<R, W>>>, frame: Frame) -> Result<fagus::Document, String>
+fn document<R, W>(
+    channel: &Arc<Mutex<Channel<R, W>>>,
+    frame: Frame,
+    limits: fagus::Limits,
+) -> Result<fagus::Document, String>
 where
     R: Read + Send + 'static,
     W: Write + Send + 'static,
@@ -562,6 +572,18 @@ where
     }
     if request.layout {
         document = document.report_layout(true);
+    }
+    if request.memory_budget.is_some() || request.time_limit.is_some() {
+        let mut limits = limits;
+        if let Some(bytes) = request.memory_budget {
+            limits = limits.memory((bytes > 0).then_some(bytes));
+        }
+        if let Some(milliseconds) = request.time_limit {
+            let limit = std::time::Duration::try_from_secs_f64(milliseconds / 1000.0)
+                .map_err(|_| format!("invalid time limit `{milliseconds}`"))?;
+            limits = limits.time((!limit.is_zero()).then_some(limit));
+        }
+        document = document.limits(limits);
     }
     if let Some(encryption) = request.encryption {
         let mut protection = fagus::Encryption::new();
@@ -753,6 +775,39 @@ mod tests {
         assert_eq!(layout["elements"][0]["id"], "a");
         assert_eq!(layout["elements"][0]["tag"], "p");
         assert_eq!(layout["elements"][0]["boxes"][0]["page"], 1);
+    }
+
+    #[test]
+    fn ends_documents_past_their_limits_and_goes_on() {
+        let html: &[u8] = b"<p>Hallo</p>";
+        let long = "<p>Hallo Welt</p>".repeat(20_000);
+        // A budget of a kilobyte, a time limit of a millisecond, then the same without limits.
+        let mut input = frame(
+            RENDER,
+            &json!({ "id": 1, "html": 0, "memoryBudget": 1024 }),
+            &[html],
+        );
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 2, "html": 0, "timeLimit": 1 }),
+            &[long.as_bytes()],
+        ));
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 3, "html": 0, "memoryBudget": 0, "timeLimit": 0 }),
+            &[html],
+        ));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
+        assert_eq!(kinds, "HEEP");
+        assert_eq!(frames[1].header["id"], 1);
+        assert_eq!(frames[1].header["diagnostics"][0]["code"], "limit.memory");
+        assert_eq!(frames[2].header["id"], 2);
+        assert_eq!(frames[2].header["diagnostics"][0]["code"], "limit.time");
+        assert_eq!(frames[3].header["id"], 3);
     }
 
     #[test]

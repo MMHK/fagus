@@ -62,6 +62,9 @@ struct Grid {
     cells: Vec<Slot>,
     columns: usize,
     rtl: bool,
+    /// The rows and cells, and the slots of the rows that cells span (twice, for the lists of
+    /// them that grow), charged to the budget of the render while the grid lives.
+    held: fagus_dom::budget::Held,
 }
 
 impl Grid {
@@ -813,6 +816,7 @@ impl Layouter<'_> {
             } else {
                 columns.iter().rposition(given).map_or(0, |index| index + 1)
             },
+            held: fagus_dom::budget::hold(fagus_dom::budget::Kind::Tables, 0),
             ..Grid::default()
         };
         for (group, part) in groups {
@@ -825,6 +829,8 @@ impl Layouter<'_> {
             // thousands of rows would take gigabytes otherwise.)
             let mut taken: Vec<Vec<Range<usize>>> = vec![Vec::new(); rows.len()];
             for (index, &row) in rows.iter().enumerate() {
+                fagus_dom::budget::check_time();
+                grid.held.add(size_of::<Row>() as u64);
                 grid.rows.push(Row { id: row, group, part });
                 let mut above = std::mem::take(&mut taken[index]);
                 grid.columns = grid
@@ -847,6 +853,8 @@ impl Layouter<'_> {
                         cell.rowspan.min(left)
                     }
                     .max(1);
+                    grid.held
+                        .add((size_of::<Slot>() + 2 * (rowspan - 1) * size_of::<Range<usize>>()) as u64);
                     for line in &mut taken[index + 1..index + rowspan] {
                         line.push(column..column + cell.colspan);
                     }
@@ -1031,6 +1039,7 @@ impl Layouter<'_> {
                     cells: slots,
                     columns: grid.columns,
                     rtl: grid.rtl,
+                    held: fagus_dom::budget::Held::none(fagus_dom::budget::Kind::Tables),
                 };
                 let collapsed = self.collapsed(table, &reduced);
                 let edges = cells

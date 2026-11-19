@@ -2,7 +2,11 @@
 //! resources a caller hands over, a caller's loader, and files inside the document's base
 //! directory are all there is. There is no network access.
 
-use std::path::Path;
+use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, PoisonError};
+
+use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
 
 /// Loads resources (stylesheets, images, fonts) for a document. Implement it to fetch URLs from
 /// a database, a cache or the network, under your own rules.
@@ -84,7 +88,13 @@ fn base64(input: &[u8]) -> Option<Vec<u8>> {
 /// with a scheme or a host (`//`) and anything that leads outside `root` (`..`, symbolic links)
 /// are refused, also where percent-encoding hides them: an absolute path, a drive or a network
 /// share (`%5C%5Chost%5Cshare` on Windows) is refused before the file system is asked about it.
+#[cfg(test)]
 pub(crate) fn read_inside(base: &Path, root: &Path, url: &str) -> Option<Vec<u8>> {
+    std::fs::read(file_inside(base, root, url)?).ok()
+}
+
+/// The file that a URL names, if it lies inside `root` (see [`read_inside`]).
+pub(crate) fn file_inside(base: &Path, root: &Path, url: &str) -> Option<PathBuf> {
     let path = url.split(['?', '#']).next()?;
     if path.is_empty() || path.contains(':') || path.starts_with("//") || path.starts_with('\\') {
         return None;
@@ -109,7 +119,69 @@ pub(crate) fn read_inside(base: &Path, root: &Path, url: &str) -> Option<Vec<u8>
     if !file.starts_with(&root) || !file.is_file() {
         return None;
     }
-    std::fs::read(file).ok()
+    Some(file)
+}
+
+/// The resources one render has loaded, each content once: what a document loads under many
+/// URLs (`logo.png?1`, `logo.png?2`, …, or the same bytes from the caller under several names)
+/// is held once, with one address, so that it is decoded and embedded once too, and each file
+/// is read once. The bytes are charged to the budget of the render (see
+/// [`fagus_dom::budget`]) once.
+#[derive(Debug, Default)]
+pub(crate) struct Loaded {
+    held: Mutex<Held>,
+    files: Mutex<FxHashMap<PathBuf, Arc<Vec<u8>>>>,
+}
+
+/// The data loaded, by its hash and length, and the addresses of the data held.
+#[derive(Debug, Default)]
+struct Held {
+    by_content: FxHashMap<(u64, usize), Vec<Arc<Vec<u8>>>>,
+    addresses: FxHashSet<usize>,
+}
+
+impl Loaded {
+    /// `data`, or the same content loaded before.
+    pub(crate) fn held_once(&self, data: Arc<Vec<u8>>) -> Arc<Vec<u8>> {
+        let mut held = self.held.lock().unwrap_or_else(PoisonError::into_inner);
+        // Held already (a file read before, a resource handed over).
+        if held.addresses.contains(&(Arc::as_ptr(&data) as usize)) {
+            return data;
+        }
+        let mut hasher = FxHasher::default();
+        data.hash(&mut hasher);
+        let same = held.by_content.entry((hasher.finish(), data.len())).or_default();
+        if let Some(known) = same.iter().find(|known| ***known == *data) {
+            return Arc::clone(known);
+        }
+        same.push(Arc::clone(&data));
+        held.addresses.insert(Arc::as_ptr(&data) as usize);
+        drop(held);
+        fagus_dom::budget::charge(fagus_dom::budget::Kind::Resources, data.len() as u64);
+        data
+    }
+
+    /// The data of `file`, read once.
+    pub(crate) fn file(&self, file: PathBuf) -> Option<Arc<Vec<u8>>> {
+        if let Some(data) = self
+            .files
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(&file)
+        {
+            return Some(Arc::clone(data));
+        }
+        // A file larger than what is left of the budget is not read.
+        if let Ok(metadata) = std::fs::metadata(&file) {
+            fagus_dom::budget::ensure_room(fagus_dom::budget::Kind::Resources, metadata.len());
+        }
+        let data = self.held_once(Arc::new(std::fs::read(&file).ok()?));
+        self.files
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(file, Arc::clone(&data));
+        Some(data)
+    }
 }
 
 #[cfg(test)]

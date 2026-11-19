@@ -507,6 +507,8 @@ All arguments are optional and named as below.
 | `maxMemory` | `?int`, `null` | Megabytes of resident memory: a worker that has more after a document is replaced with a new one. The worker tells its size on Linux (now) and macOS (its peak); on Windows the limit does not apply. No limit if `null`. |
 | `onWarning` | `?Closure(string): void`, `null` | Receives the engine's warnings: so far, that the binary is of another release than the package ([protocol.md](protocol.md#versions)). If `null`, they go to PHP's error log (`error_log()`), never to the output. The Laravel integration writes them to Laravel's log. |
 | `sandbox` | `bool`, `true` | Whether the worker renders in its sandbox on Linux, without network, programs or writing files ([cli.md](cli.md#sandbox)). `false` starts it with `--no-sandbox`. |
+| `memoryBudget` | `?int`, `null` | Megabytes one document may take, all its parts together: images, layout, fonts, resources ([limits](#limits)). A document that needs more throws a `RenderException` with the diagnostic `limit.memory`. 2048 if `null`, none if `0`. |
+| `timeLimit` | `?float`, `null` | Seconds one document may take in all. A document that takes longer throws a `RenderException` with the diagnostic `limit.time`, and the worker goes on. A tenth less than `timeout` if `null`; none if `0`. |
 
 Form controls write their texts (the labels of submit and reset buttons, "Choose File", the
 placeholders and formats of date and time fields, the decimal separator of number fields) as
@@ -517,6 +519,35 @@ Spanish, Italian, Dutch, Portuguese (`pt-BR`, `pt-PT`) and Polish. Text without 
 in the `locale` language too.
 
 Fonts, generic families and system fonts are described in [fonts.md](fonts.md).
+
+### Limits
+
+`timeout` and `timeLimit` both bound time, in two ways:
+
+- `timeout` is how long the engine waits for each answer of the worker. When it runs out, the
+  engine stops the worker process (it may be stuck) and throws an `EngineException`; the next
+  document starts a new worker. A document that asks for many resources through a `resolver()`
+  gets the whole `timeout` for each answer. It does not apply on Windows.
+- `timeLimit` is how long one document may take in the worker, from start to end, including the
+  time the worker waits for your resolver. When it runs out, the worker ends the document itself
+  and answers with an error: the engine throws a `RenderException` whose diagnostics hold
+  `limit.time`, and the same worker renders the next document. It applies on every system.
+
+By default `timeLimit` is a tenth less than `timeout` (54 seconds for 60), so that a document
+that takes too long ends with a `RenderException` before the engine has to stop the worker. Set
+it higher, or to `0` for none, for documents that ask for many resources and take longer than
+`timeout` in all.
+
+`memoryBudget` bounds what a document holds: decoded images (four bytes a pixel), the pixels of
+filters and shadows, layout boxes and fragments, table cells, computed styles, the document
+tree, its fonts and its resources (each content once, however many URLs it has). It is an
+estimate, not the worker's resident memory, which is larger (fonts, caches, what the allocator
+keeps); `maxMemory` and the system's limits stay the last line ([deployment.md](deployment.md#untrusted-documents)).
+The limits never change a PDF: a document within them renders as without them.
+
+```php
+new Engine(memoryBudget: 1024, timeLimit: 20.0);   // in Laravel: memory_budget and time_limit
+```
 
 The constructor does not start the worker. The worker starts with the first call that needs it
 (`render()`, `addFont()`, `version()`).

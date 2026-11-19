@@ -10,6 +10,21 @@ use crate::channel;
 /// The largest side of a computed image in pixels.
 pub(crate) const MAX_PIXELS: f32 = 1536.0;
 
+/// A transparent pixmap of `width` × `height` pixels, charged to the budget of the render (see
+/// [`fagus_dom::budget`]) while the [`Held`](fagus_dom::budget::Held) lives; `None` for a pixmap
+/// of no size or one too large to allocate.
+pub(crate) fn pixmap(width: u32, height: u32) -> Option<(tiny_skia::Pixmap, fagus_dom::budget::Held)> {
+    // The render ends soon (see `fagus_dom::budget::defer`): what is drawn is of no use.
+    if fagus_dom::budget::spent() {
+        return None;
+    }
+    let held = fagus_dom::budget::hold(
+        fagus_dom::budget::Kind::Pixels,
+        u64::from(width) * u64::from(height) * 4,
+    );
+    Some((tiny_skia::Pixmap::new(width, height)?, held))
+}
+
 /// An RGB image with an alpha channel.
 #[derive(Clone, Hash)]
 pub(crate) struct RgbaImage {

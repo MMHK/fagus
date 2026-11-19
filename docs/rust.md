@@ -51,11 +51,25 @@ documents. Create one and render many documents with it.
 | `add_system_fonts(&mut self) -> usize` | Adds the fonts installed on the machine, found as Chrome finds them; the output then depends on the machine |
 | `set_locale(&mut self, Option<String>)` | The language of the texts form controls show where the document gives no `lang` (`"de-DE"`); also the shaping language of text without `lang` and the PDF's language when `<html>` has none |
 | `set_generic_families(&mut self, sans_serif, serif, monospace)` | The families (`Option<String>` each) used for `sans-serif`, `serif` and `monospace` |
+| `set_limits(&mut self, Limits)`, `limits(&self) -> Limits` | The memory budget and time limit of each document, see below |
 | `render(&self, &Document) -> Result<Output, Error>` | Renders a document to PDF |
 | `render_with_diagnostics(&self, &Document) -> Result<Output, Failure>` | The same; a `Failure` has the `error` and the `diagnostics` found before it |
 
 Fonts, locale and generic families are described in [fonts.md](fonts.md) and
 [php.md](php.md); the Rust methods behave as the PHP options of the same name.
+
+`Limits` bounds one document as a whole ([cli.md](cli.md#limits) says what it counts):
+`Limits::new()` (also `Default`) has a memory budget of `Limits::DEFAULT_MEMORY` (2 GiB) and no
+time limit, `Limits::unlimited()` neither; `memory(Option<u64>)` sets the budget in bytes and
+`time(Option<Duration>)` the time limit, `memory_budget()` and `time_limit()` read them. A
+document that needs more fails with `Error::MemoryBudget` or `Error::TimeLimit`; the time counts
+from the call to `render`. They never change the output of a document that stays within them.
+
+```rust
+use std::time::Duration;
+
+engine.set_limits(fagus::Limits::new().memory(Some(1 << 30)).time(Some(Duration::from_secs(20))));
+```
 
 ## Documents
 
@@ -84,6 +98,7 @@ document can be rendered with variations.
 | `report_layout(bool)` | Whether `Output::layout` reports where the elements with an `id` ended up (default `false`) |
 | `encrypt(Encryption)` | Protects the PDF with passwords (AES-256) |
 | `sign(Signature)` | Signs the PDF digitally (PAdES), see below |
+| `limits(Limits)` | The memory budget and time limit of this document, in place of the engine's |
 
 What these options do to the PDF is described in [pdf.md](pdf.md), how resources are found in
 [resources.md](resources.md).
@@ -226,6 +241,8 @@ its layout.
 |---|---|
 | `Error::Pdf` | The document does not meet PDF/A or PDF/UA (the message lists every problem), the version or description of an invoice is empty or has control characters, or the PDF could not be written |
 | `Error::Font` | A font could not be read (also from `add_font_dir` and `add_font_data`) |
+| `Error::MemoryBudget { budget, held }` | The document needs more memory than its budget (`budget` bytes); `held` names what its parts held then, in bytes, the largest first |
+| `Error::TimeLimit { limit }` | The document took longer than its time limit |
 | `Error::Internal(String)` | A bug in Fagus: rendering stopped with a panic, which the engine caught |
 
 The types inside are exported too: `Error::Pdf` holds a `fagus::PdfError`, either
@@ -247,7 +264,8 @@ match engine.render(&document.accessible()) {
 
 `render_with_diagnostics` fails with a `fagus::Failure` instead, which keeps the diagnostics
 found before the failure (an image that could not be loaded may explain why PDF/UA refuses the
-document). Its `error` is the `Error` that `render` returns, and it displays as that error:
+document; for `MemoryBudget` and `TimeLimit` it holds the diagnostic `limit.memory` or
+`limit.time`). Its `error` is the `Error` that `render` returns, and it displays as that error:
 
 ```rust
 match engine.render_with_diagnostics(&document.accessible()) {

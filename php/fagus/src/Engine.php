@@ -87,6 +87,12 @@ final class Engine
      * @param  ?Closure(string): void  $onWarning  receives warnings, such as a binary of another release than
      *                                           this package; written to PHP's error log (error_log()) if null
      * @param  bool  $sandbox  whether the worker renders in its sandbox on Linux (docs/cli.md#sandbox)
+     * @param  ?int  $memoryBudget  megabytes a document may take, all its parts together (an estimate, see
+     *                              docs/php.md#limits); one that needs more fails with `limit.memory`.
+     *                              2048 if null, none if 0
+     * @param  ?float  $timeLimit  seconds a document may take in all; one that takes longer fails with
+     *                             `limit.time` and the worker goes on. A tenth less than $timeout if null,
+     *                             so that the worker ends the document before the engine stops it; none if 0
      */
     public function __construct(
         private readonly ?string $binary = null,
@@ -101,10 +107,17 @@ final class Engine
         private readonly ?int $maxMemory = null,
         private readonly ?Closure $onWarning = null,
         private readonly bool $sandbox = true,
+        private readonly ?int $memoryBudget = null,
+        private readonly ?float $timeLimit = null,
     ) {
         foreach (['maxDocuments' => $maxDocuments, 'maxMemory' => $maxMemory] as $name => $limit) {
             if ($limit !== null && $limit < 1) {
                 throw InvalidArgumentException::notPositive($name, $limit);
+            }
+        }
+        foreach (['memoryBudget' => $memoryBudget, 'timeLimit' => $timeLimit] as $name => $limit) {
+            if ($limit !== null && $limit < 0) {
+                throw InvalidArgumentException::negative($name, $limit);
             }
         }
     }
@@ -118,6 +131,7 @@ final class Engine
     {
         $channel = $this->start();
         [$header, $blobs] = $document->request(++$this->requests);
+        $header += $this->limits();
         try {
             $channel->write('R', $header, $blobs);
             while (true) {
@@ -173,6 +187,21 @@ final class Engine
 
             throw $exception;
         }
+    }
+
+    /**
+     * The memory budget (bytes) and time limit (milliseconds) of a render request, 0 for none.
+     *
+     * @return array{memoryBudget?: int, timeLimit: float}
+     */
+    private function limits(): array
+    {
+        $limits = ['timeLimit' => round(($this->timeLimit ?? $this->timeout * 0.9) * 1000, 3)];
+        if ($this->memoryBudget !== null) {
+            $limits['memoryBudget'] = $this->memoryBudget * 1024 * 1024;
+        }
+
+        return $limits;
     }
 
     /**

@@ -70,6 +70,8 @@ file as HTML.
 | `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
 | `--timings` | off | Print the page count and the time of each phase |
 | `--repeat <N>` | `1` | Render N times and report the median time (for benchmarks) |
+| `--memory-budget <MIB>` | `2048` | The [memory budget](#limits) of the document: one that needs more fails with `limit.memory`; `0` for none |
+| `--time-limit <SECONDS>` | none | The [time limit](#limits) of the document, such as `30` or `2.5`: one that takes longer fails with `limit.time` |
 | `--no-sandbox` | off | Render outside the [sandbox](#sandbox) (Linux only; there is none elsewhere) |
 | `--memory-limit <MIB>` | none | End the process when its memory (address space) would exceed this many MiB (Linux only) |
 | `--cpu-limit <SECONDS>` | none | End the process after this many seconds of processor time (Linux only) |
@@ -164,7 +166,7 @@ before are printed too, ahead of the error.
 | Code | Meaning |
 |---|---|
 | `0` | The PDF was written, or help or the version was printed |
-| `1` | Rendering failed: the input or a font directory could not be read, the document was refused (PDF/A, PDF/UA), `--strict` found diagnostics, `--created` is not a date, the PKCS#12 file or its password is wrong, or the PDF could not be written or signed. The reason goes to standard error, after `Error:` |
+| `1` | Rendering failed: the input or a font directory could not be read, the document was refused (PDF/A, PDF/UA), it exceeded its memory budget or time limit, `--strict` found diagnostics, `--created` is not a date, the PKCS#12 file or its password is wrong, or the PDF could not be written or signed. The reason goes to standard error, after `Error:` |
 | `2` | The command line is wrong: an unknown option, a missing `--output` or input, a value that is not allowed (`--pdfa 5b`) |
 
 ```text
@@ -256,6 +258,8 @@ a client of your own only to use Fagus from another language.
 | `--serif <FAMILY>` | none | The family used for `serif` |
 | `--monospace <FAMILY>` | none | The family used for `monospace` |
 | `--allow-read <DIR>` | every file | Let the [sandbox](#sandbox) read only the files in this directory, besides the fonts; repeatable (Linux only) |
+| `--memory-budget <MIB>` | `2048` | The [memory budget](#limits) of each document, unless a request sets its own (`memoryBudget`); `0` for none |
+| `--time-limit <SECONDS>` | none | The [time limit](#limits) of each document, unless a request sets its own (`timeLimit`) |
 | `--no-sandbox` | off | Render outside the sandbox, as for `render` |
 | `--memory-limit <MIB>` | none | End the worker when its memory would exceed this many MiB, as for `render` |
 | `--cpu-limit <SECONDS>` | none | End the worker after this many seconds of processor time in all, as for `render` |
@@ -264,6 +268,46 @@ Everything else (PDF/A, attachments, resources, the creation date, passwords) co
 request; the worker does not read `FAGUS_USER_PASSWORD` and `FAGUS_OWNER_PASSWORD`. The
 worker ends with exit code 0 when its input closes, and with 1 when it reads a frame that breaks
 the protocol.
+
+## Limits
+
+Each part of a document has a limit of its own (pixels per image, pages, nesting; see
+[SECURITY.md](../SECURITY.md#limits)). The memory budget and the time limit bound the document
+as a whole: a document that needs more ends with an error and a diagnostic, without a PDF, and
+the worker goes on with the next one.
+
+```text
+$ fagus render report.html -o report.pdf --memory-budget 512
+document: error[limit.memory]: the document needs more memory than its budget of 512 MiB (styles 433 MiB, document tree 68 MiB)
+Error: the document needs more memory than its budget of 512 MiB (styles 433 MiB, document tree 68 MiB)
+$ fagus render report.html -o report.pdf --time-limit 10
+document: error[limit.time]: the document took longer than its time limit of 10.0 s
+Error: the document took longer than its time limit of 10.0 s
+```
+
+- **`--memory-budget`** (2048 MiB unless set) counts what the large parts of a document hold, as
+  an estimate, not as what the allocator counts: the document tree, computed styles, layout boxes
+  and fragments, table cells (with the rows each one spans), display lists, decoded images (four
+  bytes a pixel: held until the PDF is written for the BMP, TIFF and filtered images that Fagus
+  decodes itself, while other images only need that much room, since they are decoded one after
+  another as the PDF is written), the pixels rasterized for filters, shadows and masks while
+  they are drawn, the fonts of `@font-face` (unpacked) and the bytes of resources (a file larger
+  than what is left is not read). Parts are counted while they are
+  held: a layout that is done again replaces the one before. The process needs more than the
+  budget: the engine's fonts and caches and what the allocator keeps, so leave room above it
+  (or set `--memory-limit` higher still, as a last resort).
+- **`--time-limit`** is wall-clock time from the start of the render, including the time a
+  worker waits for the caller's resources (`?`). The engine looks at the clock for each element,
+  box, line, page, image and resource, so a document ends shortly after its time is up; parts
+  that the engine cannot interrupt (parsing the markup, compressing the PDF) finish first.
+
+Neither changes the output: a document that stays within both renders to the same bytes as
+without them. A resource is held once per document however many URLs it has
+(`logo.png?v=1`, `logo.png?v=2`, …): the same content is decoded and embedded once, and the same
+file is read once.
+
+`--memory-limit` and `--cpu-limit` below are limits of the process, which the system enforces
+by ending it; the budget and the time limit end one document and keep the process.
 
 ## Sandbox
 

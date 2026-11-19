@@ -426,6 +426,7 @@ impl Inner {
             resources: parent.resources.clone(),
             loader: parent.loader.clone(),
             nesting: source.nesting,
+            loaded: Arc::clone(&parent.loaded),
             ..Document::html(source.markup)
         };
         let document = if input.xhtml {
@@ -497,6 +498,11 @@ impl Inner {
                 fonts.add_document_face(face);
             }
         }
+        // Kept with the document around it until it is painted.
+        fagus_dom::budget::charge(
+            fagus_dom::budget::Kind::Layout,
+            fagus_layout::held_by(std::slice::from_ref(&page)),
+        );
         let responsive_height =
             fagus_layout::is_responsive(&document).then(|| fagus_layout::content_height(&page));
         FrameDocument {

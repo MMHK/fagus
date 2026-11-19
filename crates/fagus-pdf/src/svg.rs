@@ -1929,7 +1929,7 @@ pub fn alpha(image: &fagus_layout::Image, fonts: &FontDb) -> Option<fagus_layout
         return None;
     }
     let (width, height) = (columns as u32, rows as u32);
-    let mut pixmap = tiny_skia::Pixmap::new(width, height)?;
+    let (mut pixmap, _held) = crate::raster::pixmap(width, height)?;
     let natural = (tree.size().width(), tree.size().height());
     let (x, y, drawn_width, drawn_height) = fit(&image.data, false).place(natural, columns, rows);
     let transform =
@@ -1953,7 +1953,7 @@ pub(crate) fn pixels(tree: &Tree, fit: Fit, width: f32, height: f32) -> Option<(
         return None;
     }
     let (columns, rows) = (columns as u32, rows as u32);
-    let mut pixmap = tiny_skia::Pixmap::new(columns, rows)?;
+    let (mut pixmap, _held) = crate::raster::pixmap(columns, rows)?;
     let natural = (tree.size().width(), tree.size().height());
     let (x, y, drawn_width, drawn_height) = fit.place(natural, columns as f32, rows as f32);
     let transform =

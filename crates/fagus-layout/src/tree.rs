@@ -235,6 +235,8 @@ pub struct Targets {
 #[derive(Debug, Default)]
 pub struct BoxTree {
     boxes: Vec<LayoutBox>,
+    /// The boxes, charged to the budget of the render while they live.
+    held: fagus_dom::budget::Held,
     pub root: Option<BoxId>,
     /// Boxes with `position: fixed`, which are repeated on every page.
     pub fixed: Vec<BoxId>,
@@ -804,6 +806,10 @@ impl BoxTree {
         }
         tree.targets = targets;
         tree.counter_styles = counter_styles;
+        tree.held = fagus_dom::budget::hold(
+            fagus_dom::budget::Kind::Layout,
+            (tree.boxes.len() * size_of::<LayoutBox>()) as u64,
+        );
         tree
     }
 

@@ -49,7 +49,10 @@ What Fagus promises for untrusted documents:
   glibc's `malloc_trim` in the command line, which takes no arguments from the document (the crates
   it depends on do have `unsafe`).
 - **Bounded work.** The limits below keep a document from taking unbounded memory or time.
-  Where a limit is reached, the part is left out (often with a diagnostic) and the rest renders.
+  Where the limit of a part is reached, the part is left out (often with a diagnostic) and the
+  rest renders. Where the memory budget or the time limit of the whole document is reached, the
+  document ends with an error (`limit.memory`, `limit.time`) and the engine goes on with the
+  next one.
 
 On Linux, the binary renders in a [sandbox](docs/cli.md#sandbox) (Landlock and seccomp) that
 backs the first two up: should a bug in Fagus or in a crate it uses be exploited, the process
@@ -72,22 +75,22 @@ still cannot open sockets, start programs, write files or (with `fagus render`, 
 | Filters, shadows, masks | rasterized at most 12 million pixels per region; blurs at most 25 million |
 | Fonts | 64 MiB unpacked from WOFF or WOFF2 (the sizes the font declares are checked before unpacking); 256 MiB of document fonts kept per engine |
 | Worker frames | 1 GiB |
+| Memory of a document | 2 GiB by default ([`--memory-budget`, `memoryBudget`](docs/cli.md#limits)), an estimate of what its large parts hold at once: the document tree, computed styles, layout boxes and fragments, table cells with the rows they span, display lists, decoded images (4 bytes a pixel, held or needed at once), pixels rasterized for filters, shadows and masks, `@font-face` fonts unpacked, and resource bytes. A file larger than what is left is not read |
+| Time of a document | none by default for the binary and Rust, a tenth less than `timeout` in PHP ([`--time-limit`, `timeLimit`](docs/cli.md#limits)); wall-clock time, checked for each element, box, line, page, image and resource |
+| Resources | each content once per document, however many URLs name it; each file read once |
 
 ### Remaining risks
 
 These are known and not fixed in the engine; deploy accordingly:
 
-- **Total memory and time.** The limits bound each part, not the document: a document can still
-  use several GiB, for example with many large images (each up to 200 million pixels), deeply
-  nested groups with opacity inside a filtered element, or a table with tens of thousands of rows
-  that each cell spans. There is no deadline inside the engine. Give the process limits of its
-  own: `--memory-limit` and `--cpu-limit` on Linux, a container's memory limit, the PHP engine's
-  `timeout` (which applies to each answer of the worker, so a document that asks for many
-  resources with `?` can take longer). A worker that runs out of memory is ended by the system;
-  the PHP package starts a new one for the next document.
-- **Resources by URL.** Each distinct URL is loaded once per document; the same file under many
-  URLs (`logo.png?1`, `logo.png?2`, …) is read and kept as many times. There is no total budget
-  for the bytes of a document's resources.
+- **The budget is an estimate.** The memory budget counts the large parts of a document, not
+  what the process takes: the engine's own fonts and caches, smaller allocations and what the
+  allocator keeps come on top, and a few steps run to their end before the clock is looked at
+  again (parsing the markup, writing and compressing the PDF). Set the budget to what the
+  process can spare, and still give the process limits of its own: `--memory-limit` and
+  `--cpu-limit` on Linux, a container's memory limit, the PHP engine's `timeout`. A worker that
+  runs out of memory is ended by the system; the PHP package starts a new one for the next
+  document.
 - **Everything inside the root can be read.** A document may show any file in its root in the PDF
   (as text with `<object type="text/plain">`, as an image, as a font). Make the root a directory
   of assets only, never one with configuration or secrets (`.env`), and never a user's home or

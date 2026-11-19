@@ -7,7 +7,17 @@
 
 use std::sync::OnceLock;
 
-use fagus::{Date, Document, Engine, Error};
+use std::time::Duration;
+
+use fagus::{Date, Document, Engine, Error, Limits};
+
+/// The memory budget and time limit of each document, below the limits `run.sh` gives libFuzzer
+/// (`-rss_limit_mb=4096`, `-timeout=60`): an input that needs more ends as the engine ends such
+/// documents, with `Error::MemoryBudget` or `Error::TimeLimit`. What still takes too long or too
+/// much is where the engine does not look at its budget.
+pub const LIMITS: Limits = Limits::new()
+    .memory(Some(1 << 30))
+    .time(Some(Duration::from_secs(20)));
 
 /// The engine the targets render with, made once: the fonts of `tests/fonts` and those built
 /// into Fagus, never the system's, so that runs do not depend on the machine.
@@ -15,6 +25,7 @@ pub fn engine() -> &'static Engine {
     static ENGINE: OnceLock<Engine> = OnceLock::new();
     ENGINE.get_or_init(|| {
         let mut engine = Engine::new();
+        engine.set_limits(LIMITS);
         engine
             .add_font_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../tests/fonts"))
             .expect("the fonts of the tests");
@@ -27,8 +38,8 @@ pub fn date() -> Date {
     Date::from_unix(1_793_620_800)
 }
 
-/// Renders `document`. Rendering may fail for a reason (a font or PDF error), but never with an
-/// internal error, which is a bug.
+/// Renders `document`. Rendering may fail for a reason (a font or PDF error, a budget that ran
+/// out), but never with an internal error, which is a bug.
 pub fn render(document: &Document) {
     match engine().render(&document.clone().created(date())) {
         Err(Error::Internal(message)) => panic!("internal error: {message}"),

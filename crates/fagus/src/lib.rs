@@ -16,6 +16,7 @@ mod forms;
 mod frames;
 mod interactive;
 mod layout_info;
+mod limits;
 mod missing_glyphs;
 mod palette_values;
 mod resources;
@@ -46,6 +47,7 @@ pub use fagus_pdf::sign::{Algorithm, Signature, Signer, Timestamper, timestamp_r
 pub use fagus_pdf::{Attachment, Conformance, Date, Encryption, PdfError, Permission, Relationship};
 pub use fagus_text::FontError;
 pub use layout_info::{Layout, LayoutBox, LayoutElement, LayoutPage, LayoutRow, RowSection};
+pub use limits::Limits;
 pub use resources::ResourceLoader;
 
 /// An error while rendering.
@@ -59,6 +61,20 @@ pub enum Error {
     /// A bug in Fagus: rendering stopped where it should not.
     #[error("internal error while rendering: {0}")]
     Internal(String),
+    /// The document needed more memory than its budget ([`Limits`]), in bytes. `held` is what
+    /// its parts held then, the largest first.
+    #[error(
+        "the document needs more memory than its budget of {} ({})",
+        limits::size(*budget),
+        limits::held(held)
+    )]
+    MemoryBudget {
+        budget: u64,
+        held: Vec<(&'static str, u64)>,
+    },
+    /// The document took longer than its time limit ([`Limits`]).
+    #[error("the document took longer than its time limit of {:.1} s", limit.as_secs_f64())]
+    TimeLimit { limit: Duration },
 }
 
 /// The stack of the threads that render documents. Style, layout and painting walk the document
@@ -113,6 +129,10 @@ pub struct Document {
     svg_depth: u8,
     /// Where the document lies in frames (see [`frames`]).
     nesting: frames::Nesting,
+    /// Its memory budget and time limit, if not the engine's.
+    limits: Option<Limits>,
+    /// The resources a render of it has loaded, shared with the documents of its frames.
+    loaded: Arc<resources::Loaded>,
 }
 
 /// The profile of a ZUGFeRD 2 or Factur-X invoice, as named in its XML.
@@ -228,6 +248,8 @@ impl Document {
             signature: None,
             svg_depth: 0,
             nesting: frames::Nesting::default(),
+            limits: None,
+            loaded: Arc::default(),
         }
     }
 
@@ -472,6 +494,14 @@ impl Document {
         self
     }
 
+    /// Sets the memory budget and the time limit of this document, in place of the engine's
+    /// ([`Engine::set_limits`]).
+    #[must_use]
+    pub fn limits(mut self, limits: Limits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+
     /// Adds a stylesheet after the stylesheets of the document.
     #[must_use]
     pub fn stylesheet(mut self, name: impl Into<String>, css: impl Into<String>) -> Self {
@@ -564,6 +594,8 @@ struct Inner {
     sheets: sheets::Sheets,
     /// SVG images with HTML laid out as documents for earlier documents and layouts.
     svg_documents: Mutex<svg_document::Cache>,
+    /// The memory budget and time limit of documents that set none of their own.
+    limits: Limits,
 }
 
 /// Faces of `@font-face` rules, kept for the next documents up to a size: the oldest go first.
@@ -615,6 +647,7 @@ impl Clone for Inner {
             sheets: self.sheets.clone(),
             // Laid out with the fonts and the locale of the engine, which may change.
             svg_documents: Mutex::default(),
+            limits: self.limits,
         }
     }
 }
@@ -726,6 +759,7 @@ impl Engine {
                 images: fagus_pdf::Images::default(),
                 sheets: sheets::Sheets::default(),
                 svg_documents: Mutex::default(),
+                limits: Limits::new(),
             }),
             workers: Workers::new(),
         }
@@ -802,6 +836,17 @@ impl Engine {
             });
     }
 
+    /// Sets the memory budget and the time limit of each document (see [`Limits`]; by default
+    /// [`Limits::new`]). A document can set its own with [`Document::limits`].
+    pub fn set_limits(&mut self, limits: Limits) {
+        Arc::make_mut(&mut self.inner).limits = limits;
+    }
+
+    /// The memory budget and the time limit of each document.
+    pub fn limits(&self) -> Limits {
+        self.inner.limits
+    }
+
     /// Renders a document to PDF, on one of the engine's threads.
     pub fn render(&self, input: &Document) -> Result<Output, Error> {
         self.render_with_diagnostics(input)
@@ -813,17 +858,28 @@ impl Engine {
     pub fn render_with_diagnostics(&self, input: &Document) -> Result<Output, Failure> {
         let (reply, result) = mpsc::sync_channel(1);
         let inner = Arc::clone(&self.inner);
-        let document = input.clone();
+        // The resources of this render are its own.
+        let document = Document {
+            loaded: Arc::default(),
+            ..input.clone()
+        };
+        // The time limit counts from now, while the document may still wait for a thread.
+        let limits = input.limits.unwrap_or(inner.limits);
+        let budget =
+            fagus_dom::budget::Budget::new(limits.memory_budget(), limits.time_limit(), Instant::now());
         let job: Job = Box::new(move || {
-            let output = std::panic::catch_unwind(AssertUnwindSafe(|| inner.render(&document)))
-                .unwrap_or_else(|panic| {
-                    let message = panic
-                        .downcast_ref::<&str>()
-                        .map(|message| (*message).to_owned())
-                        .or_else(|| panic.downcast_ref::<String>().cloned())
-                        .unwrap_or_else(|| "a panic".to_owned());
-                    Err(Error::Internal(message).into())
-                });
+            let output = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                fagus_dom::budget::run(budget, || inner.render(&document))
+                    .unwrap_or_else(|exceeded| Err(Failure::exceeded(exceeded)))
+            }))
+            .unwrap_or_else(|panic| {
+                let message = panic
+                    .downcast_ref::<&str>()
+                    .map(|message| (*message).to_owned())
+                    .or_else(|| panic.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "a panic".to_owned());
+                Err(Error::Internal(message).into())
+            });
             // Let go of the engine before answering: the caller may change it next.
             drop(inner);
             drop(document);
@@ -1057,6 +1113,9 @@ impl Inner {
             diagnostics.extend(frames::spent_warning(&budget));
         }
         timings.layout = start.elapsed();
+        // The pages are held until they are painted.
+        let pages_held =
+            fagus_dom::budget::hold(fagus_dom::budget::Kind::Layout, fagus_layout::held_by(&pages));
         if pages.len() >= fagus_layout::MAX_PAGES {
             diagnostics.push(Diagnostic::new(
                 Severity::Warning,
@@ -1206,6 +1265,7 @@ impl Inner {
         // pages need not hold beside them.
         let page_count = pages.len();
         drop(pages);
+        drop(pages_held);
         if !inaccessible.is_empty() {
             return Err(Failure {
                 error: Error::Pdf(PdfError::Conformance {
@@ -1384,6 +1444,15 @@ impl Inner {
     /// Loads a resource: from a `data:` URL, the resources handed over, the caller's loader, or
     /// the base directory, in that order.
     fn load(&self, input: &Document, url: &str) -> Option<Arc<Vec<u8>>> {
+        let data = self.load_anew(input, url);
+        // (The caller's loader may take its time.)
+        fagus_dom::budget::check_time_now();
+        Some(input.loaded.held_once(data?))
+    }
+
+    /// Loads a resource as [`Self::load`] does, without looking for the same content loaded
+    /// before (but each file only once).
+    fn load_anew(&self, input: &Document, url: &str) -> Option<Arc<Vec<u8>>> {
         let url = url.trim();
         if url.is_empty() {
             return None;
@@ -1407,7 +1476,7 @@ impl Inner {
         }
         let base = input.base.as_deref()?;
         let root = input.root.as_deref().unwrap_or(base);
-        resources::read_inside(base, root, url).map(Arc::new)
+        input.loaded.file(resources::file_inside(base, root, url)?)
     }
 
     /// Loads the faces of the `@font-face` rules of the style sheets of an SVG image for its
@@ -1446,6 +1515,7 @@ impl Inner {
                 Source::Url(source) if font_face::loads(source) => {
                     let data = resources::data_url(source.url.url.as_ref())?;
                     let data = fagus_text::unpack(data).ok()?;
+                    fagus_dom::budget::charge(fagus_dom::budget::Kind::Fonts, data.len() as u64);
                     Face::from_rule(Arc::new(data), 0, &descriptors)
                 }
                 _ => None,
@@ -1543,6 +1613,7 @@ impl Inner {
                 });
                 match face {
                     Some(face) => {
+                        fagus_dom::budget::charge(fagus_dom::budget::Kind::Fonts, face.data.len() as u64);
                         fonts.add_document_face(face);
                         break;
                     }

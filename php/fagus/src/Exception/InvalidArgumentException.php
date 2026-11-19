@@ -37,6 +37,11 @@ final class InvalidArgumentException extends FagusException
         return new self("The engine's {$name} must be at least 1 or null, not {$value}.");
     }
 
+    public static function negative(string $name, int|float $value): self
+    {
+        return new self("The engine's {$name} must be at least 0 or null, not {$value}.");
+    }
+
     public static function emptyInvoiceField(string $field): self
     {
         return new self("The invoice {$field} must not be empty.");

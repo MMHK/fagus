@@ -70,9 +70,11 @@ pub(crate) fn rasterize(
     height: u32,
     transform: Transform,
 ) -> Option<Pixmap> {
+    let (canvas, held) = crate::raster::pixmap(width, height)?;
     let mut rasterizer = Rasterizer {
         fonts,
-        pixmaps: vec![Pixmap::new(width, height)?],
+        pixmaps: vec![canvas],
+        held: vec![held],
         transform,
         clip: None,
         frames: Vec::new(),
@@ -91,6 +93,8 @@ struct Rasterizer<'a> {
     fonts: &'a FontDb,
     /// The pixmap of the canvas, then one for every group open above it, drawn into the last.
     pixmaps: Vec<Pixmap>,
+    /// The pixmaps, charged to the budget of the render while they live.
+    held: Vec<fagus_dom::budget::Held>,
     /// From CSS pixels to the pixels of the pixmaps.
     transform: Transform,
     /// Where drawing shows, if it is clipped.
@@ -485,10 +489,11 @@ impl Rasterizer<'_> {
     /// `opacity`, `blend` and `mask` at its pop.
     fn push_group(&mut self, opacity: f32, blend: BlendMode, mask: Option<Mask>) {
         let (width, height) = self.size();
-        match Pixmap::new(width, height) {
-            Some(pixmap) => {
+        match crate::raster::pixmap(width, height) {
+            Some((pixmap, held)) => {
                 self.push_frame(Some(Group { opacity, blend, mask }));
                 self.pixmaps.push(pixmap);
+                self.held.push(held);
             }
             None => self.push_frame(None),
         }
@@ -502,6 +507,7 @@ impl Rasterizer<'_> {
         if let Some(group) = frame.group
             && let Some(mut pixmap) = self.pixmaps.pop()
         {
+            self.held.pop();
             if let Some(mask) = &group.mask {
                 pixmap.apply_mask(mask);
             }
@@ -745,7 +751,7 @@ impl Rasterizer<'_> {
         let fit = crate::svg::fit(&image.data, image.inline);
         let (x, y, width, height) = fit.place(natural, rect.width, rect.height);
         let (columns, rows) = self.size();
-        let Some(mut layer) = Pixmap::new(columns, rows) else {
+        let Some((mut layer, _held)) = crate::raster::pixmap(columns, rows) else {
             return;
         };
         let transform = self
