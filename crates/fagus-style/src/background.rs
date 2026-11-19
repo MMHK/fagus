@@ -63,7 +63,14 @@ fn image_set_candidate<'a>(
         option.file_type.as_ref().is_none_or(|kind| {
             matches!(
                 kind.to_ascii_lowercase().as_str(),
-                "image/png" | "image/jpeg" | "image/gif" | "image/webp" | "image/svg+xml"
+                "image/png"
+                    | "image/jpeg"
+                    | "image/gif"
+                    | "image/webp"
+                    | "image/bmp"
+                    | "image/x-ms-bmp"
+                    | "image/tiff"
+                    | "image/svg+xml"
             )
         })
     };

@@ -476,9 +476,9 @@ fn with_attribute(tag: &str, name: &str, value: &str) -> String {
     }
 }
 
-/// The images of `data:` URLs in an SVG, as usvg reads them, without those whose pixels do not
-/// decode: krilla only decodes them as it writes the PDF, and would fail the document for one,
-/// where Chrome leaves the image out.
+/// The images of `data:` URLs in an SVG, as usvg reads them (BMP and TIFF images as PNG images of
+/// their pixels), without those whose pixels do not decode: krilla only decodes them as it writes
+/// the PDF, and would fail the document for one, where Chrome leaves the image out.
 fn decodable_images() -> usvg::ImageHrefDataResolverFn<'static> {
     let resolve = ImageHrefResolver::default_data_resolver();
     Box::new(move |mime, data, options| {
@@ -492,7 +492,11 @@ fn decodable_images() -> usvg::ImageHrefDataResolverFn<'static> {
             std::borrow::Cow::Owned(capped) => Arc::new(capped),
             std::borrow::Cow::Borrowed(_) => data,
         };
-        let kind = resolve(mime, data, options)?;
+        // BMP and TIFF images, which usvg does not read, as PNG images of their pixels.
+        let kind = match crate::decode::as_png(&data) {
+            Some(png) => usvg::ImageKind::PNG(Arc::new(png)),
+            None => resolve(mime, data, options)?,
+        };
         let decodes = match &kind {
             usvg::ImageKind::PNG(data) => crate::decode::rgba(data, ImageFormat::Png).is_some(),
             usvg::ImageKind::GIF(data) => crate::decode::rgba(data, ImageFormat::Gif).is_some(),

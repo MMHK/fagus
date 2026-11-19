@@ -2150,11 +2150,12 @@ mod tests {
     fn picks_the_candidate_of_an_image_set_that_chrome_prints() {
         use crate::values::Image;
         let (document, styled) = styles(
-            "<p id=a></p><p id=b></p><p id=c></p><p id=d></p>",
+            "<p id=a></p><p id=b></p><p id=c></p><p id=d></p><p id=e></p>",
             r#"#a { background-image: image-set("x2.png" 2x, "x1.png" 1x, "x3.png" 3x) }
                #b { background-image: -webkit-image-set("x2.png" 2x, "x3.png" 3x) }
                #c { background-image: image-set("half.png" 0.5x, "quarter.png" 48dpi) }
-               #d { background-image: image-set("x.avif" type("image/avif"), "x.png" type("image/png")) }"#,
+               #d { background-image: image-set("x.avif" type("image/avif"), "x.png" type("image/png")) }
+               #e { background-image: image-set("x.avif" type("image/avif"), "x.tif" type("image/tiff")) }"#,
         );
         let image = |id: &str| by_id(&document, &styled, id).background_image[0].clone();
         // The lowest resolution from 1x up, the highest below where there is none.
@@ -2163,6 +2164,7 @@ mod tests {
         assert_eq!(image("c"), Image::Url("half.png".into(), 0.5));
         // Of the types Fagus shows.
         assert_eq!(image("d"), Image::Url("x.png".into(), 1.0));
+        assert_eq!(image("e"), Image::Url("x.tif".into(), 1.0));
     }
 
     #[test]

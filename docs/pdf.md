@@ -790,9 +790,9 @@ The binary compresses on two threads of its own while it draws the pages; the en
 
 ## Images in the PDF
 
-Fagus reads PNG, JPEG, GIF, WebP and SVG images. Other formats (AVIF, JPEG XL, BMP …) report
-`image.unsupported` and are left out; `<picture>` and `srcset` skip AVIF and JPEG XL sources, as
-Chrome chooses among the formats it can show. An image of more than 200 megapixels reports
+Fagus reads PNG, JPEG, GIF, WebP, BMP, TIFF and SVG images. Other formats (AVIF, JPEG XL, ICO …)
+report `image.unsupported` and are left out; `<picture>` and `srcset` skip AVIF and JPEG XL
+sources, as Chrome chooses among the formats it can show. An image of more than 200 megapixels reports
 `image.too-large`, one that does not decode `image.broken`.
 
 How images go into the PDF:
@@ -802,6 +802,10 @@ How images go into the PDF:
 - PNG, GIF and WebP as their pixels, compressed without loss; transparency becomes a soft mask.
   A PNG whose `gAMA` chunk Chrome corrects for is corrected the same way. An animated GIF shows
   its first frame.
+- BMP and TIFF as their pixels, decoded by Fagus, compressed without loss. BMP is read as Chrome
+  reads it; TIFF, which Chrome does not show, as Safari shows it: its first image, gray, RGB, CMYK
+  (converted to RGB as CMYK JPEGs) or YCbCr, uncompressed or compressed with LZW, Deflate,
+  PackBits, CCITT Group 4 or JPEG. Palette and Lab TIFFs and CCITT Group 3 report `image.broken`.
 - SVG as vector graphics, with their text, gradients and patterns. Filtered SVG and SVG filters
   that PDF cannot express are drawn as pixels at 300 dpi, as Chrome prints them.
 - At their full resolution: Fagus does not scale images down. Scale large photos before you hand

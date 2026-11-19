@@ -393,7 +393,14 @@ pub(crate) fn write_uncompacted(
     let mut broken_images = Vec::new();
     loop {
         match attempt(pages, fonts, metadata, options, &mut image_cache, release) {
-            Ok(pdf) => return Ok(Written { pdf, broken_images }),
+            Ok(pdf) => {
+                for data in image_cache.undecoded {
+                    if !broken_images.iter().any(|known| Arc::ptr_eq(known, &data)) {
+                        broken_images.push(data);
+                    }
+                }
+                return Ok(Written { pdf, broken_images });
+            }
             Err(Failure::Pdf(error)) => return Err(error),
             // Not without the pages let go of; there are none to draw again where nothing
             // draws an image.
@@ -450,6 +457,7 @@ impl ImageCache {
             morphology: FxHashMap::default(),
             svgs: FxHashMap::default(),
             svg_traits: FxHashMap::default(),
+            undecoded: Vec::new(),
         }
     }
 }
@@ -1055,6 +1063,9 @@ struct ImageCache {
     /// The images embedded so far, by their data, whether they are smoothed, and what their
     /// pixels go through (their filters, written out, and their padding).
     images: FxHashMap<(usize, bool, String), Option<Embedded>>,
+    /// The data of BMP and TIFF images that did not decode: Fagus decodes them itself, so krilla
+    /// does not find them broken as it writes the PDF.
+    undecoded: Vec<Arc<Vec<u8>>>,
     /// SVG images with non-scaling strokes drawn at another width than their natural one, by
     /// their data and that width (its bits), parsed for it (see [`svg::parse_drawn`]).
     strokes: FxHashMap<(usize, u32), Option<Arc<usvg::Tree>>>,
@@ -1150,6 +1161,7 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                 ImageFormat::Jpeg => memo::Kind::Jpeg(interpolate),
                 ImageFormat::Gif => memo::Kind::Gif(interpolate),
                 ImageFormat::Webp => memo::Kind::Webp(interpolate),
+                ImageFormat::Bmp | ImageFormat::Tiff => memo::Kind::Decoded(image.format, interpolate),
                 ImageFormat::Svg => {
                     return svg::parse_kept(&image.data, fonts, &cache.memo, true, image.inline)
                         .map(|tree| Embedded::Svg(tree, svg::fit(&image.data, image.inline)));
@@ -1161,22 +1173,26 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                 let data: Arc<Vec<u8>> = Arc::clone(&image.data);
                 let raster = match kind {
                     memo::Kind::Png(_) => match decode::gamma_png(&data, interpolate) {
-                        Some(corrected) => Ok(corrected),
-                        None => krilla::image::Image::from_png(data.into(), interpolate),
+                        Some(corrected) => Some(corrected),
+                        None => krilla::image::Image::from_png(data.into(), interpolate).ok(),
                     },
                     memo::Kind::Jpeg(_) => match decode::cmyk_jpeg(&data, interpolate) {
-                        Some(converted) => Ok(converted),
-                        None => krilla::image::Image::from_jpeg(data.into(), interpolate),
+                        Some(converted) => Some(converted),
+                        None => krilla::image::Image::from_jpeg(data.into(), interpolate).ok(),
                     },
-                    memo::Kind::Gif(_) => krilla::image::Image::from_gif(data.into(), interpolate),
+                    memo::Kind::Gif(_) => krilla::image::Image::from_gif(data.into(), interpolate).ok(),
+                    memo::Kind::Decoded(format, _) => decode::decoded(&data, format, interpolate),
                     memo::Kind::Webp(_) | memo::Kind::Flat(_) | memo::Kind::Svg { .. } => {
-                        krilla::image::Image::from_webp(data.into(), interpolate)
+                        krilla::image::Image::from_webp(data.into(), interpolate).ok()
                     }
                 };
-                memo::Prepared::Raster(raster.ok())
+                memo::Prepared::Raster(raster)
             });
             match prepared {
                 memo::Prepared::Raster(raster) => {
+                    if raster.is_none() && matches!(kind, memo::Kind::Decoded(..)) {
+                        cache.undecoded.push(Arc::clone(&image.data));
+                    }
                     raster.map(|raster| Embedded::Raster(raster, Arc::clone(&image.data)))
                 }
                 memo::Prepared::Svg(_) => None,

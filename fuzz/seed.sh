@@ -25,7 +25,8 @@ seed() {
 seed render 65536 -name '*.html' -o -name '*.xhtml'
 seed css 262144 -name '*.css'
 seed font 1048576 -name '*.ttf' -o -name '*.otf' -o -name '*.ttc' -o -name '*.woff' -o -name '*.woff2'
-seed image 262144 -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.webp'
+seed image 262144 -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.webp' \
+    -o -name '*.bmp' -o -name '*.tif' -o -name '*.tiff'
 seed svg 262144 -name '*.svg'
 seed worker 1 -name '-'
 

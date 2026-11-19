@@ -6,7 +6,8 @@ use fagus_css::srcset::{self, Candidate};
 use fagus_dom::{Document, ElementData, NodeId};
 
 /// The image types Fagus draws, as the `type` of a `<source>` names them (parameters and case
-/// aside). A source of another type, such as AVIF, is skipped, so that the next one shows.
+/// aside). A source of another type, such as AVIF, is skipped, so that the next one shows. TIFF
+/// is one, as in Safari (Chrome skips it).
 const TYPES: &[&str] = &[
     "image/png",
     "image/apng",
@@ -15,6 +16,9 @@ const TYPES: &[&str] = &[
     "image/pjpeg",
     "image/gif",
     "image/webp",
+    "image/bmp",
+    "image/x-ms-bmp",
+    "image/tiff",
     "image/svg+xml",
 ];
 
@@ -155,6 +159,18 @@ mod tests {
         assert_eq!(
             pick(&picture(r#"<source type="image/avif" srcset="a.avif"><source type="image/webp; codecs=x" srcset="w.webp">"#)).as_deref(),
             Some("w.webp")
+        );
+        // BMP as in Chrome, TIFF as in Safari.
+        assert_eq!(
+            pick(&picture(
+                r#"<source type="image/avif" srcset="a.avif"><source type="image/tiff" srcset="t.tif">"#
+            ))
+            .as_deref(),
+            Some("t.tif")
+        );
+        assert_eq!(
+            pick(&picture(r#"<source type="image/bmp" srcset="b.bmp">"#)).as_deref(),
+            Some("b.bmp")
         );
         assert_eq!(
             pick(&picture(r#"<source media="print" srcset="p.png">"#)).as_deref(),

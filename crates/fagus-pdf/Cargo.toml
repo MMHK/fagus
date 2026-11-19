@@ -25,6 +25,7 @@ png.workspace = true
 zune-jpeg.workspace = true
 image-webp.workspace = true
 gif.workspace = true
+tiff.workspace = true
 usvg.workspace = true
 resvg.workspace = true
 # Not used directly: switches krilla's compression to the faster zlib-rs backend.

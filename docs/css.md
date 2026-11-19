@@ -308,8 +308,9 @@ as an isolated group.
 
 **Works:**
 
-- `<img>` with PNG, JPEG, GIF, WebP and SVG. SVG stays vector graphics. JPEG, PNG and WebP are
-  turned as their EXIF orientation says (`image-orientation: none` turns this off).
+- `<img>` with PNG, JPEG, GIF, WebP, BMP and SVG, and TIFF, which Chrome does not show and Safari
+  does. SVG stays vector graphics. JPEG, PNG, WebP and TIFF are turned as their EXIF or TIFF
+  orientation says (`image-orientation: none` turns this off).
 - `srcset`, `sizes` and `<picture>` with `media` and `type`, chosen as Chrome chooses them when it
   loads the page (on screen, before printing). `(min-resolution)` queries see 300 dpi.
 - `object-fit` and `object-position`, `image-rendering: pixelated` and `crisp-edges`.
@@ -326,7 +327,7 @@ as an isolated group.
   table, and tables. The generic family `math` finds a math font.
 
 **Differs:** AVIF and JPEG XL are skipped in `<picture>` and `image-set()`; use one of the formats
-above. An image that does not load shows its alt text after Chrome's broken-image icon. An image
+above. TIFF sources are taken, as in Safari. An image that does not load shows its alt text after Chrome's broken-image icon. An image
 whose data does not decode is left out with an `image.broken` warning.
 
 **Not supported:** scripts in SVG and in frames do not run. Fagus loads no media other than images.
@@ -534,5 +535,5 @@ A short list of what Fagus does not do. Most of it is also absent in Chrome's pr
   `text-spacing`, `ruby-overhang`, `@font-feature-values`.
 - **Effects:** `backdrop-filter` (no filtering of the backdrop), `cross-fade()`, `element()` as an
   image.
-- **Images:** AVIF, JPEG XL, BMP, TIFF and ICO.
+- **Images:** AVIF, JPEG XL and ICO.
 - **At-rules:** `@function`, `@starting-style` and `@view-transition` have no effect.

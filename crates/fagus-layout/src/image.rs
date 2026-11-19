@@ -14,6 +14,10 @@ pub enum ImageFormat {
     Jpeg,
     Gif,
     Webp,
+    /// BMP, read as Chrome reads it (see [`crate::bmp`]).
+    Bmp,
+    /// TIFF, which Chrome does not show and Safari does: the first image of the file.
+    Tiff,
     /// SVG, drawn as vector graphics; its size comes from the SVG's own `width`, `height` and
     /// `viewBox`.
     Svg,
@@ -73,7 +77,7 @@ pub enum PixelFilter {
 /// Why an image could not be used.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ImageError {
-    /// Not a PNG, JPEG, GIF or WebP image.
+    /// Not a PNG, JPEG, GIF, WebP, BMP or TIFF image.
     Unsupported,
     /// More than 200 megapixels.
     TooLarge,
@@ -93,9 +97,20 @@ impl Image {
             imagesize::ImageType::Jpeg => ImageFormat::Jpeg,
             imagesize::ImageType::Gif => ImageFormat::Gif,
             imagesize::ImageType::Webp => ImageFormat::Webp,
+            imagesize::ImageType::Bmp => ImageFormat::Bmp,
+            imagesize::ImageType::Tiff => ImageFormat::Tiff,
             _ => return Err(ImageError::Unsupported),
         };
-        let size = imagesize::blob_size(&data).map_err(|_| ImageError::Unsupported)?;
+        // imagesize reads the height of a top-down BMP (negative) and OS/2 headers wrong.
+        let size = match format {
+            ImageFormat::Bmp => crate::bmp::size(&data)
+                .map(|(width, height)| imagesize::ImageSize {
+                    width: width as usize,
+                    height: height as usize,
+                })
+                .ok_or(ImageError::Unsupported)?,
+            _ => imagesize::blob_size(&data).map_err(|_| ImageError::Unsupported)?,
+        };
         if size.width as u64 * size.height as u64 > MAX_PIXELS {
             return Err(ImageError::TooLarge);
         }
@@ -163,8 +178,8 @@ impl Image {
     }
 }
 
-/// The EXIF orientation of a JPEG (APP1), PNG (`eXIf`) or WebP (`EXIF`) image, if it has one
-/// from 1 to 8.
+/// The EXIF orientation of a JPEG (APP1), PNG (`eXIf`) or WebP (`EXIF`) image, or the
+/// orientation of a TIFF image (its first IFD), if it has one from 1 to 8.
 fn exif_orientation(data: &[u8], format: ImageFormat) -> Option<u8> {
     let be16 = |at: usize| Some(u16::from_be_bytes(data.get(at..at + 2)?.try_into().ok()?));
     let tiff: &[u8] = match format {
@@ -214,7 +229,8 @@ fn exif_orientation(data: &[u8], format: ImageFormat) -> Option<u8> {
                 at = at.checked_add(8 + length + length % 2)?;
             }
         }
-        ImageFormat::Gif | ImageFormat::Svg => return None,
+        ImageFormat::Tiff => data,
+        ImageFormat::Gif | ImageFormat::Bmp | ImageFormat::Svg => return None,
     };
     // A TIFF header, then the first IFD: entries of tag, type, count and value.
     let little = match tiff.get(..2)? {
@@ -531,6 +547,41 @@ mod tests {
         assert_eq!(
             Image::probe(Arc::new(b"<html>".to_vec())).err(),
             Some(ImageError::Unsupported)
+        );
+    }
+
+    #[test]
+    fn probes_bmp_and_tiff_images() {
+        // A top-down BMP (its height negative) of 3 × 2 pixels: imagesize reads its height as
+        // 4 billion.
+        let mut bmp = b"BM".to_vec();
+        bmp.extend(66_u32.to_le_bytes());
+        bmp.extend([0; 4]);
+        bmp.extend(54_u32.to_le_bytes());
+        bmp.extend(40_u32.to_le_bytes());
+        bmp.extend(3_i32.to_le_bytes());
+        bmp.extend((-2_i32).to_le_bytes());
+        bmp.extend([1, 0, 24, 0]);
+        bmp.extend([0; 24]);
+        bmp.extend([0; 12]);
+        let image = Image::probe(Arc::new(bmp)).expect("bmp");
+        assert_eq!(
+            (image.format, image.width, image.height),
+            (ImageFormat::Bmp, 3.0, 2.0)
+        );
+        // A TIFF of 4 × 2 pixels, turned a quarter by its orientation tag (6).
+        let mut tiff = b"II\x2a\0\x08\0\0\0\x03\0".to_vec();
+        for (tag, value) in [(256_u16, 4_u16), (257, 2), (0x0112, 6)] {
+            tiff.extend(tag.to_le_bytes());
+            tiff.extend(3_u16.to_le_bytes());
+            tiff.extend(1_u32.to_le_bytes());
+            tiff.extend(u32::from(value).to_le_bytes());
+        }
+        tiff.extend([0; 4]);
+        let image = Image::probe(Arc::new(tiff)).expect("tiff");
+        assert_eq!(
+            (image.format, image.orientation, image.width, image.height),
+            (ImageFormat::Tiff, 6, 2.0, 4.0)
         );
     }
 

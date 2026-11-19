@@ -1668,7 +1668,7 @@ impl Inner {
                 Err(ImageError::Unsupported) => diagnostics.push(warning(
                     "image.unsupported",
                     format!(
-                        "image `{}` is not a PNG, JPEG, GIF, WebP or SVG image",
+                        "image `{}` is not a PNG, JPEG, GIF, WebP, BMP, TIFF or SVG image",
                         short(url)
                     ),
                 )),
@@ -4478,6 +4478,72 @@ mod tests {
         let objects = String::from_utf8_lossy(&decoded(&pdf)).replace(' ', "");
         assert!(objects.contains("/PatternType1"), "a tiling pattern: {objects}");
         assert_eq!(objects.matches("/Subtype/Image").count(), 1, "the image once");
+    }
+
+    #[test]
+    fn draws_bmp_and_tiff_images() {
+        // As an element, a background, a mask, a border image and in an SVG, which takes them
+        // as PNG images of their pixels.
+        let media = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/corpus/images/media/");
+        let read = |name: &str| std::fs::read(format!("{media}{name}")).expect("an image");
+        for name in [
+            "logo-alpha.bmp",
+            "band-rle8.bmp",
+            "scan-g4.tif",
+            "receipt-jpeg.tif",
+        ] {
+            let output = engine()
+                .render(
+                    &Document::html(
+                        "<img src=i style='width: 40px'>\
+                         <div style='width: 20px; height: 20px; background: url(i); mask-image: url(i)'></div>\
+                         <div style='width: 10px; border: 5px solid; border-image: url(i) 30%'></div>\
+                         <svg width=20 height=20><image href=i width=20 height=20 /></svg>",
+                    )
+                    .resource("i", read(name))
+                    .created(CREATED)
+                    .tagged(false),
+                )
+                .expect("rendered");
+            assert_eq!(codes(&output), Vec::<&str>::new(), "{name}");
+            let objects = String::from_utf8_lossy(&decoded(&output.pdf)).replace(' ', "");
+            assert!(
+                objects.matches("/Subtype/Image").count() >= 2,
+                "{name}: {objects}"
+            );
+        }
+        // A BMP whose color table is cut short is not one Fagus (or Chrome) reads; a TIFF of a
+        // compression Fagus does not read (CCITT Group 3, 2) is broken.
+        let mut short = read("band-rle8.bmp");
+        short.truncate(60);
+        let mut group3 = read("scan-g4.tif");
+        let compression = group3
+            .windows(4)
+            .position(|entry| entry == [3, 1, 3, 0])
+            .expect("the compression tag");
+        group3[compression + 8] = 2;
+        for (name, data, code) in [
+            ("short.bmp", short, "image.unsupported"),
+            ("group3.tif", group3, "image.broken"),
+        ] {
+            let output = engine()
+                .render(
+                    &Document::html("<img src=i style='width: 40px'>")
+                        .resource("i", data)
+                        .created(CREATED),
+                )
+                .expect("rendered without the image");
+            assert_eq!(codes(&output), [code], "{name}");
+        }
+        // AVIF is still unsupported.
+        let output = engine()
+            .render(
+                &Document::html("<img src=i>")
+                    .resource("i", b"\0\0\0\x1cftypavif\0\0\0\0avifmif1miaf".to_vec())
+                    .created(CREATED),
+            )
+            .expect("rendered");
+        assert_eq!(codes(&output), ["image.unsupported"]);
     }
 
     #[test]

@@ -29,6 +29,8 @@ pub(crate) enum Kind {
     Jpeg(bool),
     Gif(bool),
     Webp(bool),
+    /// A raster image that krilla cannot read, decoded (see [`crate::decode::decoded`]).
+    Decoded(fagus_layout::ImageFormat, bool),
     /// A raster image as PDF/A-1 can take it (see [`crate::decode::flat`]).
     Flat(fagus_layout::ImageFormat),
     /// An SVG document, parsed to be drawn or only for its size.

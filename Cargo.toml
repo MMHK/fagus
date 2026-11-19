@@ -65,6 +65,9 @@ png = "0.18.1"
 zune-jpeg = "0.5.15"
 image-webp = "0.2.4"
 gif = "0.14.2"
+# TIFF images (beyond Chrome, as Safari shows them): scans and receipts, uncompressed, LZW, Deflate,
+# PackBits, CCITT Group 4 and JPEG.
+tiff = { version = "0.11.3", default-features = false, features = ["deflate", "fax", "jpeg", "lzw"] }
 # Indexes the fonts installed on the system (opt-in); usvg already depends on it.
 fontdb = { version = "0.23.0", default-features = false, features = ["std", "fs", "memmap", "fontconfig"] }
 # WOFF and WOFF2 fonts are unpacked to OpenType before use.

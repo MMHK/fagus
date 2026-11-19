@@ -251,8 +251,60 @@ pub(crate) fn rgba(data: &[u8], format: ImageFormat) -> Option<(u32, u32, Vec<u8
         ImageFormat::Jpeg => jpeg(data),
         ImageFormat::Gif => gif(data),
         ImageFormat::Webp => webp(data),
+        ImageFormat::Bmp => fagus_layout::bmp::decode(data),
+        ImageFormat::Tiff => tiff(data),
         ImageFormat::Svg => None,
     }
+}
+
+/// A BMP or TIFF image as its pixels, which krilla cannot read itself: RGB, with an alpha channel
+/// unless all its pixels are opaque. `None` for other images and those that do not decode.
+pub(crate) fn decoded(data: &[u8], format: ImageFormat, interpolate: bool) -> Option<Image> {
+    if !matches!(format, ImageFormat::Bmp | ImageFormat::Tiff) {
+        return None;
+    }
+    let (width, height, pixels) = rgba(data, format)?;
+    let mut color = Vec::with_capacity(pixels.len() / 4 * 3);
+    let mut alpha = Vec::with_capacity(pixels.len() / 4);
+    for [r, g, b, a] in pixels.as_chunks::<4>().0 {
+        color.extend([*r, *g, *b]);
+        alpha.push(*a);
+    }
+    if alpha.iter().all(|value| *value == 255) {
+        alpha.clear();
+    }
+    Image::from_custom(
+        RgbaImage {
+            color,
+            alpha,
+            width,
+            height,
+        },
+        interpolate,
+    )
+    .ok()
+}
+
+/// The data of a BMP or TIFF image as a PNG of its pixels, for SVG images, which only take PNG,
+/// JPEG, GIF and WebP. `None` for other data and images that do not decode.
+pub(crate) fn as_png(data: &[u8]) -> Option<Vec<u8>> {
+    let format = if data.starts_with(b"BM") {
+        ImageFormat::Bmp
+    } else if data.starts_with(b"II*\0") || data.starts_with(b"MM\0*") {
+        ImageFormat::Tiff
+    } else {
+        return None;
+    };
+    let (width, height, pixels) = rgba(data, format)?;
+    let mut png = Vec::new();
+    {
+        let mut encoder = png::Encoder::new(&mut png, width, height);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_compression(png::Compression::Fastest);
+        let mut writer = encoder.write_header().ok()?;
+        writer.write_image_data(&pixels).ok()?;
+    }
+    Some(png)
 }
 
 /// A PNG, GIF or WebP image as PDF/A-1 can take it, where krilla would embed it otherwise: with
@@ -287,7 +339,8 @@ pub(crate) fn flat(data: &[u8], format: ImageFormat) -> Option<Image> {
             let mut decoder = image_webp::WebPDecoder::new(Cursor::new(data)).ok()?;
             (decoder.has_alpha(), decoder.icc_profile().ok()?)
         }
-        ImageFormat::Jpeg | ImageFormat::Svg => (false, None),
+        // Embedded as their pixels (see [`decoded`]), already as PDF/A-1 takes them.
+        ImageFormat::Jpeg | ImageFormat::Bmp | ImageFormat::Tiff | ImageFormat::Svg => (false, None),
     };
     if !needed {
         return None;
@@ -557,6 +610,128 @@ fn gif(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     Some((width as u32, height as u32, pixels))
 }
 
+/// The first image of a TIFF file as 8-bit RGBA, as Safari shows it (Chrome shows none): gray
+/// (1 to 16 bits, black or white as zero), gray with alpha, RGB and RGBA (8 or 16 bits, alpha
+/// associated or not), CMYK (as Chrome converts CMYK JPEGs without a profile), and YCbCr (as
+/// the JPEG compression of TIFF stores it). Palette, Lab and float images are not decoded.
+fn tiff(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
+    use tiff::ColorType;
+    use tiff::decoder::{Decoder, DecodingResult};
+    let mut decoder = Decoder::new(Cursor::new(data)).ok()?;
+    let (width, height) = decoder.dimensions().ok()?;
+    if !decodable(width, height) || width == 0 || height == 0 {
+        return None;
+    }
+    let color = decoder.colortype().ok()?;
+    // The meaning of a fourth (or second) sample: alpha premultiplied, alpha, or other data.
+    let extra = decoder
+        .find_tag_unsigned_vec::<u16>(tiff::tags::Tag::ExtraSamples)
+        .ok()
+        .flatten()
+        .and_then(|extra| extra.first().copied());
+    let samples = decoder.read_image().ok()?;
+    let (columns, rows) = (width as usize, height as usize);
+    // The samples as 8 bits, and how many bits they had.
+    let (values, bits): (Vec<u8>, u8) = match samples {
+        DecodingResult::U8(values) => (values, 8),
+        DecodingResult::U16(values) => (
+            values
+                .iter()
+                .map(|value| ((u32::from(*value) * 255 + 32_767) / 65_535) as u8)
+                .collect(),
+            16,
+        ),
+        _ => return None,
+    };
+    let channels = |depth: u8, count: usize| (depth == bits).then_some(count);
+    let (count, kind) = match color {
+        ColorType::Gray(depth @ (1 | 2 | 4)) if bits == 8 => {
+            return packed_gray(&values, columns, rows, depth).map(|pixels| (width, height, pixels));
+        }
+        ColorType::Gray(depth) => (channels(depth, 1)?, color),
+        ColorType::Multiband {
+            bit_depth,
+            num_samples: 2,
+        } => (channels(bit_depth, 2)?, ColorType::GrayA(bit_depth)),
+        ColorType::RGB(depth) | ColorType::YCbCr(depth) => (channels(depth, 3)?, color),
+        ColorType::RGBA(depth) | ColorType::CMYK(depth) => (channels(depth, 4)?, color),
+        ColorType::CMYKA(depth) => (channels(depth, 5)?, color),
+        _ => return None,
+    };
+    if values.len() < columns * rows * count {
+        return None;
+    }
+    let mut pixels = Vec::with_capacity(columns * rows * 4);
+    for sample in values.chunks_exact(count).take(columns * rows) {
+        let (mut rgb, alpha) = match kind {
+            ColorType::Gray(_) => ([sample[0]; 3], None),
+            ColorType::GrayA(_) => ([sample[0]; 3], Some(sample[1])),
+            ColorType::RGB(_) => ([sample[0], sample[1], sample[2]], None),
+            ColorType::RGBA(_) => ([sample[0], sample[1], sample[2]], Some(sample[3])),
+            ColorType::YCbCr(_) => (ycbcr_rgb(sample[0], sample[1], sample[2]), None),
+            ColorType::CMYK(_) => (cmyk_rgb_pixel(sample), None),
+            _ => (cmyk_rgb_pixel(sample), Some(sample[4])),
+        };
+        let alpha = match (alpha, extra) {
+            // Premultiplied: the colors are divided by it again.
+            (Some(alpha), Some(1)) => {
+                for value in &mut rgb {
+                    *value = if alpha == 0 {
+                        0
+                    } else {
+                        ((u32::from(*value) * 255 + u32::from(alpha) / 2) / u32::from(alpha)).min(255) as u8
+                    };
+                }
+                alpha
+            }
+            (Some(alpha), Some(2)) => alpha,
+            // An extra sample that is not alpha.
+            _ => 255,
+        };
+        pixels.extend([rgb[0], rgb[1], rgb[2], alpha]);
+    }
+    Some((width, height, pixels))
+}
+
+/// Gray pixels of `depth` bits (1, 2 or 4) packed into bytes, each row starting at a byte, as
+/// RGBA.
+fn packed_gray(values: &[u8], columns: usize, rows: usize, depth: u8) -> Option<Vec<u8>> {
+    let depth = usize::from(depth);
+    let stride = (columns * depth).div_ceil(8);
+    if values.len() < stride * rows {
+        return None;
+    }
+    let most = (1_u16 << depth) - 1;
+    let mut pixels = Vec::with_capacity(columns * rows * 4);
+    for line in values.chunks_exact(stride).take(rows) {
+        for column in 0..columns {
+            let at = column * depth;
+            let value = u16::from(line[at / 8] >> (8 - depth - at % 8)) & most;
+            let gray = ((value * 255 + most / 2) / most) as u8;
+            pixels.extend([gray, gray, gray, 255]);
+        }
+    }
+    Some(pixels)
+}
+
+/// A YCbCr pixel (full range, as JPEG stores it) as RGB.
+fn ycbcr_rgb(y: u8, cb: u8, cr: u8) -> [u8; 3] {
+    let (y, cb, cr) = (f32::from(y), f32::from(cb) - 128.0, f32::from(cr) - 128.0);
+    [
+        y + 1.402 * cr,
+        y - 0.344_136 * cb - 0.714_136 * cr,
+        y + 1.772 * cb,
+    ]
+    .map(|value| value.round().clamp(0.0, 255.0) as u8)
+}
+
+/// A CMYK pixel without a profile as RGB, as Chrome draws CMYK JPEGs: each channel the inverted
+/// cyan, magenta or yellow times the inverted black.
+fn cmyk_rgb_pixel(sample: &[u8]) -> [u8; 3] {
+    let black = 255 - u32::from(sample[3]);
+    [sample[0], sample[1], sample[2]].map(|value| (((255 - u32::from(value)) * black + 127) / 255) as u8)
+}
+
 fn webp(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     let mut decoder = image_webp::WebPDecoder::new(Cursor::new(data)).ok()?;
     let (width, height) = decoder.dimensions();
@@ -640,6 +815,95 @@ mod tests {
             217,
         ];
         assert!(cmyk_rgb(rgb).is_none());
+    }
+
+    /// A TIFF image of `width` × `height` pixels of color type `C`, with `extra` samples after
+    /// the color, compressed with LZW.
+    fn tiff_of<C: tiff::encoder::colortype::ColorType>(
+        width: u32,
+        height: u32,
+        extra: &[tiff::tags::ExtraSamples],
+        data: &[C::Inner],
+    ) -> Vec<u8>
+    where
+        [C::Inner]: tiff::encoder::TiffValue,
+    {
+        let mut file = Cursor::new(Vec::new());
+        let mut encoder = tiff::encoder::TiffEncoder::new(&mut file)
+            .expect("encoder")
+            .with_compression(tiff::encoder::Compression::Lzw);
+        let mut image = encoder.new_image::<C>(width, height).expect("image");
+        image.extra_samples(extra).expect("extra samples");
+        image.write_data(data).expect("pixels");
+        file.into_inner()
+    }
+
+    #[test]
+    fn decodes_tiff_images() {
+        use tiff::encoder::colortype::{CMYK8, Gray8, Gray16, RGB8, RGB16};
+        use tiff::tags::ExtraSamples;
+        let pixels = |data: &[u8]| rgba(data, ImageFormat::Tiff).map(|(_, _, pixels)| pixels);
+        let rgb = tiff_of::<RGB8>(2, 1, &[], &[255, 0, 0, 0, 0, 255]);
+        assert_eq!(pixels(&rgb), Some(vec![255, 0, 0, 255, 0, 0, 255, 255]));
+        // 16 bits to the nearest 8.
+        let deep = tiff_of::<RGB16>(1, 1, &[], &[65_535, 32_896, 257]);
+        assert_eq!(pixels(&deep), Some(vec![255, 128, 1, 255]));
+        let gray = tiff_of::<Gray16>(2, 1, &[], &[0, 65_535]);
+        assert_eq!(pixels(&gray), Some(vec![0, 0, 0, 255, 255, 255, 255, 255]));
+        // Alpha as it is, premultiplied, and a sample that is not alpha.
+        let straight = tiff_of::<RGB8>(1, 1, &[ExtraSamples::UnassociatedAlpha], &[0, 255, 0, 128]);
+        assert_eq!(pixels(&straight), Some(vec![0, 255, 0, 128]));
+        let premultiplied = tiff_of::<RGB8>(1, 1, &[ExtraSamples::AssociatedAlpha], &[0, 128, 0, 128]);
+        assert_eq!(pixels(&premultiplied), Some(vec![0, 255, 0, 128]));
+        let other = tiff_of::<RGB8>(1, 1, &[ExtraSamples::Unspecified], &[0, 255, 0, 128]);
+        assert_eq!(pixels(&other), Some(vec![0, 255, 0, 255]));
+        let gray_alpha = tiff_of::<Gray8>(1, 1, &[ExtraSamples::UnassociatedAlpha], &[200, 50]);
+        assert_eq!(pixels(&gray_alpha), Some(vec![200, 200, 200, 50]));
+        // CMYK without a profile, as Chrome draws CMYK JPEGs: cyan, and black.
+        let cmyk = tiff_of::<CMYK8>(2, 1, &[], &[255, 0, 0, 0, 0, 0, 0, 255]);
+        assert_eq!(pixels(&cmyk), Some(vec![0, 255, 255, 255, 0, 0, 0, 255]));
+        // A 1-bit fax scan (CCITT Group 4, white is zero) of a black label with white text.
+        let scan = include_bytes!("../../../tests/corpus/images/media/scan-g4.tif");
+        let (width, height, scanned) = rgba(scan, ImageFormat::Tiff).expect("the scan");
+        assert_eq!((width, height), (240, 80));
+        let at = |x: usize, y: usize| &scanned[(y * 240 + x) * 4..(y * 240 + x) * 4 + 4];
+        assert_eq!(at(0, 0), [255, 255, 255, 255]);
+        assert_eq!(at(120, 10), [0, 0, 0, 255]);
+        // JPEG compression with subsampled YCbCr: the gray band starts black, ends white.
+        let receipt = include_bytes!("../../../tests/corpus/images/media/receipt-jpeg.tif");
+        let (width, _, band) = rgba(receipt, ImageFormat::Tiff).expect("the receipt");
+        assert!(band[..3].iter().all(|value| *value < 8), "{:?}", &band[..4]);
+        let last = (width as usize - 1) * 4;
+        assert!(
+            band[last..last + 3].iter().all(|value| *value > 247),
+            "{:?}",
+            &band[last..last + 4]
+        );
+        assert_eq!(ycbcr_rgb(128, 128, 128), [128, 128, 128]);
+        assert_eq!(ycbcr_rgb(76, 85, 255), [254, 0, 0]);
+        // Not TIFF, and a TIFF cut short.
+        assert!(pixels(b"II*\0").is_none());
+        assert!(pixels(&rgb[..rgb.len() - 20]).is_none());
+    }
+
+    #[test]
+    fn packs_bmp_and_tiff_images_as_png_for_svg() {
+        use tiff::encoder::colortype::RGB8;
+        let tiff = tiff_of::<RGB8>(2, 1, &[], &[255, 0, 0, 0, 0, 255]);
+        let png = as_png(&tiff).expect("a PNG");
+        assert_eq!(
+            super::png(&png),
+            Some((2, 1, vec![255, 0, 0, 255, 0, 0, 255, 255]))
+        );
+        let bmp = include_bytes!("../../../tests/corpus/images/media/logo-alpha.bmp");
+        let png = as_png(bmp).expect("a PNG");
+        assert_eq!(super::png(&png), fagus_layout::bmp::decode(bmp));
+        assert!(as_png(&png).is_none());
+        assert!(as_png(b"BM").is_none());
+        // Embedded as pixels, with an alpha channel where pixels are not opaque.
+        assert!(decoded(bmp, ImageFormat::Bmp, false).is_some());
+        assert!(decoded(&tiff, ImageFormat::Tiff, false).is_some());
+        assert!(decoded(&png, ImageFormat::Png, false).is_none());
     }
 
     #[test]

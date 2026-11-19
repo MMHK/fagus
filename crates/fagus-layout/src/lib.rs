@@ -9,6 +9,7 @@ mod annotation;
 mod bidi;
 mod block;
 mod block_justify;
+pub mod bmp;
 mod breaks;
 mod cjk;
 mod clamp;

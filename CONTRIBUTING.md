@@ -27,7 +27,7 @@ fuzz/run.sh render 600    # a target, and for how many seconds
 | `render` | HTML, or XHTML when it starts with `<?xml`, rendered to PDF |
 | `css` | a style sheet, parsed and cascaded over a fixed document |
 | `font` | a font file (TrueType, OpenType, WOFF, WOFF2), shaped and used through `@font-face` |
-| `image` | an image (PNG, JPEG, GIF, WebP) used by a fixed document in several ways |
+| `image` | an image (PNG, JPEG, GIF, WebP, BMP, TIFF) used by a fixed document in several ways |
 | `svg` | an SVG image, used as a file and inline in HTML |
 | `worker` | the frames a caller sends `fagus worker` ([protocol](docs/protocol.md)) |
 
