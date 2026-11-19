@@ -47,7 +47,9 @@ Fagus::html(file_get_contents('example.html'))->save('example.pdf');
 Fagus parses `size` with Chrome's grammar: a value Chrome does not accept is ignored, and the page
 keeps the size that applied before, with a `css.invalid-value` warning that says why. `A6` is one of
 them (write `size: 105mm 148mm`, which the warning suggests), as are three lengths and `80mm auto`:
-a page's height cannot follow its content, so give both lengths.
+a page's height cannot follow its content in CSS, so give both lengths. For a receipt that is one
+page as long as its content, add `-fagus-page-height: fit-content` (see
+[Make the page as tall as its content](#make-the-page-as-tall-as-its-content)).
 
 **Defaults.** A page without `size` is A4. Chrome takes the paper size of the printer or of the
 system's region (Letter in the United States). A server has neither, so Fagus uses A4, so that a
@@ -70,6 +72,40 @@ its default margin of 8px inside the page area, as in a browser; most print styl
 - Content that reaches outside the page area is cut off at the page margins. Content wider than the
   page area makes Fagus lay the page out again on a wider area and scale it down, as Chrome's print
   does, by at most 1.5 times.
+
+### Make the page as tall as its content
+
+A receipt printer cuts its roll where the document ends. With `-fagus-page-height: fit-content`, a
+Fagus [extension](extensions.md#pages-that-grow-with-their-content), the page grows with its
+content: one page as tall as the content and the margins, at least as tall as `size` says.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    size: 80mm 40mm;
+    margin: 4mm;
+    -fagus-page-height: fit-content;
+    @bottom-center { content: "Thank you for your visit"; font-size: 7pt; }
+  }
+  body { margin: 0; font: 9pt/1.3 sans-serif; }
+  .total { font-weight: bold; text-align: right; }
+</style>
+</head>
+<body>
+  <h1>Café Fagus</h1>
+  <p>2 × Cappuccino <span style="float: right">7.80 €</span></p>
+  <p>1 × Apple cake <span style="float: right">4.20 €</span></p>
+  <p class="total">Total 12.00 €</p>
+</body>
+</html>
+```
+
+The footer sits at the end of the grown page, and `counter(pages)` is 1. A page grows to at most
+14,400pt (about 5 metres), the largest page a PDF holds; forced breaks still start new pages, each
+as tall as what it holds. Browsers print the page at the size of `size`.
 
 ## Use different first, left and right pages
 

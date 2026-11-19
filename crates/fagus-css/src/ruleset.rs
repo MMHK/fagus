@@ -748,6 +748,7 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
     let value = value.trim().to_ascii_lowercase();
     match name.as_str() {
         "-fagus-repeat" => Some(matches!(value.as_str(), "auto" | "at-break")),
+        "-fagus-page-height" => Some(matches!(value.as_str(), "auto" | "fit-content")),
         _ if name.starts_with("-fagus-") => Some(false),
         // Properties lightningcss does not know and Fagus parses itself: the keywords of
         // `text-wrap` (as in `@supports (text-wrap: pretty)`), any value of the others.
@@ -972,6 +973,10 @@ tr:has(input:checked) td { color: green }";
         let css = "#x { color: red }
 @supports (-fagus-repeat: at-break) { #x { color: green } }
 @supports (-fagus-repeat: sometimes) or (-fagus-unknown: auto) { #x { color: blue } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 2);
+        let css = "#x { color: red }
+@supports (-fagus-page-height: fit-content) { #x { color: green } }
+@supports (-fagus-page-height: 100mm) { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
 
         // Properties that Fagus parses itself, with the values it knows.

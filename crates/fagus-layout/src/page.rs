@@ -6,7 +6,7 @@ use fagus_css::PageSelector;
 use fagus_css::lightningcss::properties::Property;
 use fagus_css::lightningcss::properties::custom::{CustomPropertyName, Token, TokenOrValue};
 use fagus_css::lightningcss::rules::page::{PageMarginBox, PagePseudoClass};
-use fagus_css::page_size::{A4, page_size};
+use fagus_css::page_size::{A4, MAX_PAGE_SIDE, page_height_fits, page_size};
 use fagus_css::{CascadeBand, PageRuleData, RuleSet};
 use fagus_style::values::{
     Content, ContentItem, LengthPercentage, LengthPercentageAuto, Size, StringWhich, TextAlign, VerticalAlign,
@@ -122,6 +122,9 @@ pub struct PageBox {
     pub marks: PageMarks,
     /// How the page is turned on its sheet.
     pub orientation: PageOrientation,
+    /// Whether the page grows with its content (`-fagus-page-height: fit-content`, a Fagus
+    /// extension): as tall as its content and margins, at least as tall as `height`.
+    pub fit_content: bool,
 }
 
 impl PageBox {
@@ -142,6 +145,56 @@ impl PageBox {
             (cut(self.width.to_px()) - cut(self.insets[1]) - cut(self.insets[3])).max(0.0),
             (cut(self.height.to_px()) - cut(self.insets[0]) - cut(self.insets[2])).max(0.0),
         )
+    }
+
+    /// The tallest this page may grow with its content (see [`Self::fit_content`]), in pixels:
+    /// its sheet, with the bleed and the room for printer's marks around it, as tall as a PDF
+    /// page may be.
+    fn tallest(&self) -> f32 {
+        // (The room for marks is that of `fagus-pdf`, half an inch on each side.)
+        let marks = if self.marks.crop || self.marks.cross {
+            INCH / 2.0
+        } else {
+            0.0
+        };
+        let tallest = MAX_PAGE_SIDE - 2.0 * (self.bleed + marks);
+        // Whole points, so that the sheet is not rounded past the limit.
+        (tallest * 0.75).floor() / 0.75
+    }
+
+    /// The page box with its height changed to `height` pixels (rounded up to whole points, as
+    /// the sheet is): its page area and viewport as tall as that leaves.
+    fn with_height(&self, height: f32) -> Self {
+        let page = (height * 0.75).ceil() / 0.75;
+        let page = (page * 64.0).round() / 64.0;
+        let cut = |px: f32| (px * 64.0).trunc() / 64.0;
+        let exact = (page - cut(self.insets[0]) - cut(self.insets[2])).max(0.0);
+        let mut grown = self.clone();
+        grown.height = Au::from_px(page);
+        grown.exact.1 = exact;
+        grown.area.height = Au::from_px(exact.ceil());
+        grown.area_unshrunk.height = grown.area.height;
+        grown.viewport.1 = Au::from_px(exact.floor());
+        grown
+    }
+
+    /// The page box of a page that grows with its content (see [`Self::fit_content`]), for
+    /// content that reaches `bottom` below the top of its page area: as tall as that, its
+    /// margins, border and padding, at least as tall as it is and at most as tall as a PDF page
+    /// may be.
+    fn fitted(&self, bottom: Au) -> Self {
+        // Content that fits in the page area as it is laid out (rounded up to whole pixels)
+        // keeps the page as it is.
+        if bottom <= self.area.height {
+            return self.clone();
+        }
+        let cut = |px: f32| (px * 64.0).trunc() / 64.0;
+        let needed = bottom.to_px() + cut(self.insets[0]) + cut(self.insets[2]);
+        let height = needed.min(self.tallest()).max(self.height.to_px());
+        if height <= self.height.to_px() {
+            return self.clone();
+        }
+        self.with_height(height)
     }
 }
 
@@ -315,6 +368,7 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
     let mut bleed = None;
     let mut marks = PageMarks::default();
     let mut orientation = PageOrientation::Upright;
+    let mut fit_content = false;
     for rule in matching {
         for property in &rule.declarations.declarations {
             let Property::Custom(custom) = property else {
@@ -335,6 +389,11 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
                     }
                 }
                 "bleed" => bleed = page_bleed(&custom.value.0).or(bleed),
+                "-fagus-page-height" => {
+                    if let Some(fits) = page_height_fits(&custom.value.0) {
+                        fit_content = fits;
+                    }
+                }
                 "page-orientation" => {
                     if let Some(parsed) = page_orientation(&custom.value.0) {
                         orientation = parsed;
@@ -357,8 +416,10 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
     let (size, margins) = page_geometry(&style, containing);
     let (width, height) = size;
     // A page without room for its content is the default page, as only the user agent's rules
-    // make it (Chrome's default page size and margins).
-    if too_small_for_content((width, height), margins) {
+    // make it (Chrome's default page size and margins). A page that grows with its content
+    // needs room across only.
+    let room_down = if fit_content { MAX_PAGE_SIDE } else { height };
+    if too_small_for_content((width, room_down), margins) {
         let defaults: Vec<&PageRuleData> = matching
             .iter()
             .copied()
@@ -437,6 +498,7 @@ fn page_box_from(matching: &[&PageRuleData], root: &ComputedStyle) -> PageBox {
         bleed,
         marks,
         orientation,
+        fit_content,
     }
 }
 
@@ -881,14 +943,24 @@ pub fn paginate(
         }
         let in_groups = groups.at(&layouter, root_box, token.as_ref(), pages.len(), false);
         let page_type = PageType::of(pages.len(), first_left, false, &in_groups);
-        let page_box = shrunk(made_boxes.get(rules, root, page_type, name.as_deref()), shrink);
+        let made = made_boxes.get(rules, root, page_type, name.as_deref());
+        // A page that grows with its content (in a horizontal writing mode) gives it room down
+        // to the tallest page a PDF holds; its page area as declared is the initial containing
+        // block, and how tall it is at least (see `fitted` below).
+        let grows = made.fit_content && !layouter.writing_mode().is_vertical();
+        let declared = shrunk(made.clone(), shrink);
+        let page_box = if grows {
+            shrunk(made.with_height(made.tallest()), shrink)
+        } else {
+            declared.clone()
+        };
         last_name.clone_from(&name);
         // (The counter goes on from this page once it is added.)
         let numbered = counter.number(&layouter, pages.len(), &page_box.style);
         layouter.page_number.set((pages.len() + 1, 0));
         layouter
             .initial_containing_block
-            .set((page_box.content_width(), page_box.content_height()));
+            .set((declared.content_width(), declared.content_height()));
         layouter
             .after_forced_break
             .set(layouter.forced_break.replace(false));
@@ -898,16 +970,21 @@ pub fn paginate(
         let mode = layouter.writing_mode();
         let (inline, block) =
             crate::writing::physical_size((page_box.content_width(), page_box.content_height()), mode);
+        let containing_block =
+            crate::writing::physical_size((declared.content_width(), declared.content_height()), mode).1;
         // An absolutely positioned root moved down by its `top` on the first page has that much
         // less room there (see `root_offset`).
-        let moved = crate::positioned::root_top(&tree.get(root_box).style, block)
+        let moved = crate::positioned::root_top(&tree.get(root_box).style, containing_block)
             .filter(|&top| token.is_none() && !mode.is_vertical() && top < block)
             .unwrap_or(Au::ZERO);
         let space = Space {
             // A positioned root that fills the height its `top` and `bottom` leave stretches
             // over that much (see `root_fills_height`).
-            containing_height: crate::positioned::root_block_room(&tree.get(root_box).style, block)
-                .or(Some(block)),
+            containing_height: crate::positioned::root_block_room(
+                &tree.get(root_box).style,
+                containing_block,
+            )
+            .or(Some(containing_block)),
             remaining: Some(block - pushed - moved),
             // Content below monolithic overflow may move on to the next page, as there is a
             // breakpoint before it.
@@ -976,13 +1053,31 @@ pub fn paginate(
             let (dx, dy) = crate::positioned::root_offset(
                 &tree.get(root_box).style,
                 content.rect,
-                (inline, block),
+                (inline, containing_block),
                 token.is_none(),
             );
             content.rect.x += dx;
             content.rect.y += dy;
         }
         content.rect.y += pushed;
+        // A page that grows with its content ends below it: below the root element's margin
+        // box where the content ends on the page, below what ends on it where the content
+        // breaks (at a forced break, or past the tallest page), or below the monolithic content
+        // that reaches further.
+        let page_box = if grows {
+            let root_end = if outcome.token.is_none() {
+                content.rect.y + content.rect.height + outcome.collapsed_bottom.resolve()
+            } else {
+                flow_bottom(&content, Au::ZERO)
+            };
+            let bottom = crate::monolithic::content_bottom(&content, Au::ZERO)
+                .map_or(root_end, |bottom| bottom.max(root_end));
+            shrunk(made.fitted(Au::from_px(bottom.to_px() * shrink)), shrink)
+        } else {
+            page_box
+        };
+        let page_block =
+            crate::writing::physical_size((page_box.content_width(), page_box.content_height()), mode).1;
         let count = fragment_count(&content);
         fragments += count;
         counts.push(count);
@@ -990,7 +1085,7 @@ pub fn paginate(
         page_marks.collect(tree, &content, &mut false);
         marks.push(page_marks);
         // The page area in the coordinates of the writing mode the content is laid out in.
-        logical.push((inline, block));
+        logical.push((inline, page_block));
         // Monolithic content that reaches past the end of the page area pushes the content that
         // follows on the next pages; the root box grows to hold it.
         let resumed = std::mem::take(&mut pushed);
@@ -1019,7 +1114,7 @@ pub fn paginate(
             }
             reach_floor = reach_floor.max(start + resumed * 2);
         }
-        start += block;
+        start += page_block;
         pages.push(Page::new(content, &page_box, tree, shrink));
         page_boxes.push(page_box);
         counter = numbered;
@@ -1499,6 +1594,25 @@ impl Page {
             shift: (page_box.content_x - page_box.area.x).to_px(),
             carried: Vec::new(),
         }
+    }
+}
+
+/// How far down the content in the flow of a fragment lying `origin` below the top of its page
+/// reaches: the bottom of the boxes, lines and images that end on the page, through the boxes
+/// that go on to the next one (which reach down to its end), not into positioned boxes.
+fn flow_bottom(fragment: &Fragment, origin: Au) -> Au {
+    let top = origin + fragment.rect.y;
+    match &fragment.kind {
+        FragmentKind::Box { style, .. } if style.is_out_of_flow() => Au::ZERO,
+        FragmentKind::Box { sides, .. } if sides.bottom => top + fragment.rect.height,
+        FragmentKind::Box { .. } | FragmentKind::Anonymous => fragment
+            .children
+            .iter()
+            .map(|child| flow_bottom(child, top))
+            .max()
+            .unwrap_or(top),
+        FragmentKind::Placeholder(_) => Au::ZERO,
+        _ => top + fragment.rect.height,
     }
 }
 

@@ -495,7 +495,7 @@ A Tailwind document with `print:` variants or a stylesheet with `@media print { 
 its print styles.
 
 `@supports` knows the properties and values Fagus parses (also its own, such as
-`-fagus-repeat`), and answers `selector()`, `font-tech()`, `font-format()` and `at-rule()` as
+`-fagus-repeat` and `-fagus-page-height`), and answers `selector()`, `font-tech()`, `font-format()` and `at-rule()` as
 Chrome does.
 
 ## Animations and transitions

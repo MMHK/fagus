@@ -288,7 +288,8 @@ fn drop_invalid_declarations(
 
 /// Drops the declarations of `size` in an `@page` rule that Chrome does not take (a value with
 /// `var()` is checked once it is substituted), as Chrome drops them, and reports what is wrong
-/// with each: the page keeps the size that applied before.
+/// with each: the page keeps the size that applied before. So it does with the declarations of
+/// `-fagus-page-height` that are not `auto` or `fit-content`.
 fn check_page_size(
     block: &mut DeclarationBlock<'static>,
     location: Location,
@@ -303,21 +304,29 @@ fn check_page_size(
             let CustomPropertyName::Unknown(name) = &custom.name else {
                 return true;
             };
-            if !name.0.eq_ignore_ascii_case("size")
-                || has_variables(&custom.value)
-                || is_wide_keyword(&custom.value)
-            {
+            if has_variables(&custom.value) || is_wide_keyword(&custom.value) {
                 return true;
             }
-            let Some(problem) = crate::page_size::page_size_problem(&custom.value) else {
+            let message = if name.0.eq_ignore_ascii_case("size") {
+                let Some(problem) = crate::page_size::page_size_problem(&custom.value) else {
+                    return true;
+                };
+                format!(
+                    "invalid value for `size`: {problem}; the declaration is ignored and the page keeps the size that applied before"
+                )
+            } else if name.0.eq_ignore_ascii_case("-fagus-page-height") {
+                if crate::page_size::page_height_fits(&custom.value.0).is_some() {
+                    return true;
+                }
+                "invalid value for `-fagus-page-height`: it takes `auto` or `fit-content`; the declaration is ignored"
+                    .to_owned()
+            } else {
                 return true;
             };
             diagnostics.push(Diagnostic {
                 severity: Severity::Warning,
                 code: "css.invalid-value",
-                message: format!(
-                    "invalid value for `size`: {problem}; the declaration is ignored and the page keeps the size that applied before"
-                ),
+                message,
                 source: source.to_owned(),
                 line: location.line + 1,
                 column: location.column,
@@ -1144,6 +1153,34 @@ mod tests {
     }
 
     #[test]
+    fn drops_and_reports_page_heights_that_are_not_auto_or_fit_content() {
+        let sheet = Stylesheet::parse(
+            "@page { size: 80mm 100mm; -fagus-page-height: fit-content }\n@page { -fagus-page-height: AUTO; -fagus-page-height: 200mm }",
+            Origin::Author,
+            "pages.css",
+        );
+        let found: Vec<(&str, u32, &str)> = sheet
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| (diagnostic.code, diagnostic.line, diagnostic.message.as_str()))
+            .collect();
+        assert_eq!(
+            found,
+            [(
+                "css.invalid-value",
+                2,
+                "invalid value for `-fagus-page-height`: it takes `auto` or `fit-content`; the declaration is ignored"
+            )]
+        );
+        let kept = |rule: &CssRule<'static>| match rule {
+            CssRule::Page(page) => page.declarations.declarations.len(),
+            _ => panic!("page rule"),
+        };
+        assert_eq!(kept(&sheet.sheet.rules.0[0]), 2);
+        assert_eq!(kept(&sheet.sheet.rules.0[1]), 1);
+    }
+
+    #[test]
     fn drops_and_reports_page_sizes_that_chrome_does_not_take() {
         let sheet = Stylesheet::parse(
             "@page { size: A5 }\n@page receipt {\n  size: 80mm auto;\n}\n@media print { @page :first { size: A6 landscape } }\n@page { size: 1px 2px 3px; size: var(--size); size: inherit; margin: 1cm }",
@@ -1163,7 +1200,7 @@ mod tests {
                     "css.invalid-value",
                     2,
                     &*format!(
-                        "invalid value for `size`: a page's height cannot follow its content; give both lengths, width and height, as in `80mm 200mm`; {ignored}"
+                        "invalid value for `size`: a page's height cannot follow its content in CSS; give both lengths, as in `80mm 100mm`, and `-fagus-page-height: fit-content` to let the page grow; {ignored}"
                     )
                 ),
                 (

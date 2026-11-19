@@ -4059,6 +4059,35 @@ mod tests {
     }
 
     #[test]
+    fn grows_a_page_with_fit_content_from_the_height_of_size() {
+        // The page area of `size` is 40mm less 8mm of margins, 120.94px: `100vh` is that cut to
+        // whole pixels, and the page grows with the 150px below it, rounded up to whole points.
+        let render = |body: &str| {
+            let output = engine()
+                .render(
+                    &Document::html(format!(
+                        "<!DOCTYPE html><style>@page {{ size: 80mm 40mm; margin: 4mm; -fagus-page-height: fit-content }}
+                         body {{ margin: 0 }}</style>{body}"
+                    ))
+                    .created(CREATED)
+                    .tagged(false),
+                )
+                .expect("rendered");
+            assert_eq!(output.pages, 1);
+            let objects = String::from_utf8_lossy(&decoded(&output.pdf)).replace(' ', "");
+            let start = objects.find("/MediaBox[").expect("media box") + "/MediaBox[".len();
+            objects[start..].split(']').next().unwrap_or_default().to_owned()
+        };
+        assert_eq!(render("<p style='margin: 0'>Bon</p>"), "00227.04113.04");
+        // 120px + 150px + 30.24px of margins are 225.18pt, made 226pt and that 226.08pt on the
+        // 1/300 inch grid of Chrome's sheets.
+        assert_eq!(
+            render("<div style='height: 100vh'></div><div style='height: 150px'></div>"),
+            "00227.04226.08"
+        );
+    }
+
+    #[test]
     fn lays_shrunk_content_out_on_a_viewport_as_much_larger() {
         // A box 600px wide on a page area 400px wide shrinks the content to 2/3, laid out
         // again on a viewport of 600px: `50vw` is 300px there, a container as wide as the page

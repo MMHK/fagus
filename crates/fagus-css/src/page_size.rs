@@ -179,6 +179,21 @@ pub fn page_size(tokens: &[TokenOrValue<'_>]) -> Option<(f32, f32)> {
     })
 }
 
+/// The largest side of a page a PDF holds, in pixels: 14,400 units (200 inches) at the default
+/// user unit of a point (ISO 32000-1, Annex C.2).
+pub const MAX_PAGE_SIDE: f32 = 14_400.0 * 96.0 / 72.0;
+
+/// Parses the `-fagus-page-height` descriptor of `@page`, a Fagus extension: `Some(true)` for
+/// `fit-content` (the page grows with its content), `Some(false)` for `auto` (the height `size`
+/// gives), `None` for anything else.
+pub fn page_height_fits(tokens: &[TokenOrValue<'_>]) -> Option<bool> {
+    match significant(tokens).as_slice() {
+        [TokenOrValue::Token(Token::Ident(ident))] if ident.eq_ignore_ascii_case("fit-content") => Some(true),
+        [TokenOrValue::Token(Token::Ident(ident))] if ident.eq_ignore_ascii_case("auto") => Some(false),
+        _ => None,
+    }
+}
+
 /// What is wrong with a value of `size` that [`page_size`] does not take, for the diagnostic
 /// that reports it dropped: `None` where it is valid.
 pub fn page_size_problem(tokens: &TokenList<'_>) -> Option<String> {
@@ -204,9 +219,11 @@ pub fn page_size_problem(tokens: &TokenList<'_>) -> Option<String> {
         } else {
             "height"
         };
-        return Some(format!(
-            "a page's {axis} cannot follow its content; give both lengths, width and height, as in `80mm 200mm`"
-        ));
+        return Some(if axis == "height" {
+            "a page's height cannot follow its content in CSS; give both lengths, as in `80mm 100mm`, and `-fagus-page-height: fit-content` to let the page grow".to_owned()
+        } else {
+            "a page's width cannot follow its content; give both lengths, width and height, as in `80mm 200mm`".to_owned()
+        });
     }
     if length_count == tokens.len() {
         return Some(if lengths.iter().flatten().any(|length| *length < 0.0) {
@@ -292,7 +309,7 @@ mod tests {
         assert_eq!(
             problem("80mm auto").as_deref(),
             Some(
-                "a page's height cannot follow its content; give both lengths, width and height, as in `80mm 200mm`"
+                "a page's height cannot follow its content in CSS; give both lengths, as in `80mm 100mm`, and `-fagus-page-height: fit-content` to let the page grow"
             )
         );
         assert!(problem("auto 200mm").is_some_and(|message| message.starts_with("a page's width")));

@@ -4512,6 +4512,7 @@ mod tests {
     mod padding_breaks;
     mod page_breaks;
     mod page_groups;
+    mod page_heights;
     mod page_overflow;
     mod page_pieces;
     mod page_sides;

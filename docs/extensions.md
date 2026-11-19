@@ -47,3 +47,33 @@ The table's columns are measured with the values at the end of the table, usuall
 With `border-collapse: collapse`, the borders on each page are resolved as if the carry-over rows that do not show there were not in the table: on the first page, the bottom border of the head row meets the first row of the body; on the last page, the last row meets the rows of the footer that remain.
 
 [`tests/corpus/quittio/many-lines.html`](../tests/corpus/quittio/many-lines.html) shows Quittio's invoice with its carry-over rows.
+
+## Pages that grow with their content
+
+A receipt printer prints on a roll and cuts the paper where the document ends. **`-fagus-page-height: fit-content`** in `@page` makes the page as tall as its content and its margins, one page however long the receipt is ([ADR 6](adr/0006-pages-that-grow-with-their-content.md)). The value `auto` (the initial value) keeps the height that `size` gives.
+
+```html
+<style>
+  @page {
+    size: 80mm 40mm;
+    margin: 4mm;
+    -fagus-page-height: fit-content;
+    @bottom-center { content: "Thank you!"; }
+  }
+  body { margin: 0; font: 9pt/1.3 sans-serif; }
+</style>
+<h1>Café Fagus</h1>
+<table class="lines">…</table>
+<p class="total">Total 18.40 €</p>
+```
+
+- The height of `size` is the least the page is tall: a short receipt is 40mm long here. It is also what viewport units (`vh`) and percentages of the page area refer to, as in the browser's print preview, which shows the page at that size.
+- The page is at most 14,400pt (about 5 metres) tall, the largest page a PDF holds. Content past that goes on to a next page, which grows in turn. Forced breaks (`break-before: page`) still start a new page: each page grows with what it holds.
+- The content's height is that of the root element with its margins (the `body`'s default margin of 8px counts), or of lines and images that reach further. Absolutely positioned boxes do not make the page taller. Fixed boxes are placed on the grown page: `position: fixed; bottom: 0` lands at the bottom of its page area.
+- Margin boxes, page counters and the backgrounds of the page and of the root element follow the grown page: `@bottom-center` sits at its end, and `counter(pages)` is 1.
+- The page is rounded up to whole points, as the page size of the PDF is.
+- In vertical writing modes the descriptor is ignored.
+- `size: 80mm auto` is invalid CSS, which Chrome ignores, and so does Fagus, with a `css.invalid-value` warning that points here. A value of `-fagus-page-height` other than `auto` and `fit-content` is ignored with the same warning.
+
+Without Fagus, a browser prints the page at the size of `size`. `@supports (-fagus-page-height: fit-content)` tells the two apart. There is no need to render a document several times to find the height that fits it on one page: one render with `fit-content` gives that page.
+
