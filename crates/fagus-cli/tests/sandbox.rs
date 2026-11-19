@@ -214,3 +214,29 @@ fn limits_only_on_linux() {
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("only supported on Linux"));
 }
+
+#[test]
+fn refuses_to_sign_an_encrypted_pdf() {
+    let directory = scratch("sign-encrypted");
+    let page = directory.join("page.html");
+    std::fs::write(&page, "<p>Rechnung</p>").expect("written");
+    let output = directory.join("page.pdf");
+    let p12 = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/signing/rsa.p12");
+    let result = fagus()
+        .arg("render")
+        .arg(&page)
+        .arg("-o")
+        .arg(&output)
+        .args(["--user-password", "benutzer", "--sign-p12", p12])
+        .env("FAGUS_SIGN_PASSWORD", "fagus-test-only")
+        .output()
+        .expect("ran");
+    assert!(!result.status.success());
+    assert!(
+        String::from_utf8_lossy(&result.stderr).contains("an encrypted PDF cannot be signed yet"),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert!(!output.exists(), "no file is left");
+    std::fs::remove_dir_all(directory).expect("removed");
+}

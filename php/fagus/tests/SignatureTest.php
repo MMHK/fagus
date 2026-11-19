@@ -214,6 +214,17 @@ final class SignatureTest extends TestCase
     }
 
     #[Test]
+    public function it_does_not_sign_encrypted_pdfs_yet(): void
+    {
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('the PDF could not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it');
+        self::document()
+            ->encrypt('benutzer')
+            ->sign(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD))
+            ->render(self::$engine);
+    }
+
+    #[Test]
     public function it_hides_the_key_from_dumps(): void
     {
         $dump = print_r(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD)->reason('Rechnung'), true);

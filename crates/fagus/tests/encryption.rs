@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use fagus::{Conformance, Date, Document, Encryption, Engine, Permission};
+use fagus::{Conformance, Date, Document, Encryption, Engine, Permission, Signature};
 
 const HTML: &str = "<!doctype html><html lang=de><title>Gehaltsabrechnung</title>\
     <h1>Gehalt</h1><p>Text mit <a href='https://example.com/'>Link</a></p>";
@@ -156,5 +156,26 @@ fn refuses_to_encrypt_what_must_stay_open() {
             .expect_err("no password")
             .to_string(),
         "the PDF could not be written: encryption needs a user password or an owner password"
+    );
+}
+
+#[test]
+fn refuses_to_sign_an_encrypted_pdf_for_now() {
+    let p12 = std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../tests/signing/rsa.p12"
+    ))
+    .expect("fixture");
+    let signature = Signature::pkcs12(&p12, "fagus-test-only").expect("PKCS#12 file");
+    let error = engine()
+        .render(
+            &Document::html(HTML)
+                .encrypt(Encryption::new().user_password("benutzer"))
+                .sign(signature),
+        )
+        .expect_err("refused");
+    assert_eq!(
+        error.to_string(),
+        "the PDF could not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it"
     );
 }

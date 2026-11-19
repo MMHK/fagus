@@ -2,9 +2,9 @@
 
 This page describes the PDF file Fagus writes and the options that change it: metadata, links and
 bookmarks, tagged and accessible PDF, PDF/A, attachments, electronic invoices, passwords and
-digital signatures. How the pages
-look is up to the HTML and CSS (see [css.md](css.md) and [paged-media.md](paged-media.md)); the
-methods of the document builder are described in [php.md](php.md).
+digital signatures. How the pages look is up to the HTML and CSS (see [css.md](css.md) and
+[paged-media.md](paged-media.md)); the methods of the document builder are described in
+[php.md](php.md).
 
 Every PDF Fagus writes is a PDF 1.7 file (PDF 1.4 for PDF/A-1b, PDF 2.0 for PDF/A-4) with:
 
@@ -740,6 +740,9 @@ What to know about encrypted PDFs:
   encrypted (PDF/A forbids encryption)``. Encrypt a copy of the archived invoice if you need
   one. Fagus refuses `accessible()` with `encrypt()` as well, so that PDF/UA files stay readable
   by every assistive technology.
+- An encrypted PDF cannot be signed yet: `encrypt()` with `sign()` fails with ``the PDF could
+  not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it`` (see
+  [Sign the PDF](#sign-the-pdf)).
 - The file key, its salts and the initialization vectors are random, from the operating system:
   an encrypted PDF is not byte-reproducible (see
   [Make the output reproducible](#make-the-output-reproducible)), even with `created()`. The Rust
@@ -806,6 +809,10 @@ structure of a tagged PDF, as a field of no size that shows nothing.
 Change nothing after signing: any program that writes the file again (to compress it, merge it
 or add pages) breaks the signature. A signed PDF can be signed again by a program that adds its
 signature as another incremental update, such as Acrobat.
+
+Signing an encrypted PDF is not supported yet: `sign()` together with `encrypt()` (or
+`--sign-p12` with a password on the command line) fails with ``the PDF could not be signed: an
+encrypted PDF cannot be signed yet; sign it or encrypt it``, before anything is rendered.
 
 ### Reproducible signatures
 

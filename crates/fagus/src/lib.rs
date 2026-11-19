@@ -250,7 +250,8 @@ impl Document {
     }
 
     /// Signs the PDF digitally (`PAdES`), with an invisible signature. The time of signing is the
-    /// creation date (see [`Document::created`]) unless the signature gives its own.
+    /// creation date (see [`Document::created`]) unless the signature gives its own. An encrypted
+    /// PDF (see [`Document::encrypt`]) cannot be signed yet: rendering it fails.
     #[must_use]
     pub fn sign(mut self, signature: Signature) -> Self {
         self.signature = Some(signature);
@@ -818,6 +819,13 @@ impl Inner {
     fn render(&self, input: &Document) -> Result<Output, Failure> {
         if let Some(error) = input.encryption_problem() {
             return Err(Error::Pdf(error).into());
+        }
+        // The signature's incremental update would have to be encrypted with the file's key.
+        if input.signature.is_some() && input.encryption.is_some() {
+            return Err(Error::Pdf(PdfError::Sign(
+                "an encrypted PDF cannot be signed yet; sign it or encrypt it".to_owned(),
+            ))
+            .into());
         }
         if let Some(problems) = input.factur_x_problem() {
             return Err(Error::Pdf(PdfError::Conformance {
