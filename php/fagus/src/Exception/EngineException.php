@@ -79,6 +79,11 @@ final class EngineException extends FagusException
         return new self('The fagus binary cannot sign PDFs and wrote the PDF without a signature. Install the binary of the same release.');
     }
 
+    public static function withoutForms(): self
+    {
+        return new self('The fagus binary cannot make form fields and wrote the controls as they look. Install the binary of the same release.');
+    }
+
     public static function unexpected(string $kind): self
     {
         return new self("The fagus worker sent an unexpected message `{$kind}`.");

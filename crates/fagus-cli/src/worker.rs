@@ -374,6 +374,8 @@ where
                     .header
                     .get("signature")
                     .is_some_and(|signature| !signature.is_null());
+                // And that it made the form controls fields.
+                let forms = frame.header.get("forms").and_then(Value::as_bool) == Some(true);
                 let reply = render(&engine, &channel, frame);
                 let mut channel = lock(&channel)?;
                 match reply {
@@ -381,6 +383,7 @@ where
                         let mut header = json!({
                             "encrypted": encrypted,
                             "signed": signed,
+                            "forms": forms,
                             "id": id,
                             "pages": output.pages,
                             "diagnostics": diagnostics(&output.diagnostics),
@@ -922,6 +925,8 @@ mod tests {
         // The field's appearance is a stream of its own beside the page's.
         assert_eq!(frames[1].header["pages"], 1);
         assert_eq!(frames[2].header["pages"], 1);
+        assert_eq!(frames[1].header["forms"], false);
+        assert_eq!(frames[2].header["forms"], true);
         let streams = |pdf: &[u8]| pdf.windows(9).filter(|window| window == b"endstream").count();
         assert_eq!(streams(&frames[2].blobs[0]), streams(&frames[1].blobs[0]) + 1);
     }

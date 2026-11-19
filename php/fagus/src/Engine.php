@@ -145,6 +145,10 @@ final class Engine
                         if (isset($header['signature']) && ($reply['signed'] ?? false) !== true) {
                             throw EngineException::withoutSignature();
                         }
+                        // Nor one with the controls printed as fields.
+                        if (($header['forms'] ?? false) === true && ($reply['forms'] ?? false) !== true) {
+                            throw EngineException::withoutForms();
+                        }
                         $this->rendered($reply);
 
                         return Pdf::fromReply($reply, $data[0] ?? '');

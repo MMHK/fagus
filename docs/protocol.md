@@ -30,7 +30,7 @@ ends the worker with exit code 1 and the reason on its error output.
 | `R` render | caller → worker | the document, see below | HTML, stylesheets, resources, attachments, invoice XML |
 | `?` ask | worker → caller | `id`, `url` | – |
 | `r` resource | caller → worker | `found` | the resource, if found |
-| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted`, `signed`, `layout`, `rss`, `maxRss` | the PDF |
+| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted`, `signed`, `forms`, `layout`, `rss`, `maxRss` | the PDF |
 | `E` error | worker → caller | `id` (if known), `message`, `diagnostics`, `rss`, `maxRss` | – |
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
@@ -99,8 +99,9 @@ The header of `R`; fields other than `id` and `html` may be left out:
 - `accessible`: whether the PDF conforms to PDF/UA-1 (and is tagged). The document needs a
   title, a language and alternative text for every image; otherwise the answer is `E`.
 - `forms`: whether the form controls become the fields of an interactive form (`false` if left
-  out; see [pdf.md](pdf.md#fill-in-forms)). A worker of an older release ignores it and prints
-  the controls as they look.
+  out; see [pdf.md](pdf.md#fill-in-forms)). Added in 0.3.0: a worker of an older release
+  ignores it and prints the controls as they look, which the caller notices by the missing
+  `forms` in `P`.
 - `attachments`: `name` and `mime` are required. `relationship` is `source`, `data`,
   `alternative`, `supplement` or `unspecified` (`unspecified` if left out). `description` may be
   left out (or be `null` or empty): PDF/A-3 and PDF/UA require one, so the worker then describes
@@ -144,6 +145,7 @@ The header of `P`:
   "timings": { "parse": 0.12, "style": 0.31, "layout": 0.44, "paint": 0.02, "pdf": 0.71 },
   "encrypted": false,
   "signed": false,
+  "forms": false,
   "rss": 41943040,
   "maxRss": 102760448,
   "blobs": [48213]
@@ -152,7 +154,7 @@ The header of `P`:
 
 `encrypted` is `true` when the PDF is encrypted (the request had `encryption`), `false`
 otherwise; a caller that asked for encryption and does not get `true` must not use the PDF.
-`signed` is the same for `signature`. Times
+`signed` is the same for `signature`, `forms` for `forms: true`. Times
 are in milliseconds. `severity` is `info`, `warning` or `error`; `line` and `column` are 0
 when unknown. With `layout: true` in the request, the header has a `layout` too.
 
@@ -283,6 +285,7 @@ than that ignores them:
 |---|---|---|
 | `facturX.version`, `facturX.description` | `R` | 0.2.0 |
 | `layout` | `R`, `P` | 0.3.0 |
+| `forms` | `R`, `P` | 0.3.0 |
 | `encryption` | `R` | 0.3.0 |
 | `encrypted` | `P` | 0.3.0 |
 | `signature`; the messages `S`, `s`, `T`, `t` | `R` | 0.3.0 |

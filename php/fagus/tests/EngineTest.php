@@ -133,14 +133,15 @@ final class EngineTest extends TestCase
     }
 
     #[Test]
-    public function it_refuses_the_pdf_of_a_binary_that_ignored_the_signature_or_the_passwords(): void
+    public function it_refuses_the_pdf_of_a_binary_that_ignored_newer_options(): void
     {
-        // The stand-in, like a binary older than these options, answers without `signed` and `encrypted`.
+        // The stand-in, like a binary older than these options, answers without `signed`, `encrypted` and `forms`.
         $engine = new Engine($this->fake());
         $signature = Signature::fromPkcs12(__DIR__.'/../../../tests/signing/rsa.p12', 'fagus-test-only');
         foreach ([
             [Document::html('<p>x</p>')->sign($signature), 'The fagus binary cannot sign PDFs and wrote the PDF without a signature. Install the binary of the same release.'],
             [Document::html('<p>x</p>')->encrypt('user'), 'The fagus binary cannot encrypt PDFs and wrote the PDF without a password. Install the binary of the same release.'],
+            [Document::html('<input name=x>')->forms(), 'The fagus binary cannot make form fields and wrote the controls as they look. Install the binary of the same release.'],
         ] as [$document, $message]) {
             try {
                 $document->render($engine);
