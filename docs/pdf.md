@@ -222,6 +222,11 @@ rectangle lies, and annotations know no clipping. So a field lies only where its
 - A control in a box turned by other than a quarter turn, or skewed, keeps its whole rectangle:
   the part that shows is no rectangle in it.
 
+Only clipping cuts a field. A control that is transparent (`opacity: 0`) or covered by other
+content is still a field: such controls are
+often laid over a printed form on purpose, to be filled in where the form shows its boxes. To
+leave a control out of the fields, hide it with `visibility: hidden` or `display: none`.
+
 Fields go with PDF/A-1b to PDF/A-4 and with PDF/UA-1: in a tagged PDF each field is a form field
 of the logical structure (`Form`) with its widget, and the description is its alternative text.
 

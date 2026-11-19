@@ -925,7 +925,9 @@ styled by `@footnote` as the page's; the column's content takes the room above i
 columns are balanced with their footnotes in them, so the columns end at the same height with
 their areas at the bottom; columns filled in turn (`column-fill: auto`) end where their footnotes
 start. A footnote that does not fit below the content up to its call takes the line of its call
-to the next column, whatever its `footnote-policy`, and a footnote in a column does not break.
+to the next column, whatever its `footnote-policy`, and a footnote in a column does not break:
+a column's footnotes are short by design, and one split across columns would be read in two
+places side by side.
 Where a footnote does not fit even below the first line of a column, it goes into the footnote
 area of the page. The footnotes number on through the document, those of the columns and of the
 page alike.
