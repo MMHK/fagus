@@ -451,6 +451,9 @@ placeholders. Fagus uses standard CSS for them.
 | `fontDir`, `fontdata` | `@font-face`, or `fontDirectories` on the engine |
 | `SetTitle()`, `SetAuthor()` | `<title>`, `<meta name="author">` |
 | `SetWatermarkText()` | a positioned element or a background in the document |
+| `SetDocTemplate('letterhead.pdf')` | `@page { background: url(letterhead.pdf) no-repeat }`, positioned by minus the margins ([page templates](paged-media.md#use-a-pdf-as-page-template)) |
+| `SetDocTemplate('letterhead.pdf', true)` (the template's pages in turn) | `@page :nth(2n) { background-image: url(letterhead.pdf#page=2) }`, and so on for more pages |
+| `SetPageTemplate()`, `UseTemplate()` of one page | `@page :first { background-image: url(letterhead.pdf#page=1) }`, or a named page |
 
 ### Migrating from Browsershot, Snappy or other browser-based tools
 
