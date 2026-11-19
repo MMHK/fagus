@@ -458,6 +458,7 @@ fn paint_pages(
                 pixels: false,
                 next_context: NextContext::Other,
                 transforms: 0,
+                ctm: Some([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
                 space: None,
                 next_space: None,
                 fields,
@@ -1309,6 +1310,10 @@ struct Painter<'a> {
     /// How many boxes with a transform are painted around what is painted (the box itself
     /// included): in them fixed backgrounds scroll (CSS Transforms 1, §6), as in Chrome.
     transforms: u32,
+    /// The transform of what is painted onto the page, made of the transforms of the boxes
+    /// around it; `None` in a 3D space (`transform-style: preserve-3d`) and behind the viewer,
+    /// where no field can lie.
+    ctm: Option<[f32; 6]>,
     /// The reference boxes of the clip paths of inline boxes broken across lines (see
     /// [`inline_clip_boxes`]), by element.
     inline_clips: FxHashMap<NodeId, RectF>,
@@ -1402,6 +1407,7 @@ impl Painter<'_> {
         };
         let layered = layer.is_some();
         self.layers.extend(layer);
+        let outer_ctm = self.ctm;
         let mut effects = self.push_effects(fragment, (x, y), perspective, space.map(|(m, r, _)| (m, r)));
         // A box that keeps the space draws its own content in its plane, and its layers in the
         // space (each with its own transform composed with the space's).
@@ -1521,6 +1527,7 @@ impl Painter<'_> {
         self.pixels = outer_pixels;
         self.transforms -= u32::from(transformed);
         self.pop(effects);
+        self.ctm = outer_ctm;
         if layered {
             self.layers.pop();
         }
@@ -2191,17 +2198,21 @@ impl Painter<'_> {
                 Some(matrix) => Item::PushTransform(matrix),
                 None => Item::PushOpacity(0.0),
             });
+            self.ctm = None;
             pushed += 1;
         } else if style.has_transform() || perspective.is_some() {
             let width = fragment.rect.width.to_px();
             let height = fragment.rect.height.to_px();
-            self.items.push(
-                match transform::matrix(style, (x, y, width, height), perspective) {
-                    Some(matrix) => Item::PushTransform(matrix),
-                    // Behind the viewer: not seen.
-                    None => Item::PushOpacity(0.0),
-                },
-            );
+            let matrix = transform::matrix(style, (x, y, width, height), perspective);
+            self.ctm = self
+                .ctm
+                .zip(matrix)
+                .map(|(outer, inner)| transform::then(outer, inner));
+            self.items.push(match matrix {
+                Some(matrix) => Item::PushTransform(matrix),
+                // Behind the viewer: not seen.
+                None => Item::PushOpacity(0.0),
+            });
             pushed += 1;
         }
         if let Some(clip) = css_clip(fragment, x, y) {

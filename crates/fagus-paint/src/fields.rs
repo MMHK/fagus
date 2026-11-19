@@ -26,8 +26,12 @@ pub struct Widget {
     pub node: NodeId,
     pub page: usize,
     /// The area of the control's border box on the page, in CSS pixels: x, y, width and height,
-    /// shrunk with the content where the content is shrunk.
+    /// shrunk with the content where the content is shrunk. In a transformed box, the smallest
+    /// rectangle around the border box as it is transformed.
     pub rect: [f32; 4],
+    /// How the border box is turned, skewed and scaled onto the page: `[a, b, c, d]` of a
+    /// matrix as in [`Item::PushTransform`], `[1, 0, 0, 1]` where it is not.
+    pub transform: [f32; 4],
     /// The size of the border box as laid out, the area [`Widget::items`] are drawn in.
     pub size: (f32, f32),
     /// What the field shows, with the top left corner of the border box at the origin.
@@ -58,10 +62,32 @@ impl Placement {
     }
 }
 
+/// Where a box of `size` at `(x, y)` lies on the page with the transform `ctm` around it: the
+/// smallest rectangle around its corners, and the transform without its translation.
+#[allow(clippy::many_single_char_names, reason = "the entries of the matrix")]
+fn placed(placement: Placement, ctm: [f32; 6], (x, y): (f32, f32), size: (f32, f32)) -> ([f32; 4], [f32; 4]) {
+    let [a, b, c, d, e, f] = ctm;
+    let corners = [(x, y), (x + size.0, y), (x, y + size.1), (x + size.0, y + size.1)]
+        .map(|(x, y)| placement.on_page(a * x + c * y + e, b * x + d * y + f));
+    let (mut left, mut top) = corners[0];
+    let (mut right, mut bottom) = corners[0];
+    for (x, y) in corners {
+        left = left.min(x);
+        top = top.min(y);
+        right = right.max(x);
+        bottom = bottom.max(y);
+    }
+    let scale = placement.scale();
+    (
+        [left, top, right - left, bottom - top],
+        [a * scale, b * scale, c * scale, d * scale],
+    )
+}
+
 impl Painter<'_> {
     /// What of `fragment` its field shows, if it is the box of a control that becomes a field
-    /// and the field can lie where the box is: not in a transformed box or a text mask, and not
-    /// a copy of content that reaches onto the page from the page before.
+    /// and the field can lie where the box is: not in a 3D space or a text mask, and not a copy
+    /// of content that reaches onto the page from the page before.
     fn lift_of(&self, fragment: &Fragment) -> Option<Lift> {
         let FragmentKind::Box {
             style,
@@ -76,7 +102,7 @@ impl Painter<'_> {
             .aliases
             .is_some_and(|aliases| aliases.contains_key(&std::ptr::from_ref(fragment)));
         (style.visibility == Visibility::Visible
-            && self.transforms == 0
+            && self.ctm.is_some()
             && self.space.is_none()
             && !self.text_mask
             && !copied)
@@ -115,14 +141,15 @@ impl Painter<'_> {
             index
         } else {
             let size = (fragment.rect.width.to_px(), fragment.rect.height.to_px());
-            let (left, top) = self.placement.on_page(x, y);
-            let scale = self.placement.scale();
+            let identity = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+            let (rect, transform) = placed(self.placement, self.ctm.unwrap_or(identity), (x, y), size);
             self.lifted.push((
                 key,
                 Widget {
                     node: *node,
                     page: self.page_index,
-                    rect: [left, top, size.0 * scale, size.1 * scale],
+                    rect,
+                    transform,
                     size,
                     items: Vec::new(),
                     layer: self.layers.last().cloned(),
@@ -254,11 +281,61 @@ mod tests {
             Lift::Text,
         );
         assert_eq!(widgets, []);
+        // In a 3D space a field cannot lie where the control is drawn.
         let (pages, widgets) = painted(
-            "<!DOCTYPE html><input name=a value=x style='transform: rotate(10deg)'>",
+            "<!DOCTYPE html><div style='transform-style: preserve-3d; transform: rotateY(20deg)'>\
+             <input name=a value=x style='transform: rotateX(10deg)'></div>",
             Lift::Text,
         );
         assert_eq!(widgets, []);
         assert_eq!(texts(&pages[0].items), ["x"]);
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names, reason = "the entries of the matrix")]
+    fn places_transformed_fields_around_their_boxes() {
+        let close = |a: f32, b: f32| (a - b).abs() < 0.01;
+        let (_, upright) = painted("<!DOCTYPE html><input name=a value=x>", Lift::Text);
+        let (width, height) = upright[0].size;
+        assert_eq!(upright[0].transform, [1.0, 0.0, 0.0, 1.0]);
+
+        // Turned by a quarter around its center: as wide as it was high.
+        let (pages, widgets) = painted(
+            "<!DOCTYPE html><input name=a value=x style='transform: rotate(90deg)'>",
+            Lift::Text,
+        );
+        assert_eq!(texts(&pages[0].items), Vec::<&str>::new());
+        let widget = &widgets[0];
+        assert_eq!(widget.size, (width, height));
+        let [a, b, c, d] = widget.transform;
+        assert!(
+            close(a, 0.0) && close(b, 1.0) && close(c, -1.0) && close(d, 0.0),
+            "{a} {b} {c} {d}"
+        );
+        assert!(
+            close(widget.rect[2], height) && close(widget.rect[3], width),
+            "{:?}",
+            widget.rect
+        );
+        let center = |rect: [f32; 4]| (rect[0] + rect[2] / 2.0, rect[1] + rect[3] / 2.0);
+        let (x, y) = center(widget.rect);
+        let (upright_x, upright_y) = center(upright[0].rect);
+        assert!(close(x, upright_x) && close(y, upright_y), "{x} {y}");
+
+        // Inside a scaled and rotated box, by 30°: the rectangle around the turned box.
+        let (_, widgets) = painted(
+            "<!DOCTYPE html><div style='transform: scale(2)'>\
+             <input name=a value=x style='transform: rotate(30deg)'></div>",
+            Lift::Text,
+        );
+        let [a, b, ..] = widgets[0].transform;
+        assert!(
+            close(a, 2.0 * libm::cosf(std::f32::consts::FRAC_PI_6))
+                && close(b, 2.0 * libm::sinf(std::f32::consts::FRAC_PI_6))
+        );
+        let expected = 2.0
+            * (width * libm::cosf(std::f32::consts::FRAC_PI_6)
+                + height * libm::sinf(std::f32::consts::FRAC_PI_6));
+        assert!(close(widgets[0].rect[2], expected), "{:?}", widgets[0].rect);
     }
 }

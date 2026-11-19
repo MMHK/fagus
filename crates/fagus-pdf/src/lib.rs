@@ -36,7 +36,7 @@ mod update;
 mod xmp;
 
 pub use encrypt::{Encryption, Permission};
-pub use forms::{Field, FieldKind, FieldWidget};
+pub use forms::{ButtonAction, Field, FieldKind, FieldWidget};
 pub use tagging::{Element, Numbering, Owner, Repeat, Role, Scope, Structure};
 pub use xmp::Extension;
 
@@ -755,17 +755,18 @@ fn attempt(
                 None => pdf_page.add_annotation(annotation),
             }
             let turn = match page.orientation {
-                PageOrientation::Upright => None,
-                PageOrientation::RotateLeft => Some("[0 1 -1 0 0 0]"),
-                PageOrientation::RotateRight => Some("[0 -1 1 0 0 0]"),
+                PageOrientation::Upright => [1.0, 0.0, 0.0, 1.0],
+                PageOrientation::RotateLeft => [0.0, 1.0, -1.0, 0.0],
+                PageOrientation::RotateRight => [0.0, -1.0, 1.0, 0.0],
             };
+            let matrix = forms::matrix(widget.transform, turn);
             let buttons = matches!(options.fields[field].kind, FieldKind::Check | FieldKind::Radio);
             for off in std::iter::once(false).chain(buttons.then_some(true)) {
                 appearances.push(forms::Appearance {
                     field,
                     widget: position,
                     off,
-                    turn,
+                    matrix,
                 });
             }
         }

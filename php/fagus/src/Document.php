@@ -183,8 +183,9 @@ final class Document
 
     /**
      * Makes the form controls fields of an interactive form, which readers fill in in a PDF
-     * viewer: text fields, text areas, checkboxes, radio buttons and drop-down lists, named after
-     * their `name`, with their values. Off by default: without it, controls print as they look,
+     * viewer: text fields, text areas, checkboxes, radio buttons, drop-down lists, list boxes and
+     * the buttons that submit (to an absolute `action`) or reset a form, named after their
+     * `name`, with their values. Off by default: without it, controls print as they look,
      * as in Chrome. Controls in an `inert` element stay as they look.
      */
     public function forms(bool $forms = true): self

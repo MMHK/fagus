@@ -58,20 +58,68 @@ pub enum FieldKind {
     Check,
     /// A group of radio buttons; one widget is on at most.
     Radio,
-    /// A drop-down list: the options with their values and what they show, and the value
-    /// chosen.
+    /// A drop-down list or a list box: the options with their values and what they show, and
+    /// the options chosen, by their index.
     Choice {
         options: Vec<(String, String)>,
-        value: Option<String>,
+        selected: Vec<usize>,
+        /// A list box, which shows several options at once, rather than a drop-down list.
+        list: bool,
+        /// Whether several options may be chosen (in a list box).
+        multiple: bool,
+        /// The option a list box shows first, scrolled to it.
+        top: usize,
     },
+    /// A push button, which submits the form or resets its fields; `caption` is its label.
+    Button {
+        action: ButtonAction,
+        caption: Option<String>,
+    },
+}
+
+/// What a push button does.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ButtonAction {
+    /// Sends the fields named in `fields` (fully qualified names) to `url`, as HTML sends a
+    /// form encoded as `application/x-www-form-urlencoded`: in the URL where `get`, else in the
+    /// body of a POST request.
+    Submit {
+        url: String,
+        get: bool,
+        fields: Vec<String>,
+    },
+    /// Sets the fields named back to their default values.
+    Reset { fields: Vec<String> },
+}
+
+impl ButtonAction {
+    /// The action dictionary.
+    fn dictionary(&self) -> String {
+        let names = |fields: &[String]| fields.iter().map(|name| update::text(name)).collect::<String>();
+        match self {
+            // Flags: `ExportFormat` (3), the HTML form format, and `GetMethod` (4).
+            Self::Submit { url, get, fields } => format!(
+                "<</S/SubmitForm/F<</FS/URL/F {}>>/Fields[{}]/Flags {}>>",
+                update::text(url),
+                names(fields),
+                if *get { 4 | 8 } else { 4 }
+            ),
+            Self::Reset { fields } => format!("<</S/ResetForm/Fields[{}]>>", names(fields)),
+        }
+    }
 }
 
 /// Where a field lies on a page and what it shows.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FieldWidget {
     pub page: usize,
-    /// The area in CSS pixels from the page's top left corner: x, y, width and height.
+    /// The area in CSS pixels from the page's top left corner: x, y, width and height; for a
+    /// control in a transformed box, the smallest rectangle around it.
     pub rect: [f32; 4],
+    /// How the control's box is turned, skewed and scaled onto the page, `[a, b, c, d]` of a
+    /// matrix in CSS pixels (`(x, y)` maps to `(a·x + c·y, b·x + d·y)`); `[s, 0, 0, s]` where
+    /// it is only shrunk by `s`.
+    pub transform: [f32; 4],
     /// The size of the area [`FieldWidget::appearance`] is drawn in, in CSS pixels; larger than the
     /// area on the page where the content is shrunk.
     pub size: (f32, f32),
@@ -90,14 +138,54 @@ pub struct FieldWidget {
 }
 
 /// An appearance drawn on a page after the document's pages.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Appearance {
     pub(crate) field: usize,
     pub(crate) widget: usize,
     /// Whether it is how a checkbox or radio button looks when off.
     pub(crate) off: bool,
-    /// How its page is turned on the sheet: the turn the appearance takes too.
-    pub(crate) turn: Option<&'static str>,
+    /// How the appearance is turned or skewed onto the sheet (`Matrix`, without translation, in
+    /// PDF's coordinates): by the control's transform and its page's turn. `None` for upright.
+    pub(crate) matrix: Option<[f32; 4]>,
+}
+
+/// The `Matrix` of a widget's appearance, from the transform of its control (in CSS pixels, see
+/// [`FieldWidget::transform`]) and the turn of its page (in PDF's coordinates); `None` where the
+/// widget is upright. Scaling is left out: the viewer fits the appearance into the widget's
+/// rectangle.
+pub(crate) fn matrix(transform: [f32; 4], turn: [f32; 4]) -> Option<[f32; 4]> {
+    let [a, b, c, d] = transform;
+    let scale = libm::sqrtf((a * d - b * c).abs());
+    if scale <= 0.0 || !scale.is_finite() {
+        return None;
+    }
+    // From y downwards to y upwards.
+    let [a, b, c, d] = [a / scale, -b / scale, -c / scale, d / scale];
+    let [ta, tb, tc, td] = turn;
+    let matrix = [ta * a + tc * b, tb * a + td * b, ta * c + tc * d, tb * c + td * d];
+    let upright = [1.0, 0.0, 0.0, 1.0];
+    (!matrix
+        .iter()
+        .zip(upright)
+        .all(|(value, upright)| (value - upright).abs() < 1e-4))
+    .then_some(matrix)
+}
+
+/// The rotation of a widget (`R` of `MK`, counterclockwise in degrees) that a viewer gives what
+/// it draws when the field is filled in: a quarter, a half or three quarters, where the
+/// appearance is turned by one of those and not skewed; `None` for other turns, which viewers
+/// cannot draw.
+fn rotation(matrix: [f32; 4]) -> Option<u32> {
+    let close = |a: f32, b: f32| (a - b).abs() < 1e-3;
+    let [a, b, c, d] = matrix;
+    // A rotation keeps its shape: `[cos, sin, -sin, cos]`.
+    if !close(a, d) || !close(b, -c) || !close(a * a + b * b, 1.0) {
+        return None;
+    }
+    [(1.0, 0.0, 0), (0.0, 1.0, 90), (-1.0, 0.0, 180), (0.0, -1.0, 270)]
+        .into_iter()
+        .find(|&(cos, sin, _)| close(a, cos) && close(b, sin))
+        .map(|(.., degrees)| degrees)
 }
 
 /// The URI of the link annotation that stands for a widget.
@@ -128,8 +216,16 @@ fn flags(field: &Field) -> u32 {
         FieldKind::Check => {}
         // Radio, and one stays on.
         FieldKind::Radio => flags |= (1 << 15) | (1 << 14),
-        // A drop-down list.
-        FieldKind::Choice { .. } => flags |= 1 << 17,
+        FieldKind::Choice { list, multiple, .. } => {
+            // A drop-down list, or a list box of which several options may be chosen.
+            if !list {
+                flags |= 1 << 17;
+            }
+            if *multiple {
+                flags |= 1 << 21;
+            }
+        }
+        FieldKind::Button { .. } => flags |= 1 << 16,
     }
     flags
 }
@@ -188,7 +284,12 @@ fn field_entries(field: &Field, partial: &str, scale: f32) -> String {
                 .map_or_else(|| "/Off".to_owned(), |widget| on_state(&widget.on));
             let _ = write!(entries, "/V {value}/DV {value}");
         }
-        FieldKind::Choice { options, value } => {
+        FieldKind::Choice {
+            options,
+            selected,
+            top,
+            ..
+        } => {
             entries.push_str("/FT/Ch/Opt[");
             for (export, shown) in options {
                 if export == shown {
@@ -198,14 +299,33 @@ fn field_entries(field: &Field, partial: &str, scale: f32) -> String {
                 }
             }
             entries.push(']');
+            let mut selected: Vec<usize> = selected
+                .iter()
+                .copied()
+                .filter(|&index| index < options.len())
+                .collect();
+            selected.sort_unstable();
+            selected.dedup();
+            let values: Vec<String> = selected
+                .iter()
+                .map(|&index| update::text(&options[index].0))
+                .collect();
+            let value = match values.as_slice() {
+                [] => None,
+                [one] => Some(one.clone()),
+                several => Some(format!("[{}]", several.concat())),
+            };
             if let Some(value) = value {
-                let _ = write!(entries, "/V {0}/DV {0}", update::text(value));
-                if let Some(index) = options.iter().position(|(export, _)| export == value) {
-                    let _ = write!(entries, "/I[{index}]");
-                }
+                let _ = write!(entries, "/V {value}/DV {value}");
+                let indices: Vec<String> = selected.iter().map(usize::to_string).collect();
+                let _ = write!(entries, "/I[{}]", indices.join(" "));
+            }
+            if *top > 0 {
+                let _ = write!(entries, "/TI {top}");
             }
             text_entries(&mut entries);
         }
+        FieldKind::Button { .. } => entries.push_str("/FT/Btn"),
     }
     entries
 }
@@ -234,6 +354,7 @@ pub(crate) fn write(
 
     // The appearances: form XObjects made of the content of their pages, which go.
     let mut streams: FxHashMap<(usize, usize, bool), u32> = FxHashMap::default();
+    let mut matrices: FxHashMap<(usize, usize), [f32; 4]> = FxHashMap::default();
     for (&page, appearance) in kids[pages..].iter().zip(appearances) {
         let dictionary = update.dictionary(page)?;
         let contents = update::reference(crate::parse::entry(&dictionary, "/Contents")?)?;
@@ -251,8 +372,10 @@ pub(crate) fn write(
         if let Some(group) = crate::parse::entry(&dictionary, "/Group") {
             stream = update::with_entry(&stream, "/Group", group.trim());
         }
-        if let Some(turn) = appearance.turn {
-            stream = update::with_entry(&stream, "/Matrix", turn);
+        if let Some(matrix) = appearance.matrix {
+            let [a, b, c, d] = matrix.map(update::number);
+            stream = update::with_entry(&stream, "/Matrix", &format!("[{a} {b} {c} {d} 0 0]"));
+            matrices.insert((appearance.field, appearance.widget), matrix);
         }
         update.set_dictionary(contents, &stream)?;
         update.set(page, b"null".to_vec());
@@ -350,6 +473,24 @@ pub(crate) fn write(
                     }
                 }
             }
+            // How a viewer draws the widget anew: turned as it is, with the button's label.
+            let mut characteristics = String::new();
+            if let Some(degrees) = matrices
+                .get(&(index, position))
+                .and_then(|&matrix| rotation(matrix))
+                .filter(|&degrees| degrees != 0)
+            {
+                let _ = write!(characteristics, "/R {degrees}");
+            }
+            if let FieldKind::Button { action, caption } = &field.kind {
+                if let Some(caption) = caption.as_deref().filter(|caption| !caption.is_empty()) {
+                    let _ = write!(characteristics, "/CA {}", update::text(caption));
+                }
+                let _ = write!(extra, "/A {}", action.dictionary());
+            }
+            if !characteristics.is_empty() {
+                let _ = write!(extra, "/MK<<{characteristics}>>");
+            }
             if let Some(group) = widget.layer.as_ref().and_then(|layer| groups.get(&layer.name)) {
                 let _ = write!(extra, "/OC {group} 0 R");
             }
@@ -426,10 +567,12 @@ pub(crate) fn write(
     Some(())
 }
 
-/// The scale of a widget on its page: below 1 where the content is shrunk.
+/// The scale of a widget's text on its page: below 1 where the content is shrunk.
 fn scaled(widget: &FieldWidget) -> f32 {
-    if widget.size.0 > 0.0 {
-        widget.rect[2] / widget.size.0
+    let [.., c, d] = widget.transform;
+    let scale = libm::hypotf(c, d);
+    if scale > 0.0 && scale.is_finite() {
+        scale
     } else {
         1.0
     }
@@ -507,7 +650,10 @@ mod tests {
                 ("de".to_owned(), "Deutsch".to_owned()),
                 ("en".to_owned(), "en".to_owned()),
             ],
-            value: Some("en".to_owned()),
+            selected: vec![1],
+            list: false,
+            multiple: false,
+            top: 0,
         });
         assert_eq!(
             field_entries(&choice, "language", 0.5),
@@ -521,6 +667,95 @@ mod tests {
             max_length: None,
         });
         assert!(!field_entries(&password, "pin", 1.0).contains("secret"));
+
+        let options: Vec<(String, String)> = ["a", "b", "c", "d"]
+            .iter()
+            .map(|option| ((*option).to_owned(), option.to_uppercase()))
+            .collect();
+        let list = field(FieldKind::Choice {
+            options: options.clone(),
+            selected: vec![3, 1],
+            list: true,
+            multiple: true,
+            top: 2,
+        });
+        assert_eq!(
+            field_entries(&list, "letters", 1.0),
+            "/T (letters)/TU (Name)/Ff 2097154/FT/Ch/Opt[[(a)(A)][(b)(B)][(c)(C)][(d)(D)]]\
+             /V [(b)(d)]/DV [(b)(d)]/I[1 3]/TI 2/DA (/Helv 12 Tf 0 0 0 rg)"
+        );
+        let single = field(FieldKind::Choice {
+            options,
+            selected: Vec::new(),
+            list: true,
+            multiple: false,
+            top: 0,
+        });
+        assert_eq!(
+            field_entries(&single, "letter", 1.0),
+            "/T (letter)/TU (Name)/Ff 2/FT/Ch/Opt[[(a)(A)][(b)(B)][(c)(C)][(d)(D)]]\
+             /DA (/Helv 12 Tf 0 0 0 rg)"
+        );
+
+        let submit = field(FieldKind::Button {
+            action: ButtonAction::Submit {
+                url: "https://example.com/apply?x=1".to_owned(),
+                get: false,
+                fields: vec!["customer.name".to_owned(), "ok".to_owned()],
+            },
+            caption: Some("Send".to_owned()),
+        });
+        assert_eq!(
+            field_entries(&submit, "send", 1.0),
+            "/T (send)/TU (Name)/Ff 65538/FT/Btn"
+        );
+        let FieldKind::Button { action, .. } = &submit.kind else {
+            unreachable!()
+        };
+        assert_eq!(
+            action.dictionary(),
+            "<</S/SubmitForm/F<</FS/URL/F (https://example.com/apply?x=1)>>/Fields[(customer.name)(ok)]/Flags 4>>"
+        );
+        let get = ButtonAction::Submit {
+            url: "https://example.com/".to_owned(),
+            get: true,
+            fields: Vec::new(),
+        };
+        assert!(get.dictionary().ends_with("/Fields[]/Flags 12>>"));
+        assert_eq!(
+            ButtonAction::Reset {
+                fields: vec!["a".to_owned()]
+            }
+            .dictionary(),
+            "<</S/ResetForm/Fields[(a)]>>"
+        );
+    }
+
+    #[test]
+    fn turns_appearances_with_their_controls_and_pages() {
+        let upright = [1.0, 0.0, 0.0, 1.0];
+        assert_eq!(matrix([1.0, 0.0, 0.0, 1.0], upright), None);
+        assert_eq!(matrix([0.5, 0.0, 0.0, 0.5], upright), None, "only shrunk");
+        // `rotate(90deg)` turns clockwise on the page: a quarter clockwise in PDF's coordinates.
+        let quarter = matrix([0.0, 1.0, -1.0, 0.0], upright).expect("turned");
+        assert_eq!(quarter, [0.0, -1.0, 1.0, 0.0]);
+        assert_eq!(rotation(quarter), Some(270));
+        // On a page turned to the left, the turns add up.
+        assert_eq!(matrix([0.0, 1.0, -1.0, 0.0], [0.0, 1.0, -1.0, 0.0]), None);
+        let left = matrix(upright, [0.0, 1.0, -1.0, 0.0]).expect("turned");
+        assert_eq!(rotation(left), Some(90));
+        assert_eq!(
+            rotation(matrix([-2.0, 0.0, 0.0, -2.0], upright).expect("turned")),
+            Some(180)
+        );
+        // 30° and skews have no rotation that viewers can draw.
+        let (sin, cos) = (0.5, libm::sqrtf(3.0) / 2.0);
+        let thirty = matrix([cos, sin, -sin, cos], upright).expect("turned");
+        assert_eq!(rotation(thirty), None);
+        assert_eq!(
+            rotation(matrix([1.0, 0.0, 0.5, 1.0], upright).expect("skewed")),
+            None
+        );
     }
 
     #[test]

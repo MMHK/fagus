@@ -2,16 +2,17 @@
 //! ([`crate::Document::forms`]).
 //!
 //! Text fields (`<input>` of the types that take text, numbers or dates), text areas,
-//! checkboxes, radio buttons and drop-down lists become fields, named after their `name`. Each
-//! lies where its control is laid out and shows what the control shows; buttons, files, sliders
-//! and the like stay as they are printed, and so does every control in an `inert` element.
+//! checkboxes, radio buttons, drop-down lists, list boxes and the buttons that submit or reset
+//! a form become fields, named after their `name`. Each lies where its control is laid out and
+//! shows what the control shows; other buttons, files, sliders and the like stay as they are
+//! printed, and so does every control in an `inert` element.
 
 use std::sync::Arc;
 
 use fagus_dom::{Document, ElementData, NodeId};
 use fagus_layout::{Fragment, FragmentKind, Page};
 use fagus_paint::{Item, Lift, Widget};
-use fagus_pdf::{Field, FieldKind, FieldWidget};
+use fagus_pdf::{ButtonAction, Field, FieldKind, FieldWidget};
 use fagus_style::StyledDocument;
 use fagus_style::values::{Appearance, Direction, Display, TextAlign};
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -41,8 +42,14 @@ enum Kind {
     Text,
     TextArea,
     Select,
+    /// A `<select>` that shows several options at once (`multiple` or `size` above 1).
+    ListBox,
     Check,
     Radio,
+    /// A button that submits its form to the form's `action`.
+    Submit,
+    /// A button that resets the fields of its form.
+    Reset,
 }
 
 /// The controls of a document that become fields.
@@ -54,8 +61,9 @@ pub(crate) struct Controls {
     order: Vec<(NodeId, Kind)>,
 }
 
-/// The controls of `document` that become fields.
-pub(crate) fn controls(document: &Document, styled: &StyledDocument) -> Controls {
+/// The controls of `document` that become fields; the buttons that submit or reset a form only
+/// with `buttons` (PDF/A forbids fields that act).
+pub(crate) fn controls(document: &Document, styled: &StyledDocument, buttons: bool) -> Controls {
     let mut controls = Controls::default();
     let Some(root) = document.document_element() else {
         return controls;
@@ -75,14 +83,24 @@ pub(crate) fn controls(document: &Document, styled: &StyledDocument) -> Controls
         let Some(kind) = kind(data) else {
             continue;
         };
+        // A button does something only in a form, and is sent only where the PDF can send it.
+        let usable = match kind {
+            Kind::Submit => buttons && submission(document, node).is_some(),
+            Kind::Reset => buttons && owner(document, node).is_some(),
+            _ => true,
+        };
+        if !usable {
+            continue;
+        }
         if styled
             .style(node)
             .is_none_or(|style| style.display == Display::None)
         {
             continue;
         }
+        // A list box shows which options are chosen, which its field draws anew.
         let lift = match kind {
-            Kind::Check | Kind::Radio => Lift::Whole,
+            Kind::Check | Kind::Radio | Kind::ListBox => Lift::Whole,
             _ => Lift::Text,
         };
         controls.lifts.insert(node, lift);
@@ -97,12 +115,25 @@ fn kind(data: &ElementData) -> Option<Kind> {
         return Some(Kind::TextArea);
     }
     if data.is("select") {
-        // A drop-down list; list boxes stay as they are printed.
-        let size = data
-            .attribute("size")
-            .and_then(|size| size.trim().parse::<u32>().ok())
-            .unwrap_or(0);
-        return (data.attribute("multiple").is_none() && size <= 1).then_some(Kind::Select);
+        // A drop-down list or a list box; a drop-down list of which several options may be
+        // chosen (`multiple` with `size=1`) stays as it is printed.
+        let multiple = data.attribute("multiple").is_some();
+        return match (list_size(data) > 1, multiple) {
+            (true, _) => Some(Kind::ListBox),
+            (false, false) => Some(Kind::Select),
+            (false, true) => None,
+        };
+    }
+    if data.is("button") {
+        let kind = data
+            .attribute("type")
+            .map(|kind| kind.trim().to_ascii_lowercase());
+        // A button without a valid `type` submits.
+        return match kind.as_deref() {
+            Some("reset") => Some(Kind::Reset),
+            Some("button" | "menu") => None,
+            _ => Some(Kind::Submit),
+        };
     }
     if !data.is("input") {
         return None;
@@ -113,11 +144,69 @@ fn kind(data: &ElementData) -> Option<Kind> {
     match kind.as_str() {
         "checkbox" => Some(Kind::Check),
         "radio" => Some(Kind::Radio),
+        "submit" => Some(Kind::Submit),
+        "reset" => Some(Kind::Reset),
         kind if TEXT_TYPES.contains(&kind) => Some(Kind::Text),
         // An unknown type is a text field, as in HTML.
-        "submit" | "reset" | "button" | "image" | "file" | "range" | "color" | "hidden" => None,
+        "button" | "image" | "file" | "range" | "color" | "hidden" => None,
         _ => Some(Kind::Text),
     }
+}
+
+/// The number of options a `<select>` shows at once, as it is laid out: its `size`, or 4 with
+/// `multiple` and 1 without.
+fn list_size(data: &ElementData) -> u32 {
+    data.attribute("size")
+        .and_then(|size| size.trim().parse::<u32>().ok())
+        .filter(|&size| size > 0)
+        .unwrap_or(if data.attribute("multiple").is_some() {
+            4
+        } else {
+            1
+        })
+}
+
+/// The form a control belongs to: the one its `form` attribute names, else the one it is in.
+fn owner(document: &Document, node: NodeId) -> Option<NodeId> {
+    if let Some(id) = document.element(node).and_then(|data| data.attribute("form")) {
+        let root = document.document_element()?;
+        return std::iter::once(root)
+            .chain(document.descendants(root))
+            .find(|&candidate| {
+                document
+                    .element(candidate)
+                    .is_some_and(|data| data.is("form") && data.id.as_deref() == Some(id))
+            });
+    }
+    let mut current = document.parent(node);
+    while let Some(parent) = current {
+        if document.element(parent).is_some_and(|data| data.is("form")) {
+            return Some(parent);
+        }
+        current = document.parent(parent);
+    }
+    None
+}
+
+/// Where a submit button sends its form, and whether with GET: the button's `formaction` and
+/// `formmethod`, else the form's `action` and `method` (GET by default, as in HTML). `None`
+/// without a form, for `method=dialog` and where the URL is relative or not one to send to.
+fn submission(document: &Document, button: NodeId) -> Option<(String, bool)> {
+    let form = document.element(owner(document, button)?)?;
+    let data = document.element(button)?;
+    let action = data
+        .attribute("formaction")
+        .or_else(|| form.attribute("action"))?;
+    let method = data
+        .attribute("formmethod")
+        .or_else(|| form.attribute("method"))
+        .unwrap_or("get")
+        .trim()
+        .to_ascii_lowercase();
+    if method == "dialog" {
+        return None;
+    }
+    Some((crate::interactive::form_action(action)?, method != "post"))
 }
 
 /// The fields of the controls, from the widgets painted for them.
@@ -138,6 +227,8 @@ pub(crate) fn fields(
     // The field of each group of radio buttons, by name.
     let mut radios: FxHashMap<String, usize> = FxHashMap::default();
     let mut unnamed = 0;
+    // The form of each field, to name the fields a button submits or resets.
+    let mut forms: Vec<Option<NodeId>> = Vec::new();
     for &(node, kind) in &controls.order {
         let Some(painted) = by_node.remove(&node) else {
             continue;
@@ -162,6 +253,7 @@ pub(crate) fn fields(
                     FieldWidget {
                         page: widget.page,
                         rect: widget.rect,
+                        transform: widget.transform,
                         size: widget.size,
                         node: Some(node),
                         appearance,
@@ -208,6 +300,22 @@ pub(crate) fn fields(
         {
             radios.insert(given, fields.len());
         }
+        let caption = painted.first().map(|widget| {
+            normalize(
+                &widget
+                    .items
+                    .iter()
+                    .filter_map(|item| match item {
+                        Item::Text { text, .. } => Some(text.as_str()),
+                        _ => None,
+                    })
+                    .collect::<String>(),
+            )
+        });
+        let button = |action: ButtonAction| FieldKind::Button {
+            action,
+            caption: caption.clone().filter(|caption| !caption.is_empty()),
+        };
         let field_kind = match kind {
             Kind::Text => text_field(data),
             Kind::TextArea => FieldKind::Text {
@@ -218,8 +326,20 @@ pub(crate) fn fields(
                 max_length: max_length(data),
             },
             Kind::Select => choice(document, node),
+            Kind::ListBox => list_box(document, node, data),
             Kind::Check => FieldKind::Check,
             Kind::Radio => FieldKind::Radio,
+            Kind::Submit => {
+                let Some((url, get)) = submission(document, node) else {
+                    continue;
+                };
+                button(ButtonAction::Submit {
+                    url,
+                    get,
+                    fields: Vec::new(),
+                })
+            }
+            Kind::Reset => button(ButtonAction::Reset { fields: Vec::new() }),
         };
         let widgets = match kind {
             Kind::Check | Kind::Radio => make_widgets(&buttons),
@@ -233,19 +353,61 @@ pub(crate) fn fields(
             TextAlign::Start if rtl => 2,
             _ => 0,
         };
+        let buttons = matches!(kind, Kind::Submit | Kind::Reset);
+        let selects = matches!(kind, Kind::Select | Kind::ListBox);
+        let description = if buttons {
+            button_description(data, caption.as_deref())
+        } else {
+            description(document, node, data)
+        };
+        forms.push(owner(document, node));
         fields.push(Field {
             name,
             kind: field_kind,
-            read_only: disabled || (kind != Kind::Select && data.attribute("readonly").is_some()),
-            required: data.attribute("required").is_some(),
-            description: description(document, node, data),
+            read_only: disabled || (!selects && !buttons && data.attribute("readonly").is_some()),
+            required: !buttons && data.attribute("required").is_some(),
+            description,
             font_size: style.font_size,
             color: style.color,
             alignment,
             widgets,
         });
     }
+    // The fields a button submits or resets: the others of its form.
+    let names: Vec<(Option<NodeId>, String)> = fields
+        .iter()
+        .zip(&forms)
+        .filter(|(field, _)| !matches!(field.kind, FieldKind::Button { .. }))
+        .map(|(field, form)| (*form, field.name.clone()))
+        .collect();
+    for (field, form) in fields.iter_mut().zip(&forms) {
+        if let FieldKind::Button {
+            action: ButtonAction::Submit { fields, .. } | ButtonAction::Reset { fields },
+            ..
+        } = &mut field.kind
+        {
+            *fields = names
+                .iter()
+                .filter(|(owner, _)| owner == form)
+                .map(|(_, name)| name.clone())
+                .collect();
+        }
+    }
     fields
+}
+
+/// What a button is to a reader who does not see it: its `aria-label`, its `title`, its label
+/// or its name.
+fn button_description(data: &ElementData, caption: Option<&str>) -> Option<String> {
+    let attribute = |name: &str| {
+        data.attribute(name)
+            .map(normalize)
+            .filter(|text| !text.is_empty())
+    };
+    attribute("aria-label")
+        .or_else(|| attribute("title"))
+        .or_else(|| caption.map(str::to_owned).filter(|text| !text.is_empty()))
+        .or_else(|| attribute("name"))
 }
 
 /// The field of an `<input>` that takes text, with the value Chrome shows.
@@ -275,12 +437,10 @@ fn max_length(data: &ElementData) -> Option<u32> {
     data.attribute("maxlength")?.trim().parse().ok()
 }
 
-/// The options of a `<select>` and the one chosen: the last with `selected`, else the first
-/// that is not disabled.
-fn choice(document: &Document, select: NodeId) -> FieldKind {
+/// The options of a `<select>` with their values and what they show, and which have
+/// `selected`.
+fn options(document: &Document, select: NodeId) -> Vec<((String, String), bool, bool)> {
     let mut options = Vec::new();
-    let mut chosen = None;
-    let mut first = None;
     for node in document.descendants(select) {
         let Some(option) = document.element(node).filter(|data| data.is("option")) else {
             continue;
@@ -292,17 +452,61 @@ fn choice(document: &Document, select: NodeId) -> FieldKind {
             .filter(|label| !label.is_empty())
             .unwrap_or_else(|| text.clone());
         let value = option.attribute("value").map_or(text, str::to_owned);
-        if option.attribute("selected").is_some() {
-            chosen = Some(value.clone());
-        }
-        if first.is_none() && option.attribute("disabled").is_none() {
-            first = Some(value.clone());
-        }
-        options.push((value, shown));
+        options.push((
+            (value, shown),
+            option.attribute("selected").is_some(),
+            option.attribute("disabled").is_some(),
+        ));
     }
+    options
+}
+
+/// The drop-down list of a `<select>`, with the option chosen: the last with `selected`, else
+/// the first that is not disabled.
+fn choice(document: &Document, select: NodeId) -> FieldKind {
+    let options = options(document, select);
+    let chosen = options
+        .iter()
+        .rposition(|(_, selected, _)| *selected)
+        .or_else(|| options.iter().position(|(_, _, disabled)| !disabled));
     FieldKind::Choice {
-        options,
-        value: chosen.or(first),
+        options: options.into_iter().map(|(option, ..)| option).collect(),
+        selected: chosen.into_iter().collect(),
+        list: false,
+        multiple: false,
+        top: 0,
+    }
+}
+
+/// The list box of a `<select>`: with `multiple`, every option with `selected` is chosen,
+/// without it the last; none if none has it. It shows the first chosen option at its bottom
+/// where that is further down than it reaches, as Chrome scrolls it.
+fn list_box(document: &Document, select: NodeId, data: &ElementData) -> FieldKind {
+    let options = options(document, select);
+    let multiple = data.attribute("multiple").is_some();
+    let selected: Vec<usize> = if multiple {
+        options
+            .iter()
+            .enumerate()
+            .filter_map(|(index, (_, selected, _))| selected.then_some(index))
+            .collect()
+    } else {
+        options
+            .iter()
+            .rposition(|(_, selected, _)| *selected)
+            .into_iter()
+            .collect()
+    };
+    let size = list_size(data) as usize;
+    let top = selected
+        .first()
+        .map_or(0, |&first| (first + 1).saturating_sub(size));
+    FieldKind::Choice {
+        options: options.into_iter().map(|(option, ..)| option).collect(),
+        selected,
+        list: true,
+        multiple,
+        top,
     }
 }
 
@@ -569,13 +773,14 @@ mod tests {
         let author = fagus_css::Stylesheet::parse("", fagus_css::Origin::Author, "doc.css");
         let rules = fagus_css::RuleSet::new(&[&user_agent, &author], &fagus_css::MediaEnvironment::default());
         let styled = fagus_style::compute_styles(&document, &rules, (300.0, 300.0));
-        let found = controls(&document, &styled);
+        let found = controls(&document, &styled, true);
         let names: Vec<&str> = found
             .order
             .iter()
             .filter_map(|(node, _)| document.element(*node)?.attribute("name"))
             .collect();
-        assert_eq!(names, ["a", "b", "c", "e", "h"]);
+        assert_eq!(names, ["a", "b", "c", "d", "e", "h"]);
+        assert_eq!(found.order[3].1, Kind::ListBox);
         assert_eq!(found.order[1].1, Kind::Check);
         assert_eq!(found.lifts[&found.order[1].0], Lift::Whole);
     }
@@ -597,7 +802,10 @@ mod tests {
                     ("-".to_owned(), "-".to_owned()),
                     ("fr".to_owned(), "France".to_owned()),
                 ],
-                value: Some("fr".to_owned()),
+                selected: vec![2],
+                list: false,
+                multiple: false,
+                top: 0,
             }
         );
         let element = |id: &str| {

@@ -412,6 +412,20 @@ pub(crate) fn aria_heading(element: &ElementData) -> Option<u8> {
     Some(level.min(6))
 }
 
+/// The URI a form is sent to, from its `action`: an `http`, `https` or `mailto` URL, written
+/// as links are. Relative URLs lead nowhere, since a PDF has no address of its own.
+pub(crate) fn form_action(action: &str) -> Option<String> {
+    let action = action.trim();
+    let scheme = action.split_once(':')?.0.to_ascii_lowercase();
+    if !matches!(scheme.as_str(), "http" | "https" | "mailto") {
+        return None;
+    }
+    match target(action, &FxHashMap::default())? {
+        LinkTarget::Uri(uri) => Some(uri),
+        LinkTarget::Position { .. } => None,
+    }
+}
+
 /// Where `href` leads: a target in the document (`#id`) or a URI with a scheme that is safe in a
 /// PDF. Relative URLs and other schemes (`javascript:`, `file:`) lead nowhere.
 fn target(href: &str, targets: &FxHashMap<String, (usize, f32, f32)>) -> Option<LinkTarget> {

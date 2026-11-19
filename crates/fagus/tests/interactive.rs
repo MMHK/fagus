@@ -150,6 +150,89 @@ fn makes_fields_for_pdf_a_and_pdf_ua() {
     assert!(contains(&output.pdf, "/TU (Name)"));
 }
 
+const MORE: &str = "<!DOCTYPE html><html lang=en><title>Application</title>\
+    <form action='https://example.com/apply?step=2' method=post>\
+    <p><label>Name <input name=name></label>\
+    <p><select name=languages multiple aria-label=Languages><option value=de selected>German\
+       <option value=en>English<option value=fr selected>French<option value=it>Italian\
+       <option value=es>Spanish<option value=pl selected>Polish</select>\
+    <p><select name=size size=3 aria-label=Size><option>S<option>M<option>L</select>\
+    <p><button>Send</button><button type=reset>Clear</button><button type=button>Nothing</button>\
+    </form>\
+    <form action=/relative><input name=other aria-label=Other><input type=submit value=Go>\
+    <input type=submit formaction='https://example.com/search' value=Search></form>\
+    <input type=submit form=missing value=Lost>";
+
+#[test]
+fn makes_list_boxes_and_buttons() {
+    let output = render(Document::html(MORE).forms(true).accessible());
+    let pdf = &output.pdf;
+    // A list box of which several options are chosen, and one of which one is: none yet.
+    assert!(contains(
+        pdf,
+        "/T (languages)/TU (Languages)/Ff 2097152/FT/Ch/Opt[[(de)(German)][(en)(English)]\
+         [(fr)(French)][(it)(Italian)][(es)(Spanish)][(pl)(Polish)]]/V [(de)(fr)(pl)]\
+         /DV [(de)(fr)(pl)]/I[0 2 5]"
+    ));
+    assert!(contains(pdf, "/T (size)/TU (Size)/FT/Ch/Opt[(S)(M)(L)]/DA"));
+    // The buttons that submit and reset the form, with their labels.
+    assert!(contains(pdf, "/T (field1)/TU (Send)/Ff 65536/FT/Btn"));
+    assert!(contains(
+        pdf,
+        "/A <</S/SubmitForm/F<</FS/URL/F (https://example.com/apply?step=2)>>\
+         /Fields[(name)(languages)(size)]/Flags 4>>/MK<</CA (Send)>>"
+    ));
+    assert!(contains(
+        pdf,
+        "/A <</S/ResetForm/Fields[(name)(languages)(size)]>>/MK<</CA (Clear)>>"
+    ));
+    // A form sent with GET to the button's own URL; not to a relative one, nor without a form.
+    assert!(contains(
+        pdf,
+        "/A <</S/SubmitForm/F<</FS/URL/F (https://example.com/search)>>/Fields[(other)]/Flags 12>>"
+    ));
+    assert_eq!(count(pdf, "/S/SubmitForm"), 2);
+    assert!(!contains(pdf, "(Nothing)>>") && !contains(pdf, "/TU (Go)") && !contains(pdf, "/TU (Lost)"));
+    assert_eq!(count(pdf, "/Subtype/Widget"), 7);
+    assert_eq!(count(pdf, "/S/Form"), 7);
+
+    // PDF/A forbids fields that act: the buttons stay as they are printed.
+    let output = render(Document::html(MORE).forms(true).conformance(Conformance::PdfA2b));
+    assert!(codes(&output).is_empty(), "{:?}", output.diagnostics);
+    assert!(!contains(&output.pdf, "/ResetForm") && !contains(&output.pdf, "/SubmitForm"));
+    assert_eq!(count(&output.pdf, "/Subtype/Widget"), 4);
+}
+
+#[test]
+fn turns_fields_with_their_boxes_and_pages() {
+    let html = |style: &str| {
+        format!(
+            "<!DOCTYPE html><style>{style}</style><p style='margin: 80px'>\
+             <input name=a value=Turned style='transform: rotate(90deg)'>\
+             <input name=b value=Tilted style='transform: rotate(30deg)'>\
+             <span style='display: inline-block; transform: scale(2)'><input name=c value=Big></span>"
+        )
+    };
+    let output = render(Document::html(html("")).forms(true));
+    let pdf = &output.pdf;
+    assert_eq!(count(pdf, "/Subtype/Widget"), 3);
+    assert!(contains(pdf, "/Matrix [0 -1 1 0 0 0]"));
+    assert!(contains(pdf, "/MK<</R 270>>"));
+    assert!(contains(pdf, "/Matrix [0.866 -0.5 0.5 0.866 0 0]"));
+    assert_eq!(count(pdf, "/MK<<"), 1, "30° is no rotation viewers can draw");
+    // Scaled: the text a reader types is twice as large too.
+    assert!(contains(pdf, "/V (Big)/DV (Big)/DA (/Helv 20 Tf"));
+
+    // On a page turned to the left, the turns add up.
+    let output = render(Document::html(html("@page { page-orientation: rotate-left }")).forms(true));
+    assert!(contains(&output.pdf, "/Matrix [0 1 -1 0 0 0]"));
+    assert!(contains(&output.pdf, "/MK<</R 90>>"));
+    assert!(
+        !contains(&output.pdf, "/R 270"),
+        "rotate(90deg) on a page turned left is upright"
+    );
+}
+
 const LAYERS: &str = "<!DOCTYPE html><html lang=en><title>Layers</title>\
     <style>.note { -fagus-layer: 'Notes' screen } .copy { -fagus-layer: \"Copy\" print }\
     .more { -fagus-layer: 'Details' }</style>\

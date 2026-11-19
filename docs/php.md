@@ -216,9 +216,11 @@ and PDF/A-4, which are based on other PDF versions than PDF/UA-1. See [pdf.md](p
 ### `forms(bool $forms = true): Document`
 
 Makes the form controls of the document the fields of an interactive form, which a reader fills
-in in a PDF viewer: text fields, text areas, checkboxes, radio buttons and drop-down lists, named
-after their `name`, with their values and with `readonly`, `disabled`, `required` and
-`maxlength`. The PDF looks the same as without it. Off by default, as Chrome prints controls as
+in in a PDF viewer: text fields, text areas, checkboxes, radio buttons, drop-down lists, list
+boxes (also `<select multiple>`) and the buttons that submit or reset a `<form>`, named after
+their `name`, with their values and with `readonly`, `disabled`, `required` and `maxlength`. A
+submit button sends the fields to the form's `action`, which must be an absolute URL; controls in
+transformed boxes and on turned pages become fields too. The PDF looks the same as without it. Off by default, as Chrome prints controls as
 they look; controls in an `inert` element stay so. See [pdf.md](pdf.md#fill-in-forms).
 
 ```php

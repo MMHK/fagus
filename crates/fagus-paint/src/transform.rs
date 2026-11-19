@@ -35,6 +35,21 @@ pub(crate) fn matrix(
     flatten(&matrix, reference)
 }
 
+/// The transform that applies `inner`, then `outer`.
+#[allow(clippy::many_single_char_names, reason = "the entries of the matrices")]
+pub(crate) fn then(outer: Matrix, inner: Matrix) -> Matrix {
+    let [a, b, c, d, e, f] = outer;
+    let [ia, ib, ic, id, ie, iff] = inner;
+    [
+        a * ia + c * ib,
+        b * ia + d * ib,
+        a * ic + c * id,
+        b * ic + d * id,
+        a * ie + c * iff + e,
+        b * ie + d * iff + f,
+    ]
+}
+
 /// [`matrix`] before it is flattened, with its reference box: the transform in 3D that the
 /// boxes of a 3D rendering context (`transform-style: preserve-3d`) compose.
 pub(crate) fn matrix3d(

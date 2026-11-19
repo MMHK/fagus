@@ -339,7 +339,8 @@ impl Document {
 
     /// Whether the form controls of the document become the fields of an interactive form,
     /// which a reader fills in in a PDF viewer: text fields, text areas, checkboxes, radio
-    /// buttons and drop-down lists, named after their `name`, with their values. Off by
+    /// buttons, drop-down lists, list boxes and the buttons that submit (to an absolute
+    /// `action`) or reset a form, named after their `name`, with their values. Off by
     /// default: Chrome prints the controls as they look, and so does Fagus without it. Controls
     /// in an `inert` element stay as they look.
     #[must_use]
@@ -1169,7 +1170,7 @@ impl Inner {
             .report_layout
             .then(|| layout_info::collect(&document, &pages));
         let controls = if input.forms {
-            forms::controls(&document, &styled)
+            forms::controls(&document, &styled, conformance.is_none())
         } else {
             forms::Controls::default()
         };

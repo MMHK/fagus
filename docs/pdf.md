@@ -131,10 +131,13 @@ On the command line, the flag is `--forms`; in Rust, `Document::forms(true)`.
 | `<input type=checkbox>` | A checkbox, on where `checked` |
 | `<input type=radio>` | A radio button; those with the same `name` are one field, of which one is on |
 | `<select>` (without `multiple` and `size`) | A drop-down list with its options, the `selected` one chosen |
+| `<select multiple>`, `<select size=3>` | A list box with its options; with `multiple`, several may be chosen, the `selected` ones are |
+| `<button>`, `<button type=submit>`, `<input type=submit>` in a `<form action>` | A push button that sends the fields of its form to the `action` |
+| `<button type=reset>`, `<input type=reset>` in a `<form>` | A push button that resets the fields of its form |
 
-Buttons, file inputs, sliders, color wells, list boxes and `<select multiple>` stay as they look.
-So does every control inside an element with `inert`, for a sample that is filled in for
-illustration:
+Other buttons (`<button type=button>`, `<input type=image>`), file inputs, sliders, color wells
+and `<select multiple size=1>` stay as they look. So does every control inside an element with
+`inert`, for a sample that is filled in for illustration:
 
 ```html
 <p>Example: <span inert><input value="DE89 3704 0044 0532 0130 00"></span></p>
@@ -147,14 +150,16 @@ What the fields get from the controls:
   Periods make a tree of fields, as PDF reads names: `customer.name` and `customer.email` are
   `name` and `email` in `customer`. A name that is taken gets `_2`, `_3`, …
 - **The value** is the `value` (a number only if it is valid, an email address trimmed), the text
-  of a `<textarea>`, the `value` (or text) of the chosen option; a checkbox or radio button is on
-  in the state named by its `value` (`on` without one). A password field stores no value; it
+  of a `<textarea>`, the `value` (or text) of the chosen option (of every chosen option of a list
+  box with `multiple`; a list box without a `selected` option has none chosen, as in HTML); a
+  checkbox or radio button is on in the state named by its `value` (`on` without one). A password field stores no value; it
   shows its dots. A date stays as its `value` is written (`2026-11-19`), while the field shows it
   as the control does.
 - **Flags:** `readonly` and `disabled` (also of a `<fieldset>`) make the field read-only,
   `required` required, `maxlength` its maximum length.
 - **The description** for screen readers is the `aria-label`, the `title`, the text of the
-  `<label>`, the `placeholder` or the name.
+  `<label>`, the `placeholder` or the name; of a button, its `aria-label`, `title`, label or
+  name.
 - **The text** a reader types has the font size, color and `text-align` of the control, in
   Helvetica, the font every viewer has.
 
@@ -164,10 +169,47 @@ in the field's appearance; the frame of the control (its border and background, 
 field only when a reader changes it. A control that is repeated, such as one in a header that
 shows on every page, is one field with a place on each page: filling one fills all.
 
+### Send and reset a form
+
+A submit button sends the fields of its form (the controls inside the `<form>`, or those whose
+`form` attribute names it) when a reader clicks it in a viewer that sends forms, such as Acrobat
+and Foxit Reader; browsers' viewers (pdf.js, Chrome's) show the button but do not send. The
+address and method are those of the button's `formaction` and `formmethod`, else of the form's
+`action` and `method`:
+
+```html
+<form action="https://example.com/apply" method="post">
+  <label>Name <input name="name" required></label>
+  <button>Send</button> <button type="reset">Start over</button>
+</form>
+```
+
+- The `action` must be an absolute `http:`, `https:` or `mailto:` URL. A PDF has no address of
+  its own, so a relative `action` (`/apply`) leads nowhere and its button stays as it looks.
+- `method="get"` (the default, as in HTML) sends the fields in the URL, `method="post"` in the
+  body, in both cases encoded as `application/x-www-form-urlencoded` (the HTML form format of
+  PDF). PDF has no `multipart/form-data`, so `enctype` makes no difference; a form with files
+  cannot be sent from a PDF anyway. `method="dialog"` sends nothing: its button stays as it looks.
+- A reset button sets the fields of its form back to their values in the PDF.
+- A `disabled` button is a read-only field, which does nothing.
+
+PDF/A forbids fields that act, so with `pdfA()` and `facturX()` the buttons stay as they look,
+and the other controls still become fields.
+
+### Turned fields and pages
+
+A control inside a transformed box (`transform`, `rotate`, `scale`) becomes a field too: its
+widget is the smallest rectangle around the box as it is drawn, and its appearance is turned,
+skewed and scaled as the box is, so the PDF looks as without `forms()`. The same goes for
+fields on pages turned with `page-orientation`. A viewer draws a field anew once a reader changes
+it. For turns by a quarter, a half or three quarters (`rotate(90deg)`, `rotate(-90deg)`,
+`rotate(180deg)`, and turned pages), the field tells viewers (`/MK /R`) to draw the new value
+turned too. PDF knows no other angles and no skew: a field turned by 30° or skewed shows its
+value as it was printed until a reader changes it, and from then on upright in the rectangle
+around the box. A control in a 3D space (`transform-style: preserve-3d`) stays as it looks.
+
 Fields go with PDF/A-1b to PDF/A-4 and with PDF/UA-1: in a tagged PDF each field is a form field
 of the logical structure (`Form`) with its widget, and the description is its alternative text.
-A control inside a transformed box (`transform`) stays as it looks, since a field cannot be
-turned.
 
 ## Tagged PDF
 
