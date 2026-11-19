@@ -22,7 +22,7 @@ pub const MAX_DEPTH: usize = 256;
 const PARSE_DEPTH: u32 = 512;
 
 /// How much input the parser reads before it checks the depth.
-const CHUNK: usize = 16 * 1024;
+pub(crate) const CHUNK: usize = 16 * 1024;
 
 pub(crate) fn parse_html(html: &str) -> Document {
     let too_deep = Rc::new(Cell::new(false));

@@ -408,14 +408,25 @@ mod tests {
 
     #[test]
     fn stops_reading_absurdly_deep_documents() {
-        // Each level makes the parser search all open elements: deep nesting is slow.
-        let html = format!("<p>davor</p>{}<p>danach</p>", "<div>".repeat(100_000));
-        let start = std::time::Instant::now();
-        let document = Document::parse_html(&html);
+        // Each level makes the parser search all open elements, so its time grows with the square
+        // of the depth it reaches. It stops reading after the chunk in which elements nest deeper
+        // than PARSE_DEPTH: how much it reads, and so its time, does not grow with the input.
+        // Counted in nodes rather than timed, which a busy machine makes unreliable.
+        let parse = |depth: usize| {
+            let html = format!("<p>davor</p>{}<p>danach</p>", "<div>".repeat(depth));
+            Document::parse_html(&html)
+        };
+        let document = parse(100_000);
         assert!(document.truncated());
-        assert!(start.elapsed().as_secs_f32() < 1.0, "{:?}", start.elapsed());
         let body = document.find("body").expect("body");
         assert_eq!(document.text_content(body), "davor");
+        // Without the stop the parser would read all 100 000 levels; with it, about one chunk.
+        assert!(
+            document.len() <= sink::CHUNK / "<div>".len() + 16,
+            "{} nodes",
+            document.len()
+        );
+        assert_eq!(parse(1_000_000).len(), document.len());
     }
 
     #[test]
