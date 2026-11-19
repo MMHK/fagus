@@ -482,7 +482,7 @@ All arguments are optional and named as below.
 | `locale` | `?string`, `null` | The language of the texts that form controls show of their own (button labels, date formats) and of the PDF where a document has no `lang`, such as `'de-DE'`. American English if `null`. |
 | `maxDocuments` | `?int`, `null` | The documents a worker renders before the engine replaces it with a new one, which takes 3 to 4 ms. No limit if `null`. See [deployment.md](deployment.md#restart-workers). |
 | `maxMemory` | `?int`, `null` | Megabytes of resident memory: a worker that has more after a document is replaced with a new one. The worker tells its size on Linux (now) and macOS (its peak); on Windows the limit does not apply. No limit if `null`. |
-| `onWarning` | `?Closure(string): void`, `null` | Receives the engine's warnings: so far, that the binary is of another release than the package ([below](#engineprotocol)). If `null`, they go to PHP's error log (`error_log()`), never to the output. The Laravel integration writes them to Laravel's log. |
+| `onWarning` | `?Closure(string): void`, `null` | Receives the engine's warnings: so far, that the binary is of another release than the package ([protocol.md](protocol.md#versions)). If `null`, they go to PHP's error log (`error_log()`), never to the output. The Laravel integration writes them to Laravel's log. |
 
 Form controls write their texts (the labels of submit and reset buttons, "Choose File", the
 placeholders and formats of date and time fields, the decimal separator of number fields) as
