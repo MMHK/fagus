@@ -1327,10 +1327,6 @@ FAIL css/css-fonts/system-ui-ur.html
 FAIL css/css-fonts/system-ui-zh.html
 FAIL css/css-fonts/test-synthetic-italic-2.html
 FAIL css/css-fonts/test-synthetic-italic-3.html
-FAIL css/css-gcpm/string-set-005.html  # counter(page) in string-set gives 0, the page of the element is not known when the string is set
-FAIL css/css-gcpm/string-set-009.html  # counter(page) and counter(pages) in string-set give 0, the page of the element is not known when the string is set
-FAIL css/css-gcpm/string-set-010.html  # string-set on an element with display: none sets no string
-FAIL css/css-gcpm/string-set-011.html  # string-set on an element with display: none sets no string
 FAIL css/css-grid/abspos/grid-abspos-staticpos-align-self-img-last-baseline-001.html
 FAIL css/css-grid/abspos/grid-abspos-staticpos-align-self-img-last-baseline-002.html
 FAIL css/css-grid/abspos/grid-abspos-staticpos-align-self-last-baseline-001.html

@@ -59,7 +59,7 @@ web-platform-tests at commit [`ffa9ce07f3`](https://github.com/web-platform-test
 | `css/css-display` | 75 | 122 | 61.5 % | 100 needs JavaScript, 93 without a reference |
 | `css/css-flexbox` | 866 | 955 | 90.7 % | 69 needs JavaScript, 36 without a reference |
 | `css/css-fonts` | 248 | 346 | 71.7 % | 40 needs JavaScript, 3 without a reference |
-| `css/css-gcpm` | 13 | 17 | 76.5 % | 3 without a reference |
+| `css/css-gcpm` | 17 | 17 | 100.0 % | 3 without a reference |
 | `css/css-grid` | 652 | 1614 | 40.4 % | 149 needs JavaScript, 2 without a reference |
 | `css/css-images` | 251 | 418 | 60.0 % | 64 needs JavaScript, 5 needs the WPT server, 4 without a reference |
 | `css/css-inline` | 80 | 174 | 46.0 % | 30 needs JavaScript |
@@ -100,7 +100,7 @@ web-platform-tests at commit [`ffa9ce07f3`](https://github.com/web-platform-test
 | `css/CSS2/text` | 294 | 387 | 76.0 % | 23 needs JavaScript, 160 without a reference |
 | `css/CSS2/visudet` | 24 | 37 | 64.9 % | 1 needs JavaScript, 1 without a reference |
 | `css/CSS2/visuren` | 26 | 31 | 83.9 % | 8 needs JavaScript, 23 without a reference |
-| **total** | 12152 | 17298 | 70.3 % | 3193 needs JavaScript, 37 needs the WPT server, 117 SVG document, 2176 without a reference |
+| **total** | 12156 | 17298 | 70.3 % | 3193 needs JavaScript, 37 needs the WPT server, 117 SVG document, 2176 without a reference |
 
 <!-- End of the generated table. -->
 
