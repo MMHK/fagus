@@ -200,6 +200,10 @@ starts a new worker process each time.
 After deploying a new version of the package, restart the queue workers
 (`php artisan queue:restart`) so that they use the new binary.
 
+A worker process that has rendered large documents keeps much of the memory they needed. In a
+long-running queue worker, let the engine replace it now and then with `FAGUS_MAX_DOCUMENTS` or
+`FAGUS_MAX_MEMORY` ([deployment.md](deployment.md#restart-workers)).
+
 ## Octane and FrankenPHP
 
 Under PHP-FPM, the engine lives as long as the request: the first PDF of each request starts the
