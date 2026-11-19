@@ -95,6 +95,46 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_uses_the_pages_of_a_pdf_as_page_templates(): void
+    {
+        $media = __DIR__.'/../../../tests/corpus/images/media';
+        $html = '<style>@page { margin: 50mm 20mm 30mm; background: url(letterhead.pdf#page=2) 0 0 / 100% 100% no-repeat }'
+            .' @page :first { background-image: url(letterhead.pdf) } p { break-after: page }</style><p>Eins</p><p>Zwei</p>';
+        $letterhead = (string) file_get_contents($media.'/letterhead.pdf');
+
+        // From a file inside the root, from the resolver and handed over: the same PDF.
+        $created = new DateTimeImmutable('2026-11-19 12:00:00', new DateTimeZone('UTC'));
+        $asked = [];
+        $written = [];
+        foreach ([
+            Fagus::html($html)->baseDirectory($media),
+            Fagus::html($html)->resolver(function (string $url) use (&$asked, $letterhead): ?string {
+                $asked[] = $url;
+
+                return $url === 'letterhead.pdf' ? $letterhead : null;
+            }),
+            Fagus::html($html)->resource('letterhead.pdf', $letterhead),
+        ] as $document) {
+            $pdf = $document->created($created)->render();
+
+            $this->assertSame([], $pdf->diagnostics());
+            $this->assertSame(2, $pdf->pages());
+            $written[] = $pdf->bytes();
+        }
+        $this->assertSame($written[0], $written[1]);
+        $this->assertSame($written[0], $written[2]);
+        // Both pages of the letterhead, as form XObjects with the forms in them.
+        $this->assertGreaterThanOrEqual(2, preg_match_all('#/Subtype\s*/Form#', $written[0]));
+        // The file is loaded once for both pages; a resolver that does not know the URL with
+        // its fragment is asked for the file without it.
+        $this->assertContains('letterhead.pdf', $asked);
+        $this->assertLessThanOrEqual(2, count($asked));
+
+        $missing = Fagus::html('<img src="letterhead.pdf#page=3">')->resource('letterhead.pdf', $letterhead)->render();
+        $this->assertSame('image.broken', $missing->diagnostics()[0]->code);
+    }
+
+    #[Test]
     public function it_uses_resources_that_are_handed_over(): void
     {
         $pixel = (string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
