@@ -4,7 +4,7 @@
 //!
 //! Documents that use print features Chrome does not have (running elements, named strings,
 //! cross references, leaders, footnotes, blank pages for left and right page breaks), Fagus' own
-//! layers or TIFF images (see
+//! layers, TIFF images or web fonts with `font-display: optional` (see
 //! [`chrome_lacks`]) are not compared: Chrome prints them differently by design. Documents known
 //! to differ are listed in an expectations file (`tools/chrome-expectations.txt`, the format of
 //! [`Expectations`]); a document that differs without being listed fails the gate (see
@@ -141,6 +141,10 @@ pub fn chrome_lacks(html: &str) -> Option<&'static str> {
         ("float: footnote", "uses footnotes, which Chrome lacks"),
         ("::footnote", "uses footnotes, which Chrome lacks"),
         ("-fagus-layer", "uses layers, an extension of Fagus"),
+        (
+            "font-display: optional",
+            "uses font-display: optional, with which Chrome takes a web font only if it loads in time",
+        ),
         (".tif\"", "uses TIFF images, which Chrome does not show"),
         (".tiff\"", "uses TIFF images, which Chrome does not show"),
         (".tif)", "uses TIFF images, which Chrome does not show"),
@@ -273,11 +277,11 @@ fn print_with_chrome(options: &Options, source: &Path, pdf: &Path, profile: &Pat
         return Ok(());
     }
     // Chrome writes the texts of form controls (button labels, date formats) in the language of
-    // its user interface, Fagus in the language of the control, so Chrome gets the document's.
+    // its user interface, Fagus in the language of the control, so Chrome gets the document's:
+    // on Linux Chrome takes it from LANGUAGE (and ignores --lang), elsewhere from --lang.
     let lang = std::fs::read_to_string(source)
         .ok()
-        .and_then(|html| root_lang(&html))
-        .map(|lang| format!("--lang={lang}"));
+        .and_then(|html| root_lang(&html));
     let _ = std::fs::remove_file(pdf);
     let status = process::run(
         Command::new(&options.chrome)
@@ -292,7 +296,8 @@ fn print_with_chrome(options: &Options, source: &Path, pdf: &Path, profile: &Pat
             .arg(format!("--user-data-dir={}", profile.display()))
             .arg(format!("--print-to-pdf={}", pdf.display()))
             .args(&options.chrome_args)
-            .args(lang)
+            .args(lang.iter().map(|lang| format!("--lang={lang}")))
+            .envs(lang.iter().map(|lang| ("LANGUAGE", lang.replace('-', "_"))))
             .arg(file_url(source)),
         Duration::from_secs(180),
     )
@@ -552,6 +557,7 @@ mod tests {
             Some("uses left and right page breaks, whose blank pages Chrome leaves out")
         );
         assert_eq!(chrome_lacks("h1 { break-before: page }"), None);
+        assert!(chrome_lacks("@font-face { font-family: x; font-display: optional }").is_some());
         assert_eq!(
             chrome_lacks("@page { @top-center { content: counter(page) } }"),
             None

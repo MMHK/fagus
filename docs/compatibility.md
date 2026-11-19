@@ -103,8 +103,9 @@ Chrome for Testing 157 on Linux and by Fagus, and both PDFs are drawn by the sam
 50 dpi. A document matches when both have the same number of pages and on no page more than 0.5 %
 of the pixels differ beyond antialiasing and glyphs a pixel apart. Documents that use print
 features Chrome does not have (running elements, named strings, cross references, leaders,
-footnotes, blank pages for left and right page breaks), Fagus' own layers or TIFF images are left
-out, as Chrome cannot print them as intended. The documents that are known to differ are listed
+footnotes, blank pages for left and right page breaks), Fagus' own layers, TIFF images or web
+fonts with `font-display: optional` are left out, as Chrome cannot print them as intended or
+reliably. The documents that are known to differ are listed
 with the reason in [`tools/chrome-expectations.txt`](../tools/chrome-expectations.txt); the
 release gates fail on every change that makes another document differ, and the share of matching
 documents is in their summary.

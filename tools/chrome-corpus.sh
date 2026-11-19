@@ -5,10 +5,11 @@
 # apart. It fails when a document differs that tools/chrome-expectations.txt does not list, and
 # warns about listed documents that match now; the share of matching documents is in the summary.
 # Documents that use print features Chrome lacks (running elements, named strings, cross
-# references, leaders, footnotes, blank pages for left and right page breaks), Fagus' layers or
-# TIFF images are not compared. Chrome gets each document's language (--lang), as Fagus writes the
-# texts of form controls in it. Chrome on Linux is the reference (docs/css.md); on other systems
-# the fonts and so the results differ.
+# references, leaders, footnotes, blank pages for left and right page breaks), Fagus' layers,
+# TIFF images or web fonts with font-display: optional (which Chrome takes only if they load in
+# time) are not compared. Chrome gets each document's language (LANGUAGE on Linux, --lang
+# elsewhere), as Fagus writes the texts of form controls in it. Chrome on Linux is the reference
+# (docs/css.md); on other systems the fonts and so the results differ.
 #
 #   tools/chrome-corpus.sh OUT_DIR [fagus-conformance corpus options]
 #
