@@ -681,3 +681,15 @@ fn leaves_out_an_image_in_svg_that_claims_billions_of_pixels() {
         "<svg width=20 height=20><image width=20 height=20 href='data:image/png;base64,{png}'/></svg>"
     ));
 }
+
+#[test]
+fn reads_svg_images_with_other_white_space_in_their_root_tag() {
+    // A no-break space between attributes was taken for white space of one byte, and the tag was
+    // cut inside it.
+    let svg = "<svg xmlns='http://www.w3.org/2000/svg'\u{a0}width='10' height='10'><rect width='5' height='5'/></svg>";
+    let document = Document::html("<img src=s.svg><div style='background: url(s.svg)'>x</div>")
+        .resource("s.svg", svg.as_bytes().to_vec());
+    let output = Engine::new().render(&document);
+    assert!(output.is_ok(), "{:?}", output.err());
+    renders(&format!("<p>x</p>{svg}"));
+}

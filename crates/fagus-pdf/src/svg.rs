@@ -1775,13 +1775,14 @@ pub(crate) fn attribute_at(
     let rest = tag;
     let mut quote = None;
     let mut index = 0;
-    // Names stand outside quoted values, after white space.
+    // Names stand outside quoted values, after white space: XML's, of one byte each (a no-break
+    // space is part of a name).
     while index < rest.len() {
         let character = rest[index..].chars().next()?;
         match (quote, character) {
             (None, '"' | '\'') => quote = Some(character),
             (Some(open), _) if character == open => quote = None,
-            (None, _) if character.is_whitespace() && rest[index + 1..].starts_with(name) => {
+            (None, ' ' | '\t' | '\n' | '\r') if rest[index + 1..].starts_with(name) => {
                 let after_name = index + 1 + name.len();
                 let after = rest[after_name..].trim_start();
                 if let Some(value) = after.strip_prefix('=') {
