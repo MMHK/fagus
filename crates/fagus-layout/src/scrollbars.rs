@@ -14,8 +14,8 @@ use std::sync::Arc;
 
 use fagus_style::ComputedStyle;
 use fagus_style::values::{
-    BoxSizing, CalcNode, Display, DisplayInside, DisplayOutside, LengthPercentage, Scrollbar, ScrollbarWidth,
-    Size,
+    BoxSizing, CalcNode, Display, DisplayInside, DisplayOutside, LengthPercentage, Overflow, Scrollbar,
+    ScrollbarWidth, Size,
 };
 use rustc_hash::FxHashMap;
 
@@ -39,8 +39,13 @@ pub fn thickness(width: ScrollbarWidth) -> f32 {
 /// Whether a box of `style` may have scroll bars: a scroll container with `overflow: auto` or
 /// `scroll` along an axis, of a block, flex or grid container in horizontal writing.
 fn may_scroll(style: &ComputedStyle) -> bool {
-    (style.scrollbar_x != Scrollbar::None || style.scrollbar_y != Scrollbar::None)
-        && thickness(style.scrollbar_width) > 0.0
+    (style.scrollbar_x != Scrollbar::None || style.scrollbar_y != Scrollbar::None) && takes_bars(style)
+}
+
+/// Whether a box of `style` takes scroll bars or their gutters where its `overflow` asks for
+/// them: a block, flex or grid container in horizontal writing, with bars of some thickness.
+fn takes_bars(style: &ComputedStyle) -> bool {
+    thickness(style.scrollbar_width) > 0.0
         && !style.is_vertical()
         && matches!(
             style.display,
@@ -50,10 +55,12 @@ fn may_scroll(style: &ComputedStyle) -> bool {
         )
 }
 
-/// The resize handle Chrome draws in the corner of a scroll container that may be resized, 9
-/// pixels square, mirrored right to left.
-pub fn resize_handle(mirrored: bool) -> Arc<crate::Image> {
-    crate::tree::forms::resizer(mirrored)
+/// Whether a box of `style` keeps the gutters of `scrollbar-gutter: stable` (CSS Overflow 4,
+/// §6.1): one whose vertical overflow is `hidden`, `auto` or `scroll`, as Chrome on Linux keeps
+/// them (Blink's `HasScrollbarGutters`; a vertical writing mode would keep them below and above,
+/// which Fagus does not lay out bars for).
+fn keeps_gutters(style: &ComputedStyle) -> bool {
+    style.scrollbar_gutter.stable && style.overflow_y == Overflow::Hidden && takes_bars(style)
 }
 
 /// `length` and `delta` pixels.
@@ -85,6 +92,34 @@ fn less(size: &Size, delta: f32) -> Size {
     }
 }
 
+/// `style` with the gutters of `scrollbar-gutter: stable` (see [`keeps_gutters`]): the room of
+/// a vertical scroll bar on the side its bar would be on (the right, the left right to left), and
+/// on the other side too with `both-edges`, taken as a bar's (see the module). A bar the box gets
+/// lies in the gutter on its side.
+fn with_gutters(style: &ComputedStyle) -> ComputedStyle {
+    let mut style = style.clone();
+    let thickness = thickness(style.scrollbar_width);
+    let both = style.scrollbar_gutter.both_edges;
+    let (left, right) = if style.is_rtl() {
+        (true, both)
+    } else {
+        (both, true)
+    };
+    if left {
+        style.padding.left = plus(&style.padding.left, thickness);
+    }
+    if right {
+        style.padding.right = plus(&style.padding.right, thickness);
+    }
+    if style.box_sizing == BoxSizing::ContentBox {
+        let count = f32::from(u8::from(left) + u8::from(right));
+        style.width = less(&style.width, thickness * count);
+    }
+    style.scrollbars.gutters = (left, right);
+    style.scrollbars.thickness = thickness;
+    style
+}
+
 /// `style` with the scroll bars it lacks of `vertical` and `horizontal` (see the module).
 pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal: bool) -> ComputedStyle {
     let mut style = style.clone();
@@ -92,13 +127,14 @@ pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal:
     let content_box = style.box_sizing == BoxSizing::ContentBox;
     if vertical && !style.scrollbars.vertical {
         // Right to left, the vertical bar is on the left (Blink's
-        // `IsLeftSideVerticalScrollbar`).
-        if style.is_rtl() {
+        // `IsLeftSideVerticalScrollbar`). A gutter there holds it already.
+        let (left, right) = style.scrollbars.gutters;
+        if style.is_rtl() && !left {
             style.padding.left = plus(&style.padding.left, thickness);
-        } else {
+        } else if !style.is_rtl() && !right {
             style.padding.right = plus(&style.padding.right, thickness);
         }
-        if content_box {
+        if content_box && !(if style.is_rtl() { left } else { right }) {
             style.width = less(&style.width, thickness);
         }
         style.scrollbars.vertical = true;
@@ -115,9 +151,13 @@ pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal:
 }
 
 /// Gives the boxes with `overflow: scroll` their scroll bars, which they have whether their
-/// content overflows or not.
+/// content overflows or not, and those with `scrollbar-gutter: stable` their gutters.
 pub(crate) fn add_scrolling(tree: &mut BoxTree) {
     for id in tree.ids() {
+        if keeps_gutters(&tree.get(id).style) {
+            let style = Arc::new(with_gutters(&tree.get(id).style));
+            tree.box_mut(id).style = style;
+        }
         let style = &tree.get(id).style;
         if !may_scroll(style) {
             continue;
@@ -215,19 +255,31 @@ pub struct ScrollSize {
 /// here: they count as nothing.
 pub fn scroll_size(style: &ComputedStyle, fragment: &Fragment) -> ScrollSize {
     let bars = style.scrollbars;
-    let thickness = if bars.any() { bars.thickness } else { 0.0 };
+    let thickness = bars.thickness;
     let rtl = style.is_rtl();
-    let vertical = if bars.vertical { thickness } else { 0.0 };
     let horizontal = if bars.horizontal { thickness } else { 0.0 };
+    // The room of the vertical bar and of the gutters on either side, a bar lying in the gutter
+    // on its side.
+    let (gutter_left, gutter_right) = bars.gutters;
+    let room_left = if (bars.vertical && rtl) || gutter_left {
+        thickness
+    } else {
+        0.0
+    };
+    let room_right = if (bars.vertical && !rtl) || gutter_right {
+        thickness
+    } else {
+        0.0
+    };
     let border = &style.border_width;
     let fixed = |length: &LengthPercentage| length.fixed().unwrap_or(0.0);
     // The client area, from the border box, and the padding the box has of its own.
-    let left = border.left + if rtl { vertical } else { 0.0 };
-    let right = fragment.rect.width.to_px() - border.right - if rtl { 0.0 } else { vertical };
+    let left = border.left + room_left;
+    let right = fragment.rect.width.to_px() - border.right - room_right;
     let top = border.top;
     let bottom = fragment.rect.height.to_px() - border.bottom - horizontal;
-    let padding_left = (fixed(&style.padding.left) - if rtl { vertical } else { 0.0 }).max(0.0);
-    let padding_right = (fixed(&style.padding.right) - if rtl { 0.0 } else { vertical }).max(0.0);
+    let padding_left = (fixed(&style.padding.left) - room_left).max(0.0);
+    let padding_right = (fixed(&style.padding.right) - room_right).max(0.0);
     let padding_bottom = (fixed(&style.padding.bottom) - horizontal).max(0.0);
     // Chrome's scrollable overflow: the border boxes of what the box holds, and its in-flow
     // content (the margin boxes of its in-flow children and its lines) with its end padding

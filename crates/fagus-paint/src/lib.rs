@@ -166,7 +166,8 @@ pub enum Item {
         color: Rgba,
     },
     /// A dashed or dotted line (a text decoration) as Blink strokes it: from `from` to `to`, a
-    /// stroke `thickness` wide, with dashes or dots sized for a line `dash` pixels wide.
+    /// stroke `thickness` wide (0 for a hairline), with dashes or dots sized for a line `dash`
+    /// pixels wide; a solid line where `dash` is 0.
     DashedLine {
         from: (f32, f32),
         to: (f32, f32),
@@ -1628,7 +1629,44 @@ impl Painter<'_> {
         } else {
             self.pop(usize::from(clip.is_some()));
         }
+        self.lone_resizer(fragment, x, y);
         self.own_outline(fragment, x, y);
+    }
+
+    /// Paints the resize handle of a box that may be resized and has no scroll bars over what it
+    /// holds, as Chrome paints such a handle after the content (see [`scrollbars`]); one with
+    /// scroll bars has it in their corner.
+    fn lone_resizer(&mut self, fragment: &Fragment, x: f32, y: f32) {
+        let FragmentKind::Box { style, sides, .. } = &fragment.kind else {
+            return;
+        };
+        if !scrollbars::resizes(style)
+            || style.scrollbars.any()
+            || !sides.bottom
+            || style.visibility != Visibility::Visible
+        {
+            return;
+        }
+        let rect = snap(RectF {
+            x,
+            y,
+            width: fragment.rect.width.to_px(),
+            height: fragment.rect.height.to_px(),
+        });
+        let border = &style.border_width;
+        let shown = |visible: bool, width: f32| if visible { width } else { 0.0 };
+        let (top, right, left) = (
+            shown(sides.top, border.top),
+            shown(sides.right, border.right),
+            shown(sides.left, border.left),
+        );
+        let padding = RectF {
+            x: rect.x + left,
+            y: rect.y + top,
+            width: (rect.width - left - right).max(0.0),
+            height: (rect.height - top - border.bottom).max(0.0),
+        };
+        self.design(|painter| scrollbars::paint_lone_resizer(style, padding, &mut painter.items));
     }
 
     /// Paints the outline of a box (not those inside it), with its border box at `x`, `y`.

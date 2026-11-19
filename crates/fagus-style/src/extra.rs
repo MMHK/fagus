@@ -381,6 +381,11 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
                 _ => style.frame_sizing_content_height,
             }
         }
+        "scrollbar-gutter" => {
+            if let Some(gutter) = scrollbar_gutter(&tokens) {
+                style.scrollbar_gutter = gutter;
+            }
+        }
         "scrollbar-width" => {
             style.scrollbar_width = match keyword {
                 "auto" => crate::values::ScrollbarWidth::Auto,
@@ -1172,6 +1177,23 @@ fn feature_settings(tokens: &[&TokenOrValue<'static>]) -> Option<Vec<([u8; 4], u
 }
 
 /// The tokens without whitespace and comments.
+/// A value of `scrollbar-gutter`: `auto`, or `stable` with or without `both-edges`, in either
+/// order (CSS Overflow 4, §6.1).
+pub(crate) fn scrollbar_gutter(tokens: &[&TokenOrValue<'static>]) -> Option<crate::values::ScrollbarGutter> {
+    let words: Vec<String> = tokens
+        .iter()
+        .map(|token| ident(token).map(str::to_ascii_lowercase))
+        .collect::<Option<_>>()?;
+    let words: Vec<&str> = words.iter().map(String::as_str).collect();
+    let (stable, both_edges) = match words.as_slice() {
+        ["auto"] => (false, false),
+        ["stable"] => (true, false),
+        ["stable", "both-edges"] | ["both-edges", "stable"] => (true, true),
+        _ => return None,
+    };
+    Some(crate::values::ScrollbarGutter { stable, both_edges })
+}
+
 pub(crate) fn significant<'t>(tokens: &'t TokenList<'static>) -> Vec<&'t TokenOrValue<'static>> {
     tokens
         .0

@@ -3128,18 +3128,10 @@ mod tests {
     }
 
     #[test]
-    fn sets_text_areas_on_their_bottom_edge_and_mirrors_them_right_to_left() {
-        fn image_x(fragment: &Fragment, x: f32) -> Option<f32> {
-            let x = x + fragment.rect.x.to_px();
-            if matches!(fragment.kind, FragmentKind::Image(_)) {
-                return Some(x);
-            }
-            fragment.children.iter().find_map(|child| image_x(child, x))
-        }
+    fn sets_text_areas_on_their_bottom_edge() {
         let (document, pages) = render_document(
             "<style>body { font: 16px Inter; margin: 0 } textarea { font-family: Inter }</style>
-             <p class=p>x <textarea class=area rows=3>a</textarea></p>
-             <textarea class=rtl dir=rtl>a</textarea>",
+             <p class=p>x <textarea class=area rows=3>a</textarea></p>",
         );
         // The bottom of the text area lies on the baseline of the line.
         let (_, area_y, area) = find(&pages[0], &document, "area").expect("area");
@@ -3149,27 +3141,6 @@ mod tests {
                 .expect("a line")
                 .to_px();
         assert!((area_y + area.rect.height.to_px() - baseline).abs() < 0.5);
-        // Right to left, the resize handle is in the bottom left corner.
-        let (x, _, rtl) = find(&pages[0], &document, "rtl").expect("rtl");
-        let handle = image_x(rtl, x - rtl.rect.x.to_px()).expect("handle");
-        assert!(handle - x < 5.0, "{handle} {x}");
-    }
-
-    #[test]
-    fn draws_the_resizer_of_text_areas_without_their_native_look() {
-        fn images(fragment: &Fragment) -> usize {
-            usize::from(matches!(fragment.kind, FragmentKind::Image(_)))
-                + fragment.children.iter().map(images).sum::<usize>()
-        }
-        let (document, pages) = render_document(
-            "<style>textarea { appearance: none; border: 1px solid #ccc }</style>
-             <textarea class=a>a</textarea><textarea class=b style='resize: none'>b</textarea>",
-        );
-        // Bootstrap's `.form-control` keeps the handle in Chrome; `resize: none` drops it.
-        let (_, _, a) = find(&pages[0], &document, "a").expect("a");
-        assert_eq!(images(a), 1);
-        let (_, _, b) = find(&pages[0], &document, "b").expect("b");
-        assert_eq!(images(b), 0);
     }
 
     #[test]
@@ -3206,6 +3177,47 @@ mod tests {
         // 285px wide.
         let (_, _, scroll) = find(&pages[0], &document, "scroll").expect("scroll");
         assert_eq!(scroll.children[0].rect.width.to_px(), 285.0);
+    }
+
+    #[test]
+    fn keeps_the_gutters_of_scrollbar_gutter() {
+        // `stable` keeps the room of a vertical bar on the right of a scroll container (on the
+        // left right to left) and `both-edges` on both sides; a bar lies in the gutter on its
+        // side. Boxes that do not scroll keep none (Chrome on Linux: Blink's
+        // `HasScrollbarGutters`).
+        let (document, pages) = render_document(
+            "<style>@page { margin: 0 } body { margin: 0 } div > div { height: 20px }
+               .s { width: 300px; overflow: hidden; scrollbar-gutter: stable }</style>
+             <div class='s stable'><div></div></div>
+             <div class='s both' style='scrollbar-gutter: stable both-edges'><div></div></div>
+             <div class='s rtl' dir=rtl><div></div></div>
+             <div class='s bar' style='overflow: auto; height: 10px'><div></div></div>
+             <div class='s bars' style='overflow: scroll; scrollbar-gutter: both-edges stable'><div></div></div>
+             <div class='s visible' style='overflow: visible'><div></div></div>
+             <div class='s none' style='scrollbar-width: none'><div></div></div>
+             <div class='s border' style='box-sizing: border-box; padding: 0 5px'><div></div></div>",
+        );
+        let child = |class: &str| {
+            let (x, _, fragment) = find(&pages[0], &document, class).expect(class);
+            let FragmentKind::Box { style, .. } = &fragment.kind else {
+                panic!("{class}: a box");
+            };
+            let inner = &fragment.children[0];
+            (
+                inner.rect.x.to_px() + fragment.rect.x.to_px() - x,
+                inner.rect.width.to_px(),
+                fragment.rect.width.to_px(),
+                style.scrollbars.vertical,
+            )
+        };
+        assert_eq!(child("stable"), (0.0, 285.0, 300.0, false));
+        assert_eq!(child("both"), (15.0, 270.0, 300.0, false));
+        assert_eq!(child("rtl"), (15.0, 285.0, 300.0, false));
+        assert_eq!(child("bar"), (0.0, 285.0, 300.0, true));
+        assert_eq!(child("bars"), (15.0, 270.0, 300.0, true));
+        assert_eq!(child("visible"), (0.0, 300.0, 300.0, false));
+        assert_eq!(child("none"), (0.0, 300.0, 300.0, false));
+        assert_eq!(child("border"), (5.0, 275.0, 300.0, false));
     }
 
     #[test]

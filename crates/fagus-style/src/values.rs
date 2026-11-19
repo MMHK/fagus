@@ -504,6 +504,15 @@ pub enum Scrollbar {
     Scroll,
 }
 
+/// `scrollbar-gutter` (CSS Overflow 4, §6.1): whether a scroll container keeps the room of a
+/// vertical scroll bar beside its content even where it has none (`stable`), and on both sides
+/// (`both-edges`). `auto` is the default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub struct ScrollbarGutter {
+    pub stable: bool,
+    pub both_edges: bool,
+}
+
 /// `scrollbar-width`: how thick the scroll bars of a scroll container are.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum ScrollbarWidth {
@@ -524,6 +533,10 @@ pub struct Scrollbars {
     pub vertical: bool,
     pub horizontal: bool,
     pub thickness: f32,
+    /// The gutters of `scrollbar-gutter: stable` layout gave the box: the room of a vertical bar
+    /// on its left and on its right, which a vertical bar of its own takes (on the right, on the
+    /// left right to left) where it has one.
+    pub gutters: (bool, bool),
 }
 
 impl Scrollbars {

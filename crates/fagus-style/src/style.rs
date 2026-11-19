@@ -169,6 +169,8 @@ pub struct ComputedValues {
     pub scrollbar_y: Scrollbar,
     /// `scrollbar-width`.
     pub scrollbar_width: crate::values::ScrollbarWidth,
+    /// `scrollbar-gutter`.
+    pub scrollbar_gutter: crate::values::ScrollbarGutter,
     /// `scrollbar-color`: the colors of the thumb and of the track, `None` for `auto`; `None`
     /// inside for `currentColor`.
     pub scrollbar_color: Option<(Option<Rgba>, Option<Rgba>)>,
@@ -681,11 +683,16 @@ impl ComputedValues {
             scrollbar_x: Scrollbar::None,
             scrollbar_y: Scrollbar::None,
             scrollbar_width: crate::values::ScrollbarWidth::Auto,
+            scrollbar_gutter: crate::values::ScrollbarGutter {
+                stable: false,
+                both_edges: false,
+            },
             scrollbar_color: None,
             scrollbars: crate::values::Scrollbars {
                 vertical: false,
                 horizontal: false,
                 thickness: 0.0,
+                gutters: (false, false),
             },
             control_part: false,
             text_overflow: TextOverflow::Clip,

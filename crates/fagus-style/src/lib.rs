@@ -699,9 +699,11 @@ mod tests {
         use values::{Rgba, ScrollbarWidth};
         let (document, styled) = styles(
             "<div id=a><p id=b>x</p></div><div id=c></div><div id=d></div>",
-            "#a { scrollbar-width: thin; scrollbar-color: red rgb(0 0 255) }
-             #c { scrollbar-width: none; scrollbar-width: wide; scrollbar-color: red }
-             #d { scrollbar-color: currentColor auto; scrollbar-color: auto }",
+            "#a { scrollbar-width: thin; scrollbar-color: red rgb(0 0 255); scrollbar-gutter: stable }
+             #c { scrollbar-width: none; scrollbar-width: wide; scrollbar-color: red;
+                  scrollbar-gutter: both-edges stable; scrollbar-gutter: both-edges }
+             #d { scrollbar-color: currentColor auto; scrollbar-color: auto; scrollbar-gutter: stable both-edges;
+                  scrollbar-gutter: auto }",
         );
         let style = |id: &str| by_id(&document, &styled, id);
         assert_eq!(style("a").scrollbar_width, ScrollbarWidth::Thin);
@@ -725,6 +727,15 @@ mod tests {
         assert_eq!(style("c").scrollbar_width, ScrollbarWidth::None);
         assert_eq!(style("c").scrollbar_color, None);
         assert_eq!(style("d").scrollbar_color, None);
+        // `scrollbar-gutter`, not inherited either.
+        let stable = |both_edges| values::ScrollbarGutter {
+            stable: true,
+            both_edges,
+        };
+        assert_eq!(style("a").scrollbar_gutter, stable(false));
+        assert_eq!(style("b").scrollbar_gutter, values::ScrollbarGutter::default());
+        assert_eq!(style("c").scrollbar_gutter, stable(true));
+        assert_eq!(style("d").scrollbar_gutter, values::ScrollbarGutter::default());
     }
 
     #[test]

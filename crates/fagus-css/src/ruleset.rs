@@ -795,6 +795,10 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
         "footnote-policy" => Some(matches!(value.as_str(), "auto" | "line" | "block")),
         // Fagus has no footnote areas in columns (see `footnote_keywords`).
         "float-reference" => Some(matches!(value.as_str(), "inline" | "region" | "page")),
+        "scrollbar-gutter" => Some(matches!(
+            value.split_ascii_whitespace().collect::<Vec<_>>().as_slice(),
+            ["auto" | "stable"] | ["stable", "both-edges"] | ["both-edges", "stable"]
+        )),
         _ if crate::properties::classify(&name) == crate::properties::PropertySupport::Known => {
             Some(!value.is_empty())
         }
@@ -1026,6 +1030,11 @@ tr:has(input:checked) td { color: green }";
         assert_eq!(winner(css, "<p id=x>", "x"), 3);
         let css = "#x { color: red }
 @supports (float-reference: page) and (float-reference: region) { #x { color: green } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 2);
+        // `scrollbar-gutter` takes its values of CSS Overflow 4.
+        let css = "#x { color: red }
+@supports (scrollbar-gutter: both-edges stable) and (scrollbar-gutter: auto) { #x { color: green } }
+@supports (scrollbar-gutter: both-edges) or (scrollbar-gutter: stable stable) { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
         // Hanging punctuation is, with the values of CSS Text 3 (Chrome does not support it).
         let css = "#x { color: red }

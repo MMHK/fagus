@@ -3216,6 +3216,10 @@ fn dashed_stroke(color: Rgba, width: f32, pattern: Option<([f32; 2], bool)>) -> 
 /// dots to 3px are square dashes a width apart, wider ones round. The gaps stretch so that the
 /// line holds whole dashes, from end to end or, on a `closed` path, all round.
 fn dash_pattern(style: BorderStyle, width: f32, length: f32, closed: bool) -> Option<([f32; 2], bool)> {
+    // Dashes of no width: a solid line (see `Item::DashedLine`).
+    if width <= 0.0 {
+        return None;
+    }
     if style == BorderStyle::Dashed || width <= 3.0 {
         let (mut dash, mut gap) = (width, width);
         if style == BorderStyle::Dashed {

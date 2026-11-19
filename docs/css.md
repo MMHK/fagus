@@ -42,8 +42,8 @@ will see for CSS:
 
 Properties that have no effect in print are dropped without a diagnostic: `transition-*`,
 `animation-*` (see [Animations](#animations-and-transitions)), `cursor`, `pointer-events`,
-`user-select`, `touch-action`, `resize`, `caret-color`, `scroll-*`, `overscroll-*`,
-`scrollbar-gutter`, `view-transition-*`, `text-size-adjust`, Microsoft Office's `mso-*` properties,
+`user-select`, `touch-action`, `caret-color`, `scroll-*`, `overscroll-*`,
+`view-transition-*`, `text-size-adjust`, Microsoft Office's `mso-*` properties,
 and vendor-prefixed properties (`-webkit-`, `-moz-`, `-ms-`, `-o-`) other than the ones listed on
 this page.
 
@@ -246,7 +246,7 @@ of the first page.
 ### Overflow and containment
 
 **Works:** `overflow` (`visible`, `hidden`, `clip`, `scroll`, `auto`, also per axis),
-`overflow-clip-margin`, `text-overflow` (`ellipsis` and a string), `-webkit-line-clamp` (Tailwind's
+`overflow-clip-margin`, `scrollbar-width`, `scrollbar-color`, `scrollbar-gutter`, `resize`, `text-overflow` (`ellipsis` and a string), `-webkit-line-clamp` (Tailwind's
 `line-clamp-*`), `contain`, `content-visibility: hidden`, `contain-intrinsic-size`,
 `container-type`, `container-name`, `will-change`.
 
@@ -259,7 +259,13 @@ padding, on the left right to left; it has an arrow button at either end and, wh
 overflows, a thumb at the start, as the content is printed scrolled to its start. `scrollbar-color`
 colors the thumb and the arrows, and the track. To print no scroll bars, and keep no room for
 them, add `scrollbar-width: none` to the scrolling boxes, such as
-`@media print { pre, .table-responsive { scrollbar-width: none } }`, or `overflow: hidden`. Content wider than the page area makes Fagus lay the page out again and scale it down,
+`@media print { pre, .table-responsive { scrollbar-width: none } }`, or `overflow: hidden`.
+`scrollbar-gutter: stable` keeps the room of a vertical bar in a box with `overflow` `hidden`,
+`auto` or `scroll` whether it has a bar or not, so that its content does not move when a bar
+comes; `stable both-edges` keeps as much on the other side too. The gutter stays empty without a
+bar, and a bar lies in it. A scroll container that may be resized (`resize` other than `none`, as
+a `<textarea>` by default) has Chrome's resize handle in its bottom corner, two diagonal lines:
+over its content, or in the corner of its scroll bars, which then ends a single bar too. Content wider than the page area makes Fagus lay the page out again and scale it down,
 as Chrome's shrink-to-fit does (to at most 1.5 times the page width).
 
 **Not supported:** the unprefixed `line-clamp` is ignored, as Chrome 157 ignores it; use

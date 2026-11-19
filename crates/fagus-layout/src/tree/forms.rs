@@ -19,7 +19,7 @@ use std::sync::Arc;
 use fagus_dom::{ElementData, NodeId};
 use fagus_style::values::{
     Appearance, BorderStyle, BoxSizing, Content, Display, DisplayInside, DisplayOutside, ItemAlignment,
-    LengthPercentage, LengthPercentageAuto, LineHeight, Overflow, Position, Rgba, Size, WhiteSpace,
+    LengthPercentage, LengthPercentageAuto, LineHeight, Overflow, Rgba, Size, WhiteSpace,
 };
 use fagus_style::{ComputedStyle, ComputedValues, PseudoKey};
 use fagus_text::FontDb;
@@ -991,25 +991,6 @@ fn select_arrow(color: Rgba, zoom: f32) -> Arc<Image> {
     )
 }
 
-/// The resize handle at the bottom right of a `<textarea>`, or mirrored at its bottom left
-/// (`mirrored`, right to left): two diagonal strokes, black with white beside them
-/// (`ScrollbarTheme::PaintResizer`).
-pub(crate) fn resizer(mirrored: bool) -> Arc<Image> {
-    const STROKES: &str = concat!(
-        r#"<path d="M7 0 L0 7 M7 4 L4 7" fill="none" stroke="rgb(0,0,0)" stroke-opacity="0.6" stroke-width="1"/>"#,
-        r#"<path d="M7 1 L1 7 M7 5 L5 7" fill="none" stroke="rgb(255,255,255)" stroke-opacity="0.6" stroke-width="1"/>"#,
-    );
-    if mirrored {
-        svg(
-            9.0,
-            9.0,
-            &format!(r#"<g transform="matrix(-1 0 0 1 9 0)">{STROKES}</g>"#),
-        )
-    } else {
-        svg(9.0, 9.0, STROKES)
-    }
-}
-
 /// A mark Chrome's theme draws in the content box of a control, at whatever size the box gets.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Mark {
@@ -1963,9 +1944,7 @@ impl Builder<'_> {
         };
         // A text longer than the box scrolls: `visible` is `auto` in a text area, which gets
         // scroll bars where its text overflows it, as with `scroll`, and they take room beside
-        // the columns and below the rows, as Chrome prints them (see `crate::scrollbars`). Right
-        // to left, the resize handle is on the left, as in Chrome.
-        let rtl = own.is_rtl();
+        // the columns and below the rows, as Chrome prints them (see `crate::scrollbars`).
         own.scrollbar_x = text_area_scrollbar(own.overflow_x, own.scrollbar_x);
         own.scrollbar_y = text_area_scrollbar(own.overflow_y, own.scrollbar_y);
         own.overflow_x = Overflow::Hidden;
@@ -1990,33 +1969,10 @@ impl Builder<'_> {
         if placeholder {
             self.placeholder_style(element, &mut text_style);
         }
-        let mut items = text_items(text, &Arc::new(text_style));
-        // Chrome draws the resizer of a text area that may be resized, with its native look or
-        // without (Bootstrap's `.form-control`).
-        if own.resize {
-            if own.position == Position::Static {
-                own.position = Position::Relative;
-            }
-            let mut handle = anonymous_style(&own);
-            handle.position = Position::Absolute;
-            handle.control_part = true;
-            if rtl {
-                handle.inset.left = LengthPercentageAuto::Length(LengthPercentage::ZERO);
-            } else {
-                handle.inset.right = LengthPercentageAuto::Length(LengthPercentage::ZERO);
-            }
-            handle.inset.bottom = LengthPercentageAuto::Length(LengthPercentage::ZERO);
-            let handle = tree.push(LayoutBox {
-                style: Arc::new(handle),
-                node: None,
-                generated: true,
-                kind: BoxKind::Replaced {
-                    image: Some(resizer(rtl)),
-                    attributes: (None, None),
-                },
-            });
-            items.push(InlineItem::OutOfFlow(handle));
-        }
+        // Chrome draws the resize handle of a text area that may be resized, with its native
+        // look or without (Bootstrap's `.form-control`): a scroll container, it gets it as any
+        // other box does where painted (see `fagus_paint::scrollbars`).
+        let items = text_items(text, &Arc::new(text_style));
         // A scroll container, it sits on its bottom margin edge (CSS 2.1, §10.8.1).
         let margin_bottom = own.margin.bottom.resolve_or(0.0, 0.0);
         let inner = tree.push(LayoutBox {

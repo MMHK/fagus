@@ -2,11 +2,13 @@
 //! `ScrollbarThemeFluent` and the `NativeThemeFluent` of Chromium's `ui/native_theme`, without
 //! its arrow icon font): a track with an arrow button at either end and, where the content
 //! overflows, a thumb with round ends at the start of the track, the content being printed
-//! scrolled to its start. Layout gave the box their room (see `fagus_layout::scrollbars`).
+//! scrolled to its start. Layout gave the box their room (see `fagus_layout::scrollbars`), and
+//! the room of the gutters of `scrollbar-gutter: stable`, which stay empty where the box has no
+//! bar. A scroll container that may be resized (`resize`) has a resize handle in its corner.
 
 use fagus_layout::Fragment;
 use fagus_style::ComputedStyle;
-use fagus_style::values::Rgba;
+use fagus_style::values::{Overflow, Rgba};
 
 use crate::{ClipGeometry, Item, RectF};
 
@@ -33,13 +35,24 @@ const fn gray(level: u8) -> Rgba {
     }
 }
 
+/// The resize handle's color: black and white at 60 % (`SkColorSetARGB(153, …)`), drawn as
+/// hairlines, which Chrome's PDF output draws for its strokes of 1px (0.75pt) at three quarters
+/// of their alpha (see `fagus_layout`'s native frames of text fields).
+const HANDLE_ALPHA: f32 = 153.0 / 255.0 * 0.75;
+
 /// The parts of the padding box `padding` (snapped) of a scroll container of `style` that its
-/// scroll bars cover: the vertical bar, the horizontal one, and the corner between them (or
-/// below a vertical bar beside a resize handle).
+/// scroll bars cover: the vertical bar, the horizontal one, and the corner between them, or at
+/// the end of a bar beside a resize handle (Blink's `ScrollCornerRect`).
 pub(crate) struct Areas {
     pub(crate) vertical: Option<RectF>,
     pub(crate) horizontal: Option<RectF>,
     pub(crate) corner: Option<RectF>,
+}
+
+/// Whether a box of `style` may be resized, which Chrome shows with a resize handle: a scroll
+/// container with `resize` other than `none` (Blink's `CanResize`).
+pub(crate) fn resizes(style: &ComputedStyle) -> bool {
+    style.resize && (style.overflow_x == Overflow::Hidden || style.overflow_y == Overflow::Hidden)
 }
 
 pub(crate) fn areas(style: &ComputedStyle, padding: RectF, bottom_visible: bool) -> Areas {
@@ -54,31 +67,33 @@ pub(crate) fn areas(style: &ComputedStyle, padding: RectF, bottom_visible: bool)
     }
     let horizontal = bars.horizontal && bottom_visible;
     let left = style.is_rtl();
-    // A text area's resize handle takes the corner below a vertical bar too.
-    let cornered = horizontal || bars.vertical && style.resize && bottom_visible;
-    let bar_x = if left {
+    // A corner where both bars meet, and at the end of either beside a resize handle, which
+    // the handle lies in (on the last page of a box broken across pages).
+    let resizer = resizes(style) && bottom_visible;
+    let cornered = (bars.vertical && horizontal) || (resizer && (bars.vertical || horizontal));
+    let corner_x = if left {
         padding.x
     } else {
         padding.x + padding.width - thickness
     };
     let vertical = bars.vertical.then(|| RectF {
-        x: bar_x,
+        x: corner_x,
         y: padding.y,
         width: thickness,
         height: (padding.height - if cornered { thickness } else { 0.0 }).max(0.0),
     });
     let horizontal_bar = horizontal.then(|| RectF {
-        x: if bars.vertical && left {
+        x: if cornered && left {
             padding.x + thickness
         } else {
             padding.x
         },
         y: padding.y + padding.height - thickness,
-        width: (padding.width - if bars.vertical { thickness } else { 0.0 }).max(0.0),
+        width: (padding.width - if cornered { thickness } else { 0.0 }).max(0.0),
         height: thickness,
     });
-    let corner = (bars.vertical && cornered).then_some(RectF {
-        x: bar_x,
+    let corner = cornered.then_some(RectF {
+        x: corner_x,
         y: padding.y + padding.height - thickness,
         width: thickness,
         height: thickness,
@@ -88,6 +103,88 @@ pub(crate) fn areas(style: &ComputedStyle, padding: RectF, bottom_visible: bool)
         horizontal: horizontal_bar,
         corner,
     }
+}
+
+/// Paints the resize handle of a box of `style` that may be resized and has no scroll bars,
+/// over its content as Chrome paints it (an overlay control): in the corner of its padding box
+/// `padding` (snapped) as large as a scroll bar of `scrollbar-width: auto` is thick, whatever the
+/// box's `scrollbar-width` (Blink's `CornerRect`).
+pub(crate) fn paint_lone_resizer(style: &ComputedStyle, padding: RectF, items: &mut Vec<Item>) {
+    let corner = RectF {
+        x: if style.is_rtl() {
+            padding.x
+        } else {
+            padding.x + padding.width - THICKNESS
+        },
+        y: padding.y + padding.height - THICKNESS,
+        width: THICKNESS,
+        height: THICKNESS,
+    };
+    paint_resizer(corner, style.is_rtl(), items);
+}
+
+/// Paints a resize handle in `corner`, on its left in right-to-left boxes: two diagonal lines 7
+/// and 3 pixels long, 2 pixels from the corner's edges, black, with white ones a pixel below
+/// them (`ScrollableAreaPainter::DrawPlatformResizerImage` with `TextAreaResizerFixedSize`).
+#[allow(clippy::cast_possible_truncation, reason = "a corner of a few pixels")]
+fn paint_resizer(corner: RectF, on_left: bool, items: &mut Vec<Item>) {
+    let (width, height) = (corner.width as i32, corner.height as i32);
+    if width <= 0 || height <= 0 {
+        return;
+    }
+    // Spacing and sizes, capped to fit the corner.
+    let spacing_x = 2.min(width / 4).max(1);
+    let spacing_y = 2.min(height / 4).max(1);
+    let size_x = 7.min(width - spacing_x).max(1);
+    let size_y = 7.min(height - spacing_y).max(1);
+    let spacing = spacing_x.min(spacing_y) as f32;
+    let large = size_x.min(size_y);
+    let small = (large / 2).max(1) as f32;
+    let large = large as f32;
+    let (right, bottom) = (corner.x + corner.width, corner.y + corner.height);
+    let x = |inset: f32| {
+        if on_left { corner.x + inset } else { right - inset }
+    };
+    let points = [
+        (x(spacing), bottom - (spacing + large)),
+        (x(spacing + large), bottom - spacing),
+        (x(spacing), bottom - (spacing + small)),
+        (x(spacing + small), bottom - spacing),
+    ];
+    let offset = if on_left { -1.0 } else { 1.0 };
+    let dark = Rgba {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: HANDLE_ALPHA,
+    };
+    let light = Rgba {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: HANDLE_ALPHA,
+    };
+    let line = |from: (f32, f32), to: (f32, f32), color: Rgba| Item::DashedLine {
+        from,
+        to,
+        thickness: 0.0,
+        dash: 0.0,
+        dotted: false,
+        color,
+    };
+    items.push(line(points[0], points[1], dark));
+    items.push(line(points[2], points[3], dark));
+    // A pixel below, for contrast on a dark ground.
+    items.push(line(
+        (points[0].0, points[0].1 + 1.0),
+        (points[1].0 + offset, points[1].1),
+        light,
+    ));
+    items.push(line(
+        (points[2].0, points[2].1 + 1.0),
+        (points[3].0 + offset, points[3].1),
+        light,
+    ));
 }
 
 /// Paints the scroll bars of the fragment of a scroll container of `style` whose padding box
@@ -126,21 +223,8 @@ pub(crate) fn paint(
         });
         // The resize handle of a box that may be resized lies in the corner, over the
         // padding box's corner, which the bars cover.
-        if style.resize {
-            let left = style.is_rtl();
-            items.push(Item::Image {
-                rect: RectF {
-                    x: if left {
-                        corner.x
-                    } else {
-                        corner.x + corner.width - 9.0
-                    },
-                    y: corner.y + corner.height - 9.0,
-                    width: 9.0,
-                    height: 9.0,
-                },
-                image: fagus_layout::scrollbars::resize_handle(left),
-            });
+        if resizes(style) && bottom_visible {
+            paint_resizer(corner, style.is_rtl(), items);
         }
     }
 }
@@ -338,6 +422,143 @@ mod tests {
 
     fn rect(x: f32, y: f32, width: f32, height: f32) -> RectF {
         RectF { x, y, width, height }
+    }
+
+    /// The items of the first page of `html`, painted.
+    fn painted(html: &str) -> Vec<Item> {
+        let document = fagus_dom::Document::parse_html(html);
+        let user_agent = fagus_css::Stylesheet::parse(
+            fagus_style::USER_AGENT_CSS,
+            fagus_css::Origin::UserAgent,
+            "ua.css",
+        );
+        let rules = fagus_css::RuleSet::new(&[&user_agent], &fagus_css::MediaEnvironment::default());
+        let styled = fagus_style::compute_styles(&document, &rules, (794.0, 1123.0));
+        let mut fonts = fagus_text::FontDb::new();
+        fonts.add_default_fonts();
+        let images = fagus_layout::Images::default();
+        let pages = fagus_layout::layout(&document, &styled, &rules, &fonts, &images);
+        crate::paint(&pages, &fonts, &images, false).remove(0).items
+    }
+
+    /// A line of a resize handle: where it starts and ends, and its alpha.
+    type Line = ((f32, f32), (f32, f32), f32);
+
+    /// The lines of resize handles among `items`.
+    fn handle_lines(items: &[Item]) -> Vec<Line> {
+        items
+            .iter()
+            .filter_map(|item| match item {
+                Item::DashedLine {
+                    from,
+                    to,
+                    thickness,
+                    dash,
+                    color,
+                    ..
+                } if *thickness == 0.0 && *dash == 0.0 => Some((*from, *to, color.a)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn draws_resize_handles_as_chrome_on_linux() {
+        // A corner of 15 pixels: lines of 7 and 3 pixels 2 in from its right and bottom edges,
+        // black, and white ones a pixel below, hairlines at 45 % (Chromium 157's
+        // `DrawPlatformResizerImage`, 60 % strokes of 1px that Skia's PDF output draws so).
+        let mut items = Vec::new();
+        paint_resizer(rect(100.0, 50.0, 15.0, 15.0), false, &mut items);
+        let alpha = 0.45;
+        let lines = handle_lines(&items);
+        assert_eq!(lines.len(), 4);
+        for (line, expected) in lines.iter().zip([
+            ((113.0, 56.0), (106.0, 63.0)),
+            ((113.0, 60.0), (110.0, 63.0)),
+            ((113.0, 57.0), (107.0, 63.0)),
+            ((113.0, 61.0), (111.0, 63.0)),
+        ]) {
+            assert_eq!((line.0, line.1), expected);
+            assert!((line.2 - alpha).abs() < 1e-6);
+        }
+        // Mirrored at the left.
+        let mut items = Vec::new();
+        paint_resizer(rect(0.0, 50.0, 15.0, 15.0), true, &mut items);
+        let lines = handle_lines(&items);
+        assert_eq!((lines[0].0, lines[0].1), ((2.0, 56.0), (9.0, 63.0)));
+        assert_eq!((lines[2].0, lines[2].1), ((2.0, 57.0), (8.0, 63.0)));
+    }
+
+    #[test]
+    fn gives_resizable_boxes_a_corner_beside_one_scroll_bar() {
+        // A horizontal bar alone ends before the corner of a box that may be resized, which
+        // lies at its end (on the left right to left), as Blink's `RectForHorizontalScrollbar`.
+        let style = |rtl: bool| {
+            ComputedStyle::from(fagus_style::ComputedValues {
+                resize: true,
+                overflow_x: Overflow::Hidden,
+                overflow_y: Overflow::Hidden,
+                direction: if rtl {
+                    fagus_style::values::Direction::Rtl
+                } else {
+                    fagus_style::values::Direction::Ltr
+                },
+                scrollbars: fagus_style::values::Scrollbars {
+                    vertical: false,
+                    horizontal: true,
+                    thickness: 15.0,
+                    gutters: (false, false),
+                },
+                ..fagus_style::ComputedValues::default()
+            })
+        };
+        let padding = rect(10.0, 10.0, 200.0, 100.0);
+        let areas = areas(&style(false), padding, true);
+        assert_eq!(areas.horizontal, Some(rect(10.0, 95.0, 185.0, 15.0)));
+        assert_eq!(areas.corner, Some(rect(195.0, 95.0, 15.0, 15.0)));
+        let areas = super::areas(&style(true), padding, true);
+        assert_eq!(areas.horizontal, Some(rect(25.0, 95.0, 185.0, 15.0)));
+        assert_eq!(areas.corner, Some(rect(10.0, 95.0, 15.0, 15.0)));
+    }
+
+    #[test]
+    fn draws_the_resize_handles_of_scroll_containers() {
+        // Of a scroll container that may be resized (a text area, with its native look or
+        // without, and any other box), after its content; not of a box whose overflow is
+        // visible, nor with `resize: none`.
+        let count = |html: &str| handle_lines(&painted(html)).len();
+        assert_eq!(
+            count("<div style='overflow: hidden; resize: both; height: 50px'>x</div>"),
+            4
+        );
+        assert_eq!(
+            count("<div style='overflow: auto; resize: vertical; height: 50px'>x</div>"),
+            4
+        );
+        assert_eq!(count("<div style='resize: both; height: 50px'>x</div>"), 0);
+        assert_eq!(
+            count("<div style='overflow: clip; resize: both; height: 50px'>x</div>"),
+            0
+        );
+        assert_eq!(count("<textarea>a</textarea>"), 4);
+        assert_eq!(
+            count("<textarea style='appearance: none; border: 1px solid'>a</textarea>"),
+            4
+        );
+        assert_eq!(count("<textarea style='resize: none'>a</textarea>"), 0);
+        // Over the content: after the text of the box.
+        let items = painted(
+            "<div style='overflow: hidden; resize: both; height: 20px; width: 40px; font-size: 40px'>xxxxx</div>",
+        );
+        let text = items
+            .iter()
+            .rposition(|item| matches!(item, Item::Text { .. }))
+            .expect("text");
+        let handle = items
+            .iter()
+            .position(|item| matches!(item, Item::DashedLine { .. }))
+            .expect("a handle");
+        assert!(handle > text);
     }
 
     #[test]

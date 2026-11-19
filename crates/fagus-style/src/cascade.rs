@@ -544,6 +544,9 @@ fn rejected(name: &str, tokens: &TokenList<'static>) -> bool {
     if lower == "hanging-punctuation" {
         return crate::values::HangingPunctuation::from_tokens(tokens).is_none();
     }
+    if lower == "scrollbar-gutter" {
+        return crate::extra::scrollbar_gutter(&crate::extra::significant(tokens)).is_none();
+    }
     let Some((_, valid)) = KEYWORDS
         .iter()
         .find(|(property, _)| name.eq_ignore_ascii_case(property))
@@ -3575,6 +3578,7 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedValues, style: &mut 
             "empty-cells" => copy!(empty_cells),
             "field-sizing" => copy!(field_sizing_content),
             "scrollbar-width" => copy!(scrollbar_width),
+            "scrollbar-gutter" => copy!(scrollbar_gutter),
             "scrollbar-color" => copy!(scrollbar_color),
             "frame-sizing" => copy!(frame_sizing_content_height),
             "text-underline-position" => copy!(text_underline_position),
