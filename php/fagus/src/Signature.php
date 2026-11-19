@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Fagus\Exception\InvalidArgumentException;
+use SensitiveParameter;
 
 /**
  * A digital signature of the PDF (PAdES): the key that signs, and what the signature says. Every
@@ -53,7 +54,7 @@ final class Signature
      */
     private function __construct(
         private readonly ?string $pkcs12,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private readonly ?string $password,
         private readonly array $certificates = [],
         private readonly ?Closure $signer = null,
@@ -65,7 +66,7 @@ final class Signature
      *
      * @throws InvalidArgumentException if the file cannot be read
      */
-    public static function fromPkcs12(string $path, #[\SensitiveParameter] string $password): self
+    public static function fromPkcs12(string $path, #[SensitiveParameter] string $password): self
     {
         $data = is_file($path) ? @file_get_contents($path) : false;
         if ($data === false) {
@@ -82,7 +83,7 @@ final class Signature
      *
      * @throws InvalidArgumentException for empty data
      */
-    public static function fromPkcs12Data(#[\SensitiveParameter] string $data, #[\SensitiveParameter] string $password): self
+    public static function fromPkcs12Data(#[SensitiveParameter] string $data, #[SensitiveParameter] string $password): self
     {
         if ($data === '') {
             throw new InvalidArgumentException('The PKCS#12 data is empty.');

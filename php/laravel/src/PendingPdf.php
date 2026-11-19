@@ -16,6 +16,7 @@ use Fagus\Signature;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use SensitiveParameter;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 
 /**
@@ -102,8 +103,8 @@ final class PendingPdf implements Responsable
      * @param  list<Permission|string>|null  $permissions
      */
     public function encrypt(
-        #[\SensitiveParameter] ?string $userPassword = null,
-        #[\SensitiveParameter] ?string $ownerPassword = null,
+        #[SensitiveParameter] ?string $userPassword = null,
+        #[SensitiveParameter] ?string $ownerPassword = null,
         ?array $permissions = null,
     ): self {
         return $this->with($this->document->encrypt($userPassword, $ownerPassword, $permissions));

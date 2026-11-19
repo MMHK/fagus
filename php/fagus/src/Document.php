@@ -10,6 +10,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use Fagus\Exception\InvalidArgumentException;
 use Fagus\Exception\RenderException;
+use SensitiveParameter;
 
 /**
  * A document to render. Every method returns a changed copy; the document itself never changes.
@@ -55,6 +56,7 @@ final class Document
     private bool $strict = false;
 
     private bool $reportLayout = false;
+
     /** @var array{userPassword: ?string, ownerPassword: ?string, permissions: ?list<Permission>}|null */
     private ?array $encryption = null;
 
@@ -262,8 +264,8 @@ final class Document
      * @throws InvalidArgumentException without a password, or for a string that is no permission
      */
     public function encrypt(
-        #[\SensitiveParameter] ?string $userPassword = null,
-        #[\SensitiveParameter] ?string $ownerPassword = null,
+        #[SensitiveParameter] ?string $userPassword = null,
+        #[SensitiveParameter] ?string $ownerPassword = null,
         ?array $permissions = null,
     ): self {
         if (($userPassword ?? '') === '' && ($ownerPassword ?? '') === '') {
