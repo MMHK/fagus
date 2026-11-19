@@ -280,7 +280,10 @@ When the font of the text lacks a character, Fagus looks for it as Chrome does:
    falls back to for the character's script (PingFang or Songti for Chinese, Hiragino for Japanese,
    Geeza Pro for Arabic, Apple Symbols for symbols … on macOS);
 3. in the other fonts you added;
-4. in the built-in Inter.
+4. with system fonts on: in the installed families of `sans-serif` (Helvetica, Arial, Liberation
+   Sans, DejaVu Sans, Noto Sans), as fontconfig ranks them for Chrome on Linux, then in the first
+   installed font that has the character;
+5. in the built-in Inter.
 
 Spaces take the first font of the list that has them, and a letter with combining accents stays in
 one font that can draw the whole cluster. With `line-height: normal`, a line with glyphs from a

@@ -1664,6 +1664,15 @@ impl FontDb {
             let (_, face) = self.system.as_ref()?.covering(character)?;
             in_family(&face.family)
         };
+        // Chrome on Linux asks fontconfig for a font with the character, which ranks the
+        // families of `sans-serif` first (DejaVu Sans before DejaVu Sans Mono), not the order of
+        // the files.
+        let sans_serif = || {
+            self.system.as_ref()?;
+            platform::generic_families(Generic::SansSerif, None)
+                .into_iter()
+                .find_map(in_family)
+        };
         standard()
             .or_else(cascaded)
             .or_else(|| {
@@ -1672,6 +1681,7 @@ impl FontDb {
                     .filter(|(_, builtin)| !builtin)
                     .find_map(|(family, _)| in_family(family))
             })
+            .or_else(sans_serif)
             .or_else(system)
             .or_else(|| {
                 others
@@ -4128,6 +4138,26 @@ mod tests {
             family(&db, db.query(&["sans-serif"], 400.0, FontStyle::Normal)),
             "Helvetica"
         );
+    }
+
+    #[test]
+    fn falls_back_to_the_sans_serif_families_before_the_order_of_the_files() {
+        // As fontconfig ranks the fonts for a character Chrome asks it for on Linux: DejaVu Sans
+        // before DejaVu Sans Mono, wherever their files lie.
+        for mono_first in [false, true] {
+            // Stand-ins with a character the built-in Inter lacks.
+            let sans = ("DejaVu Sans", "STIXTwoMath-Regular.woff2");
+            let mono = ("DejaVu Sans Mono", "STIXTwoMath-Regular.woff2");
+            let mut faces = vec![("Liberation Sans", "Inter-400-latin.woff2")];
+            faces.extend(if mono_first { [mono, sans] } else { [sans, mono] });
+            let db = system_db(&faces);
+            let request = (400.0, FontStyle::Normal, 100.0);
+            let families = ["Tahoma", "sans-serif"];
+            let preferred = db.query_in(&families, request, Some("fa")).unwrap();
+            assert_eq!(family(&db, Some(preferred)), "Liberation Sans");
+            let found = db.fallback_in(&families, preferred, '𝑥', request, Some("fa"));
+            assert_eq!(family(&db, found), "DejaVu Sans", "mono first: {mono_first}");
+        }
     }
 
     #[test]
