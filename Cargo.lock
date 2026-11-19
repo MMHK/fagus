@@ -873,7 +873,13 @@ dependencies = [
 name = "fagus-testkit"
 version = "0.2.0"
 dependencies = [
+ "anyhow",
+ "clap",
  "fagus",
+ "fagus-dom",
+ "png",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

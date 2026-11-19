@@ -1,7 +1,7 @@
 [package]
 publish = false
 name = "fagus-testkit"
-description = "Reference tests, image comparison and benchmarks for Fagus"
+description = "Conformance tests for Fagus: web-platform-tests reftests and the corpus against Chrome"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,4 +14,16 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+# With the features of the command line tool, so that CI builds both from the same compiled crates.
 fagus = { workspace = true, features = ["parallel"] }
+fagus-dom.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+# Writes the pages of failing tests as images for a look.
+png.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[[bin]]
+name = "fagus-conformance"
+path = "src/main.rs"
