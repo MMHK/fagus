@@ -38,7 +38,9 @@ Fagus::html('<link rel="stylesheet" href="css/invoice.css"><img src="images/logo
 ```
 
 A query or fragment (`logo.png?v=2`, `icons.svg#check`) is not part of the file name. Percent
-escapes are decoded (`my%20logo.png` is `my logo.png`).
+escapes are decoded (`my%20logo.png` is `my logo.png`). Data handed over with `resource()` and the
+resolver are looked up by the URL as written first and, for a URL with a fragment
+(`icons.svg#check`), by the URL without it next; the file is loaded once for all its fragments.
 
 In Laravel the base directory is `public/` unless `base_directory` in `config/fagus.php` says
 otherwise.

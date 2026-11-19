@@ -1539,11 +1539,16 @@ impl Inner {
             return None;
         }
         let url = &*frames::resolve(&input.nesting.directory, url);
-        if let Some(data) = input.resources.get(url) {
+        // A fragment (`sprite.svg#icon`, `letterhead.pdf#page=2`) names a part of the resource,
+        // which is handed over and resolved without it, unless the URL itself is.
+        let resource = url.split_once('#').map_or(url, |(resource, _)| resource);
+        if let Some(data) = input.resources.get(url).or_else(|| input.resources.get(resource)) {
             return Some(Arc::clone(data));
         }
         if let Some(loader) = &input.loader
-            && let Some(data) = loader.load(url)
+            && let Some(data) = loader
+                .load(url)
+                .or_else(|| (resource != url).then(|| loader.load(resource)).flatten())
         {
             return Some(Arc::new(data));
         }
@@ -1834,13 +1839,15 @@ impl Inner {
                 continue;
             }
             // A file is loaded once for all the fragments of its URL (`sprite.svg#a1`,
-            // `sprite.svg#a2`, …), which do not leave the document.
-            let data = match url.split_once('#') {
-                Some((resource, _)) if !resource.trim_start().starts_with("data:") => loaded
+            // `sprite.svg#a2`, …) and the URL without one, which do not leave the document.
+            let resource = url.split_once('#').map_or(url, |(resource, _)| resource);
+            let data = if resource.trim_start().starts_with("data:") {
+                self.load(input, url)
+            } else {
+                loaded
                     .entry(resource)
                     .or_insert_with(|| self.load(input, url))
-                    .clone(),
-                _ => self.load(input, url),
+                    .clone()
             };
             let Some(data) = data else {
                 diagnostics.push(warning(
@@ -5307,6 +5314,35 @@ mod tests {
         assert_ne!(streams(&output.pdf), streams(&render("").pdf));
         let output = render("filter: url(filters.svg#missing)");
         assert_eq!(codes(&output), ["resource.not-loaded"]);
+    }
+
+    #[test]
+    fn loads_images_with_fragments_from_resources_and_loaders() {
+        // `sprite.svg#a` from the data handed over as `sprite.svg`, or from a loader that knows
+        // the file only by that name; the file is asked for once.
+        struct Sprite(Mutex<Vec<String>>);
+        impl ResourceLoader for Sprite {
+            fn load(&self, url: &str) -> Option<Vec<u8>> {
+                self.0.lock().expect("not poisoned").push(url.to_owned());
+                (url == "sprite.svg").then(|| SPRITE.as_bytes().to_vec())
+            }
+        }
+        const SPRITE: &str = "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'>\
+            <view id='a' viewBox='0 0 5 5'/><rect width='10' height='10' fill='red'/></svg>";
+        let html = "<img src='sprite.svg#a' alt=''><img src='sprite.svg' alt=''>";
+        let handed = engine()
+            .render(&Document::html(html).resource("sprite.svg", SPRITE.as_bytes().to_vec()))
+            .expect("rendered");
+        assert_eq!(codes(&handed), Vec::<&str>::new());
+        let sprite = Arc::new(Sprite(Mutex::default()));
+        let loaded = engine()
+            .render(&Document::html(html).loader(Arc::clone(&sprite) as Arc<dyn ResourceLoader>))
+            .expect("rendered");
+        assert_eq!(codes(&loaded), Vec::<&str>::new());
+        assert_eq!(
+            *sprite.0.lock().expect("not poisoned"),
+            ["sprite.svg#a", "sprite.svg"]
+        );
     }
 
     #[test]

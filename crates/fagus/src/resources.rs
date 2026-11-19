@@ -14,7 +14,8 @@ pub trait ResourceLoader: Send + Sync {
     /// The data at `url`, exactly as written in the document (relative URLs included), or `None`
     /// if it is not available. The documents of frames (`<iframe src>`, `<object data>`) ask for
     /// their resources by their URLs resolved against the frame's URL, relative to the document
-    /// (`sub/style.css` for `style.css` in `sub/page.html`).
+    /// (`sub/style.css` for `style.css` in `sub/page.html`). For a URL with a fragment
+    /// (`icons.svg#check`), a loader that returns `None` is asked again without the fragment.
     fn load(&self, url: &str) -> Option<Vec<u8>>;
 }
 
