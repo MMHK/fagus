@@ -3025,17 +3025,43 @@ fn draw_gradient(surface: &mut Surface<'_>, rect: RectF, gradient: &GradientPain
                 (None, true) => (*start, *end, &stops[..], SpreadMethod::Repeat),
                 (None, false) => (*start, *end, &stops[..], SpreadMethod::Pad),
             };
-            LinearGradient {
-                x1: rect.x + start.0,
-                y1: rect.y + start.1,
-                x2: rect.x + end.0,
-                y2: rect.y + end.1,
-                transform: Transform::identity(),
-                spread_method,
-                stops: gradient_stops(stops),
-                anti_alias: false,
+            let (x1, y1) = (rect.x + start.0, rect.y + start.1);
+            let (x2, y2) = (rect.x + end.0, rect.y + end.1);
+            if spread_method == SpreadMethod::Pad {
+                LinearGradient {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    transform: Transform::identity(),
+                    spread_method,
+                    stops: gradient_stops(stops),
+                    anti_alias: false,
+                }
+                .into()
+            } else {
+                // krilla turns the line of a repeating gradient onto the x axis with the
+                // system's `atan2`, `sin` and `cos`, whose last bits differ between platforms: it
+                // gets a line along the x axis, turned into place by the direction's cosine and
+                // sine, which take a square root alone.
+                let length = libm::hypotf(x2 - x1, y2 - y1);
+                let (cos, sin) = if length > 0.0 {
+                    ((x2 - x1) / length, (y2 - y1) / length)
+                } else {
+                    (1.0, 0.0)
+                };
+                LinearGradient {
+                    x1: 0.0,
+                    y1: 0.0,
+                    x2: length,
+                    y2: 0.0,
+                    transform: Transform::from_row(cos, sin, -sin, cos, x1, y1),
+                    spread_method,
+                    stops: gradient_stops(stops),
+                    anti_alias: false,
+                }
+                .into()
             }
-            .into()
         }
         GradientPaint::Radial {
             center,
