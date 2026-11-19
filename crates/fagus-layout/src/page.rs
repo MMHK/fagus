@@ -1182,7 +1182,10 @@ pub fn paginate(
             if let Some(area) = footnotes.take() {
                 place_footnote_area(&mut content, area, bottom + extent);
             }
-            shrunk(made.fitted(Au::from_px((bottom + extent).to_px() * shrink)), shrink)
+            shrunk(
+                made.fitted(Au::from_px((bottom + extent).to_px() * shrink)),
+                shrink,
+            )
         } else {
             page_box
         };
