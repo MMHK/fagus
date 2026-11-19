@@ -256,6 +256,23 @@ callback does not count. There is no timeout on Windows. For requests, keep the 
 limits of PHP-FPM (`request_terminate_timeout`) and of your web server, or render long documents
 in a queue.
 
+## Untrusted documents
+
+Fagus is meant to render HTML, CSS, fonts and images from people you do not trust;
+[SECURITY.md](../SECURITY.md#threat-model) says what it promises and what remains. In short:
+
+- **Use a root of assets only.** A document can read every file inside its base directory or
+  root and show it in the PDF. Point them at a directory of templates, styles, images and fonts,
+  never at the project root, `storage` or a directory with `.env`.
+- **Keep the sandbox on.** On Linux the worker renders in a [sandbox](cli.md#sandbox) without
+  network, programs or writing files. `Engine::sandbox()` says whether it is in force (`on`,
+  `partial` where the kernel lacks Landlock or seccomp, `off` elsewhere). In containers,
+  Docker's and Podman's default seccomp profiles allow what the sandbox needs.
+- **Limit memory and time.** The engine bounds each part of a document, not the whole: give the
+  worker a memory limit (a container's, or `--memory-limit` when you start the binary yourself)
+  and keep the `timeout`. A worker that is ended for its memory is replaced with the next
+  document.
+
 ## Verify the binary
 
 The Composer plugin installs only the binary whose SHA-256 the package lists for its release.

@@ -24,6 +24,7 @@ All notable changes to this project are documented in this file. The format is b
 - `--memory-limit <MIB>` and `--cpu-limit <SECONDS>` for `fagus render` and `fagus worker` limit the address space and the processor time of the process on Linux.
 - `Engine::system_font_directories()` in Rust: the directories of the system fonts, which a sandbox around the engine must let it read.
 - Releases have a CycloneDX SBOM of each binary (`fagus-<target>.cdx.json`) and GitHub artifact attestations of the binaries, their SBOMs and `SHA256SUMS`, which `gh attestation verify` checks (SECURITY.md). `tools/pin-binaries.php` checks the sums and attestations of the binaries before it pins them.
+- SECURITY.md describes the threat model, the limits and the risks that remain.
 
 ### Changed
 

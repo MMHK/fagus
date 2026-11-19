@@ -16,6 +16,75 @@ Include a description, the affected version and, if possible, a document that re
 
 In scope: code execution, reading files or network resources that the caller did not allow, crashes and unbounded resource use caused by input documents, and incorrect output in PDF/A or PDF/UA mode that a validator rejects.
 
+## Threat model
+
+Fagus is built to render documents whose HTML, CSS, fonts and images come from people you do not
+trust, such as invoice templates of customers or user content. The caller, the program that
+starts the binary or the worker and hands it documents, is trusted: it chooses the root
+directory, the fonts, the options and the resources.
+
+What Fagus promises for untrusted documents:
+
+- **No network.** The engine has no network code. Resources come from `data:` URLs, from the
+  caller (`resources`, a loader, the worker's `?` messages) or from files inside the root.
+- **No files outside the root.** Relative URLs resolve against the base directory and are read
+  only if they lie inside the root after resolving `..`, percent-encoding and symbolic links.
+  URLs with a scheme or a host, absolute paths, drives and network shares are refused. Images
+  inside SVG documents must be `data:` URLs.
+- **No code execution.** Fagus runs no scripts, and its own code has no `unsafe` (the crates it
+  depends on do).
+- **Bounded work.** The limits below keep a document from taking unbounded memory or time.
+  Where a limit is reached, the part is left out (often with a diagnostic) and the rest renders.
+
+On Linux, the binary renders in a [sandbox](docs/cli.md#sandbox) (Landlock and seccomp) that
+backs the first two up: should a bug in Fagus or in a crate it uses be exploited, the process
+still cannot open sockets, start programs, write files or (with `fagus render`, or a worker with
+`--allow-read`) read files outside its directories. There is no sandbox on macOS and Windows.
+
+### Limits
+
+| What | Limit |
+|---|---|
+| Nesting of elements | 256 levels laid out; deeper elements are left out (parsing stops at 512) |
+| Nesting of CSS rules, `var()` | 256 levels; `var()` 32 levels and 65,536 tokens per value |
+| Pages | 10,000 per document |
+| Grid tracks, columns | 1,000 tracks per axis and 10,000 rows; 1,000 columns |
+| Table spans | `colspan` 1,000, `rowspan` 65,534 |
+| Frames (`<iframe>`, `<object>`) | 8 levels, 256 frames, 8 MiB of markup |
+| `@import` | 8 levels |
+| Raster images | 200 million pixels each |
+| SVG images | 128 MiB of data each (also after inflating SVGZ), 1 million elements after `<use>` (usvg), entities that add at most 16 MiB of text and hold no markup, 64 primitives per filter, SVG images in SVG images 3 levels deep |
+| Filters, shadows, masks | rasterized at most 12 million pixels per region; blurs at most 25 million |
+| Fonts | 64 MiB unpacked from WOFF or WOFF2 (the sizes the font declares are checked before unpacking); 256 MiB of document fonts kept per engine |
+| Worker frames | 1 GiB |
+
+### Remaining risks
+
+These are known and not fixed in the engine; deploy accordingly:
+
+- **Total memory and time.** The limits bound each part, not the document: a document can still
+  use several GiB, for example with many large images (each up to 200 million pixels), deeply
+  nested groups with opacity inside a filtered element, or a table with tens of thousands of rows
+  that each cell spans. There is no deadline inside the engine. Give the process limits of its
+  own: `--memory-limit` and `--cpu-limit` on Linux, a container's memory limit, the PHP engine's
+  `timeout` (which applies to each answer of the worker, so a document that asks for many
+  resources with `?` can take longer). A worker that runs out of memory is ended by the system;
+  the PHP package starts a new one for the next document.
+- **Resources by URL.** Each distinct URL is loaded once per document; the same file under many
+  URLs (`logo.png?1`, `logo.png?2`, …) is read and kept as many times. There is no total budget
+  for the bytes of a document's resources.
+- **Everything inside the root can be read.** A document may show any file in its root in the PDF
+  (as text with `<object type="text/plain">`, as an image, as a font). Make the root a directory
+  of assets only, never one with configuration or secrets (`.env`), and never a user's home or
+  `/`. The base directory is the root when no root is given.
+- **The caller is trusted.** The worker believes the caller's `base`, `root` and data, and a
+  frame may hold up to 1 GiB. Do not expose the worker's input to untrusted parties.
+- **Third-party parsers.** HTML, CSS, fonts, images and SVG are parsed by Rust crates (html5ever,
+  lightningcss, skrifa, HarfRust, png, zune-jpeg, image-webp, gif, usvg, resvg, krilla, wuff);
+  a bug in one of them is a bug in Fagus. They are fuzzed through the targets in `fuzz/`.
+- **Without the sandbox** (macOS, Windows, Linux without Landlock or seccomp, `--no-sandbox`),
+  only the checks of the engine stand between a document and the file system.
+
 ## Verify a binary
 
 The release workflow builds the binaries on GitHub Actions and attests each of them: GitHub
