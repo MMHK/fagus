@@ -746,6 +746,7 @@ dependencies = [
  "flate2",
  "libm",
  "rustc-hash",
+ "serde_json",
  "thiserror",
 ]
 
