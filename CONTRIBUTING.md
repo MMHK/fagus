@@ -14,6 +14,12 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 - Pull requests also run the [release gates](docs/releasing.md#release-gates): the corpus validated with veraPDF, qpdf and Mustang, rendered to the same bytes on every platform, and timed. After changes to the PDF output, run `tools/validate.sh --subset /tmp/fagus-validate` (it needs Java) and `tools/determinism.sh /tmp/fagus-determinism` locally.
 - The documentation is in `docs/` and is published on [fagus.niklasforst.de/docs](https://fagus.niklasforst.de/docs) (`main` under `/docs/next`). Every page needs an entry in `docs/nav.yml`; run `php tools/check-docs.php` after changing the pages, which also checks the links between them.
 
+## Conformance tests
+
+`tools/wpt/run.sh` runs the reftests of [web-platform-tests](https://web-platform-tests.org/) in the directories of `tools/wpt/dirs.txt`: it checks out the tests at the commit `tools/wpt/fetch.sh` pins into `target/wpt`, renders each test and its reference with Fagus and compares the pages drawn by Poppler's `pdftoppm` (install `poppler-utils`). It fails if a test fails that `tools/wpt/expectations.txt` does not list. When a fix makes listed tests pass, `tools/wpt/run.sh --update --docs docs/compatibility.md` removes them from the list and updates the table of pass rates; commit both with the fix. A test that cannot pass for a reason other than a bug (it needs scrolling or user interaction, or takes minutes) goes into the list as `SKIP` with the reason as a comment. The workflow `wpt.yml` runs all directories each night; [compatibility.md](docs/compatibility.md) explains the comparison.
+
+`tools/chrome-corpus.sh` prints the corpus with Chrome and with Fagus and compares the pages; the release gates require 95 % of the documents to match.
+
 ## Fuzzing
 
 `fuzz/` has [cargo-fuzz](https://rust-fuzz.github.io/book/cargo-fuzz.html) targets for the parts that read untrusted input. It is a workspace of its own and needs a nightly toolchain, which the engine's build and tests do not:
