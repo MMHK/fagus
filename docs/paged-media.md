@@ -717,6 +717,70 @@ the whole sheet, margins included.
   `position: absolute; top: calc(45mm - 15mm)` on a first page with a top margin of 15mm, and
   stays in the document's structure where it is in the HTML.
 
+## Use a PDF as page template
+
+A letterhead designed in another program can stay a PDF: Fagus shows a PDF file as an image, as
+Safari and Prince do, so the page background takes it like any other image. The page is drawn as
+vector graphics, with its text, fonts and images as they are in the file, and stays sharp and
+selectable.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    size: A4;
+    margin: 28mm 20mm 32mm 25mm;
+    background: url(letterhead.pdf#page=2) -25mm -28mm no-repeat;
+  }
+  @page :first {
+    margin-top: 45mm;
+    background-image: url(letterhead.pdf);
+    background-position: -25mm -45mm;
+  }
+</style>
+</head>
+<body>
+  <p>Dear Ms. Lindner,</p>
+</body>
+</html>
+```
+
+- `#page=2` at the end of the URL chooses the page of the file (RFC 8118); without it, the first
+  page is shown. A page the file does not have reports `image.broken`.
+- The image is as large as the page's crop box, its `/Rotate` applied: an A4 page is as large as
+  an A4 sheet (a point is 4/3 CSS pixels).
+- The background of `@page` covers the whole sheet, but its images are placed in the page box,
+  inside the margins, as in Chrome. A position of minus the left and top margins puts the
+  template at the corner of the sheet; with `margin: 0`, `no-repeat` alone is enough. A template
+  of another size than the sheet is stretched to it with `background-size`, for example
+  `background: url(letterhead.pdf) -25mm -28mm / 210mm 297mm no-repeat`.
+- The margins keep the text off the letterhead's header and footer; margin boxes (page numbers)
+  are drawn on top of the template.
+- Links and other annotations of the template's page are not taken over, nor its form fields or
+  tags. In a tagged PDF the template is an artifact, as every background is.
+- PDF/A and PDF/UA do not allow it: Fagus cannot check what the template contains (fonts that are
+  not embedded, transparency), and refuses the document (a `RenderException` that says so, see
+  [PDF output](pdf.md#make-an-accessible-pdf-pdfua-1)). Convert the letterhead to SVG
+  (`pdftocairo -svg letterhead.pdf letterhead.svg`) and use that instead.
+- A template that needs a password to open is not shown (`image.unsupported`); one its owner only
+  restricts opens without one, as in viewers. PDF 2.0 files are not shown, as Fagus writes PDF 1.7.
+
+To go through the pages of the template in turn, as mPDF's `SetDocTemplate($file, true)` does,
+select the pages by number:
+
+```css
+@page { margin: 25mm; background: url(letterhead.pdf) -25mm -25mm no-repeat; }
+@page :nth(2n) { background-image: url(letterhead.pdf#page=2); }
+/* A template of three pages: */
+@page :nth(3n+2) { background-image: url(letterhead.pdf#page=2); }
+@page :nth(3n) { background-image: url(letterhead.pdf#page=3); }
+```
+
+A template can also go behind some pages only, with a named page (`page: letter`) or `:first`.
+Chrome shows no PDF images; it prints such pages without the template.
+
 ## Prepare a document for a print shop
 
 `bleed` adds room around the page for content that runs off the edge, and `marks` draws crop marks

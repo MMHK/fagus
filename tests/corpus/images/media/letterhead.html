@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  The source of letterhead.pdf, a letterhead of two pages (the first page, and the pages after it)
+  that documents of the corpus use as a page template. Rendered with Fagus:
+
+    fagus render tests/corpus/images/media/letterhead.html -o tests/corpus/images/media/letterhead.pdf --root tests --untagged --created 2026-11-19T00:00:00Z
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Briefbogen Lindenhof Gartenbau</title>
+<style>
+@font-face { font-family: Inter; src: url(../../../fonts/Inter-Regular.ttf); }
+@font-face { font-family: Inter; font-weight: 700; src: url(../../../fonts/Inter-Bold.ttf); }
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 8pt/1.4 Inter, sans-serif; color: #234a35; }
+.sheet { position: relative; width: 210mm; height: 297mm; break-after: page; overflow: hidden; }
+.sheet:last-child { break-after: auto; }
+.band { position: absolute; inset: 0 0 auto 0; height: 38mm; background: linear-gradient(100deg, #1f5c3d, #3f8f5f); }
+.leaf { position: absolute; right: -18mm; top: -14mm; width: 90mm; height: 90mm; opacity: .12; }
+.brand { position: absolute; left: 25mm; top: 11mm; display: flex; align-items: center; gap: 4mm; color: #fff; }
+.brand svg { width: 16mm; height: 16mm; }
+.name { font-size: 17pt; font-weight: 700; letter-spacing: .02em; }
+.claim { font-size: 8.5pt; opacity: .85; }
+.contact { position: absolute; right: 20mm; top: 12mm; color: #fff; text-align: right; font-size: 8pt; }
+.fold { position: absolute; left: 4mm; width: 5mm; border-top: .3mm solid #9bb8a6; }
+.footer { position: absolute; left: 25mm; right: 20mm; bottom: 10mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; padding-top: 3mm; border-top: .4mm solid #3f8f5f; font-size: 7pt; color: #4d6b5a; }
+.footer b { color: #1f5c3d; }
+.slim { position: absolute; left: 25mm; right: 20mm; top: 10mm; display: flex; align-items: center; gap: 3mm; padding-bottom: 3mm; border-bottom: .4mm solid #3f8f5f; }
+.slim svg { width: 8mm; height: 8mm; }
+.slim .name { font-size: 11pt; color: #1f5c3d; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position: absolute">
+  <symbol id="logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="30" fill="#e9f3ec"/>
+    <path d="M32 52 C18 44 14 28 32 12 C50 28 46 44 32 52 Z" fill="#3f8f5f"/>
+    <path d="M32 52 L32 22" stroke="#1f5c3d" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div class="sheet">
+  <div class="band"></div>
+  <svg class="leaf" viewBox="0 0 64 64"><path d="M32 60 C10 48 4 24 32 2 C60 24 54 48 32 60 Z" fill="#fff"/></svg>
+  <div class="brand">
+    <svg><use href="#logo"/></svg>
+    <div><div class="name">Lindenhof Gartenbau</div><div class="claim">Gärten, die wachsen dürfen · seit 1987</div></div>
+  </div>
+  <div class="contact">Am Lindenhof 12 · 79098 Freiburg<br>0761 555 01 20<br>post@lindenhof-garten.example</div>
+  <div class="fold" style="top: 105mm"></div>
+  <div class="fold" style="top: 148.5mm; width: 7mm"></div>
+  <div class="fold" style="top: 210mm"></div>
+  <div class="footer">
+    <div><b>Lindenhof Gartenbau GmbH</b><br>Am Lindenhof 12, 79098 Freiburg<br>Amtsgericht Freiburg HRB 7041</div>
+    <div><b>Geschäftsführung</b><br>Marta Lindner, Jonas Hofmann<br>USt-IdNr. DE 123 456 789</div>
+    <div><b>Sparkasse Freiburg</b><br>IBAN DE02 6805 0101 0012 3456 78<br>BIC FRSPDE66XXX</div>
+  </div>
+</div>
+
+<div class="sheet">
+  <div class="slim">
+    <svg><use href="#logo"/></svg>
+    <div class="name">Lindenhof Gartenbau</div>
+  </div>
+  <div class="footer">
+    <div><b>Lindenhof Gartenbau GmbH</b><br>Am Lindenhof 12, 79098 Freiburg<br>Amtsgericht Freiburg HRB 7041</div>
+    <div><b>Geschäftsführung</b><br>Marta Lindner, Jonas Hofmann<br>USt-IdNr. DE 123 456 789</div>
+    <div><b>Sparkasse Freiburg</b><br>IBAN DE02 6805 0101 0012 3456 78<br>BIC FRSPDE66XXX</div>
+  </div>
+</div>
+</body>
+</html>

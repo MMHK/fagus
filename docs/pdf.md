@@ -327,6 +327,9 @@ same exception:
 - `the license of … does not allow embedding it`: the font's license forbids embedding it.
 - Attached files that do not qualify (see [Attach files](#attach-files)), for example ``the
   attached file `notes` has no valid MIME type (like `text/csv`), which PDF/A-3 requires``.
+- ``the document shows a PDF file as an image (a page template), whose content cannot be checked
+  against the standard; use an SVG version of it (`pdftocairo -svg`)``: see
+  [Use a PDF as page template](paged-media.md#use-a-pdf-as-page-template).
 
 `accessible()` works together with PDF/A and with electronic invoices:
 
@@ -1224,7 +1227,7 @@ The binary compresses on two threads of its own while it draws the pages; the en
 
 ## Images in the PDF
 
-Fagus reads PNG, JPEG, GIF, WebP, AVIF, BMP, TIFF and SVG images. Other formats (JPEG XL, ICO …)
+Fagus reads PNG, JPEG, GIF, WebP, AVIF, BMP, TIFF and SVG images, and pages of PDF files. Other formats (JPEG XL, ICO …)
 report `image.unsupported` and are left out; `<picture>` and `srcset` skip JPEG XL sources, as
 Chrome chooses among the formats it can show. An image of more than 200 megapixels reports
 `image.too-large`, one that does not decode `image.broken`.
@@ -1243,6 +1246,10 @@ How images go into the PDF:
   PackBits, CCITT Group 4 or JPEG. Palette and Lab TIFFs and CCITT Group 3 report `image.broken`.
 - SVG as vector graphics, with their text, gradients and patterns. Filtered SVG and SVG filters
   that PDF cannot express are drawn as pixels at 300 dpi, as Chrome prints them.
+- A page of a PDF file, which Chrome does not show, as Safari and Prince show it: as a Form
+  XObject, with its text, vector graphics, fonts and images as they are in the file, as large as
+  its crop box (see [Use a PDF as page template](paged-media.md#use-a-pdf-as-page-template)).
+  Its links, annotations and tags are left out, and filters (`filter`, shadows) do not change it.
 - At their full resolution: Fagus does not scale images down. Scale large photos before you hand
   them to the document.
 - Without interpolation (`/Interpolate`), as Chrome writes them: viewers decide how to smooth.

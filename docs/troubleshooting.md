@@ -327,9 +327,9 @@ first `<style>` element, the URL of a linked or imported stylesheet, the name gi
 | `css.too-deep` | Blocks or functions nest too deep; the stylesheet is ignored. |
 | `html.too-deep` | Elements nest hundreds of levels deep; the rest of the document is left out (severity `error`). |
 | `resource.not-loaded` | A stylesheet, image, font or SVG reference could not be loaded ([resources.md](resources.md)). |
-| `image.unsupported` | An image is not PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF or SVG, or not a valid SVG. |
-| `image.too-large` | An image has more than 200 megapixels. |
-| `image.broken` | An image could not be decoded and is left out. |
+| `image.unsupported` | An image is not PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF, SVG or PDF, or not a valid SVG, or a PDF that needs a password or is PDF 2.0. |
+| `image.too-large` | An image has more than 200 megapixels, or a PDF image more than 128 MiB of data or content. |
+| `image.broken` | An image could not be decoded and is left out, or a PDF image names a page its file does not have. |
 | `font.unsupported` | A file is not a font Fagus can read, or an installed font has no glyphs it can draw. |
 | `font.missing-glyph` | No font has a glyph for some characters; they are drawn as empty boxes ([fonts.md](fonts.md)). |
 | `frame.limit` | The documents in frames reach their limit; later frames show nothing. |

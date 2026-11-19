@@ -72,6 +72,7 @@ fn image_set_candidate<'a>(
                     | "image/tiff"
                     | "image/avif"
                     | "image/svg+xml"
+                    | "application/pdf"
             )
         })
     };

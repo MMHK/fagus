@@ -235,8 +235,8 @@ fn blur(pixels: &mut [u8], width: usize, height: usize, sigma: f32, uniform: boo
     }
 }
 
-/// The alpha channel of a raster image, for `shape-outside`; `None` for SVG images and images
-/// that cannot be decoded.
+/// The alpha channel of a raster image, for `shape-outside`; `None` for SVG and PDF images and
+/// images that cannot be decoded.
 pub fn alpha(image: &fagus_layout::Image) -> Option<fagus_layout::AlphaMask> {
     let (width, height, pixels) = rgba(&image.data, image.format)?;
     let alpha = pixels.as_chunks::<4>().0.iter().map(|pixel| pixel[3]).collect();
@@ -254,7 +254,7 @@ pub(crate) fn rgba(data: &[u8], format: ImageFormat) -> Option<(u32, u32, Vec<u8
         ImageFormat::Bmp => fagus_layout::bmp::decode(data),
         ImageFormat::Tiff => tiff(data),
         ImageFormat::Avif => crate::avif::decode(data).map(|avif| (avif.width, avif.height, avif.pixels)),
-        ImageFormat::Svg => None,
+        ImageFormat::Svg | ImageFormat::Pdf(_) => None,
     }
 }
 
@@ -389,9 +389,12 @@ pub(crate) fn flat(data: &[u8], format: ImageFormat) -> Option<Image> {
             (decoder.has_alpha(), decoder.icc_profile().ok()?)
         }
         // Embedded as their pixels (see [`decoded`]), already as PDF/A-1 takes them.
-        ImageFormat::Jpeg | ImageFormat::Bmp | ImageFormat::Tiff | ImageFormat::Avif | ImageFormat::Svg => {
-            (false, None)
-        }
+        ImageFormat::Jpeg
+        | ImageFormat::Bmp
+        | ImageFormat::Tiff
+        | ImageFormat::Avif
+        | ImageFormat::Svg
+        | ImageFormat::Pdf(_) => (false, None),
     };
     if !needed {
         return None;

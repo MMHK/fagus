@@ -20,6 +20,7 @@ pub use decode::alpha as image_alpha;
 pub use memo::Images;
 mod outline_font;
 mod parse;
+pub mod pdf_image;
 mod problems;
 mod raster;
 mod rasterizer;
@@ -539,6 +540,7 @@ impl ImageCache {
             svg_traits: FxHashMap::default(),
             undecoded: Vec::new(),
             layers: layers::Layers::default(),
+            pdfs: FxHashMap::default(),
         }
     }
 }
@@ -1260,6 +1262,8 @@ enum Embedded {
     /// Pixels, and the data they come from.
     Raster(krilla::image::Image, Arc<Vec<u8>>),
     Svg(Arc<usvg::Tree>, svg::Fit),
+    /// A page of a PDF file (its index, from 0), drawn as a form `XObject`.
+    Pdf(krilla::pdf::PdfDocument, usize),
 }
 
 /// Images prepared for the PDF, by the address of their data: each is embedded once.
@@ -1310,14 +1314,25 @@ struct ImageCache {
     svg_traits: FxHashMap<usize, (bool, bool, bool, bool, Option<Rgba>)>,
     /// The layers (`-fagus-layer`) drawn so far.
     layers: layers::Layers,
+    /// The PDF files shown as images, opened, by their data: the pages of one file come from one
+    /// document, whose objects krilla writes once.
+    pdfs: FxHashMap<usize, Option<OpenedPdf>>,
 }
+
+/// A PDF file shown as an image, read, and as krilla embeds its pages.
+type OpenedPdf = (Arc<krilla::pdf::Pdf>, krilla::pdf::PdfDocument);
 
 fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut ImageCache) -> Option<Embedded> {
     // Chrome writes images without `/Interpolate` (leaving smoothing to viewers), whatever
     // `image-rendering` says and however they are scaled (Chrome 157, measured).
     let interpolate = false;
-    let filtered = !image.filters.is_empty() || image.pad > 0;
-    let filters = if filtered {
+    // The pixels of a PDF page cannot go through filters; a part of one (of a border image) is
+    // clipped as it is drawn.
+    let filtered =
+        !matches!(image.format, ImageFormat::Pdf(_)) && (!image.filters.is_empty() || image.pad > 0);
+    let filters = if let ImageFormat::Pdf(page) = image.format {
+        format!("page {page}")
+    } else if filtered {
         format!("{:?} {}", image.filters, image.pad)
     } else {
         String::new()
@@ -1331,6 +1346,9 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                 return None;
             }
             fagus_dom::budget::check_time_now();
+            if let ImageFormat::Pdf(page) = image.format {
+                return embedded_pdf(&image.data, page, &mut cache.pdfs);
+            }
             // Decoded, an image takes four bytes a pixel (an SVG image's pixels are charged where
             // they are drawn). krilla decodes PNG, JPEG, GIF and WebP as it writes the PDF, one
             // image after another, so they only need room; the pixels that Fagus decodes itself
@@ -1403,6 +1421,8 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                     return svg::parse_kept(&image.data, fonts, &cache.memo, true, image.inline)
                         .map(|tree| Embedded::Svg(tree, svg::fit(&image.data, image.inline)));
                 }
+                // Embedded above.
+                ImageFormat::Pdf(_) => return None,
             };
             // Decoding and compressing the pixels is most of the work: they are kept for the
             // next document.
@@ -1436,6 +1456,78 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
             }
         })
         .clone()
+}
+
+/// The page `page` of the PDF file `data` as krilla embeds it, the file opened once in `pdfs`.
+/// The file and the content of the page, which krilla decodes and compresses again, are
+/// charged to the budget until the PDF is written.
+fn embedded_pdf(
+    data: &Arc<Vec<u8>>,
+    page: u32,
+    pdfs: &mut FxHashMap<usize, Option<OpenedPdf>>,
+) -> Option<Embedded> {
+    let (pdf, document) = pdfs
+        .entry(Arc::as_ptr(data) as usize)
+        .or_insert_with(|| {
+            let pdf = Arc::new(pdf_image::open(data).ok()?);
+            fagus_dom::budget::charge(fagus_dom::budget::Kind::Images, data.len() as u64);
+            Some((Arc::clone(&pdf), krilla::pdf::PdfDocument::new(pdf)))
+        })
+        .clone()?;
+    // Measured again (a Flate stream is decoded without being kept), as krilla will decode it.
+    let content = pdf_image::content_size(pdf.pages().get(page as usize)?.raw()).ok()?;
+    fagus_dom::budget::charge(fagus_dom::budget::Kind::Images, content);
+    Some(Embedded::Pdf(document, page as usize))
+}
+
+/// Draws the page `page` of the PDF `document` (image `image`) into `rect`, at the origin of the
+/// surface. A shadow of it (`drop-shadow()`) is not drawn; other filters leave it as it is.
+fn draw_pdf_page(
+    surface: &mut Surface<'_>,
+    rect: RectF,
+    image: &fagus_layout::Image,
+    document: &krilla::pdf::PdfDocument,
+    page: usize,
+) {
+    use fagus_layout::PixelFilter;
+    if image
+        .filters
+        .iter()
+        .any(|filter| matches!(filter, PixelFilter::Silhouette(_)))
+    {
+        return;
+    }
+    // A part of the page (a slice of a border image) is the page drawn larger, clipped to the
+    // part.
+    let part = image.filters.iter().find_map(|filter| match filter {
+        PixelFilter::Part(part) => Some(*part),
+        _ => None,
+    });
+    let Some([left, top, right, bottom]) = part else {
+        if let Some(size) = Size::from_wh(rect.width, rect.height) {
+            surface.draw_pdf_page(document, size, page);
+        }
+        return;
+    };
+    let (width, height) = (rect.width / (right - left), rect.height / (bottom - top));
+    let (Some(size), Some(clip)) = (
+        Size::from_wh(width, height).filter(|_| width.is_finite() && height.is_finite()),
+        clip_path(
+            RectF {
+                x: 0.0,
+                y: 0.0,
+                ..rect
+            },
+            None,
+        ),
+    ) else {
+        return;
+    };
+    surface.push_clip_path(&clip, &FillRule::NonZero);
+    surface.push_transform(&Transform::from_translate(-left * width, -top * height));
+    surface.draw_pdf_page(document, size, page);
+    surface.pop();
+    surface.pop();
 }
 
 /// The data of SVG image `image` with its `feMorphology` filters as they are drawn in `rect`
@@ -1641,6 +1733,7 @@ fn draw_image_as(
             }
         }
         Embedded::Raster(raster, _) => surface.draw_image(raster, size),
+        Embedded::Pdf(document, page) => draw_pdf_page(surface, rect, image, &document, page),
         Embedded::Svg(tree, fit) => {
             // An inline SVG is laid out at the size of its box, as Chrome lays out the root of
             // one: one as large as a percentage of the box, which the percentages in it are of,

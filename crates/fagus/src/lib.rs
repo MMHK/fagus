@@ -1856,6 +1856,11 @@ impl Inner {
                 ));
                 continue;
             };
+            // A page of a PDF file, the one the fragment names (`letterhead.pdf#page=2`).
+            if fagus_pdf::pdf_image::is_pdf(&data) {
+                pdf_image(url, data, &mut images, diagnostics);
+                continue;
+            }
             if fagus_pdf::svg::is_svg(&data) {
                 // A sprite shows the view or target its fragment names.
                 let data = url
@@ -1917,7 +1922,7 @@ impl Inner {
                 Err(ImageError::Unsupported) => diagnostics.push(warning(
                     "image.unsupported",
                     format!(
-                        "image `{}` is not a PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF or SVG image",
+                        "image `{}` is not a PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF, SVG or PDF image",
                         short(url)
                     ),
                 )),
@@ -2363,6 +2368,43 @@ fn blend_keyword(mode: fagus_style::values::BlendMode) -> String {
         keyword.push(character.to_ascii_lowercase());
     }
     keyword
+}
+
+/// Adds the page of the PDF file `data` that the fragment of `url` names to `images`, or says
+/// why it cannot be shown.
+fn pdf_image(url: &str, data: Arc<Vec<u8>>, images: &mut Images, diagnostics: &mut Vec<Diagnostic>) {
+    use fagus_pdf::pdf_image::PdfImageError;
+    let fragment = url.split_once('#').map(|(_, fragment)| fragment);
+    let problem = match fagus_pdf::pdf_image::probe(data, fragment) {
+        Ok(image) => {
+            images.insert(url, Arc::new(image));
+            return;
+        }
+        Err(PdfImageError::Broken) => ("image.broken", "is a PDF file that could not be read".to_owned()),
+        Err(PdfImageError::Password) => (
+            "image.unsupported",
+            "is a PDF file that needs a password, which Fagus does not open".to_owned(),
+        ),
+        Err(PdfImageError::Version) => (
+            "image.unsupported",
+            "is a PDF 2.0 file, newer than the PDF 1.7 Fagus writes".to_owned(),
+        ),
+        Err(PdfImageError::TooLarge) => (
+            "image.too-large",
+            "is a PDF file larger than 128 MiB, or its page holds more than 128 MiB of content".to_owned(),
+        ),
+        Err(PdfImageError::NoPage(page, count)) => (
+            "image.broken",
+            format!(
+                "names page {page} of a PDF file of {count} page{}",
+                if count == 1 { "" } else { "s" }
+            ),
+        ),
+    };
+    diagnostics.push(warning(
+        problem.0,
+        format!("image `{}` {}", short(url), problem.1),
+    ));
 }
 
 /// An SVG image (or an `inline` SVG element) with its natural size (none for a size its root

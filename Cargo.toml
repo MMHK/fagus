@@ -44,8 +44,12 @@ unicode-properties = { version = "0.1.5", default-features = false, features = [
 unicode-bidi = "0.3.18"
 # Fagus shapes text itself, so krilla's own shaper (simple-text) is not needed.
 # krilla's `rayon` (with fagus-pdf's feature `parallel`) compresses the content streams of pages
-# side by side.
-krilla = { version = "0.8.2", default-features = false, features = ["raster-images"] }
+# side by side. Its `pdf` draws the pages of PDF files that documents show as images (letterheads
+# as page templates), as Form XObjects.
+krilla = { version = "0.8.2", default-features = false, features = ["raster-images", "pdf"] }
+# Reads the PDF files shown as images (their pages, sizes and content streams); krilla's `pdf`
+# already depends on it.
+hayro-syntax = { version = "0.7.2", default-features = false, features = ["std"] }
 rayon = "1.12.0"
 imagesize = "0.14.0"
 krilla-svg = "0.8.1"

@@ -7,7 +7,7 @@ use fagus_dom::{Document, ElementData, NodeId};
 
 /// The image types Fagus draws, as the `type` of a `<source>` names them (parameters and case
 /// aside). A source of another type, such as JPEG XL, is skipped, so that the next one shows.
-/// TIFF is one, as in Safari (Chrome skips it).
+/// TIFF and PDF are, as in Safari (Chrome skips them).
 const TYPES: &[&str] = &[
     "image/png",
     "image/apng",
@@ -21,6 +21,7 @@ const TYPES: &[&str] = &[
     "image/tiff",
     "image/avif",
     "image/svg+xml",
+    "application/pdf",
 ];
 
 /// Where a choice of `srcset` is made: on the screen Chrome loads the document on, or on the

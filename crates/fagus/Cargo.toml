@@ -33,4 +33,6 @@ parallel = ["fagus-pdf/parallel"]
 
 [dev-dependencies]
 flate2.workspace = true
+# Reads back the PDF files the tests of PDF images write.
+hayro-syntax.workspace = true
 serde_json.workspace = true

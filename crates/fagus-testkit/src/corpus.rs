@@ -4,7 +4,7 @@
 //!
 //! Documents that use print features Chrome does not have (running elements, named strings,
 //! cross references, leaders, footnotes, blank pages for left and right page breaks), Fagus' own
-//! layers, TIFF images or web fonts with `font-display: optional` (see
+//! layers, TIFF and PDF images or web fonts with `font-display: optional` (see
 //! [`chrome_lacks`]) are not compared: Chrome prints them differently by design. Documents known
 //! to differ are listed in an expectations file (`tools/chrome-expectations.txt`, the format of
 //! [`Expectations`]); a document that differs without being listed fails the gate (see
@@ -149,6 +149,9 @@ pub fn chrome_lacks(html: &str) -> Option<&'static str> {
         (".tiff\"", "uses TIFF images, which Chrome does not show"),
         (".tif)", "uses TIFF images, which Chrome does not show"),
         (".tiff)", "uses TIFF images, which Chrome does not show"),
+        (".pdf\"", "uses PDF images, which Chrome does not show"),
+        (".pdf)", "uses PDF images, which Chrome does not show"),
+        (".pdf#", "uses PDF images, which Chrome does not show"),
     ]
     .into_iter()
     .find(|(needle, _)| lower.contains(needle))
@@ -563,6 +566,10 @@ mod tests {
         assert_eq!(
             chrome_lacks(r#"<img src="../images/scan-g4.tif" alt="">"#),
             Some("uses TIFF images, which Chrome does not show")
+        );
+        assert_eq!(
+            chrome_lacks("@page { background: url(letterhead.pdf#page=2) }"),
+            Some("uses PDF images, which Chrome does not show")
         );
         assert_eq!(
             chrome_lacks("h1 { break-before: recto }"),

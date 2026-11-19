@@ -103,7 +103,9 @@ pub(crate) fn describe(
         Problem::EmbeddedFile(error, _) => attachment_problem(error, attachments, conformance),
         Problem::MissingTagging => "the document is not tagged".to_owned(),
         Problem::EmbeddedPDF(_) => {
-            "the document shows another PDF, which cannot be checked against the standard".to_owned()
+            "the document shows a PDF file as an image (a page template), whose content cannot be \
+             checked against the standard; use an SVG version of it (`pdftocairo -svg`)"
+                .to_owned()
         }
         Problem::RequiresNewerPdfVersion(feature, _) => format!(
             "{} needs a newer PDF version than the standard allows",

@@ -19,6 +19,7 @@ fagus-paint.workspace = true
 fagus-text.workspace = true
 krilla.workspace = true
 krilla-svg.workspace = true
+hayro-syntax.workspace = true
 skrifa.workspace = true
 tiny-skia.workspace = true
 png.workspace = true
@@ -29,7 +30,8 @@ tiff.workspace = true
 re_rav1d.workspace = true
 usvg.workspace = true
 resvg.workspace = true
-# Not used directly: switches krilla's compression to the faster zlib-rs backend.
+# Switches krilla's compression to the faster zlib-rs backend, and measures the content streams
+# of PDF images.
 flate2.workspace = true
 fagus-style.workspace = true
 fagus-css.workspace = true

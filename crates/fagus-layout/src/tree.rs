@@ -1337,12 +1337,17 @@ pub fn embedded_image_url(data: &fagus_dom::ElementData) -> Option<&str> {
     url.filter(|_| object_shows_image(data)).map(str::trim)
 }
 
-/// Whether the `type` of an `<object>`, if it has one, is that of an image.
+/// Whether the `type` of an `<object>`, if it has one, is that of an image, or of a PDF file,
+/// whose page Fagus shows as an image.
 fn object_shows_image(data: &fagus_dom::ElementData) -> bool {
     data.attribute("type").is_none_or(|kind| {
-        kind.trim()
-            .get(..6)
+        let kind = kind.trim();
+        kind.get(..6)
             .is_some_and(|start| start.eq_ignore_ascii_case("image/"))
+            || kind
+                .split(';')
+                .next()
+                .is_some_and(|essence| essence.trim().eq_ignore_ascii_case("application/pdf"))
     })
 }
 

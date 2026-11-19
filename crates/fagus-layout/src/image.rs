@@ -23,6 +23,9 @@ pub enum ImageFormat {
     /// SVG, drawn as vector graphics; its size comes from the SVG's own `width`, `height` and
     /// `viewBox`.
     Svg,
+    /// A page of a PDF file (the index of the page, from 0), which Chrome does not show and
+    /// Safari and Prince do: drawn as vector graphics, as large as the page's crop box.
+    Pdf(u32),
 }
 
 /// An image file with its intrinsic size.
@@ -88,7 +91,8 @@ pub enum ImageError {
 
 impl PartialEq for Image {
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.data, &other.data) || self.data == other.data
+        // The pages of one PDF file are images of their own.
+        (Arc::ptr_eq(&self.data, &other.data) || self.data == other.data) && self.format == other.format
     }
 }
 
@@ -264,7 +268,9 @@ fn exif_orientation(data: &[u8], format: ImageFormat) -> Option<u8> {
             }
         }
         ImageFormat::Tiff => data,
-        ImageFormat::Gif | ImageFormat::Bmp | ImageFormat::Avif | ImageFormat::Svg => return None,
+        ImageFormat::Gif | ImageFormat::Bmp | ImageFormat::Avif | ImageFormat::Svg | ImageFormat::Pdf(_) => {
+            return None;
+        }
     };
     // A TIFF header, then the first IFD: entries of tag, type, count and value.
     let little = match tiff.get(..2)? {

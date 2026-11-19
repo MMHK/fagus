@@ -349,7 +349,12 @@ as an isolated group.
   table, and tables. The generic family `math` finds a math font.
 
 **Differs:** JPEG XL is skipped in `<picture>` and `image-set()`; use one of the formats above.
-TIFF sources are taken, as in Safari. An image that does not load shows its alt text after Chrome's broken-image icon. An image
+TIFF sources are taken, as in Safari. A PDF file is an image too, as in Safari and Prince: a page of
+it (the first, or the one `#page=N` names) is drawn as vector graphics, as large as its crop box, in
+`<img>`, `<picture>` (`type="application/pdf"`), `<object>`, `<embed>`, backgrounds (also of
+`@page`, for [page templates](paged-media.md#use-a-pdf-as-page-template)), border images, list
+markers, `content` and `image-set()`. Chrome shows none. Filters, masks and `shape-outside` do not
+use the pixels of a PDF image. An image that does not load shows its alt text after Chrome's broken-image icon. An image
 whose data does not decode is left out with an `image.broken` warning.
 
 **Not supported:** scripts in SVG and in frames do not run. Fagus loads no media other than images.
