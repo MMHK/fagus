@@ -23,22 +23,42 @@ What these pages describe is the public API:
 
 - **PHP and Laravel:** the classes, methods, enums and exceptions of [PHP API](php.md), with the
   names of their parameters; the facade, `PendingPdf`, the configuration keys and the commands of
-  [Laravel](laravel.md); the environment variables (`FAGUS_BINARY`, `FAGUS_SYSTEM_FONTS`,
-  `FAGUS_LOCALE`, `FAGUS_SANDBOX`, `FAGUS_DOWNLOAD_URL`, `FAGUS_GITHUB_TOKEN`). Not covered: anything marked
-  `@internal` and the namespace `Fagus\Internal`.
-- **Rust:** the crate `fagus` with the types it exports and its features ([Rust library](rust.md)).
-  The other crates of the repository are internal and change in any release.
+  [Laravel](laravel.md); `Installer` and `vendor/bin/fagus-install`; the environment variables
+  (`FAGUS_BINARY`, `FAGUS_DOWNLOAD_URL`, `FAGUS_GITHUB_TOKEN`, and those of `config/fagus.php`
+  such as `FAGUS_SYSTEM_FONTS`, `FAGUS_LOCALE` and `FAGUS_SANDBOX`). Not covered: anything marked
+  `@internal`, the namespace `Fagus\Internal`, and where the installer puts the binary inside
+  the package: ask `Installer::install()` for its path, or set `FAGUS_BINARY`.
+- **Rust:** the crate `fagus` with the types it exports and its features ([Rust library](rust.md)),
+  see [below](#the-rust-crate). The other crates of the repository are internal and change in
+  any release.
 - **Command line:** the commands, options, defaults and exit codes of [Command line](cli.md), and
   the format of diagnostics lines. Not the text of `--help`, of error messages or of `--timings`.
 - **Worker protocol:** protocol 1 of [Worker protocol](protocol.md). Within a protocol number,
   new fields and values may come; a client ignores fields it does not know. A new number comes
-  only with a major release.
+  only with a major release, so every binary of a major speaks the same protocol. The PHP
+  package supports the binary of its own release; with a binary of another release it renders
+  but warns (`onWarning`), since that binary ignores options newer than itself.
 - **CSS:** the [extensions](extensions.md) with the `-fagus-` prefix.
 - **Diagnostics:** the codes, such as `css.invalid-value`, and what they mean
-  ([Troubleshooting](troubleshooting.md#read-diagnostics)). Not their messages or severity.
+  ([Troubleshooting](troubleshooting.md#read-diagnostics)), and the three severities `info`,
+  `warning` and `error`. Not their messages, and not which severity a diagnostic has: a minor
+  release may turn a warning into an error or the other way round.
 
 A minor release may add methods, optional parameters, enum cases, options, configuration keys,
 extensions and diagnostics codes. If you `match` over an enum of Fagus, give it a `default` arm.
+
+## The Rust crate
+
+`fagus` is not published on crates.io: use it as a Git dependency pinned to a release tag
+([Rust library](rust.md#add-the-crate)). A crate on crates.io may only depend on crates there,
+so publishing `fagus` would mean publishing the seven internal crates it is built from as well,
+which are not API and change in any release. Publishing may come later if there is demand.
+
+So that a minor release can add a variant or a field, the enums of `fagus` and its structs with
+public fields that may grow are `#[non_exhaustive]`: a `match` over such an enum needs a `_` arm,
+and structs such as `Attachment` and `Date` are made with their constructors
+(`Attachment::new`, `Date::new`), not with struct literals. `Severity` is the exception: its
+three values stay within a major release. The list is in [Rust library](rust.md#stability).
 
 ## What may change in any release
 
@@ -66,15 +86,17 @@ Before something is removed in a major release, a minor release deprecates it an
 use instead. It keeps working until the next major release. You notice it:
 
 - in PHP, as `@deprecated` in your IDE and static analysis, and at runtime as an
-  `E_USER_DEPRECATED` notice that error handlers see (Laravel's `deprecations` log channel,
-  PHPUnit), not on the screen;
+  `E_USER_DEPRECATED` notice, once for each place in your code that calls it, which error
+  handlers see (Laravel's `deprecations` log channel, PHPUnit), not on the screen;
 - in Rust, as a compiler warning from `#[deprecated]`;
 - on the command line, as a warning on standard error; the exit code stays the same;
 - in CSS, as a `css.deprecated` diagnostic.
 
 The changelog lists deprecations under *Deprecated*. A major release comes with
 [UPGRADING.md](https://github.com/nforst/fagus/blob/main/UPGRADING.md), which lists every
-breaking change and what to do; its section for 1.0 already collects what changed since 0.1.0.
+breaking change and what to do; its section for 1.0 already collects what changed since 0.1.0,
+and its section *Next major* collects the breaking changes planned for the next major release as
+soon as they are decided.
 
 ## Supported versions
 
@@ -86,7 +108,11 @@ breaking change and what to do; its section for 1.0 already collects what change
 | Platforms | Linux (x64, arm64, glibc 2.17 or newer, musl), macOS (x64, arm64), Windows x64 | Dropped only in a major release |
 
 Composer keeps a project on an older PHP or Laravel at the last release that supports it.
-Security fixes go into the newest release ([security policy](../SECURITY.md)).
+
+Security fixes go into the latest minor release. When a new major release comes out, the last
+minor release of the previous major gets security fixes for six more months, time to plan the
+upgrade. Older minor releases get none: an update within a major needs no changes
+([security policy](../SECURITY.md#supported-versions)).
 
 ## Updating
 

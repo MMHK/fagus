@@ -4,6 +4,13 @@ What to change in code, configuration and templates when updating to a new major
 releases need no changes (see [docs/stability.md](docs/stability.md)); PDFs may still look
 different after one, closer to Chrome.
 
+## Next major
+
+Breaking changes planned for the next major release are collected here as soon as they are
+decided, each with the deprecation in a minor release that prepares it, so that you can act on
+them early; when the major release comes, they become its section. Until 1.0 is out, its changes
+are collected in the section below, and this one is for 2.0: nothing is planned yet.
+
 ## From 0.x to 1.0
 
 1.0 is not released yet. This section collects the changes since 0.1.0 that can need action, so

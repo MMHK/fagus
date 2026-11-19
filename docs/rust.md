@@ -12,8 +12,9 @@ std::fs::write("invoice.pdf", output.pdf)?;
 
 ## Add the crate
 
-The crate is not published on crates.io. Depend on it from the Git repository, pinned to a
-release tag (releases are tagged `v` and their version) or to a commit with `rev`:
+The crate is not published on crates.io ([why](stability.md#the-rust-crate)). Depend on it from the Git
+repository, pinned to a release tag (releases are tagged `v` and their version) or to a commit
+with `rev`:
 
 ```toml
 [dependencies]

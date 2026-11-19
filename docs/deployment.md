@@ -127,8 +127,9 @@ The engine looks for the binary in this order:
 
 1. The `binary` argument of `Engine` (in Laravel, the `binary` key of `config/fagus.php`).
 2. `FAGUS_BINARY`.
-3. The binary the installer put into the package (`vendor/nforst/fagus/php/fagus/bin/fagus`,
-   `fagus.exe` on Windows).
+3. The binary the installer put into the package (now `vendor/nforst/fagus/php/fagus/bin/fagus`,
+   `fagus.exe` on Windows; the place is not API and may change in a minor release, so ask
+   `Installer::install()` for it or set `FAGUS_BINARY`).
 4. `fagus` (`fagus.exe`) on the `PATH`.
 
 A binary named in the first two must exist and be executable, otherwise the engine does not fall
