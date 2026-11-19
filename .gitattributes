@@ -19,3 +19,7 @@
 /pint.json export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
+
+# The test keys and certificates stay as they were made, without line ends converted on Windows.
+/tests/signing/*.pem -text
+/tests/signing/*.key -text

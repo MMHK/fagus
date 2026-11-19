@@ -399,7 +399,11 @@ fn sign_inner(pdf: &[u8], signature: &Signature, time: Date) -> Result<Vec<u8>, 
         }
     }
     let fields = update::Fields { entries };
-    let certificates: usize = signature.certificates.iter().map(Vec::len).sum();
+    // By their DER, so that the room (and the file) does not depend on how they were given.
+    let certificates: usize = chain
+        .iter()
+        .map(|certificate| certificate.to_der().map_or(0, |der| der.len()))
+        .sum();
     let value_size = match algorithm {
         Algorithm::RsaSha256 => 1024,
         Algorithm::EcdsaP256Sha256 => 72,
@@ -754,7 +758,11 @@ mod tests {
             vec![read("rsa.pem"), read("ca.pem")],
             move |digest: &[u8], algorithm| key.sign(digest, algorithm),
         );
-        verify(&sign(&sample(None), &pem, TIME).expect("signed"));
+        // The same file as with DER certificates.
+        assert_eq!(
+            sign(&sample(None), &pem, TIME).expect("signed"),
+            sign(&sample(None), &own, TIME).expect("signed")
+        );
     }
 
     #[test]
@@ -784,9 +792,10 @@ mod tests {
             "[tsa]\ndefault_tsa = test\n[test]\nserial = {}\nsigner_cert = {}\nsigner_key = {}\n\
              signer_digest = sha256\ndefault_policy = 1.2.3.4\ndigests = sha256\n\
              ess_cert_id_alg = sha256\naccuracy = secs:1\n",
-            directory.join("serial").display(),
-            fixture("tsa.pem").display(),
-            fixture("tsa.key").display()
+            // OpenSSL's configuration takes backslashes as escapes.
+            directory.join("serial").display().to_string().replace('\\', "/"),
+            fixture("tsa.pem").display().to_string().replace('\\', "/"),
+            fixture("tsa.key").display().to_string().replace('\\', "/")
         );
         std::fs::write(directory.join("tsa.cnf"), configuration).map_err(|error| error.to_string())?;
         std::fs::write(directory.join("serial"), "01\n").map_err(|error| error.to_string())?;

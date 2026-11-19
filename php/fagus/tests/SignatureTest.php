@@ -140,12 +140,14 @@ final class SignatureTest extends TestCase
         if ($openssl === '') {
             $this->markTestSkipped('OpenSSL is the time-stamping authority of the test.');
         }
-        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus-tsa-'.bin2hex(random_bytes(6));
+        // OpenSSL's configuration takes backslashes as escapes.
+        $directory = str_replace('\\', '/', sys_get_temp_dir()).'/fagus-tsa-'.bin2hex(random_bytes(6));
+        $fixtures = str_replace('\\', '/', (string) realpath(self::FIXTURES));
         mkdir($directory);
         file_put_contents("{$directory}/serial", "01\n");
         file_put_contents("{$directory}/tsa.cnf", implode("\n", [
             '[tsa]', 'default_tsa = test', '[test]', "serial = {$directory}/serial",
-            'signer_cert = '.self::FIXTURES.'/tsa.pem', 'signer_key = '.self::FIXTURES.'/tsa.key',
+            "signer_cert = {$fixtures}/tsa.pem", "signer_key = {$fixtures}/tsa.key",
             'signer_digest = sha256', 'default_policy = 1.2.3.4', 'digests = sha256', 'ess_cert_id_alg = sha256', '',
         ]));
         $digests = [];
