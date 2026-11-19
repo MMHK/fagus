@@ -3,13 +3,14 @@
 //! slides in prints where it starts, and one with a negative `animation-delay` prints as far
 //! into its animation as the delay says (Chrome 157, measured). The keyframes' declarations
 //! cascade above all normal declarations and below the important ones (CSS Cascade 5, §6.1);
-//! between two keyframes, colors and opacity are interpolated and other values flip at the
-//! middle, as discrete values do.
+//! between two keyframes, colors, opacity and registered numeric custom properties are
+//! interpolated and other values flip at the middle, as discrete values do.
 
 use lightningcss::declaration::DeclarationBlock;
 use lightningcss::properties::animation::{
     AnimationDirection, AnimationFillMode, AnimationIterationCount, AnimationName,
 };
+use lightningcss::properties::custom::{CustomProperty, CustomPropertyName, Token, TokenList, TokenOrValue};
 use lightningcss::properties::{Property, PropertyId};
 use lightningcss::rules::keyframes::KeyframeSelector;
 use lightningcss::values::easing::{EasingFunction, StepPosition};
@@ -460,18 +461,128 @@ pub(super) fn animate(
     // Each property takes the nearer keyframe's value; where it lies between two, colors and
     // opacity are interpolated.
     let mut animated = with(&|step| if step.progress < 0.5 { step.from } else { step.to });
+    let halfway = |step: &&Step<'_>| step.progress > 0.0 && step.progress < 1.0;
     let between = all
         .iter()
-        .filter(|step| step.progress > 0.0 && step.progress < 1.0 && interpolates(&step.id))
+        .filter(|step| halfway(step) && interpolates(&step.id))
         .collect::<Vec<_>>();
-    if !between.is_empty() {
+    let numeric = all
+        .iter()
+        .filter(|step| halfway(step) && custom_name(&step.id).is_some_and(|name| registry.is_numeric(name)))
+        .collect::<Vec<_>>();
+    if !between.is_empty() || !numeric.is_empty() {
         let from = with(&|step| step.from);
         let to = with(&|step| step.to);
+        // Registered custom properties of numbers, lengths, percentages, angles and times
+        // interpolate as values of their type (CSS Properties and Values API 1, §2.5); other
+        // properties take them through `var()`, so the style is built again with them.
+        let mixed: Vec<(PropertyId<'static>, Property<'static>)> = numeric
+            .iter()
+            .filter_map(|step| {
+                let name = custom_name(&step.id)?;
+                let value = |style: &ComputedStyle| {
+                    style
+                        .custom_properties
+                        .get(name)
+                        .map(AsRef::as_ref)
+                        .or_else(|| registry.initial(name))
+                        .cloned()
+                };
+                let value = mix_tokens(&value(&from)?, &value(&to)?, step.progress)?;
+                let PropertyId::Custom(name) = &step.id else {
+                    return None;
+                };
+                Some((
+                    step.id.clone(),
+                    Property::Custom(CustomProperty {
+                        name: name.clone(),
+                        value,
+                    }),
+                ))
+            })
+            .collect();
+        if !mixed.is_empty() {
+            let mut declarations = ordered.to_vec();
+            declarations.extend(
+                all.iter()
+                    .filter(|step| !mixed.iter().any(|(id, _)| *id == step.id))
+                    .filter_map(|step| if step.progress < 0.5 { step.from } else { step.to })
+                    .chain(mixed.iter().map(|(_, property)| property))
+                    .map(|property| (ANIMATED, property)),
+            );
+            declarations.sort_by_key(|(precedence, _)| *precedence);
+            animated = build(&declarations);
+        }
         for step in between {
             interpolate(&step.id, (&from, &to), step.progress, &mut animated);
         }
     }
     *style = animated;
+}
+
+/// The name of a custom property (`--x`), if `id` is one.
+fn custom_name<'i>(id: &'i PropertyId<'static>) -> Option<&'i str> {
+    match id {
+        PropertyId::Custom(CustomPropertyName::Custom(name)) => Some(name.0.as_ref()),
+        _ => None,
+    }
+}
+
+/// Two values of a registered numeric custom property interpolated: a number, percentage,
+/// length, angle or time each, of the same unit; `None` for others, which flip at the middle.
+fn mix_tokens(
+    from: &TokenList<'static>,
+    to: &TokenList<'static>,
+    progress: f32,
+) -> Option<TokenList<'static>> {
+    use lightningcss::values::length::LengthValue;
+    let single = |tokens: &TokenList<'static>| -> Option<TokenOrValue<'static>> {
+        let mut significant = tokens.0.iter().filter(|token| !token.is_whitespace());
+        match (significant.next(), significant.next()) {
+            (Some(token), None) => Some(token.clone()),
+            _ => None,
+        }
+    };
+    let mix = |a: f32, b: f32| a + (b - a) * progress;
+    let value = match (single(from)?, single(to)?) {
+        (TokenOrValue::Length(a), TokenOrValue::Length(b)) => {
+            let ((from, from_unit), (to, to_unit)) = (a.to_unit_value(), b.to_unit_value());
+            if from_unit.eq_ignore_ascii_case(to_unit) {
+                TokenOrValue::Token(Token::Dimension {
+                    has_sign: false,
+                    value: mix(from, to),
+                    int_value: None,
+                    unit: from_unit.to_owned().into(),
+                })
+            } else {
+                TokenOrValue::Length(LengthValue::Px(mix(a.to_px()?, b.to_px()?)))
+            }
+        }
+        (TokenOrValue::Angle(a), TokenOrValue::Angle(b)) => TokenOrValue::Angle(
+            lightningcss::values::angle::Angle::Deg(mix(a.to_degrees(), b.to_degrees())),
+        ),
+        (TokenOrValue::Time(a), TokenOrValue::Time(b)) => {
+            TokenOrValue::Time(Time::Seconds(mix(a.to_ms() / 1000.0, b.to_ms() / 1000.0)))
+        }
+        (
+            TokenOrValue::Token(Token::Number { value: a, .. }),
+            TokenOrValue::Token(Token::Number { value: b, .. }),
+        ) => TokenOrValue::Token(Token::Number {
+            has_sign: false,
+            value: mix(a, b),
+            int_value: None,
+        }),
+        (
+            TokenOrValue::Token(Token::Percentage { unit_value: a, .. }),
+            TokenOrValue::Token(Token::Percentage { unit_value: b, .. }),
+        ) => TokenOrValue::Token(Token::Percentage {
+            has_sign: false,
+            unit_value: mix(a, b),
+            int_value: None,
+        }),
+        _ => return None,
+    };
+    Some(TokenList(vec![value]))
 }
 
 /// Whether the values of a property are interpolated between keyframes (rather than flipping

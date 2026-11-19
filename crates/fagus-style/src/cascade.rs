@@ -270,10 +270,8 @@ fn rollback(property: &Property<'static>) -> Option<Rollback> {
     };
     match property {
         Property::Unparsed(unparsed) => of_tokens(&unparsed.value),
-        Property::Custom(CustomProperty {
-            name: CustomPropertyName::Unknown(_),
-            value,
-        }) => of_tokens(value),
+        // Unknown properties kept as tokens, and custom properties (`--x: revert-layer`).
+        Property::Custom(CustomProperty { value, .. }) => of_tokens(value),
         Property::All(CSSWideKeyword::Revert) => Some(Rollback::Origin),
         Property::All(CSSWideKeyword::RevertLayer) => Some(Rollback::Layer),
         Property::FontFamily(families) => match families.as_slice() {

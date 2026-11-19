@@ -8,7 +8,7 @@ use std::sync::Arc;
 use fagus_css::{MediaEnvironment, Origin, RuleSet, Stylesheet};
 use fagus_dom::{Document, NodeId};
 
-use crate::values::{ClipShape, Content, ContentItem, Rgba, ShapeBox, ShapeOutside};
+use crate::values::{ClipShape, Content, ContentItem, LengthPercentage, Rgba, ShapeBox, ShapeOutside, Size};
 use crate::{ComputedStyle, StyledDocument, USER_AGENT_CSS, compute_styles};
 
 fn styles(html: &str, css: &str) -> (Document, StyledDocument) {
@@ -111,4 +111,31 @@ fn reads_content_and_shape_outside_that_lightningcss_keeps_as_tokens() {
             reference: ShapeBox::MarginBox,
         })
     ));
+}
+
+#[test]
+fn interpolates_registered_custom_properties_between_keyframes() {
+    // Halfway from 50px to `revert-layer`, which reverts to the element's own 150px (WPT
+    // `revert-layer-011`); a number interpolates too, a property of any value flips at the
+    // middle and one registered as a color keeps its own interpolation out of it.
+    let (document, styled) = styles(
+        r#"<div id="length"></div><div id="number"></div><div id="any"></div><div id="layered"></div>"#,
+        "@property --x { syntax: '<length>'; initial-value: 0px; inherits: false }
+        @property --n { syntax: '<number>'; initial-value: 0; inherits: false }
+        @keyframes length { from { --x: 50px } to { --x: revert-layer } }
+        @keyframes number { from { --n: 1 } to { --n: 3 } }
+        @keyframes any { from { --a: 10px } to { --a: 30px } }
+        div { animation: 2s linear -1s paused; height: 10px }
+        #length { width: var(--x); --x: 150px; animation-name: length }
+        #number { width: calc(var(--n) * 10px); animation-name: number }
+        #any { width: var(--a); animation-name: any }
+        @layer one { #layered { --w: 40px } }
+        @layer two { #layered { --w: revert-layer; width: var(--w, 5px) } }",
+    );
+    let width = |id| by_id(&document, &styled, id).width.clone();
+    assert_eq!(width("length"), Size::Length(LengthPercentage::Px(100.0)));
+    assert_eq!(width("number"), Size::Length(LengthPercentage::Px(20.0)));
+    assert_eq!(width("any"), Size::Length(LengthPercentage::Px(30.0)));
+    // `revert-layer` on a custom property outside animations.
+    assert_eq!(width("layered"), Size::Length(LengthPercentage::Px(40.0)));
 }

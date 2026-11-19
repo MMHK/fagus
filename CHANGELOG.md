@@ -53,6 +53,8 @@ All notable changes to this project are documented in this file. The format is b
 - A WOFF font whose tables declare more than 64 MiB unpacked is rejected before it is unpacked; only the size in its header was checked, which a font of a few hundred kilobytes could understate to unpack to gigabytes.
 - A resource URL that percent-encodes an absolute path, a drive or a network share (`%5C%5Chost%5Cshare%5Clogo.png`) is refused before the file system is asked about it. On Windows, such a URL made the engine look at a network share before it found the file outside the root.
 - `fagus worker` reads a frame as its data arrives instead of reserving the length the frame claims first: a frame that claimed up to 1 GiB and ended early took that much memory.
+- `revert` and `revert-layer` work on custom properties: `--x: revert-layer` takes the value the cascade layers below give, as for other properties. It was taken as the text `revert-layer`, which made a registered property (`@property`) fall back to its initial value.
+- Registered custom properties of numbers, percentages, lengths, angles and times are interpolated between two keyframes of an animation, as Chrome prints them: `@property --x { syntax: '<length>' }` halfway from `50px` to `150px` is `100px` in every `var(--x)`. They flipped at the middle before.
 
 ## [0.2.0] - 2026-11-17
 

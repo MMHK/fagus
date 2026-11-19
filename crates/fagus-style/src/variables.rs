@@ -94,6 +94,27 @@ impl Registry {
         )
     }
 
+    /// Whether a property is registered as a single number, percentage, length, angle or time,
+    /// whose values interpolate in animations.
+    pub fn is_numeric(&self, name: &str) -> bool {
+        use lightningcss::values::syntax::{Multiplier, SyntaxComponentKind, SyntaxString};
+        matches!(
+            self.properties.get(name).and_then(|registered| registered.syntax.as_ref()),
+            Some(SyntaxString::Components(components))
+                if matches!(components.as_slice(), [component]
+                    if component.multiplier == Multiplier::None
+                        && matches!(
+                            component.kind,
+                            SyntaxComponentKind::Number
+                                | SyntaxComponentKind::Percentage
+                                | SyntaxComponentKind::Length
+                                | SyntaxComponentKind::LengthPercentage
+                                | SyntaxComponentKind::Angle
+                                | SyntaxComponentKind::Time
+                        ))
+        )
+    }
+
     /// Whether a property is registered with a syntax that its values must have.
     pub fn has_syntax(&self, name: &str) -> bool {
         self.properties
