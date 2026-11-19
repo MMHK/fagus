@@ -170,30 +170,40 @@ pub(crate) fn generic_families(generic: Generic, script: Option<LangScript>) -> 
     own.iter().chain(default).copied().collect()
 }
 
+/// The families fallback tries first for a character of text in a language of `script`, before
+/// the families of `sans-serif`: fontconfig on Linux ranks the fonts that support the text's
+/// language first, so Chinese, Japanese and Korean text takes Noto Sans CJK in its own variant.
+pub(crate) fn fallback_families(script: Option<LangScript>) -> &'static [&'static str] {
+    match script {
+        Some(LangScript::Japanese) => &["Noto Sans CJK JP"],
+        Some(LangScript::Korean) => &["Noto Sans CJK KR"],
+        Some(LangScript::SimplifiedChinese) => &["Noto Sans CJK SC"],
+        Some(LangScript::TraditionalChinese) => &["Noto Sans CJK TC"],
+        Some(LangScript::Devanagari) | None => &[],
+    }
+}
+
 /// The families that Chrome takes for a generic family in text of a language of `script`, before
 /// the default ones: none for languages without their own.
 pub(crate) fn script_families(generic: Generic, script: Option<LangScript>) -> &'static [&'static str] {
     use LangScript::{Devanagari, Japanese, Korean, SimplifiedChinese, TraditionalChinese};
     match (generic, script) {
-        (Generic::Standard | Generic::SansSerif, Some(Japanese)) => &[
-            "Hiragino Kaku Gothic ProN",
-            "Yu Gothic",
-            "Meiryo",
-            "Noto Sans CJK JP",
-        ],
-        (Generic::Serif, Some(Japanese)) => &["Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP"],
-        (Generic::Standard | Generic::SansSerif, Some(Korean)) => {
-            &["Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR"]
+        // Chrome on Linux has no fonts of its own for these languages: their text takes the
+        // default families, and fallback finds the characters (see [`fallback_families`]).
+        (Generic::Standard | Generic::SansSerif, Some(Japanese)) => {
+            &["Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo"]
         }
-        (Generic::Serif, Some(Korean)) => &["AppleMyungjo", "Batang", "Noto Serif CJK KR"],
+        (Generic::Serif, Some(Japanese)) => &["Hiragino Mincho ProN", "Yu Mincho"],
+        (Generic::Standard | Generic::SansSerif, Some(Korean)) => &["Apple SD Gothic Neo", "Malgun Gothic"],
+        (Generic::Serif, Some(Korean)) => &["AppleMyungjo", "Batang"],
         (Generic::Standard | Generic::SansSerif | Generic::Cursive, Some(SimplifiedChinese)) => {
-            &["PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC"]
+            &["PingFang SC", "Microsoft YaHei"]
         }
-        (Generic::Serif, Some(SimplifiedChinese)) => &["Songti SC", "SimSun", "Noto Serif CJK SC"],
+        (Generic::Serif, Some(SimplifiedChinese)) => &["Songti SC", "SimSun"],
         (Generic::Standard | Generic::SansSerif | Generic::Cursive, Some(TraditionalChinese)) => {
-            &["PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC"]
+            &["PingFang TC", "Microsoft JhengHei"]
         }
-        (Generic::Serif, Some(TraditionalChinese)) => &["Songti TC", "PMingLiU", "Noto Serif CJK TC"],
+        (Generic::Serif, Some(TraditionalChinese)) => &["Songti TC", "PMingLiU"],
         // Chrome's Devanagari MT has no Latin letters: they come from Times New Roman, spaces,
         // digits and punctuation from it.
         (Generic::Standard | Generic::Serif, Some(Devanagari)) => &["Devanagari MT", "Times New Roman"],

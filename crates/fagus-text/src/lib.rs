@@ -1664,13 +1664,15 @@ impl FontDb {
             let (_, face) = self.system.as_ref()?.covering(character)?;
             in_family(&face.family)
         };
-        // Chrome on Linux asks fontconfig for a font with the character, which ranks the
-        // families of `sans-serif` first (DejaVu Sans before DejaVu Sans Mono), not the order of
-        // the files.
+        // Chrome on Linux asks fontconfig for a font with the character, which ranks the fonts
+        // for the text's language first (Noto Sans CJK KR for Korean), then the families of
+        // `sans-serif` (DejaVu Sans before DejaVu Sans Mono), not the order of the files.
         let sans_serif = || {
             self.system.as_ref()?;
-            platform::generic_families(Generic::SansSerif, None)
-                .into_iter()
+            platform::fallback_families(lang.and_then(LangScript::of))
+                .iter()
+                .copied()
+                .chain(platform::generic_families(Generic::SansSerif, None))
                 .find_map(in_family)
         };
         standard()
@@ -4138,6 +4140,25 @@ mod tests {
             family(&db, db.query(&["sans-serif"], 400.0, FontStyle::Normal)),
             "Helvetica"
         );
+    }
+
+    #[test]
+    fn sets_cjk_text_as_chrome_on_linux() {
+        // No fonts of its own for Korean: the default family for the text, and fallback in the
+        // Noto Sans CJK of the language, wherever its file lies (stand-ins with a character the
+        // built-in Inter lacks).
+        let db = system_db(&[
+            ("Liberation Sans", "Inter-400-latin.woff2"),
+            ("Noto Sans CJK JP", "STIXTwoMath-Regular.woff2"),
+            ("Noto Sans CJK KR", "STIXTwoMath-Regular.woff2"),
+        ]);
+        let request = (400.0, FontStyle::Normal, 100.0);
+        let preferred = db.query_in(&["sans-serif"], request, Some("ko")).unwrap();
+        assert_eq!(family(&db, Some(preferred)), "Liberation Sans");
+        let found = db.fallback_in(&["sans-serif"], preferred, '𝑥', request, Some("ko"));
+        assert_eq!(family(&db, found), "Noto Sans CJK KR");
+        let found = db.fallback_in(&["sans-serif"], preferred, '𝑥', request, Some("ja"));
+        assert_eq!(family(&db, found), "Noto Sans CJK JP");
     }
 
     #[test]

@@ -253,7 +253,8 @@ With system fonts:
   Menlo, San Francisco for `system-ui`, Apple Chancery, Papyrus), else those of Windows and Linux
   (Times New Roman, Arial, Consolas, Liberation, DejaVu, Noto …). For Japanese, Korean and Chinese
   text (by `lang`) they are the fonts Chrome takes for these languages (Hiragino, Apple SD Gothic
-  Neo, PingFang, Yu Gothic, Malgun Gothic, Microsoft YaHei, Noto CJK …).
+  Neo, PingFang, Yu Gothic, Malgun Gothic, Microsoft YaHei …). Chrome on Linux has none for these
+  languages: there the text takes the default families, and its characters Noto Sans CJK.
 - A family the system lacks takes an installed family with the same glyph widths, as fontconfig
   substitutes it on Linux and Chrome accepts it there: Liberation Sans (or Arimo) for Arial and
   Helvetica, Liberation Serif (or Tinos) for Times New Roman and Times, Liberation Mono (or
@@ -280,9 +281,10 @@ When the font of the text lacks a character, Fagus looks for it as Chrome does:
    falls back to for the character's script (PingFang or Songti for Chinese, Hiragino for Japanese,
    Geeza Pro for Arabic, Apple Symbols for symbols … on macOS);
 3. in the other fonts you added;
-4. with system fonts on: in the installed families of `sans-serif` (Helvetica, Arial, Liberation
-   Sans, DejaVu Sans, Noto Sans), as fontconfig ranks them for Chrome on Linux, then in the first
-   installed font that has the character;
+4. with system fonts on: in Noto Sans CJK of the text's language for Chinese, Japanese and Korean,
+   then in the installed families of `sans-serif` (Helvetica, Arial, Liberation Sans, DejaVu Sans,
+   Noto Sans), as fontconfig ranks them for Chrome on Linux, then in the first installed font that
+   has the character;
 5. in the built-in Inter.
 
 Spaces take the first font of the list that has them, and a letter with combining accents stays in
