@@ -516,6 +516,7 @@ mod tests {
             target: LinkTarget::Uri("https://fagus.niklasforst.de".to_owned()),
             node: None,
             description: Some("Fagus".to_owned()),
+            role: crate::LinkRole::Element,
         };
         let options = Options {
             conformance,

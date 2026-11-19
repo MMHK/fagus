@@ -242,6 +242,9 @@ pub enum Tag {
         order: u32,
         /// Whether the content is the marker of a list item.
         marker: bool,
+        /// Whether the content is the call of a footnote (`::footnote-call`); `node` is then the
+        /// footnote's element.
+        call: bool,
     },
     /// Something a reader skips.
     Artifact(Artifact),
@@ -444,6 +447,7 @@ fn paint_pages(
                 slices: &slices,
                 aliases: merged.as_ref().map(|(_, aliases)| aliases),
                 node: None,
+                call: None,
                 artifact: None,
                 tag: None,
                 ruby_annotation: None,
@@ -1272,6 +1276,8 @@ struct Painter<'a> {
     aliases: Option<&'a carried::Aliases>,
     /// The closest element around what is painted.
     node: Option<NodeId>,
+    /// The element of the footnote whose call is painted, while it is.
+    call: Option<NodeId>,
     /// Set while painting a margin box: everything in it is this kind of artifact.
     artifact: Option<Artifact>,
     /// The last tag added.
@@ -1662,8 +1668,14 @@ impl Painter<'_> {
             return;
         }
         let order = self.orders.get(&self.original(fragment)).copied();
-        let tag = match (self.artifact, self.node, order) {
-            (None, Some(node), Some(order)) => Tag::Content { node, order, marker },
+        // The call of a footnote is content of the footnote's link.
+        let tag = match (self.artifact, self.call.or(self.node), order) {
+            (None, Some(node), Some(order)) => Tag::Content {
+                node,
+                order,
+                marker,
+                call: self.call.is_some(),
+            },
             (artifact, ..) => Tag::Artifact(artifact.unwrap_or(Artifact::Layout)),
         };
         self.tag(tag);
@@ -1881,6 +1893,12 @@ impl Painter<'_> {
     /// boxes and atomic inlines paint their backgrounds here, not with the blocks.
     fn inlines(&mut self, fragment: &Fragment, x: f32, y: f32, in_line: bool) {
         let outer = self.enter(fragment);
+        let outer_call = self.call;
+        if let FragmentKind::Box { style, .. } = &fragment.kind
+            && let Some(note) = style.footnote_call
+        {
+            self.call = Some(note);
+        }
         // The annotation of a ruby column is not its base.
         let outer_annotation = self.ruby_annotation;
         if matches!(&fragment.kind, FragmentKind::Box { style, .. } if style.ruby_display == RubyDisplay::Annotation)
@@ -2142,6 +2160,7 @@ impl Painter<'_> {
         self.ruby_annotation = outer_annotation;
         self.line_shift = outer_shift;
         self.node = outer;
+        self.call = outer_call;
     }
 
     /// Starts the group effects of a stacking context at `(x, y)`; returns how many to pop.

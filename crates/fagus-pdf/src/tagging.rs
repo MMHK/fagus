@@ -10,6 +10,8 @@ use std::num::{NonZeroU16, NonZeroU32};
 
 use fagus_dom::NodeId;
 use fagus_paint::{Artifact, Item, PageList, Tag};
+
+use crate::LinkRole;
 use krilla::surface::Surface;
 use krilla::tagging::{
     self, ArtifactType, ContentTag, Identifier, ListNumbering, Node, SpanTag, TableHeaderScope, TagGroup,
@@ -25,6 +27,11 @@ pub struct Structure {
     /// What the content of each node belongs to. The content of nodes that are not listed belongs
     /// to the document.
     pub owners: FxHashMap<NodeId, Owner>,
+    /// The links of each footnote, by its element: the `Link` of its call, which leads to it,
+    /// and the one of its marker in its label, which leads back. They hold the content of the
+    /// call and of the marker with the link annotation; a link without its annotation gives its
+    /// content to the element around it.
+    pub footnotes: FxHashMap<NodeId, (usize, usize)>,
 }
 
 /// What content belongs to.
@@ -95,8 +102,8 @@ pub enum Role {
     Label,
     /// The content of a list item.
     ListBody,
-    /// A footnote, after the text that calls it; its marker is a label. Each gets an ID, as
-    /// PDF/UA asks.
+    /// A footnote, after the text that calls it (the call a link to it); its marker is a
+    /// label (with a link back to the call). Each gets an ID, as PDF/UA asks.
     Note,
     Table {
         summary: Option<String>,
@@ -261,9 +268,15 @@ impl<'a> Tagger<'a> {
         }
     }
 
-    /// Where content of a node on a page goes: into an element, or an artifact of a kind.
-    fn place(&self, node: NodeId, page: usize, marker: bool) -> Result<usize, ArtifactType> {
-        let element = self.owner(node).ok_or(ArtifactType::Layout)?;
+    /// Where content of a node on a page goes: into an element, or an artifact of a kind. The
+    /// call of a footnote goes into its link, the marker of a footnote into the link in its
+    /// label.
+    fn place(&self, node: NodeId, page: usize, marker: bool, call: bool) -> Result<usize, ArtifactType> {
+        let footnote = self.footnote_links(node);
+        let element = match footnote {
+            Some((link, _)) if call => link,
+            _ => self.owner(node).ok_or(ArtifactType::Layout)?,
+        };
         // A form field holds its widget only (PDF/UA-1, ISO 14289-1 7.18.4): what the control
         // draws on the page beside it is its design.
         if self.structure.elements[element].role == Role::Form {
@@ -282,9 +295,21 @@ impl<'a> Tagger<'a> {
             }
         }
         if marker && let Some(label) = self.label(element) {
-            return Ok(label);
+            return Ok(footnote.map_or(label, |(_, back)| back));
         }
         Ok(element)
+    }
+
+    /// The links of the footnote whose element is `node` (see [`Structure::footnotes`]), where
+    /// they are in the tree.
+    fn footnote_links(&self, node: NodeId) -> Option<(usize, usize)> {
+        let &(call, back) = self.structure.footnotes.get(&node)?;
+        let reached = |element: usize| {
+            self.parents
+                .get(element)
+                .is_some_and(|parent| *parent != usize::MAX)
+        };
+        (reached(call) && reached(back)).then_some((call, back))
     }
 
     /// The label of the list item or the footnote an element is in.
@@ -391,7 +416,12 @@ impl<'a> Tagger<'a> {
     /// Starts a marked-content sequence for what `first` begins.
     fn start(&mut self, surface: &mut Surface<'_>, page: usize, tag: Tag, first: Option<&Item>) {
         let kind = match tag {
-            Tag::Content { node, order, marker } => match self.place(node, page, marker) {
+            Tag::Content {
+                node,
+                order,
+                marker,
+                call,
+            } => match self.place(node, page, marker, call) {
                 Ok(element) => {
                     let content = match first {
                         Some(Item::Text { .. }) => ContentTag::Span(SpanTag::empty()),
@@ -411,9 +441,15 @@ impl<'a> Tagger<'a> {
         surface.start_tagged(ContentTag::Artifact(tagging::Artifact::with_kind(kind)));
     }
 
-    /// Adds a link annotation, which belongs to the element of `node`.
-    pub(crate) fn annotation(&mut self, node: Option<NodeId>, id: Identifier) {
-        let element = self.annotated(node);
+    /// Adds a link annotation, which belongs to the element of `node`, or to a link of the
+    /// footnote `node` is.
+    pub(crate) fn annotation(&mut self, node: Option<NodeId>, role: LinkRole, id: Identifier) {
+        let links = node.and_then(|node| self.footnote_links(node));
+        let element = match (role, links) {
+            (LinkRole::FootnoteCall, Some((call, _))) => Some(call),
+            (LinkRole::FootnoteMarker, Some((_, back))) => Some(back),
+            _ => self.annotated(node),
+        };
         self.annotations.push((element, id, false));
     }
 
@@ -449,6 +485,18 @@ impl<'a> Tagger<'a> {
                 None => loose.push((id, widget)),
             }
         }
+        // The links of footnotes that have no annotation (a call that is not shown, a marker
+        // whose call is not) give their content to the element around them.
+        let dissolved: Vec<bool> = (0..count)
+            .map(|element| {
+                annotations[element].is_empty()
+                    && self
+                        .structure
+                        .footnotes
+                        .values()
+                        .any(|&(call, back)| call == element || back == element)
+            })
+            .collect();
         // Children come after their parents in tree order, so in reverse they are done first.
         let mut first: Vec<Option<u32>> = vec![None; count];
         let mut groups: Vec<Option<Vec<Node>>> = (0..count).map(|_| None).collect();
@@ -480,7 +528,13 @@ impl<'a> Tagger<'a> {
                     (Some(a), Some(b)) => Some(a.min(b)),
                     (a, b) => a.or(b),
                 };
-                nodes.push(TagGroup::with_children(kind(&self.structure.elements[child]), children).into());
+                if dissolved[child] {
+                    nodes.extend(children);
+                } else {
+                    nodes.push(
+                        TagGroup::with_children(kind(&self.structure.elements[child]), children).into(),
+                    );
+                }
             }
             nodes.extend(own[position..].iter().map(|(_, id)| Node::from(*id)));
             let role = self.structure.elements.get(element).map(|element| &element.role);
@@ -656,6 +710,7 @@ mod tests {
                 })
                 .collect(),
             owners: owners.iter().copied().collect(),
+            ..Structure::default()
         }
     }
 
@@ -664,6 +719,7 @@ mod tests {
             node,
             order,
             marker: false,
+            call: false,
         })
     }
 
@@ -683,6 +739,19 @@ mod tests {
     /// Draws pages with links (page and node) and returns the tag tree as an outline: `c1.2` is
     /// the content with MCID 2 on page 1, `a0.0` the first annotation on page 0.
     fn tree(structure: &Structure, pages: &[Vec<Item>], links: &[(usize, Option<NodeId>)]) -> String {
+        let links: Vec<_> = links
+            .iter()
+            .map(|&(page, node)| (page, node, LinkRole::Element))
+            .collect();
+        tree_with(structure, pages, &links)
+    }
+
+    /// [`tree`] with links of other roles.
+    fn tree_with(
+        structure: &Structure,
+        pages: &[Vec<Item>],
+        links: &[(usize, Option<NodeId>, LinkRole)],
+    ) -> String {
         let lists: Vec<PageList> = pages
             .iter()
             .map(|items| PageList {
@@ -701,7 +770,7 @@ mod tests {
             let mut surface = page.surface();
             tagger.draw(&mut surface, index, &list.items, &mut |_, _| {});
             surface.finish();
-            for (_, node) in links.iter().filter(|(page, _)| *page == index) {
+            for (_, node, role) in links.iter().filter(|(page, ..)| *page == index) {
                 let rect = krilla::geom::Rect::from_xywh(0.0, 0.0, 10.0, 10.0).expect("rect");
                 let target = krilla::annotation::Target::Action(
                     krilla::action::LinkAction::new("https://quittio.dev".to_owned()).into(),
@@ -711,7 +780,7 @@ mod tests {
                     None,
                 );
                 let id = page.add_tagged_annotation(annotation);
-                tagger.annotation(*node, id);
+                tagger.annotation(*node, *role, id);
             }
             page.finish();
         }
@@ -889,6 +958,7 @@ mod tests {
                 node: nodes[1],
                 order: 0,
                 marker: true,
+                call: false,
             }),
             rect(),
             content(nodes[1], 1),
@@ -904,7 +974,8 @@ mod tests {
                     Item::Tag(Tag::Content {
                         node: nodes[1],
                         order: 0,
-                        marker: true
+                        marker: true,
+                        call: false
                     }),
                     rect(),
                     content(nodes[1], 1),
@@ -935,12 +1006,64 @@ mod tests {
                 node: nodes[2],
                 order: 1,
                 marker: true,
+                call: false,
             }),
             rect(),
             content(nodes[2], 2),
             rect(),
         ];
         assert_eq!(tree(&structure, &[page], &[]), "P[c0.0 Note[Lbl[c0.1] c0.2]]");
+    }
+
+    #[test]
+    fn links_footnote_calls_and_markers() {
+        let nodes = nodes();
+        let mut structure = structure(
+            vec![
+                (Role::Document, vec![1]),
+                (Role::Paragraph, vec![2, 3]),
+                (Role::Link, vec![]),
+                (Role::Note, vec![4]),
+                (Role::Label, vec![5]),
+                (Role::Link, vec![]),
+            ],
+            &[(nodes[1], Owner::Element(1)), (nodes[2], Owner::Element(3))],
+        );
+        structure.footnotes.insert(nodes[2], (2, 5));
+        let part = |order: u32, marker: bool, call: bool| {
+            Item::Tag(Tag::Content {
+                node: nodes[2],
+                order,
+                marker,
+                call,
+            })
+        };
+        let page = vec![
+            content(nodes[1], 0),
+            rect(),
+            part(1, false, true),
+            rect(),
+            content(nodes[1], 2),
+            rect(),
+            part(3, true, false),
+            rect(),
+            content(nodes[2], 4),
+            rect(),
+        ];
+        // The call is a link to the note, the marker in its label one back.
+        let links = [
+            (0, Some(nodes[2]), LinkRole::FootnoteCall),
+            (0, Some(nodes[2]), LinkRole::FootnoteMarker),
+        ];
+        assert_eq!(
+            tree_with(&structure, std::slice::from_ref(&page), &links),
+            "P[c0.0 Link[c0.1 a0.0] c0.2 Note[Lbl[Link[c0.3 a0.1]] c0.4]]"
+        );
+        // Without their annotations, the call and the marker are text of the elements around.
+        assert_eq!(
+            tree(&structure, &[page], &[]),
+            "P[c0.0 c0.1 c0.2 Note[Lbl[c0.3] c0.4]]"
+        );
     }
 
     #[test]

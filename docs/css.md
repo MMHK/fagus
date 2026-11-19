@@ -180,8 +180,9 @@ that break across pages and columns, and `shape-outside` (basic shapes, `path()`
 
 **Footnotes:** `float: footnote` with `footnote-display`, `footnote-policy`, `::footnote-call`,
 `::footnote-marker` and the `@footnote` area of `@page` (see
-[Paged media](paged-media.md#footnotes)). Chrome has no footnotes. `float-reference` is not
-supported.
+[Paged media](paged-media.md#footnotes)). Chrome has no footnotes. `float-reference` takes
+`inline`, `region` and `page`, which all put a footnote into the footnote area of its page;
+`column` is not supported.
 
 ### Flexbox
 
@@ -530,8 +531,8 @@ A short list of what Fagus does not do. Most of it is also absent in Chrome's pr
   [Resources](resources.md)).
 - **Interaction:** `:hover`, `:focus`, `:active`, `:visited` never match; transitions do nothing;
   animations print their state at time zero.
-- **Footnotes:** `float-reference` (footnotes go on the page of their call, see
-  [Paged media](paged-media.md#footnotes)).
+- **Footnotes:** `float-reference: column` (footnotes go into the footnote area of the page, also
+  in columns, see [Paged media](paged-media.md#footnotes)).
 - **Layout:** `display: grid-lanes` (masonry), `display: run-in`, unprefixed `line-clamp`,
   `shape-inside`, `block-step`.
 - **Text:** `text-align: justify-all`, `-webkit-text-stroke`, `paint-order` for HTML text,

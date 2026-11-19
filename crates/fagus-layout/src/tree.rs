@@ -2984,7 +2984,15 @@ impl Builder<'_> {
             .iter()
             .position(|item| matches!(item, Collected::Inline(InlineItem::Open { .. })))
         {
-            Some(open) => call.insert(open + 1, placeholder),
+            Some(open) => {
+                // The call's box knows its footnote, which it links to.
+                if let Collected::Inline(InlineItem::Open { style, .. }) = &mut call[open] {
+                    let mut own = ComputedStyle::clone(style);
+                    own.footnote_call = Some(element);
+                    *style = Arc::new(own);
+                }
+                call.insert(open + 1, placeholder);
+            }
             None => call.insert(0, placeholder),
         }
         out.extend(call);

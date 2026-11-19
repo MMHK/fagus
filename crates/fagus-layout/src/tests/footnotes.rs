@@ -1,6 +1,7 @@
 //! Footnotes (CSS Generated Content for Paged Media 3, §2): `float: footnote` moves an element
 //! into the footnote area at the bottom of the page its call is on. The expected pages are those
-//! `WeasyPrint` 66 makes of the same documents, unless a test says otherwise.
+//! `WeasyPrint` 66 makes of the same documents, unless a test says otherwise; where a footnote
+//! does not fit on the page of its call, Fagus breaks it as Prince does.
 
 use std::fmt::Write as _;
 
@@ -76,17 +77,18 @@ fn moves_footnotes_to_the_bottom_of_the_page_of_their_call() {
     assert_eq!(top(&pages, 0, "Second"), 238.0);
 }
 
+/// Nine lines calling seven footnotes; the fifth does not fit below the lines up to its call.
+const SEVEN_NOTES: &str = "<p>a<span class=note>n1</span></p><p>b<span class=note>n2</span></p>
+    <p>c<span class=note>n3</span></p><p>d<span class=note>n4<br>x</span></p>
+    <p>e<span class=note>n5<br>y<br>z</span></p><p>f<span class=note>n6</span></p>
+    <p>g</p><p>h</p><p>i<span class=note>n7</span></p>";
+
 #[test]
 fn moves_footnotes_that_do_not_fit_to_the_next_page() {
-    // The footnotes of five and six do not fit below the lines up to theirs: they go on the
-    // next page with the one called there, and their calls stay (`footnote-policy: auto`).
-    let pages = paged(
-        "",
-        "<p>a<span class=note>n1</span></p><p>b<span class=note>n2</span></p>
-         <p>c<span class=note>n3</span></p><p>d<span class=note>n4<br>x</span></p>
-         <p>e<span class=note>n5<br>y<br>z</span></p><p>f<span class=note>n6</span></p>
-         <p>g</p><p>h</p><p>i<span class=note>n7</span></p>",
-    );
+    // Not even two lines of the fifth footnote fit below the lines up to its call, as `orphans`
+    // asks: it goes on the next page with the sixth, after it, and the one called there; their
+    // calls stay (`footnote-policy: auto`).
+    let pages = paged(".note { orphans: 3 }", SEVEN_NOTES);
     assert_eq!(
         texts(&pages),
         [
@@ -96,6 +98,23 @@ fn moves_footnotes_that_do_not_fit_to_the_next_page() {
     );
     assert_eq!(top(&pages, 0, "n1"), 190.0);
     assert_eq!(top(&pages, 1, "n5"), 190.0);
+}
+
+#[test]
+fn breaks_footnotes_that_do_not_fit_below_their_call() {
+    // Two lines of the fifth footnote fit below its call: they stay on its page, with the
+    // content ending at the call's line, and the third goes on at the top of the next page's
+    // footnote area, as in Prince. (WeasyPrint moves the footnote to the next page whole.)
+    let pages = paged("", SEVEN_NOTES);
+    assert_eq!(
+        texts(&pages),
+        [
+            "a|1|b|2|c|3|d|4|e|5|1. |n1|2. |n2|3. |n3|4. |n4|x|5. |n5|y",
+            "f|6|g|h|i|7|z|6. |n6|7. |n7",
+        ]
+    );
+    assert_eq!(top(&pages, 0, "y"), 238.0);
+    assert_eq!(top(&pages, 1, "z"), 214.0);
 }
 
 /// Ten lines, the last but one calling a footnote of three lines that does not fit below it.
@@ -130,10 +149,16 @@ fn moves_the_line_or_the_block_of_the_call_with_its_footnote() {
 
 #[test]
 fn keeps_the_line_of_a_call_that_starts_the_page() {
-    // A footnote that does not fit below the first line of a page goes on the next page; the
-    // line stays, or no page would hold it.
+    // A footnote that does not fit below the first line of a page breaks there, as with
+    // `footnote-policy: auto`; the line stays, or no page would hold it.
     let pages = paged(
         ".note { footnote-policy: line; font-size: 16px; line-height: 20px }",
+        "<p>a<span class=note>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</span></p><p>b</p>",
+    );
+    assert_eq!(texts(&pages), ["a|1|1. |1|2|3|4|5|6|7", "b|8|9|10"]);
+    // Where not even its first lines fit, it goes on the next page.
+    let pages = paged(
+        ".note { footnote-policy: block; font-size: 16px; line-height: 20px; orphans: 9 }",
         "<p>a<span class=note>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</span></p><p>b</p>",
     );
     assert_eq!(texts(&pages)[0], "a|1|b");
@@ -142,9 +167,10 @@ fn keeps_the_line_of_a_call_that_starts_the_page() {
 
 #[test]
 fn breaks_footnotes_taller_than_a_page() {
-    // The footnote moves to the next page, which it fills, and goes on on the page after.
-    // (WeasyPrint lets it run off the top of the page.)
-    let note: Vec<String> = (1..=20).map(|line| format!("t{line}")).collect();
+    // The footnote starts below its call and fills the page; the rest goes on at the top of the
+    // footnote area of the next page, with the content after the call above it.
+    // (WeasyPrint moves it to the next page and lets it run off the top.)
+    let note: Vec<String> = (1..=40).map(|line| format!("t{line}")).collect();
     let pages = paged(
         "",
         &format!(
@@ -153,14 +179,20 @@ fn breaks_footnotes_taller_than_a_page() {
         ),
     );
     assert_eq!(pages.len(), 3);
-    assert_eq!(texts(&pages)[0], "a|1|b|c");
-    // 16 pixels of margin above the area, then 15 lines of 12 pixels.
-    assert_eq!(top(&pages, 1, "t1"), 66.0);
-    assert_eq!(top(&pages, 1, "t15"), 234.0);
-    assert!(texts(&pages)[1].ends_with("|t15"));
-    // The rest at the end of the third page.
-    assert_eq!(texts(&pages)[2], "t16|t17|t18|t19|t20");
-    assert_eq!(top(&pages, 2, "t20"), 238.0);
+    // 16 pixels of margin above the area, then 13 lines of 12 pixels below the line of the
+    // call.
+    assert!(texts(&pages)[0].starts_with("a|1|1. |t1|"));
+    assert!(texts(&pages)[0].ends_with("|t13"));
+    assert_eq!(top(&pages, 0, "t1"), 86.0);
+    // A page of footnote: the content waits below the call where the area fills it.
+    assert!(texts(&pages)[1].starts_with("t14|"));
+    assert!(texts(&pages)[1].ends_with("|t28"));
+    assert_eq!(top(&pages, 1, "t14"), 66.0);
+    assert_eq!(
+        texts(&pages)[2],
+        "b|c|t29|t30|t31|t32|t33|t34|t35|t36|t37|t38|t39|t40"
+    );
+    assert_eq!(top(&pages, 2, "t40"), 238.0);
 }
 
 #[test]
@@ -324,4 +356,137 @@ fn puts_the_footnotes_below_the_content_of_a_page_that_grows() {
         (note + 12.0 + 50.0..note + 12.0 + 51.0).contains(&height),
         "page {height}px tall, footnote at {note}"
     );
+}
+
+/// `count` lines of a footnote, `prefix1` to `prefixN`, apart.
+fn note_lines(prefix: &str, count: usize) -> String {
+    (1..=count)
+        .map(|line| format!("{prefix}{line}"))
+        .collect::<Vec<_>>()
+        .join("<br>")
+}
+
+#[test]
+fn breaks_inline_footnotes_between_their_lines() {
+    // Two inline footnotes share lines; the second does not fit below the call: the lines of
+    // both that fit stay on the page, the rest goes on in the footnote area of the next page,
+    // each line once.
+    let pages = paged(
+        "@page { @footnote { font: 10px/12px Inter } } .note { footnote-display: inline }",
+        &format!(
+            "<p>l1</p><p>l2</p><p>l3</p><p>l4</p><p>l5</p><p>a<span class=note>first</span> b<span class=note>{}</span></p><p>z</p>",
+            note_lines("s", 12)
+        ),
+    );
+    let all = texts(&pages);
+    assert_eq!(pages.len(), 2, "{all:?}");
+    // Below the six lines, 200 - 120 - 16 = 64 pixels: five lines of the footnotes.
+    assert_eq!(all[0], "l1|l2|l3|l4|l5|a|1| b|2|1. |first|2. |s1|s2|s3|s4|s5");
+    assert_eq!(top(&pages, 0, "first"), 190.0);
+    assert_eq!(top(&pages, 0, "s5"), 238.0);
+    assert_eq!(all[1], "z|s6|s7|s8|s9|s10|s11|s12");
+    assert_eq!(top(&pages, 1, "s6"), 166.0);
+}
+
+#[test]
+fn breaks_compact_footnotes_between_their_lines() {
+    // Compact footnotes that fit on a line are inline, and break between lines as those do.
+    let notes = (1..=80).fold(String::new(), |mut notes, note| {
+        let _ = write!(notes, "<span class=note>c{note}</span>");
+        notes
+    });
+    let pages = paged(
+        "@page { @footnote { font: 10px/12px Inter; margin: 0 } }
+         .note { footnote-display: compact; margin-right: 6px }
+         .note::footnote-call { content: none }",
+        &format!("<p>l1</p><p>l2</p><p>l3</p><p>l4</p><p>l5</p><p>l6</p><p>x{notes}</p><p>z</p>"),
+    );
+    let all = texts(&pages);
+    assert_eq!(pages.len(), 2, "{all:?}");
+    // Five lines of footnotes fit below the call, the others go on on the next page.
+    let lines = |page: usize| {
+        let mut tops: Vec<f32> = runs(&pages)[page]
+            .iter()
+            .filter(|(run, _)| run.starts_with('c'))
+            .map(|&(_, y)| y)
+            .collect();
+        tops.dedup();
+        tops
+    };
+    assert_eq!(lines(0), [190.0, 202.0, 214.0, 226.0, 238.0], "{all:?}");
+    assert!(all[1].starts_with("z|"), "{all:?}");
+    for note in 1..=80 {
+        let text = format!("c{note}");
+        let count = all
+            .iter()
+            .flat_map(|page| page.split('|'))
+            .filter(|run| *run == text)
+            .count();
+        assert_eq!(count, 1, "{text} in {all:?}");
+    }
+}
+
+#[test]
+fn takes_the_line_of_a_call_below_footnotes_moved_to_its_page() {
+    // The call starts the second page, below a footnote moved there from the first; its own
+    // footnote does not fit beside that one, but on a page of its own below its line: the
+    // paragraph waits for the third page, as `footnote-policy: block` asks.
+    let body = format!(
+        "<p>l1</p><p>l2</p><p>l3</p><p>l4</p><p>l5</p><p>l6</p><p>l7</p><p>l8</p>
+         <p>l9<span class=note style='footnote-policy: auto; orphans: 9'>{}</span></p><p>l10</p>
+         <p>m1<span class=note>{}</span><br>m2</p><p>z</p>",
+        note_lines("a", 7),
+        note_lines("b", 10)
+    );
+    let pages = paged(".note { footnote-policy: block }", &body);
+    assert_eq!(
+        texts(&pages),
+        [
+            "l1|l2|l3|l4|l5|l6|l7|l8|l9|1|l10",
+            "1. |a1|a2|a3|a4|a5|a6|a7",
+            "m1|2|m2|z|2. |b1|b2|b3|b4|b5|b6|b7|b8|b9|b10",
+        ]
+    );
+    // With `auto`, the paragraph stays and the footnote breaks below it.
+    let pages = paged(".note { footnote-policy: auto }", &body);
+    assert_eq!(
+        texts(&pages)[1],
+        "m1|2|1. |a1|a2|a3|a4|a5|a6|a7|2. |b1|b2|b3|b4|b5|b6"
+    );
+}
+
+#[test]
+fn takes_the_line_of_a_call_in_a_paragraph_from_the_page_before() {
+    // The paragraph of the call starts on the page before: the page cannot break before it
+    // there any more, so `footnote-policy: block` takes the line of the call along, as `line`
+    // does.
+    let body = format!(
+        "<p>l1</p><p>l2</p><p>l3</p><p>l4</p><p>l5</p><p>l6</p><p>l7</p>
+         <p>m1<br>m2<br>m3<br>m4<br>m5<br>m6<br>m7<br>m8<br>m9<br>m10<br>m11<span class=note>{}</span><br>m12</p><p>z</p>",
+        note_lines("n", 12)
+    );
+    let expected = [
+        "l1|l2|l3|l4|l5|l6|l7|m1|m2|m3",
+        "m4|m5|m6|m7|m8|m9|m10",
+        "m11|1|m12|1. |n1|n2|n3|n4|n5|n6|n7|n8|n9|n10|n11|n12",
+        "z",
+    ];
+    assert_eq!(texts(&paged(".note { footnote-policy: block }", &body)), expected);
+    assert_eq!(texts(&paged(".note { footnote-policy: line }", &body)), expected);
+}
+
+#[test]
+fn leaves_the_lines_of_calls_in_columns_in_place() {
+    // The page does not end where a line in the second column does: the footnote moves to the
+    // next page, as with `footnote-policy: auto`.
+    let pages = paged(
+        ".note { footnote-policy: line } .columns { columns: 2; column-fill: auto; height: 180px }",
+        &format!(
+            "<div class=columns><p>c1</p><p>c2</p><p>c3</p><p>c4</p><p>c5</p><p>c6</p><p>c7</p><p>c8</p><p>c9</p>
+             <p>d1</p><p>d2<span class=note>{}</span></p><p>d3</p></div>",
+            note_lines("n", 13)
+        ),
+    );
+    assert_eq!(texts(&pages)[0], "c1|c2|c3|c4|c5|c6|c7|c8|c9|d1|d2|1|d3");
+    assert!(texts(&pages)[1].starts_with("1. |n1|"));
 }

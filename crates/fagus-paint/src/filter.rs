@@ -786,6 +786,7 @@ mod tests {
             node: NodeId::DOCUMENT,
             order: 0,
             marker: false,
+            call: false,
         };
         let mut items = vec![
             Item::Tag(Tag::Artifact(Artifact::Layout)),

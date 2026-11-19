@@ -776,8 +776,12 @@ and Prince print footnotes; Chrome has no footnotes and leaves the element in th
 ```
 
 The footnote area grows from the bottom of the page area up, and the text of the page gets the
-room above it. A page whose calls do not leave room for their footnotes ends earlier, and the
-footnotes that still do not fit go on the next page.
+room above it. A page whose calls do not leave room for their footnotes ends earlier, and a
+footnote that still does not fit breaks: it starts below the line of its call and goes on at the
+top of the footnote area of the next page.
+
+**Links.** The call is a link to its footnote and the marker a link back to the call (WeasyPrint
+links neither).
 
 **Calls and markers.** `::footnote-call` is the call in the text, `::footnote-marker` the number at
 the start of the footnote. Both take styles and `content`; by default they are:
@@ -817,28 +821,41 @@ what happens:
 
 | `footnote-policy` | What happens |
 |---|---|
-| `auto` (default) | The footnote goes on the next page; the call stays. |
+| `auto` (default) | The footnote starts below the line of its call and goes on on the next page, where at least `orphans` lines of it fit; else it goes on the next page whole. The call stays. |
 | `line` | The line of the call goes to the next page with the footnote. |
 | `block` | The paragraph of the call goes to the next page with the footnote. |
 
-With `line` and `block`, a call on the first line of a page stays and its footnote moves, as no
-page would hold both. A footnote taller than a page breaks across pages. Once the content of the
+With `line` and `block`, a call on the first line of a page stays and its footnote breaks as with
+`auto`, as no page would hold both; but where footnotes moved from the page before take the room,
+the line or paragraph goes to the next page, which leaves a page of footnotes. A paragraph that
+started on the page before cannot go to the next page whole any more: `block` then takes the line
+of the call, as `line` does. In multi-column layouts, a page does not end where the line of a call
+in a column does: there the footnote goes to the next page as with `auto`, whole. A footnote breaks
+between its lines as a paragraph does, with `orphans` and `widows`. Once the content of the
 document ends, the footnotes still waiting get pages of their own.
+
+With `auto`, the text after the call stays on the page where it fits. WeasyPrint takes the next
+line to the next page as well, because the area it keeps for the moved footnote still takes the
+room of its top margin; that is not something `auto` asks for.
 
 **Footnotes side by side.** `footnote-display: inline` puts footnotes on the lines of the footnotes
 beside them, `compact` does so with those that fit on one line, and `block` (default) gives each
-footnote lines of its own. Inline footnotes do not break across pages.
+footnote lines of its own. Footnotes on shared lines break between those lines too.
 
 **Tagged PDF.** Each footnote is a `Note` in the structure of the document, after the text with its
-call and with its marker as a label, as PDF/UA asks (see [PDF output](pdf.md#tagged-pdf)).
+call and with its marker as a label, as PDF/UA asks (see [PDF output](pdf.md#tagged-pdf)). The
+call is a `Link` with its annotation, and so is the marker in the label.
 
 **Details:**
 
 - `float` does not apply to absolutely positioned boxes and to flex and grid items: there,
   `float: footnote` makes no footnote, as other `float` values make no float.
 - A call in a table header that repeats on every page calls its footnote once, on the first page.
-- `float-reference` is not supported: footnotes go on the page of their call. The footnote area
-  spans the page area; in multi-column layouts too.
+- `float-reference` (CSS Page Floats 3) takes `inline` (the initial value), `region` and `page`:
+  with all three a footnote goes into the footnote area of its page, as Fagus has no regions and
+  `inline` refers to the line of the call, which is on that page. `column`, with which Prince puts
+  footnotes at the bottom of their column, is not supported and is ignored with a diagnostic: the
+  footnote area spans the page area, in multi-column layouts too.
 - Footnotes cost a few extra layouts of each page that holds calls: a page is laid out, the calls
   on it are found and it is laid out again with room for their footnotes. The result is the same
   every time.

@@ -2,7 +2,7 @@
 
 use fagus_dom::{Document, ElementData, NodeId};
 use fagus_layout::{Fragment, FragmentKind, Page};
-use fagus_pdf::{Bookmark, Link, LinkTarget};
+use fagus_pdf::{Bookmark, Link, LinkRole, LinkTarget};
 use fagus_style::StyledDocument;
 use fagus_style::values::{BookmarkLevel, ContentItem, ContentTarget, Display, Visibility};
 use rustc_hash::FxHashMap;
@@ -38,8 +38,38 @@ pub(crate) fn collect(
                 target,
                 node: Some(node),
                 description: Some(description(document, node, &href)),
+                role: LinkRole::Element,
             });
         }
+    }
+    // A footnote's call leads to the footnote, its marker back to the call.
+    for (page, rect, node, role, text) in found.footnote_links {
+        let to = match role {
+            LinkRole::FootnoteMarker => found.calls.get(&node),
+            _ => found.starts.get(&node),
+        };
+        let Some(&(target_page, x, y)) = to else {
+            continue;
+        };
+        // What the call leads to is the footnote's text; the marker, its number.
+        let note = || Some(normalize(&document.text_content(node))).filter(|text| !text.is_empty());
+        let description = match role {
+            LinkRole::FootnoteMarker => Some(normalize(&text))
+                .filter(|text| !text.is_empty())
+                .or_else(note),
+            _ => note().or_else(|| Some(normalize(&text)).filter(|text| !text.is_empty())),
+        };
+        links[page].push(Link {
+            rect,
+            target: LinkTarget::Position {
+                page: target_page,
+                x,
+                y,
+            },
+            node: Some(node),
+            description,
+            role,
+        });
     }
     (links, found.bookmarks)
 }
@@ -98,6 +128,12 @@ struct Found<'a> {
     /// Whether the fragments being walked are in a box of an opacity that Chrome does not draw
     /// at all: their links are not drawn either.
     unseen: bool,
+    /// The footnote whose box is being walked.
+    footnote: Option<NodeId>,
+    /// Page, area, footnote, role and text of the calls and markers of footnotes.
+    footnote_links: Vec<(usize, [f32; 4], NodeId, LinkRole, String)>,
+    /// Where the first call of each footnote is.
+    calls: FxHashMap<NodeId, (usize, f32, f32)>,
 }
 
 impl Found<'_> {
@@ -175,6 +211,8 @@ impl Found<'_> {
         let y = origin.1 + fragment.rect.y.to_px();
         let outer_link = self.inline_link.clone();
         let outer_unseen = self.unseen;
+        let outer_footnote = self.footnote;
+        self.footnote_link(fragment, (x, y), page, content);
         if let FragmentKind::Box {
             style,
             node: Some(node),
@@ -245,7 +283,59 @@ impl Found<'_> {
         }
         self.inline_link = outer_link;
         self.unseen = outer_unseen;
+        self.footnote = outer_footnote;
     }
+
+    /// Takes the call of a footnote, at `(x, y)`, as a link to the footnote, and its marker as
+    /// one back to the call; notes the footnote whose box `fragment` is.
+    fn footnote_link(&mut self, fragment: &Fragment, (x, y): (f32, f32), page: usize, content: bool) {
+        let FragmentKind::Box { style, node, .. } = &fragment.kind else {
+            return;
+        };
+        if let Some(node) = node {
+            if style.footnote {
+                self.footnote = Some(*node);
+            }
+            return;
+        }
+        let (role, note) = if let Some(note) = style.footnote_call
+            && content
+        {
+            let (left, top) = self.on_page(x, y);
+            self.calls.entry(note).or_insert((page, left, top));
+            (LinkRole::FootnoteCall, note)
+        } else if style.footnote_marker
+            && let Some(note) = self.footnote
+        {
+            (LinkRole::FootnoteMarker, note)
+        } else {
+            return;
+        };
+        // A call inside a link is that link's.
+        if style.visibility != Visibility::Visible || self.unseen || self.inline_link.is_some() {
+            return;
+        }
+        let rect = self.link_rect(
+            (x, y),
+            (fragment.rect.width.to_px(), fragment.rect.height.to_px()),
+        );
+        if rect[2] > 0.0 && rect[3] > 0.0 {
+            self.footnote_links
+                .push((page, rect, note, role, text_of(fragment)));
+        }
+    }
+}
+
+/// The text of the runs in a fragment.
+fn text_of(fragment: &Fragment) -> String {
+    let mut text = String::new();
+    if let FragmentKind::Text(run) = &fragment.kind {
+        text.push_str(&run.text);
+    }
+    for child in &fragment.children {
+        text.push_str(&text_of(child));
+    }
+    text
 }
 
 /// The horizontal spans, from the left of `fragment`, of the areas that a link's box fragment
@@ -546,6 +636,84 @@ mod tests {
         let shifted = Page { shift: 0.5, ..page };
         let (links, _) = collect(&document, &styled, &[shifted]);
         assert_eq!(links[0][0].rect, [25.25, 40.0, 50.0, 10.0]);
+    }
+
+    /// The links of `html`, laid out with the user agent style sheet and its `<style>`.
+    fn links_of(html: &str) -> Vec<Vec<Link>> {
+        let document = Document::parse_html(html);
+        let user_agent = fagus_css::Stylesheet::parse(
+            fagus_style::USER_AGENT_CSS,
+            fagus_css::Origin::UserAgent,
+            "ua.css",
+        );
+        let css: String = document
+            .descendants(NodeId::DOCUMENT)
+            .filter(|&node| document.element(node).is_some_and(|data| data.is("style")))
+            .map(|node| document.text_content(node))
+            .collect();
+        let author = fagus_css::Stylesheet::parse(&css, fagus_css::Origin::Author, "doc.css");
+        let rules = fagus_css::RuleSet::new(&[&user_agent, &author], &fagus_css::MediaEnvironment::default());
+        let styled = fagus_style::compute_styles(&document, &rules, (400.0, 300.0));
+        let mut fonts = fagus_text::FontDb::new();
+        fonts.add_default_fonts();
+        let pages = fagus_layout::layout(
+            &document,
+            &styled,
+            &rules,
+            &fonts,
+            &fagus_layout::Images::default(),
+        );
+        collect(&document, &styled, &pages).0
+    }
+
+    #[test]
+    fn links_footnote_calls_and_markers() {
+        // The call leads to the footnote, its marker back to the call, also across pages.
+        let links = links_of(
+            "<!DOCTYPE html><style>@page { size: 400px 300px; margin: 50px }
+             body { margin: 0; font: 16px/20px sans-serif } p { margin: 0 }
+             .note { float: footnote; font-size: 10px; line-height: 12px }</style>
+             <p>Text<span class=note>The <b>first</b> note</span> goes on.</p>
+             <p>More<span class=note style='orphans: 20'>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</span></p>
+             <p style='margin-top: 100px'>End</p>",
+        );
+        assert_eq!(links.len(), 2);
+        let roles: Vec<(LinkRole, usize)> = links
+            .iter()
+            .enumerate()
+            .flat_map(|(page, links)| links.iter().map(move |link| (link.role, page)))
+            .collect();
+        assert_eq!(
+            roles,
+            [
+                (LinkRole::FootnoteCall, 0),
+                (LinkRole::FootnoteCall, 0),
+                (LinkRole::FootnoteMarker, 0),
+                (LinkRole::FootnoteMarker, 1),
+            ]
+        );
+        let [call, other_call, marker] = &links[0][..] else {
+            panic!("three links on the first page");
+        };
+        // The call is a small box on the first line; it leads to the footnote at the bottom.
+        assert!(call.rect[1] >= 50.0 && call.rect[1] < 70.0, "{:?}", call.rect);
+        assert!(call.rect[2] < 20.0, "{:?}", call.rect);
+        assert_eq!(call.description.as_deref(), Some("The first note"));
+        let LinkTarget::Position { page: 0, x, y } = call.target else {
+            panic!("{:?}", call.target);
+        };
+        assert_eq!(x, 50.0);
+        assert!((marker.rect[1] - y).abs() < 1.0, "{:?} at {y}", marker.rect);
+        // The marker leads back to the call.
+        assert_eq!(marker.description.as_deref(), Some("1."));
+        let LinkTarget::Position { page: 0, x, y } = marker.target else {
+            panic!("{:?}", marker.target);
+        };
+        assert!((x - call.rect[0]).abs() < 1.0 && (y - call.rect[1]).abs() < 1.0);
+        // The second footnote does not fit on the first page: its call leads to the next.
+        assert!(matches!(other_call.target, LinkTarget::Position { page: 1, .. }));
+        assert!(matches!(links[1][0].target, LinkTarget::Position { page: 0, .. }));
+        assert_eq!(links[1][0].node, other_call.node);
     }
 
     #[test]

@@ -341,6 +341,20 @@ pub struct Link {
     pub node: Option<NodeId>,
     /// What the link is, for readers that do not see it: usually its text.
     pub description: Option<String>,
+    /// What the link is in the structure of a tagged PDF.
+    pub role: LinkRole,
+}
+
+/// What a link is in the structure of a tagged PDF.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum LinkRole {
+    /// The link of its element (`node`): it belongs to the element's structure element.
+    #[default]
+    Element,
+    /// The call of the footnote whose element is `node`, which leads to the footnote.
+    FootnoteCall,
+    /// The marker of the footnote whose element is `node`, which leads back to its call.
+    FootnoteMarker,
 }
 
 /// Where a link leads.
@@ -707,7 +721,7 @@ fn attempt(
                 match &mut tagger {
                     Some(tagger) => {
                         let id = pdf_page.add_tagged_annotation(annotation);
-                        tagger.annotation(link.node, id);
+                        tagger.annotation(link.node, link.role, id);
                     }
                     None => pdf_page.add_annotation(annotation),
                 }
@@ -724,6 +738,7 @@ fn attempt(
                     .description
                     .clone()
                     .or_else(|| Some(options.fields[field].name.clone())),
+                role: LinkRole::Element,
             };
             let (Some(annotation), Some(_)) = (
                 link_annotation(&placeholder, page, pages),

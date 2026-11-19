@@ -793,6 +793,8 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
         )),
         "footnote-display" => Some(matches!(value.as_str(), "block" | "inline" | "compact")),
         "footnote-policy" => Some(matches!(value.as_str(), "auto" | "line" | "block")),
+        // Fagus has no footnote areas in columns (see `footnote_keywords`).
+        "float-reference" => Some(matches!(value.as_str(), "inline" | "region" | "page")),
         _ if crate::properties::classify(&name) == crate::properties::PropertySupport::Known => {
             Some(!value.is_empty())
         }
@@ -1020,8 +1022,11 @@ tr:has(input:checked) td { color: green }";
         let css = "#x { color: red }
 @supports (float: inline-start) { #x { color: green } }
 @supports (float: footnote) and (footnote-display: block) and (footnote-policy: line) { #x { color: blue } }
-@supports (footnote-display: list) or (float-reference: page) { #x { color: yellow } }";
+@supports (footnote-display: list) or (float-reference: column) { #x { color: yellow } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 3);
+        let css = "#x { color: red }
+@supports (float-reference: page) and (float-reference: region) { #x { color: green } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 2);
         // Hanging punctuation is, with the values of CSS Text 3 (Chrome does not support it).
         let css = "#x { color: red }
 @supports (hanging-punctuation: first allow-end last) { #x { color: green } }

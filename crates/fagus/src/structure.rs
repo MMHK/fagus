@@ -199,12 +199,16 @@ impl<'a> Builder<'a> {
                 self.list_item(node, parent, style, &inner, lang);
                 return;
             }
-            // A footnote is a note where it is called, its marker a label (PDF/UA-1, §7.9).
+            // A footnote is a note where it is called, its marker a label (PDF/UA-1, §7.9). Its
+            // call is a link to it, its marker one back to the call.
             _ if style.footnote => {
+                let call = self.push(parent, Element::new(Role::Link));
                 let mut note = Element::new(Role::Note);
                 note.language = lang.map(str::to_owned);
                 let note = self.push(parent, note);
-                self.push(note, Element::new(Role::Label));
+                let label = self.push(note, Element::new(Role::Label));
+                let back = self.push(label, Element::new(Role::Link));
+                self.structure.footnotes.insert(node, (call, back));
                 self.own(node, note);
                 self.children(node, note, &inner);
                 return;
@@ -565,7 +569,7 @@ mod tests {
             outline(
                 "<p>Text<span style=\"float: footnote\">Note <em>with</em> <a href=\"#x\">a link</a></span>                  goes on.</p><aside style=\"float: footnote\"><p>Block</p></aside>"
             ),
-            "Document[Paragraph[Note[Label Emphasis Link]] Note[Label Paragraph]]"
+            "Document[Paragraph[Link Note[Label[Link] Emphasis Link]] Link Note[Label[Link] Paragraph]]"
         );
     }
 

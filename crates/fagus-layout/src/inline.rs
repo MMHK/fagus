@@ -731,13 +731,25 @@ pub fn layout_lines(
     items: &[InlineItem],
     width: Au,
 ) -> Vec<Line> {
+    layout_lines_from(layouter, container, items, width, (0, 0))
+}
+
+/// Like [`layout_lines`], from `start`: where the line after one laid out before starts (its
+/// [`Line::end`]).
+pub(crate) fn layout_lines_from(
+    layouter: &Layouter<'_>,
+    container: &ComputedStyle,
+    items: &[InlineItem],
+    width: Au,
+    start: (usize, usize),
+) -> Vec<Line> {
     layouter.push_context();
     let mut lines = lines_in_flow(
         layouter,
         (container, None),
         (items, None),
         width,
-        ((0, 0), None),
+        (start, None),
         (Au::ZERO, Au::ZERO),
     );
     layouter.pop_context();

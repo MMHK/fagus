@@ -538,6 +538,9 @@ pub struct ComputedValues {
     /// Whether this is the style of a `::footnote-marker`, whose text labels its footnote in a
     /// tagged PDF.
     pub footnote_marker: bool,
+    /// The element of the footnote whose call (`::footnote-call`) the box is, which layout sets
+    /// on the box: the call is a link to the footnote.
+    pub footnote_call: Option<fagus_dom::NodeId>,
     /// `bookmark-level`: the level of the element's entry in the PDF outline (CSS GCPM 3, §5).
     pub bookmark_level: crate::values::BookmarkLevel,
     /// `bookmark-label`, when it is not the element's text.
@@ -866,6 +869,7 @@ impl ComputedValues {
             footnote_display: crate::values::FootnoteDisplay::Block,
             footnote_policy: crate::values::FootnotePolicy::Auto,
             footnote_marker: false,
+            footnote_call: None,
             bookmark_level: crate::values::BookmarkLevel::Auto,
             bookmark_label: None,
             bookmark_closed: false,

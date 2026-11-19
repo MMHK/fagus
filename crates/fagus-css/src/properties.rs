@@ -75,6 +75,7 @@ const KNOWN: &[&str] = &[
     "field-sizing",
     "flex-line-count",
     "float",
+    "float-reference",
     "font-feature-settings",
     "font-kerning",
     "font-optical-sizing",
@@ -226,8 +227,7 @@ mod tests {
         assert_eq!(classify("hanging-punctuation"), PropertySupport::Known);
         assert_eq!(classify("footnote-display"), PropertySupport::Known);
         assert_eq!(classify("footnote-policy"), PropertySupport::Known);
-        // Footnotes stay in the page they are called on.
-        assert_eq!(classify("float-reference"), PropertySupport::Unknown);
+        assert_eq!(classify("float-reference"), PropertySupport::Known);
     }
 
     #[test]

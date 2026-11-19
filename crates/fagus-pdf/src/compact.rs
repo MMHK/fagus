@@ -457,6 +457,7 @@ mod tests {
             target: LinkTarget::Uri("https://quittio.dev/endobj".to_owned()),
             node: None,
             description: Some("endobj ) ( \\ stream >> << /Length 3 %".to_owned()),
+            role: crate::LinkRole::Element,
         };
         let options = Options {
             links: vec![vec![link.clone()], vec![link]],
