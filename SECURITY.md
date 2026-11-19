@@ -15,3 +15,21 @@ Include a description, the affected version and, if possible, a document that re
 ## Scope
 
 In scope: code execution, reading files or network resources that the caller did not allow, crashes and unbounded resource use caused by input documents, and incorrect output in PDF/A or PDF/UA mode that a validator rejects.
+
+## Verify a binary
+
+The release workflow builds the binaries on GitHub Actions and attests each of them: GitHub
+signs, through Sigstore and without a key of ours, which workflow run of which commit built a
+file with a given SHA-256. Each release also holds `SHA256SUMS` and a CycloneDX SBOM of every
+binary (`fagus-<target>.cdx.json`), which lists the crates it is built from.
+
+```sh
+gh release download v1.0.0 -p fagus-x86_64-unknown-linux-gnu -p SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+gh attestation verify fagus-x86_64-unknown-linux-gnu --repo nforst/fagus \
+  --signer-workflow nforst/fagus/.github/workflows/release.yml
+```
+
+The Composer package goes further: it installs only the binary of its own release whose SHA-256
+it lists (`php/fagus/src/Internal/Release.php`), and those sums are written after the
+attestations were checked ([releasing.md](docs/releasing.md)).

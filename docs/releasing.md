@@ -5,14 +5,16 @@ A release consists of the `fagus` binary for every platform, attached to a GitHu
 1. **Prepare.** Set the version in `Cargo.toml` (`[workspace.package]`), move the entries under `[Unreleased]` in `CHANGELOG.md` to the new version, name a new minor version as the supported one in `SECURITY.md`, run `tools/notices.sh` (it rewrites `THIRD-PARTY-NOTICES` with the licenses of the crates the binary is built from; it needs `cargo install --locked cargo-about --features cli`) and commit. Push the commit and wait until the workflows *CI* and *Release gates* have passed on it (`gh run list --commit "$(git rev-parse HEAD)"`); the [release gates](#release-gates) are the checks of the corpus that a release relies on.
 
    Check the entries against [stability.md](stability.md) first. From 1.0 on, a minor release has nothing under *Removed* and no breaking change under *Changed*; everything it deprecates is under *Deprecated*, with its replacement. A major release removes only what a released minor version deprecated, and `UPGRADING.md` gets a section for it with every breaking change and what to do. A raised minimum (PHP, Laravel, Rust, glibc) is listed under *Changed*.
-2. **Build.** Run the workflow *Release* (`.github/workflows/release.yml`) on that commit with the version, for example `gh workflow run release.yml -f version=0.1.0`. It builds the binaries for Linux (x64 and arm64, glibc 2.17 and musl), macOS (x64 and arm64) and Windows (x64), checks that those the runners can run render a document, and attaches them with their sums (`SHA256SUMS`) to a draft release `v0.1.0`.
-3. **Pin.** Fetch the sums and write them into the PHP package:
+2. **Build.** Run the workflow *Release* (`.github/workflows/release.yml`) on that commit with the version, for example `gh workflow run release.yml -f version=0.1.0`. It builds the binaries for Linux (x64 and arm64, glibc 2.17 and musl), macOS (x64 and arm64) and Windows (x64), checks that those the runners can run render a document, and attaches them with their sums (`SHA256SUMS`) and a CycloneDX SBOM of each (`fagus-<target>.cdx.json`, made with `cargo-cyclonedx`) to a draft release `v0.1.0`. Each binary, its SBOM and `SHA256SUMS` get an [artifact attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations): SLSA build provenance signed through Sigstore with the identity of the workflow run, without a key or secret; the binaries an attestation of their SBOM as well.
+3. **Pin.** Fetch the files of the release and write the sums into the PHP package:
 
    ```sh
-   gh release download v0.1.0 -p SHA256SUMS -D /tmp/fagus-0.1.0
+   gh release download v0.1.0 -D /tmp/fagus-0.1.0
    php tools/pin-binaries.php 0.1.0 /tmp/fagus-0.1.0/SHA256SUMS
    git commit -am "chore: pin the binaries of 0.1.0"
    ```
+
+   With the binaries next to `SHA256SUMS`, the script checks each against its sum and with `gh attestation verify` against its attestation (built by `.github/workflows/release.yml` of this repository) before it pins anything.
 
    This commit changes nothing but `Release.php`, so the binaries are those of the code it is tagged with.
 4. **Check.** Install the binary as a user would, from the files of the draft: GitHub does not hand out a draft by its tag, so fetch them (`gh release download v0.1.0 -D /tmp/fagus-0.1.0`) and set `FAGUS_DOWNLOAD_URL=/tmp/fagus-0.1.0`, which the installer checks against the pinned sums like a download. The validation, the determinism and the speed of the corpus were checked by the release gates of the commit; what remains by hand is the comparison with Chrome.

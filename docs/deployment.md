@@ -256,6 +256,20 @@ callback does not count. There is no timeout on Windows. For requests, keep the 
 limits of PHP-FPM (`request_terminate_timeout`) and of your web server, or render long documents
 in a queue.
 
+## Verify the binary
+
+The Composer plugin installs only the binary whose SHA-256 the package lists for its release.
+A binary you install yourself, from the release or a mirror (`FAGUS_DOWNLOAD_URL`), can be checked
+against the release's `SHA256SUMS` and the attestation GitHub keeps of its build:
+
+```sh
+gh attestation verify fagus-x86_64-unknown-linux-gnu --repo nforst/fagus
+```
+
+Each release also has an SBOM of every binary (`fagus-<target>.cdx.json`, CycloneDX) for
+scanners such as Grype or Dependency-Track. [SECURITY.md](../SECURITY.md#verify-a-binary)
+describes the checks.
+
 ## Reproducible PDFs
 
 The same document gives the same bytes when:
