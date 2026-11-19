@@ -225,6 +225,23 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_makes_form_fields(): void
+    {
+        $html = '<!doctype html><p><input name="name" value="Ada"> <input type="checkbox" name="ok" checked>';
+        $this->assertStringNotContainsString('/AcroForm', self::decoded(Fagus::html($html)->render()->bytes()), 'off by default');
+
+        $document = Fagus::html($html);
+        $forms = $document->forms();
+        $this->assertNotSame($document, $forms);
+        $pdf = self::decoded($forms->render()->bytes());
+        $this->assertStringContainsString('/AcroForm', $pdf);
+        $this->assertStringContainsString('/T (name)', $pdf);
+        $this->assertStringContainsString('/V (Ada)', $pdf);
+        $this->assertStringContainsString('/FT/Btn/V /on', $pdf);
+        $this->assertStringNotContainsString('/AcroForm', self::decoded($forms->forms(false)->render()->bytes()));
+    }
+
+    #[Test]
     public function it_saves_files(): void
     {
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus '.bin2hex(random_bytes(6)).'.pdf';

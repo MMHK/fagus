@@ -35,6 +35,8 @@ final class Document
 
     private bool $accessible = false;
 
+    private bool $forms = false;
+
     /** @var list<array{name: string, data: string, mime: string, relationship: Relationship, description: ?string}> */
     private array $attachments = [];
 
@@ -175,6 +177,20 @@ final class Document
     {
         $copy = clone $this;
         $copy->accessible = $accessible;
+
+        return $copy;
+    }
+
+    /**
+     * Makes the form controls fields of an interactive form, which readers fill in in a PDF
+     * viewer: text fields, text areas, checkboxes, radio buttons and drop-down lists, named after
+     * their `name`, with their values. Off by default: without it, controls print as they look,
+     * as in Chrome. Controls in an `inert` element stay as they look.
+     */
+    public function forms(bool $forms = true): self
+    {
+        $copy = clone $this;
+        $copy->forms = $forms;
 
         return $copy;
     }
@@ -368,6 +384,9 @@ final class Document
         $header['tagged'] = $this->tagged;
         if ($this->accessible) {
             $header['accessible'] = true;
+        }
+        if ($this->forms) {
+            $header['forms'] = true;
         }
         foreach ($this->attachments as $attachment) {
             $header['attachments'][] = [

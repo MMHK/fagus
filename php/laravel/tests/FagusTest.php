@@ -134,6 +134,15 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_makes_form_fields(): void
+    {
+        $pdf = Fagus::html('<input name="name" value="Ada">')->forms()->render();
+
+        $this->assertStringContainsString('/T (name)', self::decoded($pdf->bytes()));
+        $this->assertStringNotContainsString('/AcroForm', self::decoded(Fagus::html('<input name="name">')->render()->bytes()));
+    }
+
+    #[Test]
     public function it_writes_form_controls_in_the_configured_locale(): void
     {
         // What is drawn; the metadata differ, as the locale is the language of a document without one.

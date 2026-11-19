@@ -74,6 +74,11 @@ final class PendingPdf implements Responsable
         return $this->with($this->document->accessible($accessible));
     }
 
+    public function forms(bool $forms = true): self
+    {
+        return $this->with($this->document->forms($forms));
+    }
+
     public function attach(
         string $name,
         string $data,
