@@ -847,10 +847,7 @@ mod tests {
         let Command::Render { sign, .. } = cli.command else {
             panic!("not render");
         };
-        assert_eq!(
-            sign.sign_p12.as_deref(),
-            Some(std::path::Path::new("signing.p12"))
-        );
+        assert_eq!(sign.sign_p12.as_deref(), Some(Path::new("signing.p12")));
         assert_eq!(sign.sign_reason.as_deref(), Some("Rechnung"));
         // What the signature says needs a signature.
         assert!(
