@@ -681,6 +681,12 @@ pub struct Layouter<'a> {
     /// on the page (from 0, in document order) and the value the counter is reset to. The
     /// footnotes called there count from that value on.
     pub(crate) footnote_numbering: std::cell::Cell<Option<(u32, i32)>>,
+    /// The style of the footnote areas of the page being laid out (`@footnote`), which the
+    /// footnote areas of columns take too (see `footnote::Layouter::column_footnotes`).
+    pub(crate) footnote_area: RefCell<Option<Arc<ComputedStyle>>>,
+    /// Whether the document has footnotes with `float-reference: column`, which go into
+    /// footnote areas of the columns their calls are in.
+    pub(crate) column_footnotes: bool,
     /// Where `string()` in generated content takes its value from in the string log, while the
     /// rows of a table's header or footer are laid out for one page; `None` elsewhere.
     pub(crate) string_position: std::cell::Cell<Option<usize>>,
@@ -979,6 +985,11 @@ impl<'a> Layouter<'a> {
             page_values: RefCell::default(),
             margin_page_value: std::cell::Cell::new(None),
             footnote_numbering: std::cell::Cell::new(None),
+            footnote_area: RefCell::default(),
+            column_footnotes: tree
+                .footnotes
+                .keys()
+                .any(|&id| tree.get(id).style.float_reference == fagus_style::values::FloatReference::Column),
             string_position: std::cell::Cell::new(None),
             inline_containing_height: std::cell::Cell::new(None),
             intrinsic_height: std::cell::Cell::new(None),

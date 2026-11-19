@@ -846,6 +846,26 @@ room of its top margin; that is not something `auto` asks for.
 beside them, `compact` does so with those that fit on one line, and `block` (default) gives each
 footnote lines of its own. Footnotes on shared lines break between those lines too.
 
+**Footnotes in columns.** In a multi-column layout, footnotes go into the footnote area of the
+page, which spans the page area. With `float-reference: column` they go to the bottom of the
+column their call is in instead, as Prince prints them (Prince does so by default, Fagus keeps the
+initial value of CSS):
+
+```css
+.text { columns: 2; }
+.note { float: footnote; float-reference: column; }
+```
+
+Each column with calls has a footnote area of its own at its bottom, as wide as the column and
+styled by `@footnote` as the page's; the column's content takes the room above it. Balanced
+columns are balanced with their footnotes in them, so the columns end at the same height with
+their areas at the bottom; columns filled in turn (`column-fill: auto`) end where their footnotes
+start. A footnote that does not fit below the content up to its call takes the line of its call
+to the next column, whatever its `footnote-policy`, and a footnote in a column does not break.
+Where a footnote does not fit even below the first line of a column, it goes into the footnote
+area of the page. The footnotes number on through the document, those of the columns and of the
+page alike.
+
 **Tagged PDF.** Each footnote is a `Note` in the structure of the document, after the text with its
 call and with its marker as a label, as PDF/UA asks (see [PDF output](pdf.md#tagged-pdf)). The
 call is a `Link` with its annotation, and so is the marker in the label.
@@ -857,9 +877,10 @@ call is a `Link` with its annotation, and so is the marker in the label.
 - A call in a table header that repeats on every page calls its footnote once, on the first page.
 - `float-reference` (CSS Page Floats 3) takes `inline` (the initial value), `region` and `page`:
   with all three a footnote goes into the footnote area of its page, as Fagus has no regions and
-  `inline` refers to the line of the call, which is on that page. `column`, with which Prince puts
-  footnotes at the bottom of their column, is not supported and is ignored with a diagnostic: the
-  footnote area spans the page area, in multi-column layouts too.
+  `inline` refers to the line of the call, which is on that page. With `column`, a footnote called
+  in a column of a multi-column layout goes to the bottom of that column, as Prince puts it (see
+  *Footnotes in columns* above); called outside columns, it goes into the page's
+  area.
 - Footnotes cost a few extra layouts of each page that holds calls: a page is laid out, the calls
   on it are found and it is laid out again with room for their footnotes. The result is the same
   every time.

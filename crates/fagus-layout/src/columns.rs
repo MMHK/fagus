@@ -750,31 +750,42 @@ impl Layouter<'_> {
                 height,
                 trim: columns.trim,
             };
-            let _columns = ColumnScope::open(self, columns.flow, scope);
-            // The container's own first and last lines are trimmed as the content's.
-            if columns.trim != (false, false) {
-                self.trim_pending
-                    .set((columns.trim.0 && token.is_none(), columns.trim.1));
+            let lay = |height: Option<Au>| {
+                let _columns = ColumnScope::open(self, columns.flow, scope);
+                // The container's own first and last lines are trimmed as the content's.
+                if columns.trim != (false, false) {
+                    self.trim_pending
+                        .set((columns.trim.0 && token.is_none(), columns.trim.1));
+                }
+                let outcome = self.block_container_with(
+                    columns.flow,
+                    Space {
+                        containing_width: columns.width,
+                        containing_height: columns.percent_basis,
+                        remaining: height,
+                        at_top,
+                        flush: true,
+                        bfc_left: Au::ZERO,
+                        bfc_top: Au::ZERO,
+                        rtl: false,
+                        stretch_skips_margins: (false, false),
+                    },
+                    token,
+                    None,
+                    None,
+                    true,
+                )?;
+                Some((outcome, self.forced_break.get()))
+            };
+            let laid_out = lay(height)?;
+            // Footnotes with `float-reference: column` go into an area at the bottom of the
+            // column of their call, which takes room from its content (see `footnote`).
+            match height {
+                Some(room) if self.column_footnotes && !measuring => {
+                    self.column_footnotes(columns.width, room, laid_out, &|room| lay(Some(room)))
+                }
+                _ => Some(laid_out),
             }
-            let outcome = self.block_container_with(
-                columns.flow,
-                Space {
-                    containing_width: columns.width,
-                    containing_height: columns.percent_basis,
-                    remaining: height,
-                    at_top,
-                    flush: true,
-                    bfc_left: Au::ZERO,
-                    bfc_top: Au::ZERO,
-                    rtl: false,
-                    stretch_skips_margins: (false, false),
-                },
-                token,
-                None,
-                None,
-                true,
-            )?;
-            Some((outcome, self.forced_break.get()))
         };
         // The columns at one height, as many as there are and the content needs. A column places
         // what it starts with even where it does not fit (or leaves fewer lines than `orphans`
@@ -921,6 +932,9 @@ impl Layouter<'_> {
             }
             content => content,
         };
+        // Footnotes that go into the footnote areas of the columns take room in them too: the
+        // columns hold all of it at least as tall as the content and an area of all of them.
+        let content = content + self.column_footnote_room(columns.width, &natural.fragment);
         if columns.fill == ColumnFill::Auto
             && natural.token.is_none()
             && let Some(room) = room

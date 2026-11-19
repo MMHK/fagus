@@ -3538,6 +3538,7 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedValues, style: &mut 
             }
             "footnote-display" => copy!(footnote_display),
             "footnote-policy" => copy!(footnote_policy),
+            "float-reference" => copy!(float_reference),
             "shape-outside" => copy!(shape_outside),
             "shape-margin" => copy!(shape_margin),
             "shape-image-threshold" => copy!(shape_image_threshold),

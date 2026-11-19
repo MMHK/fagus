@@ -132,6 +132,13 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
                 _ => style.footnote_display,
             }
         }
+        "float-reference" => {
+            style.float_reference = match keyword {
+                "inline" | "region" | "page" => crate::values::FloatReference::Page,
+                "column" => crate::values::FloatReference::Column,
+                _ => style.float_reference,
+            }
+        }
         "footnote-policy" => {
             style.footnote_policy = match keyword {
                 "auto" => FootnotePolicy::Auto,

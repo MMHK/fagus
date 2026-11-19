@@ -11,6 +11,10 @@
 //! [`Footnotes::fit`]). The search takes a handful of layouts at most and depends on nothing
 //! but the content: it gives the same pages every time.
 //!
+//! A footnote with `float-reference: column` whose call is in a column of a multi-column
+//! container goes into a footnote area at the bottom of that column, as Prince puts it (see
+//! [`Layouter::column_footnotes`]); the page's area takes the others.
+//!
 //! A footnote that does not fit on the page of its call starts below the line of its call and
 //! goes on in the footnote area of the next page (`footnote-policy: auto`, as Prince breaks
 //! footnotes), or takes the line (`line`) or the block (`block`) of its call with it to the next
@@ -20,7 +24,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::values::{Display, FootnoteDisplay, FootnotePolicy, MaxSize};
+use fagus_dom::NodeId;
+use fagus_style::values::{Display, FloatReference, FootnoteDisplay, FootnotePolicy, MaxSize};
 use fagus_style::{ComputedStyle, ComputedValues};
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -182,6 +187,7 @@ impl Footnotes {
             self.deferred = rest;
             self.deferred.extend(calls.iter().map(note));
             self.called(&calls);
+            self.called_in_columns(layouter.tree, outcome.as_ref());
             return (outcome, moved);
         }
         // The notes moved here and those of `calls`.
@@ -300,6 +306,7 @@ impl Footnotes {
         self.deferred = rest;
         self.deferred.extend(held[count..].iter().map(note));
         self.called(&held);
+        self.called_in_columns(layouter.tree, outcome.as_ref());
         (outcome, (placed > 0).then_some(laid))
     }
 
@@ -324,9 +331,20 @@ impl Footnotes {
         }
     }
 
-    /// The calls of footnotes not called before in the content of a page, in document order.
+    /// The calls of footnotes not called before in the content of a page, in document order,
+    /// whose footnotes go into the page's footnote area: not those in the footnote areas of
+    /// columns (see [`Layouter::column_footnotes`]).
     fn calls(&self, tree: &BoxTree, outcome: Option<&Outcome>) -> Vec<Call> {
+        let (mut calls, placed) = self.all_calls(tree, outcome);
+        calls.retain(|call| tree.get(call.id).node.is_none_or(|node| !placed.contains(&node)));
+        calls
+    }
+
+    /// The calls of footnotes not called before in the content of a page, in document order,
+    /// and the elements of the footnotes placed in the footnote areas of its columns.
+    fn all_calls(&self, tree: &BoxTree, outcome: Option<&Outcome>) -> (Vec<Call>, FxHashSet<NodeId>) {
         let mut calls = Vec::new();
+        let mut placed = FxHashSet::default();
         if let Some(outcome) = outcome {
             let place = Place {
                 origin: Au::ZERO,
@@ -334,12 +352,20 @@ impl Footnotes {
                 block: None,
                 columns: false,
             };
-            find_calls(tree, &outcome.fragment, place, &mut calls);
+            find_calls(tree, &outcome.fragment, place, &mut calls, &mut placed);
         }
         calls.retain(|call| !self.seen.contains(&call.id));
         calls.sort_by_key(|call| call.ordinal);
         calls.dedup_by_key(|call| call.id);
-        calls
+        (calls, placed)
+    }
+
+    /// Marks the footnotes of the calls in `outcome` that went into the footnote areas of
+    /// columns as called, which the footnotes after them count on from.
+    fn called_in_columns(&mut self, tree: &BoxTree, outcome: Option<&Outcome>) {
+        let (mut calls, placed) = self.all_calls(tree, outcome);
+        calls.retain(|call| tree.get(call.id).node.is_some_and(|node| placed.contains(&node)));
+        self.called(&calls);
     }
 }
 
@@ -369,11 +395,26 @@ struct Place {
     columns: bool,
 }
 
-/// Collects the calls in `fragment`, which lies at `place`.
-fn find_calls(tree: &BoxTree, fragment: &Fragment, place: Place, calls: &mut Vec<Call>) {
+/// Collects the calls in `fragment`, which lies at `place`, and the elements of the footnotes
+/// placed in it (in the footnote areas of columns).
+fn find_calls(
+    tree: &BoxTree,
+    fragment: &Fragment,
+    place: Place,
+    calls: &mut Vec<Call>,
+    placed: &mut FxHashSet<NodeId>,
+) {
     let y = place.origin + fragment.rect.y;
     let mut inner = Place { origin: y, ..place };
     match &fragment.kind {
+        FragmentKind::Box {
+            style,
+            node: Some(node),
+            ..
+        } if style.footnote => {
+            placed.insert(*node);
+            return;
+        }
         FragmentKind::Placeholder(id) => {
             if let Some(&ordinal) = tree.footnotes.get(id) {
                 let (line, end) = place.line.unwrap_or((y, y));
@@ -398,7 +439,149 @@ fn find_calls(tree: &BoxTree, fragment: &Fragment, place: Place, calls: &mut Vec
         _ => {}
     }
     for child in &fragment.children {
-        find_calls(tree, child, inner, calls);
+        find_calls(tree, child, inner, calls, placed);
+    }
+}
+
+/// A call in a column of a footnote that goes into the footnote area of the column: the
+/// footnote, its number, and where the line of the call starts in the column.
+#[derive(Clone, Copy, Debug)]
+struct ColumnCall {
+    id: BoxId,
+    ordinal: u32,
+    line: Au,
+}
+
+/// The calls in the column `fragment` of footnotes with `float-reference: column`, in document
+/// order: not those in columns nested in it, which have footnote areas of their own, nor in the
+/// footnotes placed in it.
+fn column_calls(tree: &BoxTree, fragment: &Fragment) -> Vec<ColumnCall> {
+    fn walk(tree: &BoxTree, fragment: &Fragment, origin: Au, line: Option<Au>, calls: &mut Vec<ColumnCall>) {
+        let y = origin + fragment.rect.y;
+        let mut line = line;
+        match &fragment.kind {
+            FragmentKind::Placeholder(id) => {
+                if let Some(&ordinal) = tree.footnotes.get(id)
+                    && tree.get(*id).style.float_reference == FloatReference::Column
+                {
+                    calls.push(ColumnCall {
+                        id: *id,
+                        ordinal,
+                        line: line.unwrap_or(y),
+                    });
+                }
+                return;
+            }
+            FragmentKind::Line { .. } => line = Some(y),
+            FragmentKind::Box { style, .. } if style.footnote || style.is_multicol() => return,
+            _ => {}
+        }
+        for child in &fragment.children {
+            walk(tree, child, y, line, calls);
+        }
+    }
+    let mut calls = Vec::new();
+    for child in &fragment.children {
+        walk(tree, child, fragment.rect.y, None, &mut calls);
+    }
+    calls.sort_by_key(|call| call.ordinal);
+    calls.dedup_by_key(|call| call.id);
+    calls
+}
+
+impl Layouter<'_> {
+    /// A column `width` wide and `room` tall with the footnote area of the footnotes with
+    /// `float-reference: column` called in it, at its bottom, as Prince puts them (CSS Page
+    /// Floats 3, §3.1): `first` is the column laid out in all of `room`, `lay` lays it out again
+    /// in less. The footnotes take room from the content of the column, as those of a page take
+    /// it from the page; the most of them whose calls stay in the column with them do, and the
+    /// column ends above the line of the call of the first footnote that does not fit, which
+    /// goes on in the next column (whatever its `footnote-policy`). Where not even the first
+    /// fits below the line of its call at the top of the column, the footnotes of the column go
+    /// into the footnote area of the page. Columns balanced to the same height are balanced
+    /// with their footnotes in them, at each height tried.
+    pub(crate) fn column_footnotes(
+        &self,
+        width: Au,
+        room: Au,
+        first: (Outcome, bool),
+        lay: &dyn Fn(Au) -> Option<(Outcome, bool)>,
+    ) -> Option<(Outcome, bool)> {
+        let calls = column_calls(self.tree, &first.0.fragment);
+        if calls.is_empty() {
+            return Some(first);
+        }
+        let Some(style) = self.footnote_area.borrow().clone() else {
+            return Some(first);
+        };
+        let numbering = self.footnote_numbering.get();
+        let mut cache = FxHashMap::default();
+        for count in (0..=calls.len()).rev() {
+            let notes: Vec<Note> = calls[..count]
+                .iter()
+                .map(|call| Note::new(call.id, numbering))
+                .collect();
+            let area = if notes.is_empty() {
+                None
+            } else {
+                let (laid, placed, rest) = lay_out(self, &style, width, &notes, room, false, &mut cache);
+                if placed < notes.len() || !rest.is_empty() || laid.extent >= room {
+                    continue;
+                }
+                Some(laid)
+            };
+            let extent = area.as_ref().map_or(Au::ZERO, |area| area.extent);
+            let cut = calls
+                .get(count)
+                .map_or(room - extent, |next| next.line.min(room - extent));
+            if cut <= Au::ZERO {
+                continue;
+            }
+            let Some((mut outcome, forced)) = lay(cut) else {
+                continue;
+            };
+            let held = column_calls(self.tree, &outcome.fragment);
+            if !fits(&outcome, cut)
+                || held.len() != count
+                || held.iter().zip(&calls).any(|(held, call)| held.id != call.id)
+            {
+                continue;
+            }
+            if let Some(area) = area {
+                let mut fragment = area.fragment;
+                fragment.rect.y += room - extent;
+                outcome.fragment.rect.height = outcome.fragment.rect.height.max(room);
+                outcome.fragment.children.push(fragment);
+            }
+            return Some((outcome, forced));
+        }
+        lay(room)
+    }
+
+    /// How much taller the content of columns `width` wide that `fragment` holds in one column
+    /// gets with the footnote area of the footnotes called in it that go into the areas of
+    /// columns: the room for balancing them to start from (see `Layouter::row`).
+    pub(crate) fn column_footnote_room(&self, width: Au, fragment: &Fragment) -> Au {
+        if !self.column_footnotes {
+            return Au::ZERO;
+        }
+        let calls = column_calls(self.tree, fragment);
+        let Some(style) = self.footnote_area.borrow().clone().filter(|_| !calls.is_empty()) else {
+            return Au::ZERO;
+        };
+        let numbering = self.footnote_numbering.get();
+        let notes: Vec<Note> = calls.iter().map(|call| Note::new(call.id, numbering)).collect();
+        let unbounded = Au(i32::MAX / 4);
+        let (laid, ..) = lay_out(
+            self,
+            &style,
+            width,
+            &notes,
+            unbounded,
+            false,
+            &mut FxHashMap::default(),
+        );
+        laid.extent
     }
 }
 

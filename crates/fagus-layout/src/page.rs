@@ -1039,6 +1039,12 @@ pub fn paginate(
         // (The counter goes on from this page once it is added.)
         let numbered = counter.number(&layouter, pages.len(), &page_box.style);
         layouter.page_number.set((pages.len() + 1, 0));
+        // Footnote areas in columns are styled as the page's (see `footnote`).
+        if layouter.column_footnotes {
+            layouter
+                .footnote_area
+                .replace(Some(Arc::clone(&page_box.footnote)));
+        }
         layouter
             .initial_containing_block
             .set((declared.content_width(), declared.content_height()));

@@ -766,16 +766,6 @@ fn check_block(
                             Some(("css.invalid-value", "invalid value for `float`".to_owned()))
                         }
                         PropertySupport::Known
-                            if name.0.eq_ignore_ascii_case("float-reference")
-                                && is_one_of(&custom.value, &["column"]) =>
-                        {
-                            Some((
-                                "css.invalid-value",
-                                "invalid value for `float-reference`: Fagus puts footnotes into the footnote area of the page, not of a column"
-                                    .to_owned(),
-                            ))
-                        }
-                        PropertySupport::Known
                             if let Some(keywords) = footnote_keywords(&name.0)
                                 && !has_variables(&custom.value)
                                 && !is_wide_keyword(&custom.value)
@@ -860,18 +850,17 @@ fn is_float_keyword(tokens: &TokenList<'_>) -> bool {
 }
 
 /// The keywords of `footnote-display` and `footnote-policy` (CSS Generated Content for Paged
-/// Media 3, §2.3 and §2.6), and those of `float-reference` (CSS Page Floats 3, §3.1) that Fagus
-/// takes; `None` for other properties. A footnote goes into the footnote area of the page with
-/// each of them: `inline` (the initial value) and `region` (a document without regions) refer
-/// to its line, which is on that page. `column` would put it at the bottom of its column, as
-/// Prince does, which Fagus does not.
+/// Media 3, §2.3 and §2.6), and those of `float-reference` (CSS Page Floats 3, §3.1); `None` for
+/// other properties. A footnote goes into the footnote area of the page with `inline` (the
+/// initial value), `region` (a document without regions) and `page`, and into that of its
+/// column with `column`, as Prince puts it.
 fn footnote_keywords(name: &str) -> Option<&'static [&'static str]> {
     if name.eq_ignore_ascii_case("footnote-display") {
         Some(&["block", "inline", "compact"])
     } else if name.eq_ignore_ascii_case("footnote-policy") {
         Some(&["auto", "line", "block"])
     } else if name.eq_ignore_ascii_case("float-reference") {
-        Some(&["inline", "region", "page"])
+        Some(&["inline", "region", "page", "column"])
     } else {
         None
     }
@@ -1352,19 +1341,15 @@ mod tests {
                     "css.invalid-value",
                     "invalid value for `float`; the declaration is ignored"
                 ),
-                (
-                    "css.invalid-value",
-                    "invalid value for `float-reference`: Fagus puts footnotes into the footnote area of the page, not of a column; the declaration is ignored"
-                ),
             ]
         );
         let CssRule::Style(rule) = &sheet.sheet.rules.0[0] else {
             panic!("style rule")
         };
         // `float: left`, `float: footnote`, both footnote properties, `float-reference: page`,
-        // `footnote-policy: Block`, the first `hanging-punctuation` and `float-reference:
-        // Region`.
-        assert_eq!(rule.declarations.declarations.len(), 8);
+        // `footnote-policy: Block`, the first `hanging-punctuation`, `float-reference: column`
+        // and `float-reference: Region`.
+        assert_eq!(rule.declarations.declarations.len(), 9);
     }
 
     #[test]

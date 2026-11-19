@@ -1712,7 +1712,8 @@ mod tests {
         let (document, styled) = styles(
             "<p id=p>Text<span id=a>Note</span><span id=b>Not</span><span id=c>Kept</span></p>",
             "span { float: footnote; font-size: 10px }
-             #a { footnote-display: inline; footnote-policy: line }
+             #a { footnote-display: inline; footnote-policy: line; float-reference: column }
+             #c { float-reference: column; float-reference: page }
              #b { position: absolute }
              #c { float: left; float: footnote; float: none }
              #a::footnote-call { color: red }",
@@ -1723,6 +1724,9 @@ mod tests {
         assert_eq!(a.display, Display::BLOCK);
         assert_eq!(a.footnote_display, values::FootnoteDisplay::Inline);
         assert_eq!(a.footnote_policy, values::FootnotePolicy::Line);
+        assert_eq!(a.float_reference, values::FloatReference::Column);
+        assert_eq!(style("c").float_reference, values::FloatReference::Page);
+        assert_eq!(style("p").float_reference, values::FloatReference::Page);
         // Absolutely positioned boxes do not float, nor are they footnotes.
         assert!(!style("b").footnote);
         assert!(!style("c").footnote);

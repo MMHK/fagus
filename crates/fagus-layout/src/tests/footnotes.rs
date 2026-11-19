@@ -490,3 +490,151 @@ fn leaves_the_lines_of_calls_in_columns_in_place() {
     assert_eq!(texts(&pages)[0], "c1|c2|c3|c4|c5|c6|c7|c8|c9|d1|d2|1|d3");
     assert!(texts(&pages)[1].starts_with("1. |n1|"));
 }
+
+/// Whether the text run `text` on `page` is in a multi-column container.
+fn in_columns(page: &Page, text: &str) -> bool {
+    fn walk(fragment: &Fragment, columns: bool, text: &str) -> bool {
+        let columns =
+            columns || matches!(&fragment.kind, FragmentKind::Box { style, .. } if style.is_multicol());
+        match &fragment.kind {
+            FragmentKind::Text(run) if run.text == text => columns,
+            _ => fragment.children.iter().any(|child| walk(child, columns, text)),
+        }
+    }
+    walk(&page.fragments[0], false, text)
+}
+
+/// The paragraphs `prefix1` to `prefix{count}`, the one at `call` calling `note`.
+fn paragraphs(prefix: &str, count: usize, call: usize, note: &str) -> String {
+    (1..=count)
+        .map(|index| {
+            if index == call {
+                format!("<p>{prefix}{index}<span class=note>{note}</span></p>")
+            } else {
+                format!("<p>{prefix}{index}</p>")
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn puts_footnotes_at_the_bottom_of_the_column_of_their_call() {
+    // `float-reference: column` (CSS Page Floats 3), as Prince: each column has a footnote area
+    // at its bottom for the footnotes called in it, styled as the page's. The columns are
+    // balanced with them; the footnotes number on through the document, and a call outside
+    // columns calls into the page's area.
+    let pages = paged(
+        ".note { float-reference: column } .columns { columns: 2; column-gap: 20px }",
+        "<div class=columns><p>p1</p><p>p2<span class=note>A</span></p><p>p3</p>
+         <p>p4</p><p>p5<span class=note>B</span></p><p>p6</p></div>
+         <p>after<span class=note>C</span></p>",
+    );
+    assert_eq!(pages.len(), 1);
+    assert_eq!(
+        texts(&pages)[0],
+        "p1|p2|1|p3|1. |A|p4|p5|2|p6|2. |B|after|3|3. |C"
+    );
+    // Both columns start at the top and end with their footnotes, at the same height.
+    assert_eq!(top(&pages, 0, "p4"), top(&pages, 0, "p1"));
+    assert_eq!(top(&pages, 0, "A"), top(&pages, 0, "B"));
+    assert!(top(&pages, 0, "A") >= top(&pages, 0, "p3") + 20.0 + 16.0);
+    // The paragraph after the columns comes below them, and its footnote at the end of the page.
+    assert!(top(&pages, 0, "after") > top(&pages, 0, "A"));
+    assert_eq!(top(&pages, 0, "C"), 238.0);
+    assert!(in_columns(&pages[0], "A") && in_columns(&pages[0], "B") && !in_columns(&pages[0], "C"));
+}
+
+#[test]
+fn ends_columns_above_the_footnotes_called_in_them() {
+    // Columns filled in turn, 180px high: the footnote of three lines (with the area's margin
+    // of 1em, 52px) leaves room for six lines in the first column, the rest goes on in the
+    // second.
+    let pages = paged(
+        ".note { float-reference: column } .columns { columns: 2; column-fill: auto; height: 180px }",
+        &format!(
+            "<div class=columns>{}</div>",
+            paragraphs("c", 12, 2, &note_lines("n", 3))
+        ),
+    );
+    assert_eq!(
+        texts(&pages)[0],
+        "c1|c2|1|c3|c4|c5|c6|1. |n1|n2|n3|c7|c8|c9|c10|c11|c12"
+    );
+    assert_eq!(top(&pages, 0, "c7"), 50.0);
+    assert_eq!(top(&pages, 0, "n1"), 50.0 + 180.0 - 36.0);
+}
+
+#[test]
+fn moves_a_call_whose_footnote_does_not_fit_to_the_next_column() {
+    // The footnote of ten lines does not fit below the fifth line: the column ends above the
+    // line of its call, which starts the next column with the footnote below it. The rest goes
+    // on in a column beside the container, which its height ends, as in Chrome.
+    let pages = paged(
+        ".note { float-reference: column } .columns { columns: 2; column-fill: auto; height: 180px }",
+        &format!(
+            "<div class=columns>{}</div>",
+            paragraphs("c", 9, 5, &note_lines("n", 10))
+        ),
+    );
+    assert_eq!(pages.len(), 1);
+    assert_eq!(
+        texts(&pages)[0],
+        "c1|c2|c3|c4|c5|1|c6|1. |n1|n2|n3|n4|n5|n6|n7|n8|n9|n10|c7|c8|c9"
+    );
+    assert_eq!(top(&pages, 0, "c5"), 50.0);
+    assert_eq!(top(&pages, 0, "c7"), 50.0);
+    assert_eq!(top(&pages, 0, "n10"), 50.0 + 180.0 - 12.0);
+}
+
+#[test]
+fn puts_footnotes_too_tall_for_their_column_into_the_page_area() {
+    // Columns 60px high hold no footnote of four lines below the line of its call: it goes into
+    // the footnote area of the page.
+    let pages = paged(
+        ".note { float-reference: column } .columns { columns: 2; height: 60px }",
+        &format!(
+            "<div class=columns>{}</div>",
+            paragraphs("c", 4, 1, &note_lines("n", 4))
+        ),
+    );
+    assert_eq!(pages.len(), 1);
+    assert_eq!(texts(&pages)[0], "c1|1|c2|c3|c4|1. |n1|n2|n3|n4");
+    assert_eq!(top(&pages, 0, "n4"), 238.0);
+    assert!(!in_columns(&pages[0], "n4"));
+}
+
+#[test]
+fn balances_columns_with_their_footnotes_across_pages() {
+    // Columns that go on over pages: each footnote is in a column of the page of its call, once,
+    // and the content holds all paragraphs once.
+    let body: String = (1..=40)
+        .map(|index| {
+            if index % 7 == 3 {
+                format!("<p>q{index}<span class=note>N{index}</span></p>")
+            } else {
+                format!("<p>q{index}</p>")
+            }
+        })
+        .collect();
+    let pages = paged(
+        ".note { float-reference: column } .columns { columns: 2 }",
+        &format!("<div class=columns>{body}</div>"),
+    );
+    let all = runs(&pages);
+    for index in 1..=40 {
+        let paragraph = format!("q{index}");
+        let found: Vec<usize> = (0..pages.len())
+            .filter(|&page| all[page].iter().any(|(text, _)| *text == paragraph))
+            .collect();
+        assert_eq!(found.len(), 1, "{paragraph}: {:?}", texts(&pages));
+        if index % 7 == 3 {
+            let note = format!("N{index}");
+            assert!(
+                all[found[0]].iter().any(|(text, _)| *text == note),
+                "{note} on the page of its call: {:?}",
+                texts(&pages)
+            );
+            assert!(in_columns(&pages[found[0]], &note), "{note} in a column");
+        }
+    }
+}

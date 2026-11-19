@@ -548,6 +548,8 @@ pub struct ComputedValues {
     pub footnote_display: crate::values::FootnoteDisplay,
     /// `footnote-policy`.
     pub footnote_policy: crate::values::FootnotePolicy,
+    /// `float-reference`.
+    pub float_reference: crate::values::FloatReference,
     /// Whether this is the style of a `::footnote-marker`, whose text labels its footnote in a
     /// tagged PDF.
     pub footnote_marker: bool,
@@ -894,6 +896,7 @@ impl ComputedValues {
             footnote: false,
             footnote_display: crate::values::FootnoteDisplay::Block,
             footnote_policy: crate::values::FootnotePolicy::Auto,
+            float_reference: crate::values::FloatReference::Page,
             footnote_marker: false,
             footnote_call: None,
             bookmark_level: crate::values::BookmarkLevel::Auto,

@@ -793,8 +793,7 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
         )),
         "footnote-display" => Some(matches!(value.as_str(), "block" | "inline" | "compact")),
         "footnote-policy" => Some(matches!(value.as_str(), "auto" | "line" | "block")),
-        // Fagus has no footnote areas in columns (see `footnote_keywords`).
-        "float-reference" => Some(matches!(value.as_str(), "inline" | "region" | "page")),
+        "float-reference" => Some(matches!(value.as_str(), "inline" | "region" | "page" | "column")),
         "scrollbar-gutter" => Some(matches!(
             value.split_ascii_whitespace().collect::<Vec<_>>().as_slice(),
             ["auto" | "stable"] | ["stable", "both-edges"] | ["both-edges", "stable"]
@@ -1026,10 +1025,10 @@ tr:has(input:checked) td { color: green }";
         let css = "#x { color: red }
 @supports (float: inline-start) { #x { color: green } }
 @supports (float: footnote) and (footnote-display: block) and (footnote-policy: line) { #x { color: blue } }
-@supports (footnote-display: list) or (float-reference: column) { #x { color: yellow } }";
+@supports (footnote-display: list) or (float-reference: side) { #x { color: yellow } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 3);
         let css = "#x { color: red }
-@supports (float-reference: page) and (float-reference: region) { #x { color: green } }";
+@supports (float-reference: page) and (float-reference: region) and (float-reference: column) { #x { color: green } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
         // `scrollbar-gutter` takes its values of CSS Overflow 4.
         let css = "#x { color: red }

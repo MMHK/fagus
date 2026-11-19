@@ -439,6 +439,17 @@ pub enum FootnotePolicy {
     Block,
 }
 
+/// `float-reference` (CSS Page Floats 3, §3.1) of a footnote: whose footnote area it goes into.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum FloatReference {
+    /// That of the page (`inline`, the initial value, `region` and `page`: Fagus has no regions).
+    #[default]
+    Page,
+    /// That of the column its call is in, in a multi-column container; that of the page
+    /// elsewhere.
+    Column,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Float {
     #[default]
