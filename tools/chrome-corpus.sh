@@ -38,26 +38,28 @@ mkdir -p "$out"
 # fontconfig and Fagus read) lists only these, with the system's rules (aliases such as Arial to
 # Liberation Sans), so that both fall back to the same font for a script.
 set_up_fonts() {
-  local fonts=$root/target/chrome-fonts files=() file
+  local fonts=$root/target/chrome-fonts names=() files=() name file
+  for name in Sans Serif Mono; do
+    names+=(Liberation"$name"-{Regular,Bold,Italic,BoldItalic}.ttf)
+  done
+  names+=(DejaVu{Sans,SansMono}{,-Bold,-Oblique,-BoldOblique}.ttf DejaVuSerif{,-Bold,-Italic,-BoldItalic}.ttf)
+  for name in Thai Devanagari Bengali Tamil Ethiopic; do
+    names+=(NotoSans"$name"-{Regular,Bold}.ttf)
+  done
+  names+=(NotoSansCJK-{Regular,Bold}.ttc)
   files+=("$root"/tests/fonts/*.ttf)
-  for file in Sans Serif Mono; do
-    files+=(/usr/share/fonts/truetype/liberation2/Liberation"$file"-{Regular,Bold,Italic,BoldItalic}.ttf)
-  done
-  files+=(/usr/share/fonts/truetype/dejavu/DejaVu{Sans,SansMono}{,-Bold,-Oblique,-BoldOblique}.ttf)
-  files+=(/usr/share/fonts/truetype/dejavu/DejaVuSerif{,-Bold,-Italic,-BoldItalic}.ttf)
-  for file in Thai Devanagari Bengali Tamil Ethiopic; do
-    files+=(/usr/share/fonts/truetype/noto/NotoSans"$file"-{Regular,Bold}.ttf)
-  done
-  files+=(/usr/share/fonts/opentype/noto/NotoSansCJK-{Regular,Bold}.ttc)
-  rm -rf "$fonts"
-  mkdir -p "$fonts/files" "$fonts/cache"
-  for file in "${files[@]}"; do
-    if [[ ! -f $file ]]; then
-      echo "missing font $file; install the packages named in tools/chrome-corpus.sh" >&2
+  for name in "${names[@]}"; do
+    file=$(find /usr/share/fonts -name "$name" -print -quit)
+    if [[ -z $file ]]; then
+      echo "missing font $name; install the packages named in tools/chrome-corpus.sh. Installed:" >&2
+      find /usr/share/fonts -type f | sort >&2
       exit 2
     fi
-    cp "$file" "$fonts/files/"
+    files+=("$file")
   done
+  rm -rf "$fonts"
+  mkdir -p "$fonts/files" "$fonts/cache"
+  cp "${files[@]}" "$fonts/files/"
   cat > "$fonts/fonts.conf" <<CONF
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
