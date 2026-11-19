@@ -120,7 +120,7 @@ pub(super) fn initial_letter(
     let line = metrics(fonts, container);
     let line_height = Au::from_px(line.line_height).to_px();
     let paragraph = fonts.face(face_for(fonts, container)?);
-    let cap = paragraph.metrics.cap_height * paragraph.scale(used_font_size(fonts, container));
+    let cap = paragraph.cap_height_at(used_font_size(fonts, container));
     let letter_face = fonts.face(face_for(fonts, letter_style)?);
     let letter_cap = letter_face.metrics.cap_height * letter_face.scale(1.0);
     if line_height <= 0.0 {

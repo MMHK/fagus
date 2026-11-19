@@ -120,7 +120,10 @@ with table layouts render as in Chrome.
   `attr()`; `sibling-index()`, `sibling-count()`; `env()`.
 - Absolute units: `px`, `pt`, `pc`, `in`, `cm`, `mm`, `Q`. One CSS pixel is 1/96 inch.
 - Font-relative units: `em`, `rem`, `ex`, `rex`, `ch`, `rch`, `cap`, `rcap`, `ic`, `ric`, `lh`,
-  `rlh`, measured in the first available font of the element's language, as in Chrome.
+  `rlh`, measured in the first available font of the element's language, as in Chrome. `ex` and
+  `cap` are the x-height and cap height of the font's OS/2 table; a TrueType font without them
+  (such as DejaVu) takes the top of its "x" and "H" in whole pixels from 8px on, where FreeType's
+  hinting puts them for Chrome on Linux (8px for DejaVu Sans Mono at 14px, not 7.66px).
 - Viewport units (`vw`, `vh`, `vmin`, `vmax`, `vi`, `vb` and the `s`, `l`, `d` variants) refer to
   the page area of the first page.
 - Container query units (`cqw`, `cqh`, `cqi`, `cqb`, `cqmin`, `cqmax`).

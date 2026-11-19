@@ -795,8 +795,8 @@ pub fn compute_styles_in(
 /// asked before.
 struct FontUnitsCache<'a> {
     fonts: &'a dyn FontMetrics,
-    /// The metrics of fonts, by their properties and optical size (its bits).
-    known: std::cell::RefCell<FxHashMap<(FontKey, Option<u32>), FontUnits>>,
+    /// The metrics of fonts, by their properties, optical size and size (their bits).
+    known: std::cell::RefCell<FxHashMap<UnitsKey, FontUnits>>,
     /// The line spacing of fonts at a size (its bits), for `line-height: normal`.
     spacing: std::cell::RefCell<FxHashMap<(FontKey, u32), Option<f32>>>,
 }
@@ -804,6 +804,9 @@ struct FontUnitsCache<'a> {
 /// The font properties that select a font: the families, the weight and stretch as bits, the
 /// style and the language.
 type FontKey = (Arc<[String]>, u32, FontStyle, u32, Option<Arc<str>>);
+
+/// The font properties, the optical size and the size (their bits) that font metrics are kept by.
+type UnitsKey = (FontKey, Option<u32>, u32);
 
 impl<'a> FontUnitsCache<'a> {
     fn new(fonts: &'a dyn FontMetrics) -> Self {
@@ -837,6 +840,7 @@ impl<'a> FontUnitsCache<'a> {
                         style: style.font_style,
                         stretch: style.font_stretch,
                         optical_size: None,
+                        size: style.font_size,
                         lang: style.lang.clone(),
                     },
                     style.font_size,
@@ -897,6 +901,7 @@ impl<'a> FontUnitsCache<'a> {
                 style.lang.clone(),
             ),
             optical_size.map(f32::to_bits),
+            style.font_size.to_bits(),
         );
         if let Some(units) = self.known.borrow().get(&key) {
             return *units;
@@ -907,6 +912,7 @@ impl<'a> FontUnitsCache<'a> {
             style: style.font_style,
             stretch: style.font_stretch,
             optical_size,
+            size: style.font_size,
             lang: style.lang.clone(),
         });
         self.known.borrow_mut().insert(key, units);
@@ -3073,6 +3079,7 @@ fn finish(style: &mut ComputedValues, is_root: bool) {
                 style: style.font_style,
                 stretch: style.font_stretch,
                 optical_size: optical_size(style),
+                size: style.font_size,
                 lang: style.lang.clone(),
             })),
         );

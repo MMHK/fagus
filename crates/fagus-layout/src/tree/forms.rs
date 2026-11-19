@@ -496,7 +496,7 @@ pub(super) fn char_widths(fonts: Option<&FontDb>, style: &ComputedStyle) -> Char
             .then(|| fonts.shape(face_id, &character.to_string()).advance * scale)
     };
     let zero = advance('0');
-    let x = advance('x').unwrap_or(face.metrics.x_height * scale);
+    let x = advance('x').unwrap_or_else(|| face.x_height_at(size));
     let family = style.font_family.first().map_or("", String::as_str);
     let trusted = !family.is_empty()
         && !INVALID_CHAR_WIDTH

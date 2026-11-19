@@ -961,6 +961,9 @@ pub struct FontRequest {
     /// Chrome takes the metrics of the instance at that size (the "0" of SF Pro at 16px is that
     /// of its optical size 17, wider than at its default 28). `None` keeps the axis's default.
     pub optical_size: Option<f32>,
+    /// The font size in pixels: a face whose x-height and cap height are fitted to the pixel
+    /// grid, as Chrome on Linux fits those it takes from glyphs, has them per size.
+    pub size: f32,
     /// The language of the element (its `lang`), which picks the family that a generic family
     /// stands for: Chrome's standard font for `lang="ja"` on macOS is Hiragino Kaku Gothic,
     /// whose "0" is 0.657 em wide.

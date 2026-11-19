@@ -14,16 +14,15 @@ use crate::units::Au;
 /// `style`, in pixels: from its first available font, as Chrome measures them.
 pub(crate) fn edges(fonts: &FontDb, style: &ComputedStyle) -> (f32, f32) {
     let primary = metrics(fonts, style);
-    let height = |metric: fn(&fagus_text::FaceMetrics) -> f32| {
+    let height = |metric: fn(&fagus_text::Face, f32) -> f32| {
         face_for(fonts, style).map_or(primary.ascent, |face| {
-            let face = fonts.face(face);
-            (metric(&face.metrics) * face.scale(used_font_size(fonts, style)) * 64.0).round() / 64.0
+            (metric(fonts.face(face), used_font_size(fonts, style)) * 64.0).round() / 64.0
         })
     };
     let (over, under) = style.text_box_edge;
     let over = match over {
-        TextEdge::Cap => height(|metrics| metrics.cap_height),
-        TextEdge::Ex => height(|metrics| metrics.x_height),
+        TextEdge::Cap => height(fagus_text::Face::cap_height_at),
+        TextEdge::Ex => height(fagus_text::Face::x_height_at),
         TextEdge::Text | TextEdge::Alphabetic => primary.ascent,
     };
     let under = match under {

@@ -439,15 +439,30 @@ impl fagus_style::values::FontMetrics for StyleFonts<'_> {
             let em = fonts.face(face).metrics.units_per_em / fonts.face(face).size_adjust;
             fonts.shape_variable(face, "0", &[], &variations).advance / em
         };
+        // The x-height and cap height at the size of the request, where the face's are fitted to
+        // the pixel grid (see `Face::x_height_at`).
+        let at_size = |height: fn(&fagus_text::Face, f32) -> f32, metric: FontMetric| {
+            if request.size > 0.0 && request.size.is_finite() {
+                height(fonts.face(face), request.size) / request.size
+            } else {
+                aspect_value(fonts, face, metric)
+            }
+        };
         FontUnits {
-            ex: positive(aspect_value(fonts, face, FontMetric::ExHeight), fallback.ex),
+            ex: positive(
+                at_size(fagus_text::Face::x_height_at, FontMetric::ExHeight),
+                fallback.ex,
+            ),
             // The face's own "0", outside its `unicode-range` too, as Chrome measures it.
             ch: if fonts.face(face).glyph('0').is_some() {
                 positive(ch, fallback.ch)
             } else {
                 fallback.ch
             },
-            cap: positive(aspect_value(fonts, face, FontMetric::CapHeight), fallback.cap),
+            cap: positive(
+                at_size(fagus_text::Face::cap_height_at, FontMetric::CapHeight),
+                fallback.cap,
+            ),
             // A water ideograph of no advance makes `ic` nothing, as in Chrome.
             ic: Some(aspect_value(fonts, face, FontMetric::IcWidth))
                 .filter(|ic| ic.is_finite() && *ic >= 0.0)
@@ -659,7 +674,7 @@ fn face_metrics(fonts: &FontDb, face: FaceId, size: f32) -> Metrics {
         ascent,
         descent,
         line_height: ascent + descent + (face.metrics.line_gap * scale).round(),
-        x_height: face.metrics.x_height * scale,
+        x_height: face.x_height_at(size),
     }
 }
 

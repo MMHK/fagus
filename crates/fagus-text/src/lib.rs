@@ -263,6 +263,20 @@ pub struct Face {
     /// size and of the band: underlined text crosses the same glyphs at the same heights again
     /// and again.
     intercepts: Mutex<Intercepts>,
+    /// The heights that `FreeType`'s auto-hinter fits to the pixel grid where Chrome on Linux
+    /// measures the x-height and the cap height from glyphs (see [`Face::x_height_at`]).
+    grid_fit: GridFit,
+}
+
+/// The tops of a TrueType face's "x" and "H" (font units) where Chrome on Linux takes its x-height
+/// and cap height from them, because the face's OS/2 table gives none (Skia's
+/// `getCBoxForLetter`), and the overshoot of its round small letters, by which the auto-hinter
+/// scales the face vertically.
+#[derive(Clone, Copy, Debug, Default)]
+struct GridFit {
+    x: Option<i64>,
+    cap: Option<i64>,
+    overshoot: Option<i64>,
 }
 
 /// The boxes of a face's glyphs, by glyph and the bits of a size (see [`Face::glyph_bounds`]).
@@ -484,6 +498,71 @@ impl Face {
         let ascent = (self.metrics.ascender * scale).round();
         let descent = (self.metrics.descender * scale).round();
         (ascent + self.ascent_adjustment(ascent, descent), descent)
+    }
+
+    /// The x-height of the face at a font size of `size` pixels, in pixels, as Chrome on Linux
+    /// takes it for `ex`, `vertical-align: middle` and `font-size-adjust`: the OS/2 table's, or
+    /// for a face without one the top of its "x", which in a TrueType face is where `FreeType` puts
+    /// it (see [`grid_fitted`]): 8 pixels at 14 pixels for `DejaVu` Sans Mono, whose "x" is 7.66
+    /// pixels high.
+    pub fn x_height_at(&self, size: f32) -> f32 {
+        self.fitted(self.grid_fit.x, size)
+            .unwrap_or_else(|| self.metrics.x_height * self.scale(size))
+    }
+
+    /// The cap height of the face at `size` pixels, as Chrome on Linux takes it for `cap`: the
+    /// OS/2 table's, or the top of the "H" as for [`Face::x_height_at`].
+    pub fn cap_height_at(&self, size: f32) -> f32 {
+        self.fitted(self.grid_fit.cap, size)
+            .unwrap_or_else(|| self.metrics.cap_height * self.scale(size))
+    }
+
+    fn fitted(&self, top: Option<i64>, size: f32) -> Option<f32> {
+        let pixels = size * self.size_adjust;
+        if !(pixels > 0.0 && pixels.is_finite()) {
+            return None;
+        }
+        Some(grid_fitted(
+            top?,
+            self.grid_fit.overshoot,
+            pixels,
+            self.metrics.units_per_em as i64,
+        ))
+    }
+
+    /// The highest point of the outline of `glyph` (curves' control points included), in font
+    /// units: what `FreeType` takes as a glyph's top.
+    fn point_top(&self, glyph: u32) -> Option<f32> {
+        /// Keeps the highest point.
+        struct Top(Option<f32>);
+        impl Top {
+            fn add(&mut self, y: f32) {
+                self.0 = Some(self.0.map_or(y, |top| top.max(y)));
+            }
+        }
+        impl skrifa::outline::OutlinePen for Top {
+            fn move_to(&mut self, _: f32, y: f32) {
+                self.add(y);
+            }
+            fn line_to(&mut self, _: f32, y: f32) {
+                self.add(y);
+            }
+            fn quad_to(&mut self, _: f32, cy: f32, _: f32, y: f32) {
+                self.add(cy);
+                self.add(y);
+            }
+            fn curve_to(&mut self, _: f32, cy0: f32, _: f32, cy1: f32, _: f32, y: f32) {
+                self.add(cy0);
+                self.add(cy1);
+                self.add(y);
+            }
+            fn close(&mut self) {}
+        }
+        let mut top = Top(None);
+        let units = self.metrics.units_per_em / self.size_adjust;
+        self.draw_glyph(glyph, units, &[], &mut top)
+            .then_some(top.0)
+            .flatten()
     }
 
     /// What Chrome adds to the rounded `ascent` of the face, with the rounded `descent`: 15 % of
@@ -2782,16 +2861,47 @@ fn make_face(font: Font, data: Arc<Vec<u8>>, index: u32) -> Face {
         latin,
         bounds: Mutex::default(),
         intercepts: Mutex::default(),
+        grid_fit: GridFit::default(),
     };
-    // The x-height is the top of the "x", as Chrome on macOS measures it for `ex` and
-    // `font-size-adjust` (Core Text's x-height is the height of the glyph's box).
-    if let Some(top) = face
-        .glyph('x')
-        .and_then(|glyph| face.glyph_bounds(glyph, face.metrics.units_per_em))
-        .map(|[_, top, _, _]| -top)
-        .filter(|top| *top > 0.0)
-    {
-        face.metrics.x_height = top;
+    // Where the OS/2 table gives no x-height or cap height (before its version 2, or 0), Chrome
+    // on Linux takes the top of the "x" and of the "H" (Skia's `getCBoxForLetter`), which
+    // FreeType fits to the pixel grid in TrueType faces (see `Face::x_height_at`).
+    let (own_x_height, own_cap_height) = {
+        use skrifa::raw::TableProvider;
+        face.font.tables().os2().ok().map_or((false, false), |os2| {
+            (
+                os2.sx_height().is_some_and(|height| height > 0),
+                os2.s_cap_height().is_some_and(|height| height > 0),
+            )
+        })
+    };
+    let truetype = {
+        use skrifa::raw::TableProvider;
+        face.font.tables().glyf().is_ok()
+    };
+    let top = |character: char| {
+        face.glyph(character)
+            .and_then(|glyph| face.point_top(glyph))
+            .filter(|top| *top > 0.0)
+    };
+    let x = top('x').filter(|_| !own_x_height);
+    let cap = top('H').filter(|_| !own_cap_height);
+    // The auto-hinter's blue zone of the small letters: the median top of the round ones.
+    let mut rounds: Vec<f32> = ['o', 'e', 's', 'c'].into_iter().filter_map(top).collect();
+    rounds.sort_by(f32::total_cmp);
+    let overshoot = rounds.get(rounds.len() / 2).map(|top| top.round() as i64);
+    if let Some(x) = x {
+        face.metrics.x_height = x;
+    }
+    if let Some(cap) = cap {
+        face.metrics.cap_height = cap;
+    }
+    if truetype {
+        face.grid_fit = GridFit {
+            x: x.map(|top| top.round() as i64),
+            cap: cap.map(|top| top.round() as i64),
+            overshoot,
+        };
     }
     face
 }
@@ -2848,6 +2958,40 @@ fn tracking_table(font: &Font) -> Vec<(f32, f32)> {
         .collect()
 }
 
+/// The height `top` (font units) of a TrueType face at `pixels` as `FreeType` gives it for Chrome on
+/// Linux, in `FreeType`'s fixed-point arithmetic: in 1/64 pixels below 8 pixels, which Chrome does
+/// not hint (measured); from 8 pixels on as the auto-hinter fits it, for Chrome hints lightly
+/// (fontconfig's `hintslight`): the vertical scale stretched so that the `overshoot` of the round
+/// small letters ends on a whole pixel, rounded up from 3/8 of one (`af_latin_metrics_scale_dim`),
+/// then the height rounded to whole pixels (its blue zone's fitted reference). Chrome 157 gives
+/// exactly this for the x-height and cap height of the `DejaVu` faces up to 52 pixels (measured in
+/// steps of 1/4 pixel); above that it is up to 0.3 pixels more.
+#[allow(clippy::cast_possible_truncation, reason = "a font size in 26.6 fixed point")]
+fn grid_fitted(top: i64, overshoot: Option<i64>, pixels: f32, units_per_em: i64) -> f32 {
+    let sign = |value: i64| if value < 0 { -1 } else { 1 };
+    let mul_div = |a: i64, b: i64, c: i64| {
+        if c == 0 {
+            return 0;
+        }
+        sign(a) * sign(b) * sign(c) * ((a.abs() * b.abs() + c.abs() / 2) / c.abs())
+    };
+    let mul_fix = |a: i64, b: i64| mul_div(a, b, 0x10000);
+    // Skia sets the size in 26.6 points, cut (`SkScalarToFDot6`).
+    let size = (pixels * 64.0) as i64;
+    let mut scale = mul_div(size, 0x10000, units_per_em.max(1));
+    if pixels < 8.0 {
+        return mul_fix(top, scale) as f32 / 64.0;
+    }
+    if let Some(overshoot) = overshoot {
+        let scaled = mul_fix(overshoot, scale);
+        let fitted = (scaled + 40) & !63;
+        if scaled != fitted && scaled > 0 {
+            scale = mul_div(scale, fitted, scaled);
+        }
+    }
+    ((mul_fix(top, scale) + 32) & !63) as f32 / 64.0
+}
+
 /// What Chrome adds to the rounded `ascent` of an installed face of `family` with the rounded
 /// `descent` (see [`Face::ascent_adjustment`]).
 fn ascent_adjustment(family: &str, ascent: f32, descent: f32) -> f32 {
@@ -2880,10 +3024,14 @@ fn face_metrics(font: &Font) -> FaceMetrics {
     });
     let x_height = metrics
         .x_height
-        .map_or(units_per_em * 0.5, |value| value.to_f64() as f32);
+        .map(|value| value.to_f64() as f32)
+        .filter(|value| *value > 0.0)
+        .unwrap_or(units_per_em * 0.5);
     let cap_height = metrics
         .cap_height
-        .map_or(units_per_em * 0.7, |value| value.to_f64() as f32);
+        .map(|value| value.to_f64() as f32)
+        .filter(|value| *value > 0.0)
+        .unwrap_or(units_per_em * 0.7);
     let underline = style.underline;
     let strike = style.strike_through;
     FaceMetrics {
@@ -3743,6 +3891,28 @@ mod tests {
             .glyph_bounds(x, face.metrics.units_per_em)
             .expect("an outline");
         assert!((face.metrics.x_height + top).abs() < 1e-3);
+    }
+
+    #[test]
+    fn fits_heights_from_glyphs_to_the_pixel_grid_as_freetype_does_for_chrome_on_linux() {
+        // DejaVu Sans, whose OS/2 table (version 1) has no x-height or cap height: an "x" 1120
+        // units high, an "H" 1493, round small letters 1147, 2048 units per em. The x-heights and
+        // cap heights Chrome 157 on Linux takes (measured with `ex` and `cap`): not hinted below
+        // 8 pixels, in 1/64 pixels; whole pixels from 8 on, 3/8 of a pixel of overshoot rounded up.
+        let x = |pixels| grid_fitted(1120, Some(1147), pixels, 2048);
+        assert_eq!(x(7.5), 4.109_375);
+        assert_eq!(
+            [x(8.0), x(9.5), x(13.0), x(13.25), x(14.0), x(15.0)],
+            [5.0, 5.0, 7.0, 8.0, 8.0, 9.0]
+        );
+        let cap = |pixels| grid_fitted(1493, Some(1147), pixels, 2048);
+        assert_eq!([cap(14.0), cap(16.0)], [10.0, 12.0]);
+        // DejaVu Serif ("x" 1063, round letters 1092): the stretched scale makes it alternate.
+        let serif = |pixels| grid_fitted(1063, Some(1092), pixels, 2048);
+        assert_eq!(
+            [serif(34.25), serif(34.5), serif(35.75), serif(36.0), serif(36.25)],
+            [18.0, 19.0, 19.0, 18.0, 19.0]
+        );
     }
 
     #[test]

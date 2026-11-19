@@ -356,6 +356,7 @@ fn measures_ch_in_variable_fonts_at_their_weight_and_optical_size() {
                 style: FontStyle::Normal,
                 stretch: 100.0,
                 optical_size,
+                size: 16.0,
                 lang: None,
             })
             .ch

@@ -9,7 +9,6 @@ FAIL documents/article-wikipedia-mathml.html  # MathML: Chrome on Linux draws ST
 FAIL documents/certificate.html  # engine: the tiles of a centered background image of 18mm lie a pixel off (also against Chrome on macOS)
 FAIL documents/diploma-fullbleed.html  # engine: with hyphens: auto, Chrome on Linux hyphenates "com-ment", Fagus does not
 FAIL documents/form-tax-comb-fields.html  # engine: a few glyphs lie a pixel off, 0.55 % of a page against 0.5 % allowed (also against Chrome on macOS)
-FAIL documents/notebook-jupyter-classic.html  # Chrome on Linux rounds the x-height of DejaVu Sans Mono to whole pixels (8px instead of 7.66px at 14px), so the prompts' min-width: 14ex is 4.8px wider; Fagus measures it as Chrome on macOS
 FAIL documents/paper-katex-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/paper-mathjax-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/paper-pandoc-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows

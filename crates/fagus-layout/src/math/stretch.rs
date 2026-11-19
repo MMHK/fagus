@@ -48,7 +48,7 @@ impl<'a> MathFont<'a> {
     }
 
     pub(crate) fn x_height(&self) -> f32 {
-        self.face.metrics.x_height * self.scale
+        self.face.x_height_at(self.size)
     }
 
     /// The thickness of underlines, which rules take without a `MATH` table.
