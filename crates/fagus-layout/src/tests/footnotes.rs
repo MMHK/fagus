@@ -300,3 +300,23 @@ fn sets_inline_and_compact_footnotes_side_by_side() {
     assert!(at("4. ") > at("n3"));
     assert_eq!(texts(&pages).len(), 1);
 }
+
+#[test]
+fn puts_the_footnotes_below_the_content_of_a_page_that_grows() {
+    // Twenty lines end 450px down; the footnote area follows them and the page grows to hold it
+    // and the bottom margin, instead of placing the area at the end of the tallest page.
+    let lines: String = (1..20).map(|line| format!("<p>Line{line}</p>")).collect();
+    let pages = paged(
+        "@page { size: 400px 100px; -fagus-page-height: fit-content }",
+        &format!("<p>Call<span class=note>Notetext</span></p>{lines}"),
+    );
+    assert_eq!(pages.len(), 1);
+    assert_eq!(top(&pages, 0, "Line19"), 430.0);
+    let note = top(&pages, 0, "Notetext");
+    assert!(note >= 450.0, "the footnote at {note} overlaps the content");
+    let height = pages[0].height.to_px();
+    assert!(
+        (note + 12.0 + 50.0..note + 12.0 + 51.0).contains(&height),
+        "page {height}px tall, footnote at {note}"
+    );
+}
