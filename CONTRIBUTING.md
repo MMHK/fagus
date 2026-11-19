@@ -38,6 +38,7 @@ fuzz/run.sh render 600    # a target, and for how many seconds
 | `font` | a font file (TrueType, OpenType, WOFF, WOFF2), shaped and used through `@font-face` |
 | `image` | an image (PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF) used by a fixed document in several ways |
 | `avif` | an AVIF image (its container and AV1 pictures), as an element, filtered and in SVG |
+| `pdf` | a PDF file (cross references, objects, page tree, encryption, content streams) as a page template, an element and a border image |
 | `svg` | an SVG image, used as a file and inline in HTML |
 | `worker` | the frames a caller sends `fagus worker` ([protocol](docs/protocol.md)) |
 

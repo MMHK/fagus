@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [render, css, font, image, avif, svg, worker]
+        target: [render, css, font, image, avif, pdf, svg, worker]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

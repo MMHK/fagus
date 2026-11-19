@@ -71,6 +71,7 @@ still cannot open sockets, start programs, write files or (with `fagus render`, 
 | Frames (`<iframe>`, `<object>`) | 8 levels, 256 frames, 8 MiB of markup |
 | `@import` | 8 levels |
 | Raster images | 200 million pixels each |
+| PDF images | 128 MiB of data each, and 128 MiB of page content once decoded (content streams compressed other than with Flate: 32 KiB compressed) |
 | SVG images | 128 MiB of data each (also after inflating SVGZ), 1 million elements after `<use>` (usvg), entities that add at most 16 MiB of text and hold no markup, 64 primitives per filter, SVG images in SVG images 3 levels deep |
 | Filters, shadows, masks | rasterized at most 12 million pixels per region; blurs at most 25 million |
 | Fonts | 64 MiB unpacked from WOFF or WOFF2 (the sizes the font declares are checked before unpacking); 256 MiB of document fonts kept per engine |
@@ -97,9 +98,11 @@ These are known and not fixed in the engine; deploy accordingly:
   `/`. The base directory is the root when no root is given.
 - **The caller is trusted.** The worker believes the caller's `base`, `root` and data, and a
   frame may hold up to 1 GiB. Do not expose the worker's input to untrusted parties.
-- **Third-party parsers.** HTML, CSS, fonts, images and SVG are parsed by Rust crates (html5ever,
-  lightningcss, skrifa, HarfRust, png, zune-jpeg, image-webp, gif, rav1d, usvg, resvg, krilla,
-  wuff); a bug in one of them is a bug in Fagus. rav1d, which decodes the AV1 pictures of AVIF
+- **Third-party parsers.** HTML, CSS, fonts, images, SVG and PDF files shown as images are parsed
+  by Rust crates (html5ever, lightningcss, skrifa, HarfRust, png, zune-jpeg, image-webp, gif,
+  rav1d, usvg, resvg, krilla, hayro-syntax, wuff); a bug in one of them is a bug in Fagus.
+  hayro-syntax reads the cross references, objects and page tree of a PDF image in full as it
+  opens the file, before the limits of the page are checked; the file's size bounds that work. rav1d, which decodes the AV1 pictures of AVIF
   images, is a port of dav1d's C code and has unsafe code; Fagus reads the container of AVIF
   images itself. They are fuzzed through the targets in `fuzz/`.
 - **Without the sandbox** (macOS, Windows, Linux without Landlock or seccomp, `--no-sandbox`),
