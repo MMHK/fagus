@@ -129,6 +129,8 @@ const KNOWN: &[&str] = &[
     "rx",
     "ry",
     "scroll-marker-group",
+    "scrollbar-color",
+    "scrollbar-width",
     "shape-image-threshold",
     "shape-margin",
     "shape-outside",

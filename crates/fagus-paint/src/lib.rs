@@ -24,6 +24,7 @@ mod filter;
 mod mask;
 mod reach;
 mod reference;
+mod scrollbars;
 mod shadow;
 mod stitched;
 mod svg_clip;
@@ -2280,6 +2281,45 @@ impl Painter<'_> {
 
     /// Background and borders of a box.
     fn decorations(&mut self, fragment: &Fragment, x: f32, y: f32) {
+        self.box_decorations(fragment, x, y);
+        self.scrollbars(fragment, x, y);
+    }
+
+    /// Paints the scroll bars of a scroll container (see [`scrollbars`]) over its background and
+    /// borders: what it holds is clipped to its padding box less them.
+    fn scrollbars(&mut self, fragment: &Fragment, x: f32, y: f32) {
+        let FragmentKind::Box { style, sides, .. } = &fragment.kind else {
+            return;
+        };
+        if !style.scrollbars.any() || style.visibility != Visibility::Visible {
+            return;
+        }
+        let rect = snap(RectF {
+            x,
+            y,
+            width: fragment.rect.width.to_px(),
+            height: fragment.rect.height.to_px(),
+        });
+        let border = &style.border_width;
+        let shown = |visible: bool, width: f32| if visible { width } else { 0.0 };
+        let (top, right, bottom, left) = (
+            shown(sides.top, border.top),
+            shown(sides.right, border.right),
+            shown(sides.bottom, border.bottom),
+            shown(sides.left, border.left),
+        );
+        let padding = RectF {
+            x: rect.x + left,
+            y: rect.y + top,
+            width: (rect.width - left - right).max(0.0),
+            height: (rect.height - top - bottom).max(0.0),
+        };
+        self.design(|painter| {
+            scrollbars::paint(style, fragment, padding, sides.bottom, &mut painter.items);
+        });
+    }
+
+    fn box_decorations(&mut self, fragment: &Fragment, x: f32, y: f32) {
         let FragmentKind::Box { style, sides, .. } = &fragment.kind else {
             return;
         };
@@ -3516,6 +3556,19 @@ fn clip_rect(fragment: &Fragment, x: f32, y: f32) -> Option<Clip> {
         width: (width - border.left - border.right).max(0.0),
         height: (height - border.top - border.bottom).max(0.0),
     });
+    // Scroll bars cover the padding box at its edges (see `scrollbars`).
+    if style.scrollbars.any() {
+        let areas = scrollbars::areas(style, rect, sides.bottom);
+        if let Some(bar) = areas.vertical {
+            if style.is_rtl() {
+                rect.x += bar.width;
+            }
+            rect.width = (rect.width - bar.width).max(0.0);
+        }
+        if let Some(bar) = areas.horizontal {
+            rect.height = (rect.height - bar.height).max(0.0);
+        }
+    }
     // `overflow: clip` in one axis only (the other `visible`) clips in that axis alone (CSS
     // Overflow 3, §3.1): the clip reaches as far as anything may in the other. Beside `hidden`,
     // `auto` or `scroll`, `visible` computes to `auto` and clips too.

@@ -52,6 +52,7 @@ mod quotes;
 mod ratio;
 pub mod responsive;
 mod ruby;
+pub mod scrollbars;
 mod shape;
 mod shape_gradient;
 mod sizing;
@@ -182,7 +183,16 @@ pub fn layout_shrunk(
         .and_then(|root| styled.style(root))
         .map_or_else(ComputedStyle::default, |style| (**style).clone());
     page::add_margin_images(&mut tree, rules, images);
-    let (pages, numbers) = page::paginate(&tree, fonts, rules, &root_style, shrink);
+    scrollbars::add_scrolling(&mut tree);
+    let (mut pages, mut numbers) = page::paginate(&tree, fonts, rules, &root_style, shrink);
+    // Scroll containers whose content overflows get their scroll bars, and the document is laid
+    // out again with them.
+    for _ in 0..scrollbars::MAX_PASSES {
+        if !scrollbars::add_overflowing(&mut tree, &pages) {
+            break;
+        }
+        (pages, numbers) = page::paginate(&tree, fonts, rules, &root_style, shrink);
+    }
     let mut found = tree.found_targets().clone();
     if found.asked {
         fn walk(
@@ -669,10 +679,10 @@ mod tests {
         assert!((check_y + 13.0 - baseline).abs() < 0.5, "{check_y} {baseline}");
         // A select is as wide as its longest option, with room for the arrow.
         assert!(rect("select").2 > 100.0);
-        // Ten characters and a scrollbar (16px in Chrome 157) wide, three lines high, in a 2px
-        // padding and a 1px border.
+        // Ten characters wide, three lines high, in a 2px padding and a 1px border: its text
+        // fits, so it has no scroll bar (Chrome 157 on Linux).
         let area = rect("area");
-        assert!((area.2 - (90.0 + 16.0 + 6.0)).abs() < 0.5, "{area:?}");
+        assert!((area.2 - (90.0 + 6.0)).abs() < 0.5, "{area:?}");
         assert_eq!(area.3, 3.0 * 16.0 + 6.0);
         // Author borders replace the native frame.
         assert_eq!(rect("styled").2, 50.0 + 4.0 + 6.0);
@@ -3090,21 +3100,51 @@ mod tests {
     }
 
     #[test]
-    fn prints_overflowing_text_areas_without_a_scroll_bar() {
-        // Chrome prints no scroll bar on a text area whose text overflows it, and its lines
-        // take the whole width (left to right and right to left); only the width its columns
-        // give keeps the room of one.
-        fn extent(fragment: &Fragment, x: f32, out: &mut (f32, f32, usize)) {
+    fn gives_scroll_containers_the_scroll_bars_of_chrome_on_linux() {
+        // `overflow: auto` gets a bar along an axis where the content overflows, `scroll` both
+        // always; a bar is 15px thick (10px `thin`, none for `none`) and adds to an auto height
+        // (Chrome 157 on Linux, measured).
+        let (document, pages) = render_document(
+            "<style>@page { margin: 0 } body { margin: 0 } div div { height: 20px }
+               .s { width: 300px }</style>
+             <div class='s wide' style='overflow-x: auto'><div style='width: 600px'></div></div>
+             <div class='s fits' style='overflow: auto'><div style='width: 300px'></div></div>
+             <div class='s scroll' style='overflow: scroll'><div></div></div>
+             <div class='s thin' style='overflow-x: auto; scrollbar-width: thin'><div style='width: 600px'></div></div>
+             <div class='s none' style='overflow-x: auto; scrollbar-width: none'><div style='width: 600px'></div></div>",
+        );
+        let bars = |class: &str| {
+            let (_, _, fragment) = find(&pages[0], &document, class).expect(class);
+            let FragmentKind::Box { style, .. } = &fragment.kind else {
+                panic!("{class}: a box");
+            };
+            (
+                style.scrollbars.vertical,
+                style.scrollbars.horizontal,
+                fragment.rect.height.to_px(),
+            )
+        };
+        assert_eq!(bars("wide"), (false, true, 35.0));
+        assert_eq!(bars("fits"), (false, false, 20.0));
+        assert_eq!(bars("scroll"), (true, true, 35.0));
+        assert_eq!(bars("thin"), (false, true, 30.0));
+        assert_eq!(bars("none"), (false, false, 20.0));
+        // The vertical bar takes its room from the content: the child of the scrolling box is
+        // 285px wide.
+        let (_, _, scroll) = find(&pages[0], &document, "scroll").expect("scroll");
+        assert_eq!(scroll.children[0].rect.width.to_px(), 285.0);
+    }
+
+    #[test]
+    fn prints_overflowing_text_areas_with_a_scroll_bar() {
+        // Chrome on Linux prints a scroll bar beside the text of a text area that overflows it,
+        // on its right, or on its left right to left, which takes 15px of its width; the lines
+        // take the rest.
+        fn extent(fragment: &Fragment, x: f32, out: &mut (f32, f32)) {
             let x = x + fragment.rect.x.to_px();
-            match &fragment.kind {
-                FragmentKind::Text(_) => {
-                    out.0 = out.0.min(x);
-                    out.1 = out.1.max(x + fragment.rect.width.to_px());
-                }
-                FragmentKind::Box { .. } if fragment.rect.width == units::Au::from_px(15.0) => {
-                    out.2 += 1;
-                }
-                _ => {}
+            if let FragmentKind::Text(_) = &fragment.kind {
+                out.0 = out.0.min(x);
+                out.1 = out.1.max(x + fragment.rect.width.to_px());
             }
             fragment.children.iter().for_each(|child| extent(child, x, out));
         }
@@ -3114,13 +3154,22 @@ mod tests {
                textarea {{ font-family: Inter; width: 100px; height: 40px; padding: 0; border: 0 }}</style>
              <textarea class=ltr>{long}</textarea><textarea class=rtl dir=rtl>{long}</textarea>"
         ));
-        for class in ["ltr", "rtl"] {
+        for (class, start) in [("ltr", 0.0), ("rtl", 15.0)] {
             let (x, _, area) = find(&pages[0], &document, class).expect(class);
-            let mut found = (f32::MAX, f32::MIN, 0);
+            let mut found = (f32::MAX, f32::MIN);
             extent(area, x - area.rect.x.to_px(), &mut found);
-            assert!(found.1 - found.0 > 90.0, "{class}: {found:?}");
-            assert!(found.0 >= x - 0.5 && found.1 <= x + 100.5, "{class}: {found:?}");
-            assert_eq!(found.2, 0, "{class}: no track");
+            assert!(found.1 - found.0 > 75.0, "{class}: {found:?}");
+            assert!(
+                found.0 >= x + start - 0.5 && found.1 <= x + start + 85.5,
+                "{class}: {found:?}"
+            );
+            let FragmentKind::Box { style, .. } = &area.kind else {
+                panic!("{class}: a box");
+            };
+            assert!(
+                style.scrollbars.vertical && !style.scrollbars.horizontal,
+                "{class}"
+            );
         }
     }
 

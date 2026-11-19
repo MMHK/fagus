@@ -425,21 +425,29 @@ fn stretches_text_areas_sliders_and_checkboxes_in_flex_and_grid() {
 }
 
 #[test]
-fn leaves_out_the_scroll_bar_of_text_areas_that_do_not_scroll() {
-    // Chrome 157 keeps 16px beside the text of a text area for a scroll bar unless its
-    // `overflow-y` is `hidden` or `clip`, and 16px below it where `overflow-x` is `scroll`.
+fn keeps_room_for_the_scroll_bars_of_text_areas_that_scroll() {
+    // Chrome 157 on Linux prints the scroll bars of a text area, 15px thick, where its text
+    // overflows it (`overflow: auto`, as `visible` is in it) and with `overflow: scroll`, beside
+    // and below the room of its columns and rows; an empty one has none.
     let html = "<p><textarea class=auto></textarea></p>
                 <p><textarea class=hidden style='overflow: hidden'></textarea></p>
                 <p><textarea class=clip style='overflow-y: clip'></textarea></p>
                 <p><textarea class=x style='overflow-x: hidden'></textarea></p>
-                <p><textarea class=scroll style='overflow: scroll'></textarea></p>";
-    let found = boxes(html, &["auto", "hidden", "clip", "x", "scroll"]);
-    assert_eq!(found[0].2 - found[1].2, 16.0, "{found:?}");
-    assert_eq!(found[0].2 - found[2].2, 16.0, "{found:?}");
+                <p><textarea class=scroll style='overflow: scroll'></textarea></p>
+                <p><textarea class=full rows=1>a\nb\nc</textarea></p>
+                <p><textarea class=one rows=1>a</textarea></p>";
+    let found = boxes(html, &["auto", "hidden", "clip", "x", "scroll", "full", "one"]);
+    assert_eq!(found[0].2, found[1].2, "{found:?}");
+    assert_eq!(found[0].2, found[2].2, "{found:?}");
     assert_eq!(found[3].2, found[0].2, "{found:?}");
     assert_eq!(
-        (found[4].2, found[4].3 - found[0].3),
-        (found[0].2, 16.0),
+        (found[4].2 - found[0].2, found[4].3 - found[0].3),
+        (15.0, 15.0),
+        "{found:?}"
+    );
+    assert_eq!(
+        (found[5].2 - found[6].2, found[5].3 - found[6].3),
+        (15.0, 0.0),
         "{found:?}"
     );
 }

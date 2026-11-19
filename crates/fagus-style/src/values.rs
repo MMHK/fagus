@@ -495,14 +495,42 @@ pub enum Overflow {
 
 /// The scroll bar `overflow` gives a box along an axis: none for `visible`, `hidden` and `clip`,
 /// one where needed for `auto`, always one for `scroll` (all three of the latter are
-/// [`Overflow::Hidden`] otherwise). Chrome prints no scroll bars, but a `<textarea>` keeps
-/// room for them.
+/// [`Overflow::Hidden`] otherwise). Chrome on Linux prints them (see [`Scrollbars`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Scrollbar {
     #[default]
     None,
     Auto,
     Scroll,
+}
+
+/// `scrollbar-width`: how thick the scroll bars of a scroll container are.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum ScrollbarWidth {
+    #[default]
+    Auto,
+    Thin,
+    /// No scroll bars, and no room for them.
+    None,
+}
+
+/// The scroll bars that layout gave a scroll container, which take their room between its
+/// border and its padding (CSS Overflow 3, §3.4): `vertical` beside its padding box (on its
+/// right, on its left right to left), `horizontal` below it, each `thickness` pixels thick.
+/// Layout adds their room to the box's padding, so that what lies inside lays out as without
+/// them; painting draws them there.
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
+pub struct Scrollbars {
+    pub vertical: bool,
+    pub horizontal: bool,
+    pub thickness: f32,
+}
+
+impl Scrollbars {
+    /// Whether the box has a scroll bar.
+    pub fn any(&self) -> bool {
+        (self.vertical || self.horizontal) && self.thickness > 0.0
+    }
 }
 
 /// A shadow of text (`text-shadow`).

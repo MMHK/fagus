@@ -381,6 +381,25 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
                 _ => style.frame_sizing_content_height,
             }
         }
+        "scrollbar-width" => {
+            style.scrollbar_width = match keyword {
+                "auto" => crate::values::ScrollbarWidth::Auto,
+                "thin" => crate::values::ScrollbarWidth::Thin,
+                "none" => crate::values::ScrollbarWidth::None,
+                _ => style.scrollbar_width,
+            }
+        }
+        "scrollbar-color" => match tokens.as_slice() {
+            [word] if ident(word).is_some_and(|word| word.eq_ignore_ascii_case("auto")) => {
+                style.scrollbar_color = None;
+            }
+            [thumb, track] => {
+                if let (Ok(thumb), Ok(track)) = (color(thumb), color(track)) {
+                    style.scrollbar_color = Some((thumb, track));
+                }
+            }
+            _ => {}
+        },
         "empty-cells" => {
             style.empty_cells = match keyword {
                 "show" => EmptyCells::Show,

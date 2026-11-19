@@ -43,7 +43,7 @@ will see for CSS:
 Properties that have no effect in print are dropped without a diagnostic: `transition-*`,
 `animation-*` (see [Animations](#animations-and-transitions)), `cursor`, `pointer-events`,
 `user-select`, `touch-action`, `resize`, `caret-color`, `scroll-*`, `overscroll-*`,
-`scrollbar-*`, `view-transition-*`, `text-size-adjust`, Microsoft Office's `mso-*` properties,
+`scrollbar-gutter`, `view-transition-*`, `text-size-adjust`, Microsoft Office's `mso-*` properties,
 and vendor-prefixed properties (`-webkit-`, `-moz-`, `-ms-`, `-o-`) other than the ones listed on
 this page.
 
@@ -251,7 +251,15 @@ of the first page.
 `container-type`, `container-name`, `will-change`.
 
 **Details:** content of a scroll container is printed as far as the box shows it, without
-scrolling. Content wider than the page area makes Fagus lay the page out again and scale it down,
+scrolling. Its scroll bars are printed as Chrome on Linux prints them (Chrome on macOS overlays
+scroll bars, which print nothing): `overflow: scroll` always has them, `overflow: auto` where the
+content overflows the box (a long line in a `pre`, a wide table in a scrolling wrapper). A bar is
+15px thick (10px with `scrollbar-width: thin`) and takes its room between the border and the
+padding, on the left right to left; it has an arrow button at either end and, where the content
+overflows, a thumb at the start, as the content is printed scrolled to its start. `scrollbar-color`
+colors the thumb and the arrows, and the track. To print no scroll bars, and keep no room for
+them, add `scrollbar-width: none` to the scrolling boxes, such as
+`@media print { pre, .table-responsive { scrollbar-width: none } }`, or `overflow: hidden`. Content wider than the page area makes Fagus lay the page out again and scale it down,
 as Chrome's shrink-to-fit does (to at most 1.5 times the page width).
 
 **Not supported:** the unprefixed `line-clamp` is ignored, as Chrome 157 ignores it; use

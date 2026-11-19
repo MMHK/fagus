@@ -4,7 +4,6 @@
 # (tools/chrome-corpus.sh OUT_DIR --update rewrites the list; keep the reasons). Documents that
 # use print features Chrome lacks are left out without being listed here.
 
-FAIL documents/article-tailwind-prose.html  # Chrome on Linux prints a classic scrollbar under the overflowing code block; Fagus draws none, as Chrome on macOS
 FAIL documents/article-wikipedia-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/certificate.html  # engine: the tiles of a centered background image of 18mm lie a pixel off (also against Chrome on macOS)
 FAIL documents/diploma-fullbleed.html  # engine: with hyphens: auto, Chrome on Linux hyphenates "com-ment", Fagus does not
@@ -13,5 +12,4 @@ FAIL documents/paper-katex-mathml.html  # MathML: Chrome on Linux draws STIX Two
 FAIL documents/paper-mathjax-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/paper-pandoc-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/quote-persian.html  # bold Persian text: Chrome on Linux falls back to DejaVu Sans and makes it bold, Fagus takes DejaVu Sans Bold
-FAIL documents/readme-github.html  # Chrome on Linux prints a classic scrollbar under the overflowing code block; Fagus draws none, as Chrome on macOS
-FAIL documents/report-ledger-sticky.html  # Chrome on Linux rounds glyph advances to whole pixels (no subpixel positioning), so the columns of the auto-sized table differ by a pixel; Fagus measures as Chrome on macOS
+FAIL documents/report-ledger-sticky.html  # Chrome on Linux keeps the room of the vertical scroll bar the table wrapper gets on the screen (a rule for the screen gives it a max-height) while the wrapper breaks across the printed pages, 15px without a bar; Fagus does not lay the document out for the screen

@@ -167,6 +167,17 @@ pub struct ComputedValues {
     /// The scroll bars of `overflow-x` and `overflow-y`.
     pub scrollbar_x: Scrollbar,
     pub scrollbar_y: Scrollbar,
+    /// `scrollbar-width`.
+    pub scrollbar_width: crate::values::ScrollbarWidth,
+    /// `scrollbar-color`: the colors of the thumb and of the track, `None` for `auto`; `None`
+    /// inside for `currentColor`.
+    pub scrollbar_color: Option<(Option<Rgba>, Option<Rgba>)>,
+    /// The scroll bars layout gave the box (see [`crate::values::Scrollbars`]).
+    pub scrollbars: crate::values::Scrollbars,
+    /// Whether the box is a part of a form control that Chrome draws as part of the control,
+    /// not as a box (the box of a text area's text, its resize handle): its own size does not
+    /// count in the overflow that gives the control scroll bars, only what it holds.
+    pub control_part: bool,
     pub text_overflow: TextOverflow,
     pub box_decoration_break: BoxDecorationBreak,
     pub container_type: ContainerType,
@@ -669,6 +680,14 @@ impl ComputedValues {
             overflow_y: Overflow::Visible,
             scrollbar_x: Scrollbar::None,
             scrollbar_y: Scrollbar::None,
+            scrollbar_width: crate::values::ScrollbarWidth::Auto,
+            scrollbar_color: None,
+            scrollbars: crate::values::Scrollbars {
+                vertical: false,
+                horizontal: false,
+                thickness: 0.0,
+            },
+            control_part: false,
             text_overflow: TextOverflow::Clip,
             box_decoration_break: BoxDecorationBreak::Slice,
             container_type: ContainerType::Normal,
@@ -943,6 +962,7 @@ impl ComputedValues {
             text_wrap_style: self.text_wrap_style,
             visibility: self.visibility,
             accent_color: self.accent_color,
+            scrollbar_color: self.scrollbar_color,
             dark: self.dark,
             lang: self.lang.clone(),
             hyphenate_character: self.hyphenate_character.clone(),

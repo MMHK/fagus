@@ -363,6 +363,11 @@ impl BoxTree {
         self.boxes.iter().map(|layout_box| &layout_box.style)
     }
 
+    /// The ids of all boxes.
+    pub(crate) fn ids(&self) -> impl Iterator<Item = BoxId> + use<> {
+        (0..u32::try_from(self.boxes.len()).expect("fewer than u32::MAX boxes")).map(BoxId)
+    }
+
     pub fn get(&self, id: BoxId) -> &LayoutBox {
         &self.boxes[id.0 as usize]
     }

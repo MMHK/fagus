@@ -695,6 +695,39 @@ mod tests {
     }
 
     #[test]
+    fn computes_the_scroll_bar_properties() {
+        use values::{Rgba, ScrollbarWidth};
+        let (document, styled) = styles(
+            "<div id=a><p id=b>x</p></div><div id=c></div><div id=d></div>",
+            "#a { scrollbar-width: thin; scrollbar-color: red rgb(0 0 255) }
+             #c { scrollbar-width: none; scrollbar-width: wide; scrollbar-color: red }
+             #d { scrollbar-color: currentColor auto; scrollbar-color: auto }",
+        );
+        let style = |id: &str| by_id(&document, &styled, id);
+        assert_eq!(style("a").scrollbar_width, ScrollbarWidth::Thin);
+        let red = Rgba {
+            r: 1.0,
+            g: 0.0,
+            b: 0.0,
+            a: 1.0,
+        };
+        let blue = Rgba {
+            r: 0.0,
+            g: 0.0,
+            b: 1.0,
+            a: 1.0,
+        };
+        assert_eq!(style("a").scrollbar_color, Some((Some(red), Some(blue))));
+        // The width is not inherited, the colors are.
+        assert_eq!(style("b").scrollbar_width, ScrollbarWidth::Auto);
+        assert_eq!(style("b").scrollbar_color, Some((Some(red), Some(blue))));
+        // Values that are not valid leave the earlier declaration.
+        assert_eq!(style("c").scrollbar_width, ScrollbarWidth::None);
+        assert_eq!(style("c").scrollbar_color, None);
+        assert_eq!(style("d").scrollbar_color, None);
+    }
+
+    #[test]
     fn computes_hanging_punctuation() {
         use values::{HangingEnd, HangingPunctuation};
         let (document, styled) = styles(

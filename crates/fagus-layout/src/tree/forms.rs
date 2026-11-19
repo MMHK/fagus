@@ -118,9 +118,6 @@ const CHECK_SIZE: f32 = 13.0;
 const ARROW_WIDTH: f32 = 15.0;
 /// The width of the spin button of a number field (Chrome 157 on Linux, measured).
 const SPIN_BUTTON: f32 = 15.0;
-/// The width of a scroll bar, which Chrome 157 adds to that of a `<textarea>` (measured), at
-/// any zoom: scroll bars are not zoomed.
-const SCROLLBAR: f32 = 16.0;
 
 const fn gray(level: u8) -> Rgba {
     let value = level as f32 / 255.0;
@@ -997,7 +994,7 @@ fn select_arrow(color: Rgba, zoom: f32) -> Arc<Image> {
 /// The resize handle at the bottom right of a `<textarea>`, or mirrored at its bottom left
 /// (`mirrored`, right to left): two diagonal strokes, black with white beside them
 /// (`ScrollbarTheme::PaintResizer`).
-fn resizer(mirrored: bool) -> Arc<Image> {
+pub(crate) fn resizer(mirrored: bool) -> Arc<Image> {
     const STROKES: &str = concat!(
         r#"<path d="M7 0 L0 7 M7 4 L4 7" fill="none" stroke="rgb(0,0,0)" stroke-opacity="0.6" stroke-width="1"/>"#,
         r#"<path d="M7 1 L1 7 M7 5 L5 7" fill="none" stroke="rgb(255,255,255)" stroke-opacity="0.6" stroke-width="1"/>"#,
@@ -1954,21 +1951,23 @@ impl Builder<'_> {
         let cols = positive(data, "cols").unwrap_or(20);
         let rows = positive(data, "rows").unwrap_or(2);
         let line = line_height(self.fonts, &own);
-        let (gutter, bar) = text_area_scrollbars(&own);
         // With `field-sizing: content`, as wide as its longest line and as high as its lines,
-        // at least one, without room for scroll bars.
+        // at least one.
         let content = own.field_sizing_content;
         let width = if content {
             text.split('\n')
                 .map(|line| text_width(self.fonts, &own, line))
                 .fold(1.0, f32::max)
         } else {
-            (char_widths(self.fonts, &own).average * cols as f32).ceil() + gutter
+            (char_widths(self.fonts, &own).average * cols as f32).ceil()
         };
-        // A text longer than the box scrolls, but Chrome prints no scroll bar and keeps the
-        // room of one only in the width the columns give (`overflow: auto`, which Fagus keeps
-        // as `hidden`). Right to left, the resize handle is on the left, as in Chrome.
+        // A text longer than the box scrolls: `visible` is `auto` in a text area, which gets
+        // scroll bars where its text overflows it, as with `scroll`, and they take room beside
+        // the columns and below the rows, as Chrome prints them (see `crate::scrollbars`). Right
+        // to left, the resize handle is on the left, as in Chrome.
         let rtl = own.is_rtl();
+        own.scrollbar_x = text_area_scrollbar(own.overflow_x, own.scrollbar_x);
+        own.scrollbar_y = text_area_scrollbar(own.overflow_y, own.scrollbar_y);
         own.overflow_x = Overflow::Hidden;
         own.overflow_y = Overflow::Hidden;
         // Its text is in a box `rows` lines high, the inner editor, whose overflow shows: the
@@ -1976,10 +1975,11 @@ impl Builder<'_> {
         // and rows in block flow and stretches in flex and grid layout, its text across.
         let mut inner = anonymous_style(&own);
         inner.display = Display::BLOCK;
+        inner.control_part = true;
         // In vertical writing modes the rows stack across, as in Chrome: the editor is that
         // wide (and the columns give the length of its lines, see `intrinsic_width`).
         if !content {
-            let block = Size::Length(LengthPercentage::Px(line * rows as f32 + bar));
+            let block = Size::Length(LengthPercentage::Px(line * rows as f32));
             if own.writing_mode.is_vertical() {
                 inner.width = block;
             } else {
@@ -1999,6 +1999,7 @@ impl Builder<'_> {
             }
             let mut handle = anonymous_style(&own);
             handle.position = Position::Absolute;
+            handle.control_part = true;
             if rtl {
                 handle.inset.left = LengthPercentageAuto::Length(LengthPercentage::ZERO);
             } else {
@@ -2391,22 +2392,18 @@ fn intrinsic_width(tree: &mut BoxTree, id: BoxId, width: f32) {
     tree.shrinks_to_fit.insert(id);
 }
 
-/// The room a `<textarea>` keeps for scroll bars beside and below its text
-/// (`TextAreaIntrinsicInlineSize`, `TextAreaIntrinsicBlockSize`): beside it unless
-/// `overflow-y` is `hidden` or `clip` (`visible` is `auto` in a text area), below it where
-/// `overflow-x` is `scroll`.
-fn text_area_scrollbars(style: &ComputedStyle) -> (f32, f32) {
+/// The scroll bar of a `<textarea>` along an axis of `overflow`: `visible` is `auto` in it,
+/// `clip` has none.
+fn text_area_scrollbar(
+    overflow: Overflow,
+    scrollbar: fagus_style::values::Scrollbar,
+) -> fagus_style::values::Scrollbar {
     use fagus_style::values::Scrollbar;
-    let beside = match style.overflow_y {
-        Overflow::Visible => true,
-        Overflow::Clip => false,
-        Overflow::Hidden => style.scrollbar_y != Scrollbar::None,
-    };
-    let below = style.overflow_x == Overflow::Hidden && style.scrollbar_x == Scrollbar::Scroll;
-    (
-        if beside { SCROLLBAR } else { 0.0 },
-        if below { SCROLLBAR } else { 0.0 },
-    )
+    match overflow {
+        Overflow::Visible => Scrollbar::Auto,
+        Overflow::Clip => Scrollbar::None,
+        Overflow::Hidden => scrollbar,
+    }
 }
 
 /// The style of the box with the line of a text field: one line, cut off at its edges, taking

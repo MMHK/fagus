@@ -508,8 +508,9 @@ fn family_keyword(families: &[lightningcss::properties::font::FontFamily<'_>]) -
 /// parses it, so that an earlier one applies: these properties take one of their keywords alone,
 /// and `clip` takes `auto` or `rect()`; multi-column properties take valid counts and widths only.
 fn rejected(name: &str, tokens: &TokenList<'static>) -> bool {
-    const KEYWORDS: [(&str, &[&str]); 4] = [
+    const KEYWORDS: [(&str, &[&str]); 5] = [
         ("ruby-position", &["over", "under"]),
+        ("scrollbar-width", &["auto", "thin", "none"]),
         (
             "-webkit-writing-mode",
             &["horizontal-tb", "vertical-rl", "vertical-lr"],
@@ -3238,7 +3239,7 @@ fn is_inherited(id: &PropertyId<'_>) -> bool {
             | "font-synthesis-weight" | "font-synthesis-style" | "font-synthesis-small-caps" | "font-size-adjust"
             | "white-space-collapse" | "text-wrap-mode" | "text-wrap-style" | "text-wrap" | "image-orientation"
             | "ruby-position" | "ruby-align" | "text-box-edge" | "writing-mode" | "-webkit-writing-mode" | "text-orientation"
-            | "text-spacing-trim" | "text-autospace" | "text-fit" | "hanging-punctuation"
+            | "text-spacing-trim" | "text-autospace" | "text-fit" | "hanging-punctuation" | "scrollbar-color"
     ))
 }
 
@@ -3573,6 +3574,8 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedValues, style: &mut 
             "outline-offset" => copy!(outline_offset),
             "empty-cells" => copy!(empty_cells),
             "field-sizing" => copy!(field_sizing_content),
+            "scrollbar-width" => copy!(scrollbar_width),
+            "scrollbar-color" => copy!(scrollbar_color),
             "frame-sizing" => copy!(frame_sizing_content_height),
             "text-underline-position" => copy!(text_underline_position),
             "font-variation-settings" => copy!(font_variation_settings),
