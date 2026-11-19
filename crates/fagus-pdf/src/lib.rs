@@ -2935,8 +2935,9 @@ fn gradient_stops(stops: &[(f32, Rgba)]) -> Vec<Stop> {
 type GradientLine = ((f32, f32), (f32, f32), Vec<(f32, Rgba)>);
 
 /// A repeating linear gradient as one that does not repeat: its period repeated across a tile
-/// of `size`. Repetition in PDF takes a PostScript function, which some viewers do not support
-/// and PDF/A does not allow. `None` for a period too short to repeat this way.
+/// of `size`. Repetition in PDF takes a PostScript function, which PDF/A does not allow and
+/// which Fagus keeps to gradients of solid bands (see `draw_gradient`). `None` for a period too
+/// short to repeat this way.
 fn unrepeat(size: RectF, start: (f32, f32), end: (f32, f32), stops: &[(f32, Rgba)]) -> Option<GradientLine> {
     const MAX_PERIODS: f32 = 2000.0;
     let (dx, dy) = (end.0 - start.0, end.1 - start.1);
@@ -2978,6 +2979,14 @@ fn unrepeat(size: RectF, start: (f32, f32), end: (f32, f32), stops: &[(f32, Rgba
     ))
 }
 
+/// Whether the colors of a gradient change only at hard stops (two stops at the same place),
+/// so that it paints bands of solid colors.
+fn hard_stops(stops: &[(f32, Rgba)]) -> bool {
+    stops
+        .windows(2)
+        .all(|pair| pair[0].0 >= pair[1].0 || pair[0].1 == pair[1].1)
+}
+
 /// Fills a background tile with a gradient. Shading geometry is relative to the tile. In PDF/A
 /// (`archival`), conic gradients are images, since their shading takes a PostScript function.
 /// The most stops of a conic gradient drawn as a sweep shading.
@@ -2998,7 +3007,15 @@ fn draw_gradient(surface: &mut Surface<'_>, rect: RectF, gradient: &GradientPain
             stops,
             repeat,
         } => {
-            let unrepeated = repeat.then(|| unrepeat(rect, *start, *end, stops)).flatten();
+            // Bands of solid colors repeat as Chrome repeats every gradient: in a shading whose
+            // PostScript function takes the place in the period, which viewers evaluate at each
+            // pixel. Viewers such as Poppler draw the shading of the periods one after the other
+            // from a table of colors a pixel apart, which blurs bands a pixel or two wide (the
+            // bars of a barcode) into gray. PDF/A, which allows no PostScript, keeps that.
+            let bands = *repeat && !archival && hard_stops(stops);
+            let unrepeated = (*repeat && !bands)
+                .then(|| unrepeat(rect, *start, *end, stops))
+                .flatten();
             let (start, end, stops, spread_method) = match (&unrepeated, repeat) {
                 (Some((start, end, stops)), _) => (*start, *end, &stops[..], SpreadMethod::Pad),
                 (None, true) if archival => {
@@ -3630,6 +3647,70 @@ mod tests {
         assert!(few.contains("/ShadingType") && !few.contains("/Subtype/Image"));
         let many = pdf(120);
         assert!(many.contains("/Subtype/Image") && !many.contains("/ShadingType"));
+    }
+
+    #[test]
+    fn repeats_bands_of_solid_colors_in_a_postscript_shading() {
+        use fagus_paint::{GradientPaint, Item, PageList};
+        use fagus_style::values::Rgba;
+        // The bars of form-tax-comb-fields' barcode, 0.4mm, 0.3mm, 0.2mm and 0.6mm in a period of
+        // 1.5mm, which Chrome draws in a shading whose PostScript function repeats the period.
+        let black = Rgba::from_u8(0, 0, 0, 1.0);
+        let white = Rgba::from_u8(255, 255, 255, 1.0);
+        let bars = vec![
+            (0.0, black),
+            (0.4 / 1.5, black),
+            (0.4 / 1.5, white),
+            (0.7 / 1.5, white),
+            (0.7 / 1.5, black),
+            (0.9 / 1.5, black),
+            (0.9 / 1.5, white),
+            (1.0, white),
+        ];
+        let pdf = |stops: Vec<(f32, Rgba)>, conformance: Option<Conformance>| {
+            let page = PageList {
+                width: 230.0,
+                height: 40.0,
+                items: vec![Item::Gradient {
+                    rect: RectF {
+                        x: 0.0,
+                        y: 0.0,
+                        width: 226.8,
+                        height: 34.0,
+                    },
+                    gradient: std::sync::Arc::new(GradientPaint::Linear {
+                        start: (0.0, 17.0),
+                        end: (5.67, 17.0),
+                        stops,
+                        repeat: true,
+                    }),
+                }],
+                bleed: 0.0,
+                marks: fagus_layout::PageMarks::default(),
+                orientation: fagus_layout::PageOrientation::Upright,
+            };
+            let written = super::write(
+                vec![page],
+                &fagus_text::FontDb::new(),
+                &super::Metadata {
+                    created: Some(Date::from_unix(0)),
+                    ..super::Metadata::default()
+                },
+                &super::Options {
+                    conformance,
+                    ..super::Options::default()
+                },
+            )
+            .expect("pdf");
+            inflated(&written.pdf)
+        };
+        assert!(pdf(bars.clone(), None).contains("/FunctionType 4"));
+        // PDF/A allows no PostScript: the periods one after the other in an axial shading.
+        let archived = pdf(bars, Some(Conformance::PdfA2b));
+        assert!(!archived.contains("/FunctionType 4") && archived.contains("/ShadingType 2"));
+        // Colors that blend between stops stay an axial shading.
+        let smooth = pdf(vec![(0.0, black), (1.0, white)], None);
+        assert!(!smooth.contains("/FunctionType 4") && smooth.contains("/ShadingType 2"));
     }
 
     #[test]
