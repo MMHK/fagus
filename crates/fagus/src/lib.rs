@@ -39,7 +39,7 @@ use fagus_text::{Face, FontDb};
 use rustc_hash::{FxHashMap, FxHasher};
 
 pub use fagus_css::{Diagnostic, Severity};
-pub use fagus_pdf::{Attachment, Conformance, Date, PdfError, Relationship};
+pub use fagus_pdf::{Attachment, Conformance, Date, Encryption, PdfError, Permission, Relationship};
 pub use fagus_text::FontError;
 pub use layout_info::{Layout, LayoutBox, LayoutElement, LayoutPage, LayoutRow, RowSection};
 pub use resources::ResourceLoader;
@@ -98,6 +98,7 @@ pub struct Document {
     created: Option<Date>,
     /// Whether to report where the elements ended up (see [`Document::report_layout`]).
     report_layout: bool,
+    encryption: Option<Encryption>,
     /// How deep the document lies in SVG images with HTML in them (see [`svg_document`]): 0
     /// for the document itself.
     svg_depth: u8,
@@ -212,6 +213,7 @@ impl Document {
             factur_x_attachment: None,
             created: None,
             report_layout: false,
+            encryption: None,
             svg_depth: 0,
             nesting: frames::Nesting::default(),
         }
@@ -267,6 +269,27 @@ impl Document {
     #[must_use]
     pub fn accessible(mut self) -> Self {
         self.accessible = true;
+        self
+    }
+
+    /// Protects the PDF with passwords: encrypted with AES-256, as PDF 2.0 defines it. The
+    /// key, salts and initialization vectors are random, so the bytes differ from run to run
+    /// (unless [`Encryption::seed`] fixes them, for tests). PDF/A, Factur-X and PDF/UA cannot be
+    /// encrypted: rendering such a document fails.
+    ///
+    /// ```
+    /// use fagus::{Document, Encryption, Permission};
+    ///
+    /// let document = Document::html("<p>Gehalt</p>").encrypt(
+    ///     Encryption::new()
+    ///         .user_password("open sesame")
+    ///         .owner_password("change me")
+    ///         .permissions([Permission::Print]),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn encrypt(mut self, encryption: Encryption) -> Self {
+        self.encryption = Some(encryption);
         self
     }
 
@@ -331,6 +354,33 @@ impl Document {
         }
         self.factur_x_description = Some(description);
         self
+    }
+
+    /// The standard that forbids encrypting the document, if it is encrypted.
+    fn encryption_problem(&self) -> Option<PdfError> {
+        self.encryption.as_ref()?;
+        let (standard, problems) = if let Some(conformance) = self.conformance {
+            (
+                conformance.name(),
+                "the PDF cannot be encrypted (PDF/A forbids encryption)",
+            )
+        } else if self.factur_x.is_some() {
+            (
+                "Factur-X",
+                "the invoice cannot be encrypted (it is PDF/A-3, which forbids encryption)",
+            )
+        } else if self.accessible {
+            (
+                "PDF/UA-1",
+                "the PDF cannot be encrypted (Fagus writes PDF/UA unencrypted, for every assistive technology)",
+            )
+        } else {
+            return None;
+        };
+        Some(PdfError::Conformance {
+            standard: standard.to_owned(),
+            problems: problems.to_owned(),
+        })
     }
 
     /// What makes the version or description of the invoice unusable, if anything.
@@ -747,6 +797,9 @@ impl Engine {
 
 impl Inner {
     fn render(&self, input: &Document) -> Result<Output, Failure> {
+        if let Some(error) = input.encryption_problem() {
+            return Err(Error::Pdf(error).into());
+        }
         if let Some(problems) = input.factur_x_problem() {
             return Err(Error::Pdf(PdfError::Conformance {
                 standard: "Factur-X".to_owned(),
@@ -1075,6 +1128,7 @@ impl Inner {
             structure,
             accessible: input.accessible,
             images: self.images.clone(),
+            encryption: input.encryption.clone(),
         };
         let written = match fagus_pdf::write(lists, &fonts, &metadata, &options) {
             Ok(written) => written,
