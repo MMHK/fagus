@@ -54,14 +54,7 @@ pub(crate) fn warning(document: &Document, pages: &[Page], fonts: &FontDb) -> Op
             list.join(", ")
         )
     };
-    Some(Diagnostic {
-        severity: Severity::Warning,
-        code: "font.missing-glyph",
-        message,
-        source: "html".to_owned(),
-        line: missing.line,
-        column: 0,
-    })
+    Some(Diagnostic::new(Severity::Warning, "font.missing-glyph", message, "html").at(missing.line, 0))
 }
 
 /// Collects the characters of the `.notdef` glyphs in a fragment and its children; `node` is the

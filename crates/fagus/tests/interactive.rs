@@ -2,14 +2,7 @@
 
 use fagus::{Conformance, Date, Document, Engine, Output};
 
-const CREATED: Date = Date {
-    year: 2026,
-    month: 11,
-    day: 19,
-    hour: 12,
-    minute: 0,
-    second: 0,
-};
+const CREATED: Date = Date::new(2026, 11, 19, 12, 0, 0);
 
 fn engine() -> Engine {
     let mut engine = Engine::new();

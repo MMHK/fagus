@@ -93,9 +93,11 @@ The types they take:
   `PdfA4e`, `PdfA4f`. `Conformance::from_level("3b")` parses a name (`"4"` for PDF/A-4),
   `name()` gives `"PDF/A-3b"`, `part()` the part of ISO 19005 (1 to 4), `is_tagged()` says
   whether the level requires tags.
-- `Attachment { name, mime_type, description: Option<String>, relationship, data: Arc<Vec<u8>> }`
-  with `Relationship::{Source, Data, Alternative, Supplement, Unspecified}`. PDF/A-3 and PDF/UA
-  require a `description`.
+- `Attachment::new(name, mime_type, data)`, where `data` is a `Vec<u8>` or an `Arc<Vec<u8>>`,
+  with `description(…)` and `relationship(…)`, a `Relationship` (`Source`, `Data`,
+  `Alternative`, `Supplement`, or `Unspecified` if not given). PDF/A-3 and PDF/UA require a
+  `description`. The fields `name`, `mime_type`, `description`, `relationship` and `data` are
+  public to read.
 - `FacturXProfile`: `Minimum`, `BasicWl`, `Basic`, `En16931`, `Extended`, `XRechnung`.
   `FacturXProfile::detect(&xml)` reads the profile an XML declares.
 - `Encryption::new()` with `user_password(…)`, `owner_password(…)` and
@@ -105,7 +107,8 @@ The types they take:
   passwords. The keys come from the operating system; `seed([u8; 32])` takes them from a
   generator with that seed instead, so that tests can compare bytes (never in production: the
   seed decrypts the file).
-- `Date { year, month, day, hour, minute, second }` in UTC. `Date::now()` and
+- `Date` in UTC, with the public fields `year`, `month`, `day`, `hour`, `minute` and `second`.
+  `Date::new(2026, 11, 1, 8, 0, 0)` (a `const fn`), `Date::now()` and
   `Date::from_unix(seconds)` make one; convert a local time to UTC before.
 
 - `Signature`: a digital signature ([pdf.md](pdf.md#sign-the-pdf)).
@@ -169,7 +172,8 @@ frames ask for their resources by their URLs resolved against the frame's URL.
 A `Diagnostic` has a `severity` (`Severity::Info`, `Warning` or `Error`, ordered so that
 `severity >= Severity::Warning` works), a stable `code` such as `css.unknown-property`, a
 `message`, a `source` (a file name, `<style> 1`, `resources`, `pdf`) and a 1-based `line` and
-`column`, 0 where unknown. Its `Display` writes it on one line:
+`column`, 0 where unknown. `Diagnostic::new(severity, code, message, source)` with `at(line, column)` makes one, for tests
+or for diagnostics of your own. Its `Display` writes it on one line:
 
 ```text
 <style> 1:12:3: warning[css.unknown-property]: unknown property `colr`; the declaration is ignored
@@ -209,8 +213,9 @@ for row in layout.element("items").map_or(&[][..], |table| &table.rows) {
   `section` a `RowSection` (`Header`, `Body`, `Footer`) and `index` its place among the rows of
   that section; its box on a page is the area of its cells there.
 
-The types are `#[non_exhaustive]`, so that fields can be added; [php.md](php.md#find-where-elements-landed)
-shows how to render twice to adjust a document to its layout.
+The types are `#[non_exhaustive]`, so that fields can be added ([stability](#stability));
+[php.md](php.md#find-where-elements-landed) shows how to render twice to adjust a document to
+its layout.
 
 ## Errors
 
@@ -226,8 +231,9 @@ The types inside are exported too: `Error::Pdf` holds a `fagus::PdfError`, eithe
 `PdfError::Conformance { standard, problems }` (the standard, like `PDF/UA-1`, and the problems in
 words, separated by semicolons), `PdfError::Write(String)` or `PdfError::Sign(String)` (the
 signature could not be made: a wrong password, a signer that failed); `Error::Font` holds a
-`fagus::FontError`, `FontError::InvalidFont` or `FontError::Io(std::io::Error)`. Their `Display`
-gives the whole message:
+`fagus::FontError`, `FontError::InvalidFont` or `FontError::Io(std::io::Error)`. The three enums
+are `#[non_exhaustive]`: a `match` over them needs a `_` arm. Their `Display` gives the whole
+message:
 
 ```rust
 match engine.render(&document.accessible()) {
@@ -280,6 +286,28 @@ processor. `render` blocks until the document is done.
 The methods that change the engine take `&mut self`: add fonts and settings before you share the
 engine. They apply to every document rendered after them.
 
+## Stability
+
+The crate follows [stability.md](stability.md): from 1.0 on, a minor release does not break code
+that uses it. So that a minor release can add a variant or a field, these types are
+`#[non_exhaustive]`:
+
+- the enums `Error`, `PdfError`, `FontError`, `Conformance`, `Relationship`, `FacturXProfile`,
+  `Permission`, `Algorithm` and `RowSection`: a `match` over one needs a `_` arm;
+- the structs with public fields `Output`, `Timings`, `Failure`, `Diagnostic`, `Attachment`,
+  `Date`, `Layout`, `LayoutPage`, `LayoutElement`, `LayoutBox` and `LayoutRow`: read their fields
+  and set them, but make them with their constructors instead of struct literals
+  (`Attachment::new`, `Date::new`, `Diagnostic::new`, `Output::default()`,
+  `Timings::default()`, `Failure::from(error)`); a pattern that takes one apart needs `..`.
+
+`Severity` is not: `Info`, `Warning` and `Error` are the severities of the command line and the
+worker protocol and stay the same within a major release. Which severity a diagnostic gets is not
+stable. `Document`, `Engine`, `Encryption` and `Signature` have no public fields. The traits
+`ResourceLoader`, `Signer` and `Timestamper` get new methods only with a default implementation.
+
+Something deprecated gets `#[deprecated(since = "…", note = "use … instead")]`, a compiler
+warning, and keeps working until the next major release.
+
 ## A complete example
 
 An invoice with fonts of its own, an attachment and the Factur-X XML, as PDF/A-3b with a fixed
@@ -287,8 +315,6 @@ date. `assets/` holds `invoice.html`, `invoice.xml` and `fonts/` (the HTML and X
 in [pdf.md](pdf.md#a-complete-example) fit):
 
 ```rust
-use std::sync::Arc;
-
 use fagus::{Attachment, Date, Document, Engine, Relationship, Severity};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -303,14 +329,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .base_directory("assets")
         .stylesheet("print.css", "body { color: #000 }")
         .factur_x(xml)
-        .attach(Attachment {
-            name: "timesheet.csv".to_owned(),
-            mime_type: "text/csv".to_owned(),
-            description: Some("Stundenzettel".to_owned()),
-            relationship: Relationship::Supplement,
-            data: Arc::new(b"date,hours\n2026-09-30,6\n".to_vec()),
-        })
-        .created(Date { year: 2026, month: 11, day: 1, hour: 8, minute: 0, second: 0 });
+        .attach(
+            Attachment::new("timesheet.csv", "text/csv", b"date,hours\n2026-09-30,6\n".to_vec())
+                .description("Stundenzettel")
+                .relationship(Relationship::Supplement),
+        )
+        .created(Date::new(2026, 11, 1, 8, 0, 0));
 
     let output = engine.render(&document)?;
     for diagnostic in &output.diagnostics {

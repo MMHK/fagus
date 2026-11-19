@@ -22,14 +22,14 @@ pub(crate) fn parse(text: &str) -> Option<fagus::Date> {
     if !valid {
         return None;
     }
-    let date = fagus::Date {
-        year: u16::try_from(year).ok()?,
-        month: month as u8,
-        day: day as u8,
-        hour: hour as u8,
-        minute: minute as u8,
-        second: second as u8,
-    };
+    let date = fagus::Date::new(
+        u16::try_from(year).ok()?,
+        month as u8,
+        day as u8,
+        hour as u8,
+        minute as u8,
+        second as u8,
+    );
     match offset(&text[end..])? {
         0 => Some(date),
         minutes => {

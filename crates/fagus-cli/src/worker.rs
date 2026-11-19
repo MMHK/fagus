@@ -527,20 +527,19 @@ where
             .description
             .filter(|description| !description.is_empty())
             .unwrap_or_else(|| attachment.name.clone());
-        document = document.attach(fagus::Attachment {
-            data: Arc::new(take(attachment.blob)?),
-            name: attachment.name,
-            mime_type: attachment.mime,
-            description: Some(description),
-            relationship: match attachment.relationship.as_deref().unwrap_or("unspecified") {
-                "source" => fagus::Relationship::Source,
-                "data" => fagus::Relationship::Data,
-                "alternative" => fagus::Relationship::Alternative,
-                "supplement" => fagus::Relationship::Supplement,
-                "unspecified" => fagus::Relationship::Unspecified,
-                other => return Err(format!("unknown relationship `{other}`")),
-            },
-        });
+        let relationship = match attachment.relationship.as_deref().unwrap_or("unspecified") {
+            "source" => fagus::Relationship::Source,
+            "data" => fagus::Relationship::Data,
+            "alternative" => fagus::Relationship::Alternative,
+            "supplement" => fagus::Relationship::Supplement,
+            "unspecified" => fagus::Relationship::Unspecified,
+            other => return Err(format!("unknown relationship `{other}`")),
+        };
+        document = document.attach(
+            fagus::Attachment::new(attachment.name, attachment.mime, take(attachment.blob)?)
+                .description(description)
+                .relationship(relationship),
+        );
     }
     if let Some(invoice) = request.factur_x {
         let xml = take(invoice.blob)?;

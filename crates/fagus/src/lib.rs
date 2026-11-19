@@ -50,6 +50,7 @@ pub use resources::ResourceLoader;
 
 /// An error while rendering.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error(transparent)]
     Font(#[from] FontError),
@@ -116,6 +117,7 @@ pub struct Document {
 
 /// The profile of a ZUGFeRD 2 or Factur-X invoice, as named in its XML.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FacturXProfile {
     Minimum,
     BasicWl,
@@ -345,17 +347,15 @@ impl Document {
     pub fn factur_x_profile(mut self, xml: Vec<u8>, profile: FacturXProfile) -> Self {
         self.declared_profile = FacturXProfile::detect(&xml);
         self.factur_x_attachment = Some(self.attachments.len());
-        self.attachments.push(Attachment {
-            name: profile.file_name().to_owned(),
-            mime_type: "text/xml".to_owned(),
-            description: Some(
-                self.factur_x_description
-                    .clone()
-                    .unwrap_or_else(|| FACTUR_X_DESCRIPTION.to_owned()),
-            ),
-            relationship: profile.relationship(),
-            data: Arc::new(xml),
-        });
+        let description = self
+            .factur_x_description
+            .clone()
+            .unwrap_or_else(|| FACTUR_X_DESCRIPTION.to_owned());
+        self.attachments.push(
+            Attachment::new(profile.file_name(), "text/xml", xml)
+                .description(description)
+                .relationship(profile.relationship()),
+        );
         self.factur_x = Some(profile);
         self
     }
@@ -482,6 +482,7 @@ impl Document {
 
 /// Time spent in each phase of rendering.
 #[derive(Clone, Copy, Debug, Default)]
+#[non_exhaustive]
 pub struct Timings {
     pub parse: Duration,
     pub style: Duration,
@@ -491,7 +492,10 @@ pub struct Timings {
 }
 
 /// A document that could not be rendered: why, and the diagnostics found before it failed.
+///
+/// `#[non_exhaustive]`: make one from an [`Error`] with `From`.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Failure {
     /// Why rendering failed.
     pub error: Error,
@@ -522,7 +526,11 @@ impl From<Error> for Failure {
 }
 
 /// The result of rendering.
-#[derive(Debug)]
+///
+/// `#[non_exhaustive]`, so that a field can be added in a minor release: outside the engine,
+/// start from `Output::default()` and set the fields.
+#[derive(Debug, Default)]
+#[non_exhaustive]
 pub struct Output {
     pub pdf: Vec<u8>,
     pub pages: usize,
@@ -860,15 +868,12 @@ impl Inner {
         };
         let mut diagnostics = Vec::new();
         if document.truncated() {
-            diagnostics.push(Diagnostic {
-                severity: Severity::Error,
-                code: "html.too-deep",
-                message: "elements are nested hundreds of levels deep; the rest of the document is left out"
-                    .to_owned(),
-                source: "html".to_owned(),
-                line: 0,
-                column: 0,
-            });
+            diagnostics.push(Diagnostic::new(
+                Severity::Error,
+                "html.too-deep",
+                "elements are nested hundreds of levels deep; the rest of the document is left out",
+                "html",
+            ));
         }
         let sheets = self.document_sheets(input, &document, &mut diagnostics);
         for sheet in &sheets {
@@ -1053,17 +1058,15 @@ impl Inner {
         }
         timings.layout = start.elapsed();
         if pages.len() >= fagus_layout::MAX_PAGES {
-            diagnostics.push(Diagnostic {
-                severity: Severity::Warning,
-                code: "layout.too-many-pages",
-                message: format!(
+            diagnostics.push(Diagnostic::new(
+                Severity::Warning,
+                "layout.too-many-pages",
+                format!(
                     "the document reaches the limit of {} pages; what follows is left out",
                     fagus_layout::MAX_PAGES
                 ),
-                source: "html".to_owned(),
-                line: 0,
-                column: 0,
-            });
+                "html",
+            ));
         }
 
         // Factur-X attaches XML, which only PDF/A-3 allows (PDF/A-4 is refused above).
@@ -1354,14 +1357,15 @@ impl Inner {
                         },
                         &mut import,
                     )),
-                    None => diagnostics.push(Diagnostic {
-                        severity: Severity::Warning,
-                        code: "resource.not-loaded",
-                        message: format!("stylesheet `{href}` could not be loaded"),
-                        source: "html".to_owned(),
-                        line: element.line,
-                        column: 0,
-                    }),
+                    None => diagnostics.push(
+                        Diagnostic::new(
+                            Severity::Warning,
+                            "resource.not-loaded",
+                            format!("stylesheet `{href}` could not be loaded"),
+                            "html",
+                        )
+                        .at(element.line, 0),
+                    ),
                 }
             }
         }
@@ -1913,11 +1917,15 @@ impl Inner {
                     }
                 }
                 None if empty => {}
-                None => diagnostics.push(Diagnostic {
-                    source: "document".to_owned(),
-                    line: element.line,
-                    ..warning("image.unsupported", "an inline SVG could not be read".to_owned())
-                }),
+                None => diagnostics.push(
+                    Diagnostic::new(
+                        Severity::Warning,
+                        "image.unsupported",
+                        "an inline SVG could not be read",
+                        "document",
+                    )
+                    .at(element.line, 0),
+                ),
             }
         }
         // `<iframe>`, `<object>` and `<embed>` elements that show documents of their own.
@@ -2369,14 +2377,7 @@ fn style_attribute_diagnostics(document: &fagus_dom::Document) -> Vec<Diagnostic
 }
 
 fn warning(code: &'static str, message: String) -> Diagnostic {
-    Diagnostic {
-        severity: Severity::Warning,
-        code,
-        message,
-        source: "resources".to_owned(),
-        line: 0,
-        column: 0,
-    }
+    Diagnostic::new(Severity::Warning, code, message, "resources")
 }
 
 /// What a document says about itself: its title (`<title>`), language (`<html lang>`, else the
@@ -2528,10 +2529,7 @@ fn layer_warnings(
 }
 
 fn pdf_warning(code: &'static str, message: String) -> Diagnostic {
-    Diagnostic {
-        source: "pdf".to_owned(),
-        ..warning(code, message)
-    }
+    Diagnostic::new(Severity::Warning, code, message, "pdf")
 }
 
 /// A URL for messages: `data:` URLs are cut short.
@@ -2639,14 +2637,7 @@ mod tests {
             .collect()
     }
 
-    const CREATED: Date = Date {
-        year: 2026,
-        month: 11,
-        day: 2,
-        hour: 12,
-        minute: 0,
-        second: 0,
-    };
+    const CREATED: Date = Date::new(2026, 11, 2, 12, 0, 0);
 
     /// An invoice XML that declares a guideline.
     fn invoice(guideline: &str) -> Vec<u8> {
@@ -2993,7 +2984,7 @@ mod tests {
             "{update}"
         );
         // A signature of its own time.
-        let later = Date { day: 3, ..CREATED };
+        let later = Date::new(2026, 11, 3, 12, 0, 0);
         let dated = engine()
             .render(&document.sign(signature.time(later)))
             .expect("rendered")
@@ -3449,13 +3440,10 @@ mod tests {
         let document = Document::html("<p>Anhang</p>")
             .created(CREATED)
             .conformance(Conformance::PdfA2b)
-            .attach(Attachment {
-                name: "daten.csv".to_owned(),
-                mime_type: "text/csv".to_owned(),
-                description: None,
-                relationship: Relationship::Supplement,
-                data: Arc::new(b"a;b".to_vec()),
-            });
+            .attach(
+                Attachment::new("daten.csv", "text/csv", b"a;b".to_vec())
+                    .relationship(Relationship::Supplement),
+            );
         let error = engine().render(&document).expect_err("not PDF/A-2");
         assert!(
             matches!(error, Error::Pdf(PdfError::Conformance { .. })),
@@ -3588,15 +3576,11 @@ mod tests {
             );
         }
         // PDF/A-4f takes attachments, PDF/A-4 and PDF/A-1b do not.
-        let document = Document::html("<p>Anhang</p>")
-            .created(CREATED)
-            .attach(Attachment {
-                name: "daten.csv".to_owned(),
-                mime_type: "text/csv".to_owned(),
-                description: Some("Daten".to_owned()),
-                relationship: Relationship::Supplement,
-                data: Arc::new(b"a;b".to_vec()),
-            });
+        let document = Document::html("<p>Anhang</p>").created(CREATED).attach(
+            Attachment::new("daten.csv", "text/csv", b"a;b".to_vec())
+                .description("Daten")
+                .relationship(Relationship::Supplement),
+        );
         let pdf = engine()
             .render(&document.clone().conformance(Conformance::PdfA4f))
             .expect("PDF/A-4f")
@@ -3694,13 +3678,10 @@ mod tests {
         let document = Document::html("<style>p { colr: red }</style><p>Anhang</p>")
             .created(CREATED)
             .conformance(Conformance::PdfA2b)
-            .attach(Attachment {
-                name: "daten.csv".to_owned(),
-                mime_type: "text/csv".to_owned(),
-                description: None,
-                relationship: Relationship::Supplement,
-                data: Arc::new(b"a;b".to_vec()),
-            });
+            .attach(
+                Attachment::new("daten.csv", "text/csv", b"a;b".to_vec())
+                    .relationship(Relationship::Supplement),
+            );
         let failure = engine()
             .render_with_diagnostics(&document)
             .expect_err("not PDF/A-2");

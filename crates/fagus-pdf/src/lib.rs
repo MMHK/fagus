@@ -98,7 +98,11 @@ pub struct Metadata {
 }
 
 /// A date and time in UTC.
+///
+/// `#[non_exhaustive]`, so that a field (a fraction of a second, an offset from UTC) can be added
+/// in a minor release: make one with [`Date::new`], [`Date::from_unix`] or [`Date::now`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Date {
     pub year: u16,
     pub month: u8,
@@ -109,6 +113,19 @@ pub struct Date {
 }
 
 impl Date {
+    /// The date and time of the numbers, in UTC: `month` 1 to 12, `day` 1 to 31, `hour` 0 to 23,
+    /// `minute` 0 to 59, `second` 0 to 60. They are written as given, not checked.
+    pub const fn new(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+        }
+    }
+
     /// The current time.
     pub fn now() -> Self {
         let seconds = std::time::SystemTime::now()
@@ -159,6 +176,7 @@ impl Date {
 
 /// A PDF/A level the document conforms to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Conformance {
     /// PDF/A-1b: archivable as PDF 1.4, without transparency.
     PdfA1b,
@@ -235,6 +253,7 @@ impl Conformance {
 
 /// How an attached file relates to the document (PDF 2.0 `AFRelationship`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Relationship {
     Source,
     Data,
@@ -244,13 +263,45 @@ pub enum Relationship {
 }
 
 /// A file attached to the document.
+///
+/// `#[non_exhaustive]`, so that a field can be added in a minor release: make one with
+/// [`Attachment::new`].
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct Attachment {
     pub name: String,
     pub mime_type: String,
     pub description: Option<String>,
     pub relationship: Relationship,
     pub data: Arc<Vec<u8>>,
+}
+
+impl Attachment {
+    /// A file named `name` with its MIME type (`text/csv`) and data, without a description and
+    /// with the relationship [`Relationship::Unspecified`].
+    pub fn new(name: impl Into<String>, mime_type: impl Into<String>, data: impl Into<Arc<Vec<u8>>>) -> Self {
+        Self {
+            name: name.into(),
+            mime_type: mime_type.into(),
+            description: None,
+            relationship: Relationship::Unspecified,
+            data: data.into(),
+        }
+    }
+
+    /// The attachment with a description, which PDF/A-3 and PDF/UA require.
+    #[must_use]
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+
+    /// The attachment with how it relates to the document.
+    #[must_use]
+    pub fn relationship(mut self, relationship: Relationship) -> Self {
+        self.relationship = relationship;
+        self
+    }
 }
 
 /// How the PDF is written beyond its pages.
@@ -318,6 +369,7 @@ pub struct Bookmark {
 
 /// An error while writing the PDF.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum PdfError {
     #[error("the PDF could not be written: {0}")]
     Write(String),

@@ -1,6 +1,10 @@
 use std::fmt;
 
 /// How serious a diagnostic is.
+///
+/// Not `#[non_exhaustive]`: the three severities are those of the command line's diagnostics
+/// lines and of the worker protocol, and stay the same within a major release, so a `match`
+/// over them may list all three. Which severity a diagnostic gets is not stable.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Severity {
     Info,
@@ -9,7 +13,11 @@ pub enum Severity {
 }
 
 /// A message about the input, with its source position.
+///
+/// `#[non_exhaustive]`, so that a field can be added in a minor release: outside this crate, make
+/// one with [`Diagnostic::new`] and [`Diagnostic::at`].
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Diagnostic {
     pub severity: Severity,
     /// A stable code, e.g. `css.parse-error`.
@@ -21,6 +29,34 @@ pub struct Diagnostic {
     pub line: u32,
     /// 1-based column, 0 if unknown.
     pub column: u32,
+}
+
+impl Diagnostic {
+    /// A diagnostic of `source` (a file name, `<style> 1`, `html`, `resources`, `pdf`) without a
+    /// position: its `line` and `column` are 0.
+    pub fn new(
+        severity: Severity,
+        code: &'static str,
+        message: impl Into<String>,
+        source: impl Into<String>,
+    ) -> Self {
+        Self {
+            severity,
+            code,
+            message: message.into(),
+            source: source.into(),
+            line: 0,
+            column: 0,
+        }
+    }
+
+    /// The diagnostic at the 1-based `line` and `column` of its source, 0 where unknown.
+    #[must_use]
+    pub fn at(mut self, line: u32, column: u32) -> Self {
+        self.line = line;
+        self.column = column;
+        self
+    }
 }
 
 impl fmt::Display for Diagnostic {

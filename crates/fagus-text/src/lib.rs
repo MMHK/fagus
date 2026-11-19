@@ -1011,6 +1011,7 @@ impl std::fmt::Debug for FontDb {
 
 /// An error while loading fonts.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum FontError {
     #[error("the data is not a supported font")]
     InvalidFont,

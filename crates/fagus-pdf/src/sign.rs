@@ -26,6 +26,7 @@ use crate::{Date, PdfError};
 
 /// The algorithm of a signature, which follows from the signer's certificate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Algorithm {
     /// RSA with PKCS#1 v1.5 padding and SHA-256.
     RsaSha256,

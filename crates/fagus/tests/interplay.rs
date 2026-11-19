@@ -7,14 +7,7 @@ use std::process::Command;
 
 use fagus::{Date, Document, Encryption, Engine, Signature};
 
-const CREATED: Date = Date {
-    year: 2026,
-    month: 11,
-    day: 19,
-    hour: 12,
-    minute: 0,
-    second: 0,
-};
+const CREATED: Date = Date::new(2026, 11, 19, 12, 0, 0);
 
 const FORM: &str = "<!DOCTYPE html><html lang=en><title>Order</title>\
     <p><label>Name <input name=customer value='Ada Lovelace'></label>\

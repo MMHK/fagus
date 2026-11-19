@@ -523,13 +523,11 @@ fn main() -> Result<()> {
                     || "attachment".to_owned(),
                     |name| name.to_string_lossy().into_owned(),
                 );
-                document = document.attach(fagus::Attachment {
-                    mime_type: mime_type(&name).to_owned(),
-                    description: Some(name.clone()),
-                    name,
-                    relationship: fagus::Relationship::Supplement,
-                    data: std::sync::Arc::new(data),
-                });
+                document = document.attach(
+                    fagus::Attachment::new(name.clone(), mime_type(&name), data)
+                        .description(name)
+                        .relationship(fagus::Relationship::Supplement),
+                );
             }
             if let Some(path) = factur_x {
                 let xml = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
