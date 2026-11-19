@@ -7,6 +7,11 @@
 //! revision: streams stay as they are, all other objects go into object streams. Incremental
 //! updates (such as the one for Factur-X metadata) are merged, the newest version of each object
 //! winning. Anything unexpected leaves the PDF as it was.
+//!
+//! An encrypted PDF is written in the same pass: the streams and the object streams are
+//! encrypted, and with them the strings of the objects inside (ISO 32000-2, §7.5.7); the strings
+//! of stream dictionaries are encrypted one by one. The cross-reference stream and the
+//! encryption dictionary stay as they are, as the standard requires.
 
 use std::fmt::Write as _;
 use std::io::Write;
@@ -16,6 +21,7 @@ use flate2::write::ZlibEncoder;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+use crate::encrypt::Encryptor;
 use crate::parse::{self, Object};
 
 /// Objects per object stream.
@@ -23,9 +29,26 @@ const PER_STREAM: usize = 128;
 
 /// The PDF with its objects in object streams and a cross-reference stream, or `None` if it is
 /// not a PDF this understands. `catalog` holds entries for the document catalog that krilla does
-/// not write; those it has already are left as they are.
-pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
+/// not write; those it has already are left as they are. With an encryptor, the PDF is
+/// encrypted.
+pub(crate) fn compact(
+    pdf: &[u8],
+    catalog: &[(&str, &str)],
+    mut encryptor: Option<&mut Encryptor>,
+) -> Option<Vec<u8>> {
     let references = parse::cross_references(pdf)?;
+    let extended: Vec<(&str, &str)>;
+    let catalog = match encryptor {
+        // AES-256 belongs to PDF 2.0; PDF 1.7 has it as Adobe's extension level 8.
+        Some(_) if pdf.starts_with(b"%PDF-1.") => {
+            extended = [("/Extensions", "<</ADBE<</BaseVersion/1.7/ExtensionLevel 8>>>>")]
+                .into_iter()
+                .chain(catalog.iter().copied())
+                .collect();
+            &extended[..]
+        }
+        _ => catalog,
+    };
     let root = parse::entry(&references.trailer, "/Root")
         .and_then(|root| root.split_whitespace().next()?.parse::<u32>().ok());
     let mut objects: Vec<Object> = Vec::with_capacity(references.offsets.len());
@@ -46,10 +69,34 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
     entries[0] = (0, 0, u16::MAX);
     for object in objects.iter().filter(|object| object.data.is_some()) {
         entries[object.number as usize] = (1, out.len() as u64, 0);
-        out.extend_from_slice(&pdf[object.whole.clone()]);
-        out.push(b'\n');
+        if let Some(encryptor) = encryptor.as_deref_mut() {
+            encrypted_stream(&mut out, pdf, object, encryptor)?;
+        } else {
+            out.extend_from_slice(&pdf[object.whole.clone()]);
+            out.push(b'\n');
+        }
     }
-    let small: Vec<&Object> = objects.iter().filter(|object| object.data.is_none()).collect();
+    // The catalog of an encrypted PDF stays outside the object streams, with its strings
+    // encrypted one by one: viewers such as macOS's look for it before they ask for the
+    // password, which the object streams need.
+    let mut catalog_outside = false;
+    if let Some(encryptor) = encryptor.as_deref_mut()
+        && let Some(object) = objects
+            .iter()
+            .find(|object| object.data.is_none() && Some(object.number) == root)
+    {
+        let body = with_entries(parse::trim(&pdf[object.body.clone()]), catalog)?;
+        let body = encryptor.encrypt_strings(&body)?;
+        entries[object.number as usize] = (1, out.len() as u64, 0);
+        writeln!(out, "{} 0 obj", object.number).ok()?;
+        out.extend_from_slice(&body);
+        out.extend_from_slice(b"\nendobj\n");
+        catalog_outside = true;
+    }
+    let small: Vec<&Object> = objects
+        .iter()
+        .filter(|object| object.data.is_none() && !(catalog_outside && Some(object.number) == root))
+        .collect();
     let mut next = highest + 1;
     // The object streams with their numbers, filled first and compressed side by side.
     let mut streams: Vec<(u32, usize, usize, Vec<u8>)> = Vec::new();
@@ -86,7 +133,10 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
         .map(|(_, _, _, content)| deflate(content))
         .collect();
     for ((number, count, first, _), compressed) in streams.iter().zip(compressed) {
-        let compressed = compressed?;
+        let mut compressed = compressed?;
+        if let Some(encryptor) = encryptor.as_deref_mut() {
+            compressed = encryptor.encrypt(&compressed)?;
+        }
         entries.push((1, out.len() as u64, 0));
         write!(
             out,
@@ -96,6 +146,17 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
         .ok()?;
         out.extend_from_slice(&compressed);
         out.extend_from_slice(b"\nendstream\nendobj\n");
+    }
+
+    // The encryption dictionary, which no object stream may hold, and which needs the
+    // identifier of the trailer.
+    let mut encrypt = String::new();
+    if let Some(encryptor) = encryptor {
+        parse::entry(&references.trailer, "/ID")?;
+        entries.push((1, out.len() as u64, 0));
+        write!(out, "{next} 0 obj\n{}\nendobj\n", encryptor.dictionary()).ok()?;
+        encrypt = format!("/Encrypt {next} 0 R");
+        next += 1;
     }
 
     // The cross-reference stream lists itself too, and carries the trailer's entries.
@@ -120,6 +181,7 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
             trailer.push_str(value.trim());
         }
     }
+    trailer.push_str(&encrypt);
     write!(
         out,
         "{xref} 0 obj\n<</Type/XRef/Size {}/W[1 {width} 2]{trailer}/Filter/FlateDecode/Length {}>>\nstream\n",
@@ -130,6 +192,30 @@ pub(crate) fn compact(pdf: &[u8], catalog: &[(&str, &str)]) -> Option<Vec<u8>> {
     out.extend_from_slice(&table);
     write!(out, "\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").ok()?;
     Some(out)
+}
+
+/// Writes a stream object encrypted: its data, and the strings of its dictionary, whose length
+/// changes. `None` if the object is not as expected or encrypting fails.
+fn encrypted_stream(out: &mut Vec<u8>, pdf: &[u8], object: &Object, encryptor: &mut Encryptor) -> Option<()> {
+    let start = parse::skip_whitespace(pdf, object.body.start);
+    let end = parse::dictionary_end(pdf, start)?;
+    // The strings are hexadecimal now: the dictionary is text.
+    let dictionary = String::from_utf8(encryptor.encrypt_strings(&pdf[start..end])?).ok()?;
+    let data = encryptor.encrypt(&pdf[object.data.clone()?])?;
+    let length = parse::entry(&dictionary, "/Length")?;
+    let at = length.as_ptr() as usize - dictionary.as_ptr() as usize;
+    write!(
+        out,
+        "{} 0 obj\n{} {}{}\nstream\n",
+        object.number,
+        &dictionary[..at],
+        data.len(),
+        &dictionary[at + length.len()..]
+    )
+    .ok()?;
+    out.extend_from_slice(&data);
+    out.extend_from_slice(b"\nendstream\nendobj\n");
+    Some(())
 }
 
 /// The PDF as one revision with a cross-reference table, every object on its own, for PDF 1.4
@@ -232,17 +318,37 @@ mod tests {
 
     /// The dictionary and the decoded data of a stream object.
     fn stream(pdf: &[u8], number: usize, offset: usize) -> (String, Vec<u8>) {
+        decrypted_stream(pdf, number, offset, None)
+    }
+
+    /// [`stream`] of an encrypted PDF, with its file key.
+    fn decrypted_stream(
+        pdf: &[u8],
+        number: usize,
+        offset: usize,
+        key: Option<&[u8; 32]>,
+    ) -> (String, Vec<u8>) {
         let object = object(pdf, u32::try_from(number).expect("number"), offset).expect("object");
         let data = object.data.expect("a stream");
         let start = skip_whitespace(pdf, object.body.start);
         let end = dictionary_end(pdf, start).expect("dictionary");
         let dictionary = std::str::from_utf8(&pdf[start..end]).expect("text").to_owned();
-        (dictionary, inflate(&pdf[data]))
+        let data = match key {
+            Some(key) => crate::encrypt::tests::decrypt(key, &pdf[data]),
+            None => pdf[data].to_vec(),
+        };
+        (dictionary, inflate(&data))
     }
 
     /// The bodies of all objects of a compacted PDF, read back through its cross-reference
     /// stream and object streams.
     fn read_back(pdf: &[u8]) -> BTreeMap<u32, Vec<u8>> {
+        read_back_decrypted(pdf, None)
+    }
+
+    /// [`read_back`] of an encrypted PDF, with its file key: the objects in object streams come
+    /// decrypted, the streams as they are.
+    fn read_back_decrypted(pdf: &[u8], key: Option<&[u8; 32]>) -> BTreeMap<u32, Vec<u8>> {
         let start = rfind(pdf, b"startxref").expect("startxref");
         let xref_offset = number_after(pdf, start + 9).expect("offset").0;
         let xref_number = number_after(pdf, xref_offset).expect("number").0;
@@ -280,7 +386,7 @@ mod tests {
             .collect::<std::collections::BTreeSet<_>>()
             .into_iter()
             .map(|number| {
-                let (dictionary, data) = stream(pdf, number, rows[number].1);
+                let (dictionary, data) = decrypted_stream(pdf, number, rows[number].1, key);
                 assert!(dictionary.contains("/Type/ObjStm"));
                 let first: usize = entry(&dictionary, "/First")
                     .expect("First")
@@ -375,7 +481,7 @@ mod tests {
     fn keeps_every_object() {
         for update in [false, true] {
             let plain = sample(update);
-            let compacted = compact(&plain, &[]).expect("compacted");
+            let compacted = compact(&plain, &[], None).expect("compacted");
             let original: BTreeMap<u32, Vec<u8>> = cross_references(&plain)
                 .expect("cross-reference table")
                 .offsets
@@ -405,7 +511,7 @@ mod tests {
             ("/ViewerPreferences", "<</DisplayDocTitle true>>"),
             ("/Type", "/Other"),
         ];
-        let objects = read_back(&compact(&plain, &entries).expect("compacted"));
+        let objects = read_back(&compact(&plain, &entries, None).expect("compacted"));
         let catalogs: Vec<String> = objects
             .values()
             .map(|body| String::from_utf8_lossy(body).into_owned())
@@ -467,12 +573,158 @@ mod tests {
         }
     }
 
+    /// The strings of an object, decoded (and decrypted with `key`), and the object with each
+    /// string replaced by `()` and the value of `/Length` by `0`.
+    fn strings(object: &[u8], key: Option<&[u8; 32]>) -> (Vec<Vec<u8>>, String) {
+        let mut strings = Vec::new();
+        let mut rest = Vec::new();
+        let mut position = 0;
+        while let Some(&byte) = object.get(position) {
+            let end = match byte {
+                b'(' => parse::string_end(object, position).expect("string end"),
+                b'<' if object.get(position + 1) != Some(&b'<') => {
+                    position + find(&object[position..], b">").expect("hexadecimal end")
+                }
+                b'<' => {
+                    rest.extend_from_slice(b"<<");
+                    position += 2;
+                    continue;
+                }
+                _ => {
+                    rest.push(byte);
+                    position += 1;
+                    continue;
+                }
+            };
+            let encoded = &object[position..=end];
+            let decoded = crate::encrypt::tests::decode(encoded);
+            strings.push(match key {
+                Some(key) => crate::encrypt::tests::decrypt(key, &decoded),
+                None => decoded,
+            });
+            rest.extend_from_slice(b"()");
+            position = end + 1;
+        }
+        let rest = String::from_utf8(rest).expect("text");
+        let length = entry(&rest, "/Length").map_or(String::new(), str::to_owned);
+        (
+            strings,
+            rest.replacen(&format!("/Length{length}"), "/Length 0", 1),
+        )
+    }
+
+    #[test]
+    fn encrypts_every_string_and_stream() {
+        use crate::encrypt::tests::{decrypt, file_key};
+        use crate::{Encryption, encrypt::Encryptor};
+
+        for update in [false, true] {
+            let plain = sample(update);
+            let compacted = compact(&plain, &[], None).expect("compacted");
+            let encryption = Encryption::new()
+                .user_password("user")
+                .owner_password("owner")
+                .seed([3; 32]);
+            let mut encryptor = Encryptor::new(&encryption).expect("encryptor");
+            let encrypted = compact(&plain, &[], Some(&mut encryptor)).expect("encrypted");
+            // The same seed, the same bytes.
+            let mut again = Encryptor::new(&encryption).expect("encryptor");
+            assert_eq!(
+                compact(&plain, &[], Some(&mut again)).expect("encrypted"),
+                encrypted
+            );
+
+            // The trailer points to the encryption dictionary, outside the object streams.
+            let start = rfind(&encrypted, b"startxref").expect("startxref");
+            let xref_offset = number_after(&encrypted, start + 9).expect("offset").0;
+            let xref_number = number_after(&encrypted, xref_offset).expect("number").0;
+            let (trailer, _) = stream(&encrypted, xref_number, xref_offset);
+            let reference: u32 = entry(&trailer, "/Encrypt")
+                .expect("Encrypt")
+                .split_whitespace()
+                .next()
+                .expect("number")
+                .parse()
+                .expect("number");
+            assert_eq!(
+                entry(&trailer, "/ID").map(str::trim),
+                entry(&cross_references(&plain).expect("table").trailer, "/ID").map(str::trim),
+                "the identifier is not encrypted"
+            );
+            let at = find(&encrypted, format!("\n{reference} 0 obj\n").as_bytes()).expect("Encrypt") + 1;
+            let encrypt = object(&encrypted, reference, at).expect("object");
+            let dictionary = std::str::from_utf8(trim(&encrypted[encrypt.body])).expect("text");
+            assert!(
+                dictionary.starts_with("<</Filter/Standard/V 5/R 6/"),
+                "{dictionary}"
+            );
+            assert_eq!(file_key(dictionary, "wrong"), None);
+            let (key, _) = file_key(dictionary, "owner").expect("owner password");
+            assert_eq!(file_key(dictionary, "user"), Some((key, false)));
+
+            // Every object as before; the catalog with Adobe's extension for AES-256 in PDF 1.7.
+            let references = cross_references(&plain).expect("table");
+            let is_stream = |number: u32| {
+                object(&plain, number, references.offsets[&number])
+                    .expect("object")
+                    .data
+                    .is_some()
+            };
+            let expected = read_back(&compacted);
+            let found = read_back_decrypted(&encrypted, Some(&key));
+            let mut streams = 0;
+            for (number, body) in &expected {
+                let found = &found[number];
+                if find(body, b"/Type/Catalog").is_some() {
+                    // Outside the object streams, with its strings encrypted.
+                    let extended = with_entries(
+                        body,
+                        &[("/Extensions", "<</ADBE<</BaseVersion/1.7/ExtensionLevel 8>>>>")],
+                    )
+                    .expect("catalog");
+                    assert_eq!(strings(found, Some(&key)), strings(&extended, None));
+                    continue;
+                }
+                if !is_stream(*number) {
+                    assert_eq!(found, body, "object {number}");
+                    continue;
+                }
+                // A stream: its data and the strings of its dictionary encrypted.
+                streams += 1;
+                let parse = |body: &[u8]| {
+                    let start = skip_whitespace(body, 0);
+                    let end = dictionary_end(body, start).expect("dictionary");
+                    let data = &body[end..];
+                    let data_start = find(data, b"stream").expect("stream") + 7;
+                    let data_end = rfind(data, b"endstream").expect("endstream") - 1;
+                    (body[start..end].to_vec(), data[data_start..data_end].to_vec())
+                };
+                let (plain_dictionary, plain_data) = parse(body);
+                let (dictionary, data) = parse(found);
+                assert_eq!(decrypt(&key, &data), plain_data, "object {number}");
+                let (plain_strings, plain_rest) = strings(&plain_dictionary, None);
+                let (found_strings, found_rest) = strings(&dictionary, Some(&key));
+                assert_eq!(found_strings, plain_strings, "object {number}");
+                assert_eq!(found_rest, plain_rest, "object {number}");
+                assert_eq!(
+                    entry(std::str::from_utf8(&dictionary).expect("text"), "/Length").map(str::trim),
+                    Some(data.len().to_string().as_str())
+                );
+            }
+            assert!(streams > 2, "{streams}");
+            // Nothing readable is left: not the title, not the text of a link.
+            assert!(find(&compacted, b"Rechnung").is_some());
+            assert!(find(&encrypted, b"Rechnung").is_none());
+            assert!(find(&encrypted, b"quittio.dev").is_none());
+        }
+    }
+
     #[test]
     fn leaves_what_it_does_not_understand() {
-        assert!(compact(b"%PDF-1.7\nnot really", &[]).is_none());
+        assert!(compact(b"%PDF-1.7\nnot really", &[], None).is_none());
         let plain = sample(false);
         let broken = [&plain[..plain.len() - 30], b"startxref\n99999999\n%%EOF\n"].concat();
-        assert!(compact(&broken, &[]).is_none());
+        assert!(compact(&broken, &[], None).is_none());
         assert!(classic(&broken, &[]).is_none());
     }
 }

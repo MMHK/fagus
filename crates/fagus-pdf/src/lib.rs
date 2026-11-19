@@ -6,6 +6,7 @@
 mod clip_text;
 mod compact;
 mod decode;
+mod encrypt;
 mod filtered;
 pub mod foreign_layers;
 mod memo;
@@ -27,6 +28,7 @@ mod tainted;
 mod text_anchor;
 mod xmp;
 
+pub use encrypt::{Encryption, Permission};
 pub use tagging::{Element, Numbering, Owner, Repeat, Role, Scope, Structure};
 pub use xmp::Extension;
 
@@ -262,6 +264,9 @@ pub struct Options {
     pub accessible: bool,
     /// Images prepared for earlier documents, and where those of this one are kept.
     pub images: Images,
+    /// The passwords and permissions of an encrypted PDF. PDF/A forbids encryption, so it
+    /// cannot go with `conformance` (nor, in Fagus, with `accessible`).
+    pub encryption: Option<Encryption>,
 }
 
 /// A link on a page.
@@ -326,6 +331,18 @@ pub fn write(
     metadata: &Metadata,
     options: &Options,
 ) -> Result<Written, PdfError> {
+    if options.encryption.is_some() && (options.conformance.is_some() || options.accessible) {
+        return Err(PdfError::Conformance {
+            standard: standards(options),
+            problems: "the PDF cannot be encrypted (PDF/A forbids encryption)".to_owned(),
+        });
+    }
+    // Before the document is written: a missing password fails without the work.
+    let mut encryptor = options
+        .encryption
+        .as_ref()
+        .map(encrypt::Encryptor::new)
+        .transpose()?;
     let written = write_uncompacted(&pages, fonts, metadata, options)?;
     drop(pages);
     // A viewer shows the title in place of the file name, as with Chrome's PDFs.
@@ -334,6 +351,16 @@ pub fn write(
     } else {
         &[]
     };
+    // An encrypted PDF is written in the same pass as the object streams; unlike them, it must
+    // not fail quietly.
+    if let Some(encryptor) = &mut encryptor {
+        let pdf = compact::compact(&written.pdf, catalog, Some(encryptor)).ok_or_else(|| {
+            encryptor
+                .take_error()
+                .unwrap_or_else(|| PdfError::Write("the PDF could not be encrypted".to_owned()))
+        })?;
+        return Ok(Written { pdf, ..written });
+    }
     // Object streams make the PDF smaller; should that fail, the PDF stays as it is. PDF/A-1
     // is PDF 1.4, which has none.
     let rewritten = if options
@@ -342,7 +369,7 @@ pub fn write(
     {
         compact::classic(&written.pdf, catalog)
     } else {
-        compact::compact(&written.pdf, catalog)
+        compact::compact(&written.pdf, catalog, None)
     };
     Ok(Written {
         pdf: rewritten.unwrap_or(written.pdf),

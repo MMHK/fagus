@@ -37,6 +37,10 @@ libm.workspace = true
 # Compresses the object streams side by side; krilla compresses pages with it.
 rayon = { workspace = true, optional = true }
 thiserror.workspace = true
+aes.workspace = true
+cbc.workspace = true
+sha2.workspace = true
+getrandom.workspace = true
 
 [features]
 default = ["parallel"]
