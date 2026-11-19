@@ -177,16 +177,16 @@ corner of each page box, rounded to a hundredth of a point:
   has one; a row's box on a page is the area of its cells there.
 
 `rss` and `maxRss` are the worker's resident memory after the document, in bytes: now and the
-largest it has been since the worker started. They are there where the system tells them without
-unsafe code: both on Linux (from `/proc/self/status`), `maxRss` on macOS (from `getrusage`),
-neither on Windows. A caller can replace a worker that has grown by closing its input and
-starting a new one, as the PHP package does with `maxMemory` ([deployment.md](deployment.md#restart-workers)).
+largest it has been since the worker started. On Linux the worker sends both (from
+`/proc/self/status`), on macOS only `maxRss` (from `getrusage`), on Windows neither. A caller can
+replace a worker that has grown by closing its input and starting a new one, as the PHP package
+does with `maxMemory` ([deployment.md](deployment.md#restart-workers)).
 
 The header of `E` for a render request has the same `rss` and `maxRss`, the `message` and a
-`diagnostics` array of the same form. For a document
-that could not be rendered (it does not meet PDF/A or PDF/UA, or the PDF could not be written),
-it holds the diagnostics found until then, which often explain the failure; for a request the
-worker cannot use, an `F` it cannot read and a message of an unknown type, it is empty.
+`diagnostics` array of the same form. For a document that could not be rendered (it does not
+meet PDF/A or PDF/UA, or the PDF could not be written), it holds the diagnostics found until
+then, which often explain the failure; for a request the worker cannot use, an `F` it cannot read
+and a message of an unknown type, it is empty.
 
 ### Fonts
 

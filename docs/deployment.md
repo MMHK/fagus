@@ -204,10 +204,9 @@ process costs 3 to 4 ms once. Both are off by default.
 
 `maxMemory` compares the resident size the worker reports with every document
 ([protocol.md](protocol.md#rendering)): on Linux its size after the document, on macOS the
-largest it has been, which macOS tells without the size now. The resident size counts the
-binary's own pages too, about 20 MB, so leave room above what one document needs: a limit
-below that replaces the worker after every document. On Windows the worker does not report its
-memory and only `maxDocuments` applies.
+largest it has been since it started. The resident size counts the binary's own pages too,
+about 20 MB; a limit below what one document needs replaces the worker after every document.
+On Windows the worker does not report its memory and only `maxDocuments` applies.
 
 ## Speed and memory
 
