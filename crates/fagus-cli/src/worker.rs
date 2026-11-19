@@ -22,6 +22,10 @@ const PDF: u8 = b'P';
 const ERROR: u8 = b'E';
 const FONT: u8 = b'F';
 const DONE: u8 = b'K';
+const SIGN: u8 = b'S';
+const SIGNED: u8 = b's';
+const TIMESTAMP: u8 = b'T';
+const TIMESTAMPED: u8 = b't';
 
 /// A message: its type, its JSON header and its data blocks.
 #[derive(Debug)]
@@ -162,6 +166,35 @@ struct Request {
     layout: bool,
     #[serde(default)]
     encryption: Option<Encryption>,
+    #[serde(default)]
+    signature: Option<SignatureRequest>,
+}
+
+/// The digital signature of a render request.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SignatureRequest {
+    /// The data block of a PKCS#12 file.
+    #[serde(default)]
+    pkcs12: Option<usize>,
+    #[serde(default)]
+    password: Option<String>,
+    /// The data blocks of the certificates of a signer the caller asks (`S`).
+    #[serde(default)]
+    certificates: Vec<usize>,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    reason: Option<String>,
+    #[serde(default)]
+    location: Option<String>,
+    #[serde(default)]
+    contact_info: Option<String>,
+    #[serde(default)]
+    time: Option<String>,
+    /// Whether the caller timestamps the signature (`T`).
+    #[serde(default)]
+    timestamp: bool,
 }
 
 /// The default of fields that are on unless the caller turns them off.
@@ -260,6 +293,44 @@ impl<R: Read + Send, W: Write + Send> fagus::ResourceLoader for Asker<R, W> {
         }
         frame.blobs.into_iter().next()
     }
+}
+
+/// Asks the caller to sign a digest (`S`) or to timestamp one (`T`), and returns the data of the
+/// answer.
+fn ask_caller<R: Read, W: Write>(
+    channel: &Mutex<Channel<R, W>>,
+    kind: u8,
+    header: Value,
+    digest: &[u8],
+) -> Result<Vec<u8>, String> {
+    let (question, answer) = if kind == SIGN {
+        (SIGN, SIGNED)
+    } else {
+        (TIMESTAMP, TIMESTAMPED)
+    };
+    let mut channel = channel.lock().map_err(|_| "poisoned lock".to_owned())?;
+    channel
+        .write(question, header, &[digest])
+        .map_err(|error| error.to_string())?;
+    let frame = channel
+        .read()
+        .map_err(|error| error.to_string())?
+        .ok_or("the caller closed the connection")?;
+    if frame.kind != answer {
+        return Err(format!(
+            "the caller answered `{}` instead of `{}`",
+            char::from(frame.kind),
+            char::from(answer)
+        ));
+    }
+    if let Some(error) = frame.header.get("error").and_then(Value::as_str) {
+        return Err(error.to_owned());
+    }
+    frame
+        .blobs
+        .into_iter()
+        .next()
+        .ok_or_else(|| "the caller's answer has no data".to_owned())
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> io::Result<std::sync::MutexGuard<'_, T>> {
@@ -495,7 +566,67 @@ where
         }
         document = document.encrypt(protection);
     }
+    if let Some(request_signature) = request.signature {
+        document = document.sign(signature(channel, request.id, request_signature, &mut take)?);
+    }
     Ok(document)
+}
+
+/// The signature of a render request.
+fn signature<R, W>(
+    channel: &Arc<Mutex<Channel<R, W>>>,
+    id: u64,
+    request: SignatureRequest,
+    take: &mut impl FnMut(usize) -> Result<Vec<u8>, String>,
+) -> Result<fagus::Signature, String>
+where
+    R: Read + Send + 'static,
+    W: Write + Send + 'static,
+{
+    let mut signature = match (request.pkcs12, request.certificates.is_empty()) {
+        (Some(blob), true) => {
+            fagus::Signature::pkcs12(&take(blob)?, request.password.as_deref().unwrap_or_default())
+                .map_err(|error| error.to_string())?
+        }
+        (None, false) => {
+            let certificates = request
+                .certificates
+                .iter()
+                .map(|&blob| take(blob))
+                .collect::<Result<Vec<_>, _>>()?;
+            let channel = Arc::clone(channel);
+            fagus::Signature::with_signer(certificates, move |digest: &[u8], algorithm: fagus::Algorithm| {
+                ask_caller(
+                    &channel,
+                    SIGN,
+                    json!({ "id": id, "algorithm": algorithm.name() }),
+                    digest,
+                )
+            })
+        }
+        _ => return Err("a signature needs either `pkcs12` or `certificates`".to_owned()),
+    };
+    if request.timestamp {
+        let channel = Arc::clone(channel);
+        signature = signature
+            .timestamp(move |digest: &[u8]| ask_caller(&channel, TIMESTAMP, json!({ "id": id }), digest));
+    }
+    if let Some(name) = request.name {
+        signature = signature.name(name);
+    }
+    if let Some(reason) = request.reason {
+        signature = signature.reason(reason);
+    }
+    if let Some(location) = request.location {
+        signature = signature.location(location);
+    }
+    if let Some(contact) = request.contact_info {
+        signature = signature.contact_info(contact);
+    }
+    if let Some(time) = request.time {
+        signature = signature.time(date(&time).ok_or_else(|| format!("invalid date `{time}`"))?);
+    }
+    Ok(signature)
 }
 
 /// A date of the form `2026-11-02T12:00:00Z`, or with an offset (`+01:00`), in UTC.
@@ -782,6 +913,67 @@ mod tests {
         let frames = frames(&output);
         assert_eq!(frames[1].header["pages"], 1);
         assert_eq!(frames[2].header["pages"], 2);
+    }
+
+    #[test]
+    fn signs_and_asks_the_caller_to_sign() {
+        let fixture = |name: &str| {
+            std::fs::read(format!(
+                "{}/../../tests/signing/{name}",
+                env!("CARGO_MANIFEST_DIR")
+            ))
+            .expect("fixture")
+        };
+        let mut input = frame(
+            RENDER,
+            &json!({
+                "id": 1,
+                "html": 0,
+                "created": "2026-11-19T09:30:00Z",
+                "signature": { "pkcs12": 1, "password": "fagus-test-only", "reason": "Rechnung" },
+            }),
+            &[b"<p>Rechnung</p>", &fixture("ecdsa.p12")],
+        );
+        input.extend(frame(
+            RENDER,
+            &json!({
+                "id": 2,
+                "html": 0,
+                "signature": { "certificates": [1, 2], "location": "Berlin" },
+            }),
+            &[b"<p>Rechnung</p>", &fixture("rsa.pem"), &fixture("ca.pem")],
+        ));
+        // The caller cannot sign.
+        input.extend(frame(SIGNED, &json!({ "error": "no key" }), &[]));
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 3, "html": 0, "signature": { "pkcs12": 1, "password": "falsch" } }),
+            &[b"<p>Rechnung</p>", &fixture("ecdsa.p12")],
+        ));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
+        assert_eq!(kinds, "HPSEE");
+        let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
+        assert!(has(&frames[1].blobs[0], "/Reason(Rechnung)"));
+        assert!(has(&frames[1].blobs[0], "/M(D:20261119093000Z)"));
+        assert_eq!(frames[2].header["id"], 2);
+        assert_eq!(frames[2].header["algorithm"], "RSA-SHA256");
+        assert_eq!(frames[2].blobs[0].len(), 32);
+        assert_eq!(frames[3].header["id"], 2);
+        assert_eq!(
+            frames[3].header["message"],
+            "the PDF could not be signed: the signer failed: no key"
+        );
+        assert!(
+            frames[4].header["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("the PKCS#12 file cannot be read")),
+            "{}",
+            frames[4].header["message"]
+        );
     }
 
     #[test]

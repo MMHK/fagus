@@ -34,6 +34,10 @@ ends the worker with exit code 1 and the reason on its error output.
 | `E` error | worker → caller | `id` (if known), `message`, `diagnostics`, `rss`, `maxRss` | – |
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
+| `S` sign | worker → caller | `id`, `algorithm` | the digest to sign |
+| `s` signed | caller → worker | `error` (if refused) | the signature |
+| `T` timestamp | worker → caller | `id` | the digest to timestamp |
+| `t` timestamped | caller → worker | `error` (if refused) | the timestamp |
 
 The worker sends `H` when it starts; its `protocol` is 1 and its `version` that of the binary
 ([Versions](#versions)). `sandbox` says how much of the [sandbox](cli.md#sandbox) is in force:
@@ -45,7 +49,9 @@ without `id`.
 
 The caller sends `R` and reads frames until it gets `P` or `E`. Meanwhile the worker may ask for
 resources it needs with `?`, if the request allows it (`ask`); the caller answers each one with
-`r`, with the data or `found: false`. Nothing else may come in between.
+`r`, with the data or `found: false`. A request with a `signature` of the caller's own signer may
+also bring `S` and `T` (see [Signatures](#signatures)), each answered with `s` or `t`. Nothing
+else may come in between.
 
 The header of `R`; fields other than `id` and `html` may be left out:
 
@@ -189,6 +195,43 @@ The header of `E` for a render request has the same `rss` and `maxRss`, the `mes
 meet PDF/A or PDF/UA, or the PDF could not be written), it holds the diagnostics found until
 then, which often explain the failure; for a request the worker cannot use, an `F` it cannot read
 and a message of an unknown type, it is empty.
+
+### Signatures
+
+The `signature` of `R` signs the PDF (PAdES, see [pdf.md](pdf.md#sign-the-pdf)), either with a
+PKCS#12 file or with a key the caller holds:
+
+```json
+{
+  "pkcs12": 5,
+  "password": "secret",
+  "name": "Rechnungsstelle",
+  "reason": "Rechnung",
+  "location": "Berlin",
+  "contactInfo": "rechnung@example.com",
+  "time": "2026-11-02T12:00:00Z",
+  "timestamp": false
+}
+```
+
+- `pkcs12`, `password`: the data block of a PKCS#12 file (`.p12`, `.pfx`) and its password
+  (empty if left out).
+- `certificates`: instead of `pkcs12`, the data blocks of the signer's certificate and those of
+  its chain, signer first, each DER or PEM. The worker then asks the caller to sign with `S`.
+- `name`, `reason`, `location`, `contactInfo`: what the signature says; may be left out.
+- `time`: the time of signing, in the form of `created`; the creation date if left out.
+- `timestamp`: whether the worker asks the caller for a timestamp with `T` (`false` if left
+  out).
+
+`S` carries the request's `id`, the `algorithm` (`RSA-SHA256` or `ECDSA-P256-SHA256`, from the
+certificate) and the SHA-256 digest (32 bytes) to sign as its data. The caller answers `s` with
+the signature of that digest as its data: PKCS#1 v1.5 for RSA, DER or the 64 bytes of r and s for
+ECDSA. `T` carries the `id` and the SHA-256 digest of the signature value; the caller answers `t`
+with the answer of an RFC 3161 time-stamping authority (the timestamp token or the whole
+response) as its data. A caller that cannot answer sends `s` or `t` with an `error` and no data;
+the worker then answers the request with `E`. The worker checks signatures against the
+certificate and timestamps against the digest, and answers `E` for those that do not match.
+It may ask more than once for one document, should a timestamp need more room than expected.
 
 ### Fonts
 
