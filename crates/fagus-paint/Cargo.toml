@@ -21,3 +21,6 @@ fagus-layout.workspace = true
 fagus-style.workspace = true
 fagus-text.workspace = true
 rustc-hash.workspace = true
+
+[dev-dependencies]
+fagus-css.workspace = true

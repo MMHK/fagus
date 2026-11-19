@@ -310,7 +310,11 @@ fn crop_to_clips(items: &mut [Item]) {
                 clips.push(current);
                 current = None;
             }
-            Item::PushOpacity(_) | Item::PushBlend(_) | Item::PushIsolated | Item::PushMask(_) => {
+            Item::PushOpacity(_)
+            | Item::PushBlend(_)
+            | Item::PushIsolated
+            | Item::PushMask(_)
+            | Item::PushLayer(_) => {
                 clips.push(current);
             }
             Item::Pop => current = clips.pop().unwrap_or(current),

@@ -10,6 +10,7 @@
 //! ```
 
 mod font_face;
+mod forms;
 mod frames;
 mod interactive;
 mod layout_info;
@@ -36,7 +37,7 @@ use fagus_layout::responsive;
 use fagus_layout::{Image, ImageError, Images};
 use fagus_pdf::Metadata;
 use fagus_text::{Face, FontDb};
-use rustc_hash::{FxHashMap, FxHasher};
+use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
 
 pub use fagus_css::{Diagnostic, Severity};
 pub use fagus_pdf::sign::{Algorithm, Signature, Signer, Timestamper, timestamp_request};
@@ -86,6 +87,8 @@ pub struct Document {
     conformance: Option<Conformance>,
     tagged: bool,
     accessible: bool,
+    /// Whether form controls become the fields of an interactive form.
+    forms: bool,
     attachments: Vec<Attachment>,
     factur_x: Option<FacturXProfile>,
     /// The profile the invoice XML declares, if any.
@@ -208,6 +211,7 @@ impl Document {
             conformance: None,
             tagged: true,
             accessible: false,
+            forms: false,
             attachments: Vec::new(),
             factur_x: None,
             declared_profile: None,
@@ -303,6 +307,17 @@ impl Document {
     #[must_use]
     pub fn encrypt(mut self, encryption: Encryption) -> Self {
         self.encryption = Some(encryption);
+        self
+    }
+
+    /// Whether the form controls of the document become the fields of an interactive form,
+    /// which a reader fills in in a PDF viewer: text fields, text areas, checkboxes, radio
+    /// buttons and drop-down lists, named after their `name`, with their values. Off by
+    /// default: Chrome prints the controls as they look, and so does Fagus without it. Controls
+    /// in an `inert` element stay as they look.
+    #[must_use]
+    pub fn forms(mut self, forms: bool) -> Self {
+        self.forms = forms;
         self
     }
 
@@ -1093,17 +1108,30 @@ impl Inner {
         let layout = input
             .report_layout
             .then(|| layout_info::collect(&document, &pages));
+        let controls = if input.forms {
+            forms::controls(&document, &styled)
+        } else {
+            forms::Controls::default()
+        };
+        let layer_warnings = layer_warnings(&styled, conformance, input.accessible);
+        // The fields of a form are made of the widgets that painting finds, and of the document
+        // and its styles, which are then kept until after painting; otherwise they go now.
         let mut structure = None;
         let mut inaccessible = Vec::new();
-        if tagged {
-            let built = structure::build(&document, &styled);
-            if input.accessible {
-                inaccessible = accessibility_problems(&document, &metadata, &built);
+        let kept = if controls.lifts.is_empty() {
+            if tagged {
+                let built = structure::build(&document, &styled, &FxHashSet::default());
+                if input.accessible {
+                    inaccessible = accessibility_problems(&document, &metadata, &built);
+                }
+                structure = Some(built.structure);
             }
-            structure = Some(built.structure);
-        }
-        drop(styled);
-        drop(document);
+            drop(styled);
+            drop(document);
+            None
+        } else {
+            Some((document, styled))
+        };
         drop(rules);
         drop(first_page_rules);
         drop(references);
@@ -1111,8 +1139,13 @@ impl Inner {
         let prepared = start.elapsed();
 
         let start = Instant::now();
-        let lists = fagus_paint::paint(&pages, &fonts, &images, tagged);
+        let (lists, widgets) = if controls.lifts.is_empty() {
+            (fagus_paint::paint(&pages, &fonts, &images, tagged), Vec::new())
+        } else {
+            fagus_paint::paint_with_fields(&pages, &fonts, &images, tagged, &controls.lifts)
+        };
         timings.paint = start.elapsed();
+        diagnostics.extend(layer_warnings);
         // Installed fonts whose glyphs Fagus cannot draw gave way to the next font.
         for family in fonts.take_skipped_faces() {
             diagnostics.push(warning(
@@ -1145,6 +1178,25 @@ impl Inner {
                 diagnostics.push(pdf_warning(code, message));
             }
         }
+        let fields = match kept {
+            Some((document, styled)) => {
+                let fields = forms::fields(&document, &styled, &controls, widgets, &pages);
+                if tagged {
+                    let controls: FxHashSet<fagus_dom::NodeId> = fields
+                        .iter()
+                        .flat_map(|field| &field.widgets)
+                        .filter_map(|widget| widget.node)
+                        .collect();
+                    let built = structure::build(&document, &styled, &controls);
+                    if input.accessible {
+                        inaccessible = accessibility_problems(&document, &metadata, &built);
+                    }
+                    structure = Some(built.structure);
+                }
+                fields
+            }
+            None => Vec::new(),
+        };
         // The fragments are painted: what is left goes into the PDF, which a document of many
         // pages need not hold beside them.
         let page_count = pages.len();
@@ -1170,6 +1222,7 @@ impl Inner {
             accessible: input.accessible,
             images: self.images.clone(),
             encryption: input.encryption.clone(),
+            fields,
         };
         let written = match fagus_pdf::write(lists, &fonts, &metadata, &options) {
             Ok(written) => written,
@@ -1620,7 +1673,7 @@ impl Inner {
             diagnostics,
         );
         // Each URL once, though inherited properties name it in many styles.
-        let mut tried = rustc_hash::FxHashSet::default();
+        let mut tried = FxHashSet::default();
         let mut svg_bytes = 0;
         let mut parsed_svgs: ByData<Option<Arc<Image>>> = FxHashMap::default();
         // The same, by the address of data that is kept in `parsed_svgs`.
@@ -1737,7 +1790,7 @@ impl Inner {
         // `url(masks.svg#m)`) are no mask images, as in Chrome, which does not load such
         // `<mask>` elements either: the box is not masked.
         // Each URL is looked at once, each image's data (which many URLs may share) once.
-        let mut checked = rustc_hash::FxHashSet::default();
+        let mut checked = FxHashSet::default();
         let mut blank: FxHashMap<usize, bool> = FxHashMap::default();
         for style in styled.all() {
             for image in style.mask.iter().flat_map(|mask| mask.images.iter()) {
@@ -2287,7 +2340,7 @@ fn xml_escaped(text: &str) -> String {
 /// reported once, at the first element that has it.
 fn style_attribute_diagnostics(document: &fagus_dom::Document) -> Vec<Diagnostic> {
     let quirks = document.quirks_mode();
-    let mut seen = rustc_hash::FxHashSet::default();
+    let mut seen = FxHashSet::default();
     let mut found = Vec::new();
     for node in document.descendants(fagus_dom::NodeId::DOCUMENT) {
         let Some(element) = document.element(node) else {
@@ -2426,6 +2479,50 @@ fn accessibility_problems(
         last = level;
     }
     problems
+}
+
+/// Warnings about layers (`-fagus-layer`) that the standards asked for do not allow: none in
+/// PDF/A-1, none that depend on printing in the other levels of PDF/A and in PDF/UA-1.
+fn layer_warnings(
+    styled: &fagus_style::StyledDocument,
+    conformance: Option<Conformance>,
+    accessible: bool,
+) -> Vec<Diagnostic> {
+    let standard = match conformance {
+        Some(conformance) => conformance.name(),
+        None if accessible => "PDF/UA-1",
+        None => return Vec::new(),
+    };
+    let layers: Vec<&fagus_style::values::Layer> =
+        styled.all().filter_map(|style| style.layer.as_deref()).collect();
+    if layers.is_empty() {
+        return Vec::new();
+    }
+    if let Some(conformance) = conformance.filter(|conformance| conformance.part() == 1) {
+        return vec![pdf_warning(
+            "pdf.layers-unsupported",
+            format!(
+                "{} has no layers: what `-fagus-layer` puts on one is printed as if it had none",
+                conformance.name()
+            ),
+        )];
+    }
+    let decided: std::collections::BTreeSet<&str> = layers
+        .iter()
+        .filter(|layer| layer.shown != fagus_style::values::LayerShown::Always)
+        .map(|layer| &*layer.name)
+        .collect();
+    decided
+        .into_iter()
+        .map(|name| {
+            pdf_warning(
+                "pdf.layer-shown",
+                format!(
+                    "{standard} does not let what shows depend on printing: the layer `{name}` shows on screen and in print"
+                ),
+            )
+        })
+        .collect()
 }
 
 fn pdf_warning(code: &'static str, message: String) -> Diagnostic {

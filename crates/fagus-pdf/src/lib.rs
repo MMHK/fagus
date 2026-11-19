@@ -9,6 +9,8 @@ mod decode;
 mod encrypt;
 mod filtered;
 pub mod foreign_layers;
+mod forms;
+mod layers;
 mod memo;
 mod non_scaling;
 pub use decode::alpha as image_alpha;
@@ -28,9 +30,11 @@ pub mod svg_reference;
 mod tagging;
 mod tainted;
 mod text_anchor;
+mod update;
 mod xmp;
 
 pub use encrypt::{Encryption, Permission};
+pub use forms::{Field, FieldKind, FieldWidget};
 pub use tagging::{Element, Numbering, Owner, Repeat, Role, Scope, Structure};
 pub use xmp::Extension;
 
@@ -269,6 +273,8 @@ pub struct Options {
     /// The passwords and permissions of an encrypted PDF. PDF/A forbids encryption, so it
     /// cannot go with `conformance` (nor, in Fagus, with `accessible`).
     pub encryption: Option<Encryption>,
+    /// The fields of an interactive form.
+    pub fields: Vec<Field>,
 }
 
 /// A link on a page.
@@ -462,6 +468,7 @@ impl ImageCache {
             svgs: FxHashMap::default(),
             svg_traits: FxHashMap::default(),
             undecoded: Vec::new(),
+            layers: layers::Layers::default(),
         }
     }
 }
@@ -534,8 +541,28 @@ fn attempt(
     settings.configuration = configuration.finish().map_err(|_| apart())?;
     let mut document = Document::new_with(settings);
     let mut tagger = structure.map(|structure| tagging::Tagger::new(structure, pages));
-    let mut font_cache = FontCache::new(pages, fonts);
+    let mut font_cache = FontCache::new(pages, &options.fields, fonts);
     font_cache.seed_notdef = options.conformance.is_none() && !options.accessible;
+    // PDF/A-1 is PDF 1.4, which has no optional content.
+    image_cache.layers = layers::Layers::new(
+        options
+            .conformance
+            .is_none_or(|conformance| conformance.part() > 1),
+    );
+    // The widgets of the fields, by page.
+    let mut widgets: FxHashMap<usize, Vec<(usize, usize)>> = FxHashMap::default();
+    for (field, widget) in options
+        .fields
+        .iter()
+        .enumerate()
+        .flat_map(|(index, field)| (0..field.widgets.len()).map(move |widget| (index, widget)))
+    {
+        let page = options.fields[field].widgets[widget].page;
+        if page < pages.len() {
+            widgets.entry(page).or_default().push((field, widget));
+        }
+    }
+    let mut appearances: Vec<forms::Appearance> = Vec::new();
     for index in 0..pages.len() {
         let page = &pages[index];
         // Every page is written, so that page indices stay those of the layout. With bleed or
@@ -626,10 +653,80 @@ fn attempt(
                 }
             }
         }
+        // Each widget starts as a link, to become a widget once the PDF is written.
+        for &(field, position) in widgets.get(&index).into_iter().flatten() {
+            let widget = &options.fields[field].widgets[position];
+            let placeholder = Link {
+                rect: widget.rect,
+                target: LinkTarget::Uri(forms::placeholder(field, position)),
+                node: widget.node,
+                description: options.fields[field]
+                    .description
+                    .clone()
+                    .or_else(|| Some(options.fields[field].name.clone())),
+            };
+            let (Some(annotation), Some(_)) = (
+                link_annotation(&placeholder, page, pages),
+                Size::from_wh(widget.size.0 * SCALE, widget.size.1 * SCALE),
+            ) else {
+                continue;
+            };
+            match &mut tagger {
+                Some(tagger) => {
+                    let id = pdf_page.add_tagged_annotation(annotation);
+                    tagger.widget(widget.node, id);
+                }
+                None => pdf_page.add_annotation(annotation),
+            }
+            let turn = match page.orientation {
+                PageOrientation::Upright => None,
+                PageOrientation::RotateLeft => Some("[0 1 -1 0 0 0]"),
+                PageOrientation::RotateRight => Some("[0 -1 1 0 0 0]"),
+            };
+            let buttons = matches!(options.fields[field].kind, FieldKind::Check | FieldKind::Radio);
+            for off in std::iter::once(false).chain(buttons.then_some(true)) {
+                appearances.push(forms::Appearance {
+                    field,
+                    widget: position,
+                    off,
+                    turn,
+                });
+            }
+        }
         pdf_page.finish();
         if release {
             pages[index].items = Vec::new();
         }
+    }
+    // What the widgets show, each on a page of its own after the document's pages.
+    for appearance in &appearances {
+        let widget = &options.fields[appearance.field].widgets[appearance.widget];
+        let Some(size) = Size::from_wh(widget.size.0 * SCALE, widget.size.1 * SCALE) else {
+            continue;
+        };
+        let mut pdf_page = document.start_page_with(PageSettings::new(size));
+        let mut surface = pdf_page.surface();
+        surface.push_transform(&Transform::from_scale(DRAW_SCALE, DRAW_SCALE));
+        let mut transforms = vec![Some(IDENTITY)];
+        let items = if appearance.off {
+            &widget.off
+        } else {
+            &widget.appearance
+        };
+        for item in items {
+            draw(
+                &mut surface,
+                item,
+                fonts,
+                &mut font_cache,
+                image_cache,
+                &mut transforms,
+                None,
+            );
+        }
+        surface.pop();
+        surface.finish();
+        pdf_page.finish();
     }
     if let Some(tagger) = tagger {
         document.set_tag_tree(tagger.finish());
@@ -739,14 +836,47 @@ fn attempt(
         ))),
         error => Failure::Pdf(PdfError::Write(error.to_string())),
     })?;
-    match &options.xmp {
+    let pdf = match &options.xmp {
         Some(extension) => xmp::extend(pdf, extension).ok_or_else(|| {
             Failure::Pdf(PdfError::Write(
                 "the XMP metadata could not be extended".to_owned(),
             ))
-        }),
-        None => Ok(pdf),
+        })?,
+        None => pdf,
+    };
+    if image_cache.layers.list.is_empty() && options.fields.is_empty() {
+        return Ok(pdf);
     }
+    interactive(&pdf, &image_cache.layers.list, options, &appearances, pages.len()).ok_or_else(|| {
+        Failure::Pdf(PdfError::Write(
+            "the layers and form fields could not be written".to_owned(),
+        ))
+    })
+}
+
+/// The PDF with its layers made optional content and its form fields written (see [`layers`]
+/// and [`forms`]).
+fn interactive(
+    pdf: &[u8],
+    layers: &[Arc<fagus_style::values::Layer>],
+    options: &Options,
+    appearances: &[forms::Appearance],
+    pages: usize,
+) -> Option<Vec<u8>> {
+    let mut update = update::Update::new(pdf)?;
+    // PDF/A and PDF/UA leave the layers to the reader.
+    let groups = layers::write(
+        &mut update,
+        layers,
+        options.conformance.is_some() || options.accessible,
+    )?;
+    let groups: FxHashMap<Arc<str>, u32> = layers
+        .iter()
+        .zip(groups)
+        .map(|(layer, group)| (Arc::clone(&layer.name), group))
+        .collect();
+    forms::write(&mut update, &options.fields, appearances, pages, &groups)?;
+    update.finish()
 }
 
 /// The standards the PDF is to meet, like `PDF/A-3a and PDF/UA-1`.
@@ -827,6 +957,7 @@ fn is_push(item: &Item) -> bool {
         Item::PushOpacity(_)
             | Item::PushBlend(_)
             | Item::PushIsolated
+            | Item::PushLayer(_)
             | Item::PushMask(_)
             | Item::PushTransform(_)
             | Item::PushClip(..)
@@ -1097,6 +1228,8 @@ struct ImageCache {
     /// Whether SVG images have an empty `viewBox`, a size relative to their box, no size of
     /// their own and non-scaling strokes, and the background color of their root, by their data.
     svg_traits: FxHashMap<usize, (bool, bool, bool, bool, Option<Rgba>)>,
+    /// The layers (`-fagus-layer`) drawn so far.
+    layers: layers::Layers,
 }
 
 fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut ImageCache) -> Option<Embedded> {
@@ -1891,6 +2024,7 @@ fn drawable(item: &Item) -> bool {
         Item::PushOpacity(_)
         | Item::PushBlend(_)
         | Item::PushIsolated
+        | Item::PushLayer(_)
         | Item::PushMask(_)
         | Item::PushTransform(_)
         | Item::PushClip(..)
@@ -1940,9 +2074,9 @@ struct FontCache {
 }
 
 impl FontCache {
-    /// The cache for the pages, which knows the glyphs they use of faces that need fonts made
-    /// of outlines.
-    fn new(pages: &[PageList], fonts: &FontDb) -> Self {
+    /// The cache for the pages and the appearances of `fields`, which knows the glyphs they use
+    /// of faces that need fonts made of outlines.
+    fn new(pages: &[PageList], fields: &[Field], fonts: &FontDb) -> Self {
         fn collect(
             items: &[Item],
             fonts: &FontDb,
@@ -1970,6 +2104,10 @@ impl FontCache {
         let mut outlined = FxHashMap::default();
         for page in pages {
             collect(&page.items, fonts, &mut outlined);
+        }
+        for widget in fields.iter().flat_map(|field| &field.widgets) {
+            collect(&widget.appearance, fonts, &mut outlined);
+            collect(&widget.off, fonts, &mut outlined);
         }
         Self {
             fonts: FxHashMap::default(),
@@ -2081,10 +2219,16 @@ fn draw(
         }
         return;
     }
+    // The end of a layer is marked before its group ends.
+    let stream = std::ptr::from_ref(transforms) as usize;
+    if matches!(item, Item::Pop) && image_cache.layers.ends_at((stream, transforms.len())) {
+        layers::end(surface);
+    }
     match item {
         Item::PushOpacity(_)
         | Item::PushBlend(_)
         | Item::PushIsolated
+        | Item::PushLayer(_)
         | Item::PushMask(_)
         | Item::PushClip(..)
         | Item::PushClipShape(_) => {
@@ -2412,6 +2556,14 @@ fn draw(
         // Isolation changes nothing where nothing is transparent.
         Item::PushIsolated if image_cache.opaque => surface.push_opacity(NormalizedF32::ONE),
         Item::PushIsolated => surface.push_isolated(),
+        Item::PushLayer(layer) => {
+            if !image_cache
+                .layers
+                .start(surface, layer, (stream, transforms.len()))
+            {
+                surface.push_opacity(NormalizedF32::ONE);
+            }
+        }
         Item::PushMask(mask) => {
             // The mask's items, drawn where it applies, in a stream of their own.
             let mut builder = surface.stream_builder();

@@ -13,9 +13,11 @@ mod color;
 mod corner;
 mod cull;
 pub use cull::invisible_opacity;
+pub use fields::{Lift, Widget};
 mod document;
 #[cfg(test)]
 mod effects_tests;
+mod fields;
 mod filter;
 mod mask;
 mod reach;
@@ -204,6 +206,9 @@ pub enum Item {
     /// Draws what follows until the matching [`Item::Pop`] as an isolated group, so that what
     /// it blends blends only within it.
     PushIsolated,
+    /// Puts what follows until the matching [`Item::Pop`] on a layer of the PDF that a viewer
+    /// can show and hide (`-fagus-layer`).
+    PushLayer(Arc<fagus_style::values::Layer>),
     /// Transforms what follows until the matching [`Item::Pop`]: `[a, b, c, d, e, f]` maps
     /// `(x, y)` to `(a·x + c·y + e, b·x + d·y + f)`.
     PushTransform([f32; 6]),
@@ -362,18 +367,34 @@ pub struct PageList {
 
 /// Builds the display lists of laid-out pages; `tagged` adds the tags of a tagged PDF.
 pub fn paint(pages: &[Page], fonts: &FontDb, images: &fagus_layout::Images, tagged: bool) -> Vec<PageList> {
-    background::with_tile_budget(|| paint_pages(pages, fonts, images, tagged, false))
+    background::with_tile_budget(|| paint_pages(pages, fonts, images, tagged, false, None).0)
+}
+
+/// Builds the display lists of laid-out pages as [`paint`] does, with the controls of `fields`
+/// painted for the fields of an interactive form: what each field shows goes into a widget of
+/// its own (see [`Lift`]), in the order the controls are painted, and not onto the page.
+#[allow(clippy::implicit_hasher, reason = "the engine's maps are all of one hasher")]
+pub fn paint_with_fields(
+    pages: &[Page],
+    fonts: &FontDb,
+    images: &fagus_layout::Images,
+    tagged: bool,
+    fields: &FxHashMap<NodeId, Lift>,
+) -> (Vec<PageList>, Vec<Widget>) {
+    background::with_tile_budget(|| paint_pages(pages, fonts, images, tagged, false, Some(fields)))
 }
 
 /// Paints the viewport of the document of a frame (see [`fagus_layout::FrameDocument`]), laid
 /// out as on a screen: as a page, but with the images of the root's background placed in the
 /// root's box, as Chrome places them in continuous media.
 pub(crate) fn paint_frame(page: &Page, fonts: &FontDb, images: &fagus_layout::Images) -> Vec<Item> {
-    background::with_tile_budget(|| paint_pages(std::slice::from_ref(page), fonts, images, false, true))
-        .into_iter()
-        .next()
-        .map(|page| page.items)
-        .unwrap_or_default()
+    background::with_tile_budget(|| {
+        paint_pages(std::slice::from_ref(page), fonts, images, false, true, None).0
+    })
+    .into_iter()
+    .next()
+    .map(|page| page.items)
+    .unwrap_or_default()
 }
 
 /// Paints `pages` (see [`paint`]); `continuous` where they are the viewport of a frame (see
@@ -384,11 +405,13 @@ fn paint_pages(
     images: &fagus_layout::Images,
     tagged: bool,
     continuous: bool,
-) -> Vec<PageList> {
+    fields: Option<&FxHashMap<NodeId, Lift>>,
+) -> (Vec<PageList>, Vec<Widget>) {
     let mut order = 0;
     let slices = slices(pages);
     let mut carrier = carried::Carrier::new(pages);
-    pages
+    let mut widgets = Vec::new();
+    let lists = pages
         .iter()
         .enumerate()
         .map(|(page_index, page)| {
@@ -431,6 +454,11 @@ fn paint_pages(
                 transforms: 0,
                 space: None,
                 next_space: None,
+                fields,
+                lifted: Vec::new(),
+                page_index,
+                placement: fields::Placement::default(),
+                layers: Vec::new(),
             };
             painter.design(|painter| page_box(page, images, &mut painter.items));
             let (width, height) = (page.width.to_px(), page.height.to_px());
@@ -486,6 +514,10 @@ fn paint_pages(
                 if index == 0 {
                     painter.next_context = NextContext::PageRoot;
                 }
+                painter.placement = fields::Placement {
+                    shrink: shrink.then(|| (page.scale, page.area.x.to_px(), page.area.y.to_px())),
+                    shift: if shift { page.shift } else { 0.0 },
+                };
                 painter.stacking_context(fragment, (0.0, 0.0), None);
                 if shift {
                     painter.items.push(Item::Pop);
@@ -497,6 +529,7 @@ fn paint_pages(
                     painter.items.push(Item::Pop);
                 }
             }
+            widgets.extend(painter.lifted.into_iter().map(|(_, widget)| widget));
             // SVG images with HTML in them are drawn as the documents they are.
             let mut items = painter.items;
             document::expand(&mut items, fonts, images);
@@ -511,7 +544,8 @@ fn paint_pages(
                 orientation: page.orientation,
             }
         })
-        .collect()
+        .collect();
+    (lists, widgets)
 }
 
 /// The width of the spaces that end the last text of an inline box fragment and hang in it
@@ -1269,6 +1303,16 @@ struct Painter<'a> {
     space: Option<(transform::Matrix3d, Item)>,
     /// The 3D space the next stacking context painted is in, until it takes it.
     next_space: Option<transform::Matrix3d>,
+    /// The controls painted for the fields of an interactive form (see [`paint_with_fields`]).
+    fields: Option<&'a FxHashMap<NodeId, Lift>>,
+    /// The widgets of the fields on the page, by the address of the control's fragment.
+    lifted: Vec<(*const Fragment, Widget)>,
+    /// The index of the page painted.
+    page_index: usize,
+    /// How the content painted is placed on the page.
+    placement: fields::Placement,
+    /// The layers (`-fagus-layer`) around what is painted, innermost last.
+    layers: Vec<Arc<fagus_style::values::Layer>>,
 }
 
 /// What the next stacking context painted is, where it matters.
@@ -1337,6 +1381,12 @@ impl Painter<'_> {
             _ => None,
         };
         let start_effects = self.items.len();
+        let layer = match &fragment.kind {
+            FragmentKind::Box { style, .. } => style.layer.clone(),
+            _ => None,
+        };
+        let layered = layer.is_some();
+        self.layers.extend(layer);
         let mut effects = self.push_effects(fragment, (x, y), perspective, space.map(|(m, r, _)| (m, r)));
         // A box that keeps the space draws its own content in its plane, and its layers in the
         // space (each with its own transform composed with the space's).
@@ -1456,6 +1506,9 @@ impl Painter<'_> {
         self.pixels = outer_pixels;
         self.transforms -= u32::from(transformed);
         self.pop(effects);
+        if layered {
+            self.layers.pop();
+        }
         self.node = outer;
     }
 
@@ -1640,13 +1693,15 @@ impl Painter<'_> {
     /// descendants, then the floats, then all inline content.
     fn in_flow(&mut self, fragment: &Fragment, x: f32, y: f32, clip: Option<&Clip>) {
         let outer = self.enter(fragment);
-        if let Some(clip) = clip {
-            self.items.push(clip.item());
-        }
-        self.blocks(fragment, x, y);
-        self.floats(fragment, x, y);
-        self.inlines(fragment, x, y, false);
-        self.pop(usize::from(clip.is_some()));
+        self.lifted(fragment, x, y, |painter| {
+            if let Some(clip) = clip {
+                painter.items.push(clip.item());
+            }
+            painter.blocks(fragment, x, y);
+            painter.floats(fragment, x, y);
+            painter.inlines(fragment, x, y, false);
+            painter.pop(usize::from(clip.is_some()));
+        });
         self.node = outer;
     }
 
@@ -1769,7 +1824,9 @@ impl Painter<'_> {
                     if let Some(clip) = &clip {
                         self.items.push(clip.item());
                     }
-                    self.blocks(child, child_x, child_y);
+                    self.lifted(child, child_x, child_y, |painter| {
+                        painter.blocks(child, child_x, child_y);
+                    });
                     self.pop(usize::from(clip.is_some()));
                 }
                 FragmentKind::Anonymous => self.blocks(child, child_x, child_y),
@@ -1884,7 +1941,9 @@ impl Painter<'_> {
                     if let Some(clip) = &clip {
                         self.items.push(clip.item());
                     }
-                    self.inlines(child, child_x, child_y, false);
+                    self.lifted(child, child_x, child_y, |painter| {
+                        painter.inlines(child, child_x, child_y, false);
+                    });
                     self.pop(usize::from(clip.is_some()));
                 }
                 FragmentKind::Line { .. } => {
@@ -2092,6 +2151,11 @@ impl Painter<'_> {
         // only (Compositing 1, §3.2), as in Chrome.
         let isolates_blending = style.is_stacking_context() && blends_inside(fragment);
         let mut pushed = 0;
+        // The layer holds everything the box paints, its transform and effects too.
+        if let Some(layer) = &style.layer {
+            self.items.push(Item::PushLayer(Arc::clone(layer)));
+            pushed += 1;
+        }
         if let Some((full, reference)) = space {
             // In a 3D space: the transform composed in it, flattened. (Chrome prints the backs
             // of boxes with `backface-visibility: hidden` too.)
@@ -2371,6 +2435,7 @@ impl Painter<'_> {
                 Item::PushOpacity(_)
                 | Item::PushBlend(_)
                 | Item::PushIsolated
+                | Item::PushLayer(_)
                 | Item::PushTransform(_)
                 | Item::PushClip(..)
                 | Item::PushClipShape(_)
@@ -2803,12 +2868,13 @@ fn keeps_3d(style: &ComputedStyle, fragment: &Fragment) -> bool {
 }
 
 /// Whether an item begins or ends a group, a transform, a clip or a mask rather than drawing.
-fn is_group(item: &Item) -> bool {
+pub(crate) fn is_group(item: &Item) -> bool {
     matches!(
         item,
         Item::PushOpacity(_)
             | Item::PushBlend(_)
             | Item::PushIsolated
+            | Item::PushLayer(_)
             | Item::PushTransform(_)
             | Item::PushClip(..)
             | Item::PushClipShape(_)

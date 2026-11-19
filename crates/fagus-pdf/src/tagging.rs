@@ -123,6 +123,8 @@ pub enum Role {
         alt: Option<String>,
     },
     Link,
+    /// A field of an interactive form, which holds its widget annotation.
+    Form,
     /// Inline content without a more specific role, such as text in another language.
     Span,
     /// An abbreviation, with what it stands for.
@@ -178,8 +180,9 @@ pub(crate) struct Tagger<'a> {
     /// The first and last page with content of each repeating element.
     pages: FxHashMap<usize, (usize, usize)>,
     marked: Vec<Marked>,
-    /// Link annotations, with the element they belong to.
-    annotations: Vec<(Option<usize>, Identifier)>,
+    /// Link annotations and the widget annotations of form fields (`true`), with the element
+    /// they belong to.
+    annotations: Vec<(Option<usize>, Identifier, bool)>,
 }
 
 impl<'a> Tagger<'a> {
@@ -261,6 +264,11 @@ impl<'a> Tagger<'a> {
     /// Where content of a node on a page goes: into an element, or an artifact of a kind.
     fn place(&self, node: NodeId, page: usize, marker: bool) -> Result<usize, ArtifactType> {
         let element = self.owner(node).ok_or(ArtifactType::Layout)?;
+        // A form field holds its widget only (PDF/UA-1, ISO 14289-1 7.18.4): what the control
+        // draws on the page beside it is its design.
+        if self.structure.elements[element].role == Role::Form {
+            return Err(ArtifactType::Layout);
+        }
         if let Some(group) = self.repeating[element]
             && let Some(&(first, last)) = self.pages.get(&group)
         {
@@ -351,6 +359,7 @@ impl<'a> Tagger<'a> {
                 Item::PushOpacity(_)
                 | Item::PushBlend(_)
                 | Item::PushIsolated
+                | Item::PushLayer(_)
                 | Item::PushMask(_)
                 | Item::PushClip(..)
                 | Item::PushClipShape(_)
@@ -404,11 +413,22 @@ impl<'a> Tagger<'a> {
 
     /// Adds a link annotation, which belongs to the element of `node`.
     pub(crate) fn annotation(&mut self, node: Option<NodeId>, id: Identifier) {
-        let element = node.and_then(|node| match self.structure.owners.get(&node) {
+        let element = self.annotated(node);
+        self.annotations.push((element, id, false));
+    }
+
+    /// Adds the widget annotation of a form field, which belongs to the element of `node`.
+    pub(crate) fn widget(&mut self, node: Option<NodeId>, id: Identifier) {
+        let element = self.annotated(node);
+        self.annotations.push((element, id, true));
+    }
+
+    /// The element an annotation of `node` belongs to.
+    fn annotated(&self, node: Option<NodeId>) -> Option<usize> {
+        node.and_then(|node| match self.structure.owners.get(&node) {
             Some(Owner::Element(_)) => self.owner(node),
             _ => None,
-        });
-        self.annotations.push((element, id));
+        })
     }
 
     /// The tag tree: every element with content, the content in reading order.
@@ -421,12 +441,12 @@ impl<'a> Tagger<'a> {
         for list in &mut content {
             list.sort_by_key(|(order, _)| *order);
         }
-        let mut annotations: Vec<Vec<Identifier>> = vec![Vec::new(); count];
+        let mut annotations: Vec<Vec<(Identifier, bool)>> = vec![Vec::new(); count];
         let mut loose = Vec::new();
-        for (element, id) in self.annotations {
+        for (element, id, widget) in self.annotations {
             match element {
-                Some(element) => annotations[element].push(id),
-                None => loose.push(id),
+                Some(element) => annotations[element].push((id, widget)),
+                None => loose.push((id, widget)),
             }
         }
         // Children come after their parents in tree order, so in reverse they are done first.
@@ -463,16 +483,11 @@ impl<'a> Tagger<'a> {
                 nodes.push(TagGroup::with_children(kind(&self.structure.elements[child]), children).into());
             }
             nodes.extend(own[position..].iter().map(|(_, id)| Node::from(*id)));
-            let is_link = self
-                .structure
-                .elements
-                .get(element)
-                .is_some_and(|element| element.role == Role::Link);
-            for id in &annotations[element] {
-                nodes.push(if is_link {
-                    Node::from(*id)
-                } else {
-                    TagGroup::with_children(tagging::Tag::Link, vec![Node::from(*id)]).into()
+            let role = self.structure.elements.get(element).map(|element| &element.role);
+            for &(id, widget) in &annotations[element] {
+                nodes.push(match (role, widget) {
+                    (Some(Role::Link), false) | (Some(Role::Form), true) => Node::from(id),
+                    _ => annotation_group(id, widget),
                 });
             }
             first[element] = earliest;
@@ -494,11 +509,21 @@ impl<'a> Tagger<'a> {
         for node in groups[0].take().unwrap_or_default() {
             tree.push(node);
         }
-        for id in loose {
-            tree.push(TagGroup::with_children(tagging::Tag::Link, vec![Node::from(id)]));
+        for (id, widget) in loose {
+            tree.push(annotation_group(id, widget));
         }
         tree
     }
+}
+
+/// An annotation in an element of its own: a link, or a form field for a widget.
+fn annotation_group(id: Identifier, widget: bool) -> Node {
+    let kind: TagKind = if widget {
+        tagging::Tag::Form.into()
+    } else {
+        tagging::Tag::Link.into()
+    };
+    TagGroup::with_children(kind, vec![Node::from(id)]).into()
 }
 
 /// The index after the `Pop` that ends the group `items[start]` begins.
@@ -509,6 +534,7 @@ fn group_end(items: &[Item], start: usize) -> usize {
             Item::PushOpacity(_)
             | Item::PushBlend(_)
             | Item::PushIsolated
+            | Item::PushLayer(_)
             | Item::PushMask(_)
             | Item::PushClip(..)
             | Item::PushClipShape(_)
@@ -533,6 +559,7 @@ fn is_drawing(item: &Item) -> bool {
             | Item::PushOpacity(_)
             | Item::PushBlend(_)
             | Item::PushIsolated
+            | Item::PushLayer(_)
             | Item::PushMask(_)
             | Item::PushClip(..)
             | Item::PushClipShape(_)
@@ -594,6 +621,7 @@ fn kind(element: &Element) -> TagKind {
         Role::Figure { alt } => Tag::Figure(alt.clone()).into(),
         Role::Formula { alt } => Tag::Formula(alt.clone()).into(),
         Role::Link => Tag::Link.into(),
+        Role::Form => Tag::Form.into(),
         Role::Span => Tag::Span.into(),
         Role::Abbreviation { expansion } => TagKind::from(Tag::Span).with_expanded(Some(expansion.clone())),
         Role::Code => Tag::Code.into(),

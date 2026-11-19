@@ -425,7 +425,7 @@ impl Rasterizer<'_> {
                 self.push_group(opacity.clamp(0.0, 1.0), BlendMode::SourceOver, None);
             }
             Item::PushBlend(mode) => self.push_group(1.0, blend_mode(*mode), None),
-            Item::PushIsolated => self.push_group(1.0, BlendMode::SourceOver, None),
+            Item::PushIsolated | Item::PushLayer(_) => self.push_group(1.0, BlendMode::SourceOver, None),
             Item::PushMask(mask) => {
                 let (width, height) = self.size();
                 let drawn = rasterize(&mask.items, self.fonts, width, height, self.transform);

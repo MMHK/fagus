@@ -9,6 +9,7 @@ use fagus_dom::{Document, ElementData, NodeId};
 use fagus_pdf::{Element, Numbering, Owner, Repeat, Role, Scope, Structure};
 use fagus_style::values::{Display, DisplayInside, InternalDisplay, ListStyleType, Position};
 use fagus_style::{ComputedStyle, StyledDocument};
+use rustc_hash::FxHashSet;
 
 /// The structure of a document, with what a check for PDF/UA needs to know about it.
 pub(crate) struct Built {
@@ -19,8 +20,9 @@ pub(crate) struct Built {
     pub headings: Vec<(NodeId, u8)>,
 }
 
-/// The structure of a document.
-pub(crate) fn build(document: &Document, styled: &StyledDocument) -> Built {
+/// The structure of a document whose controls of `fields` are the fields of an interactive
+/// form.
+pub(crate) fn build(document: &Document, styled: &StyledDocument, fields: &FxHashSet<NodeId>) -> Built {
     let root = document.document_element();
     let language = root
         .and_then(|root| document.element(root))
@@ -30,6 +32,7 @@ pub(crate) fn build(document: &Document, styled: &StyledDocument) -> Built {
     let mut builder = Builder {
         document,
         styled,
+        fields,
         structure: Structure::default(),
         without_alt: Vec::new(),
         headings: Vec::new(),
@@ -73,6 +76,8 @@ enum Table {
 struct Builder<'a> {
     document: &'a Document,
     styled: &'a StyledDocument,
+    /// The controls that are fields: form fields of the structure, with their widgets.
+    fields: &'a FxHashSet<NodeId>,
     structure: Structure,
     without_alt: Vec<NodeId>,
     headings: Vec<(NodeId, u8)>,
@@ -164,6 +169,7 @@ impl<'a> Builder<'a> {
                 }
                 Some(Role::Formula { alt })
             }
+            _ if self.fields.contains(&node) => Some(Role::Form),
             _ if presentation => None,
             name @ ("h1" | "h2" | "h3" | "h4" | "h5" | "h6") => {
                 let level = name.as_bytes()[1] - b'0';
@@ -293,7 +299,10 @@ impl<'a> Builder<'a> {
         self.own(node, index);
         // The content of an inline SVG is part of its picture, that of a formula part of the
         // formula.
-        if matches!(self.structure.elements[index].role, Role::Formula { .. }) {
+        if matches!(
+            self.structure.elements[index].role,
+            Role::Formula { .. } | Role::Form
+        ) {
             for descendant in self.document.descendants(node) {
                 if self.document.element(descendant).is_some() {
                     self.own(descendant, index);
@@ -456,7 +465,7 @@ mod tests {
         let user_agent = Stylesheet::parse(fagus_style::USER_AGENT_CSS, Origin::UserAgent, "ua.css");
         let rules = RuleSet::new(&[&user_agent], &MediaEnvironment::default());
         let styled = fagus_style::compute_styles(&document, &rules, (794.0, 1123.0));
-        let structure = build(&document, &styled).structure;
+        let structure = build(&document, &styled, &FxHashSet::default()).structure;
         let mut out = String::new();
         write(&structure, 0, &mut out);
         out
@@ -584,7 +593,7 @@ mod tests {
         let user_agent = Stylesheet::parse(fagus_style::USER_AGENT_CSS, Origin::UserAgent, "ua.css");
         let rules = RuleSet::new(&[&user_agent], &MediaEnvironment::default());
         let styled = fagus_style::compute_styles(&document, &rules, (794.0, 1123.0));
-        let structure = build(&document, &styled).structure;
+        let structure = build(&document, &styled, &FxHashSet::default()).structure;
         assert_eq!(structure.elements.len(), 2);
         let hidden = structure
             .owners

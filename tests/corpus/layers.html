@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invoice with layers</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @page { size: A4; margin: 20mm; }
+  body { font: 10pt/1.5 Inter, sans-serif; color: #111827; }
+  h1 { font-size: 18pt; margin: 0 0 6mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border-bottom: 1px solid #d1d5db; padding: 2mm 0; text-align: left; }
+  td.amount, th.amount { text-align: right; }
+  /* Shown on screen only: a printout leaves the note out. */
+  .online { -fagus-layer: "Payment note" screen; border: 1px solid #2563eb; color: #1e40af; padding: 3mm; margin: 6mm 0; }
+  /* Printed only: the viewer hides the stamp on screen. */
+  .copy { -fagus-layer: "Copy stamp" print; position: fixed; top: 10mm; right: 0; border: 2px solid #b91c1c; color: #b91c1c; font-weight: 700; padding: 1mm 4mm; }
+  /* A layer the reader may hide, with a note on the screen layer inside it. */
+  .details { -fagus-layer: "Details"; margin-top: 8mm; color: #374151; }
+  .details .hint { -fagus-layer: "Payment note" screen; color: #1e40af; }
+  @supports not (-fagus-layer: none) { .online, .copy { display: none; } }
+</style>
+</head>
+<body>
+<div class="copy">COPY</div>
+<h1>Invoice 2026-0042</h1>
+<table>
+  <thead><tr><th>Item</th><th class="amount">Amount</th></tr></thead>
+  <tbody>
+    <tr><td>Consulting, 4 hours</td><td class="amount">480.00 €</td></tr>
+    <tr><td>Travel</td><td class="amount">95.50 €</td></tr>
+  </tbody>
+  <tfoot><tr><th>Total</th><th class="amount">575.50 €</th></tr></tfoot>
+</table>
+<p class="online">Pay online at <a href="https://example.com/pay/2026-0042">example.com/pay/2026-0042</a>.</p>
+<div class="details">
+  <h2>Payment details</h2>
+  <p>IBAN DE89 3704 0044 0532 0130 00, due within 14 days. <span class="hint">The link above opens the payment page.</span></p>
+</div>
+</body>
+</html>

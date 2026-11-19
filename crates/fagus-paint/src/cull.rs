@@ -54,7 +54,7 @@ pub(crate) fn cull_hidden(items: &mut Vec<Item>, fonts: &FontDb, page: Bounds) {
                     clip = None;
                 }
             }
-            Item::PushBlend(_) | Item::PushIsolated | Item::PushMask(_) => {
+            Item::PushBlend(_) | Item::PushIsolated | Item::PushMask(_) | Item::PushLayer(_) => {
                 stack.push((matrix, clip));
             }
             Item::Pop => {
@@ -108,7 +108,7 @@ pub fn invisible_opacity(opacity: f32) -> bool {
 
 /// Removes the clips, transforms and groups that hold nothing that draws, keeping the last tag
 /// in them so that what follows is what it was to a reader.
-fn drop_empty_groups(items: &mut Vec<Item>) {
+pub(crate) fn drop_empty_groups(items: &mut Vec<Item>) {
     let mut kept: Vec<Item> = Vec::with_capacity(items.len());
     let mut starts: Vec<usize> = Vec::new();
     for item in items.drain(..) {
@@ -119,6 +119,7 @@ fn drop_empty_groups(items: &mut Vec<Item>) {
             | Item::PushOpacity(_)
             | Item::PushBlend(_)
             | Item::PushIsolated
+            | Item::PushLayer(_)
             | Item::PushMask(_) => {
                 starts.push(kept.len());
                 kept.push(item);
