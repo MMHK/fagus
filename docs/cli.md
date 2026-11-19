@@ -255,10 +255,11 @@ kernel allows:
   later): `fagus render` may read only the files of `--root` (or the input's directory) and the
   directories of the system fonts. `fagus worker` may read every file, since each request names
   its own `base` and `root`; `--allow-read` limits it to the directories given (and the system
-  fonts), and a document's files elsewhere are then not found (`resource.not-loaded`). Neither
-  may write, create, remove (but for an output file it created, if rendering fails) or execute
-  files (nor truncate them, from Linux 6.2 on). From Linux 6.7 on, TCP is refused as well; from
-  6.12 on, connecting to abstract Unix sockets and signalling other processes.
+  fonts, and `/proc/self/status` for the memory it reports), and a document's files elsewhere
+  are then not found (`resource.not-loaded`). Neither may write, create, remove (but for an
+  output file it created, if rendering fails) or execute files (nor truncate them, from Linux
+  6.2 on). From Linux 6.7 on, TCP is refused as well; from 6.12 on, connecting to abstract Unix
+  sockets and signalling other processes.
 - **System calls** (seccomp): the calls of networking (`socket`, `connect`, …), of starting
   programs and processes (`execve`, `fork`, `clone` without a thread), of reading other
   processes (`ptrace`, `process_vm_readv`) and of kernel interfaces that rendering never uses

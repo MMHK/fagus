@@ -397,6 +397,19 @@ mod tests {
         std::fs::remove_dir_all(scratch).expect("removed");
     }
 
+    #[test]
+    fn lets_a_limited_worker_read_its_memory() {
+        let read = crate::worker_reads(vec![tests_directory()], Vec::new());
+        let policy = Policy {
+            read,
+            remove: Vec::new(),
+        };
+        sandboxed(policy, |_| {
+            let resident = crate::memory::resident();
+            assert!(resident.now.is_some() && resident.peak.is_some(), "{resident:?}");
+        });
+    }
+
     /// The pages of the corpus, rendered with their files and fonts.
     fn render_corpus(engine: &fagus::Engine, tests: &Path) -> Vec<(PathBuf, Vec<u8>, Vec<String>)> {
         let mut pages: Vec<PathBuf> = ["corpus", "corpus/invoice"]

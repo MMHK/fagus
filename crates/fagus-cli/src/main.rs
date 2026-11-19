@@ -246,6 +246,18 @@ impl Confinement {
     }
 }
 
+/// The files the worker may read in its sandbox: the files of documents are anywhere the caller
+/// says, unless it names directories; then those, the system fonts, and the status of the process
+/// for the memory that each answer reports (memory.rs).
+fn worker_reads(allow_read: Vec<PathBuf>, fonts: impl IntoIterator<Item = PathBuf>) -> Option<Vec<PathBuf>> {
+    (!allow_read.is_empty()).then(|| {
+        let mut read = allow_read;
+        read.extend(fonts);
+        read.push(PathBuf::from("/proc/self/status"));
+        read
+    })
+}
+
 /// The file the PDF goes to. It is opened before rendering, so that the sandbox need not let the
 /// process write files.
 struct Output {
@@ -573,12 +585,7 @@ fn main() -> Result<()> {
             if sans_serif.is_some() || serif.is_some() || monospace.is_some() {
                 engine.set_generic_families(sans_serif, serif, monospace);
             }
-            // The files of documents are anywhere the caller says, unless it names directories.
-            let read = (!allow_read.is_empty()).then(|| {
-                let mut read = allow_read;
-                read.extend(engine.system_font_directories());
-                read
-            });
+            let read = worker_reads(allow_read, engine.system_font_directories());
             confinement.enter(&sandbox::Policy {
                 read,
                 remove: Vec::new(),
