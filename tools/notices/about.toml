@@ -27,3 +27,14 @@ targets = [
 ignore-build-dependencies = true
 ignore-dev-dependencies = true
 private = { ignore = true }
+
+# re_rav1d (AVIF images) has its license in COPYING; without it named, the headers of the dav1d C
+# files the crate carries would each count as a license. The MIT notice of the dav1d-rs API it
+# takes is added by tools/notices.sh.
+[re_rav1d.clarify]
+license = "BSD-2-Clause"
+
+[[re_rav1d.clarify.files]]
+path = "COPYING"
+license = "BSD-2-Clause"
+checksum = "6477f5c0674c89dc9251708a442343449bcb9c14b969b09286eb61d0640b284a"

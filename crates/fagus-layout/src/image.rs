@@ -18,6 +18,8 @@ pub enum ImageFormat {
     Bmp,
     /// TIFF, which Chrome does not show and Safari does: the first image of the file.
     Tiff,
+    /// AVIF, read as Chrome reads it (see [`crate::avif`]).
+    Avif,
     /// SVG, drawn as vector graphics; its size comes from the SVG's own `width`, `height` and
     /// `viewBox`.
     Svg,
@@ -45,7 +47,8 @@ pub struct Image {
     pub inline: bool,
     /// How the pixels are turned to be seen (the EXIF orientation, 1 to 8, 1 as stored), as
     /// browsers turn them (`image-orientation: from-image`); `width` and `height` are those of
-    /// the turned image.
+    /// the turned image. The `irot` and `imir` of an AVIF image are given as one, which
+    /// `image-orientation: none` does not undo.
     pub orientation: u8,
     /// What its pixels go through before they are embedded, in order (`filter`).
     pub filters: Arc<[PixelFilter]>,
@@ -77,7 +80,7 @@ pub enum PixelFilter {
 /// Why an image could not be used.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ImageError {
-    /// Not a PNG, JPEG, GIF, WebP, BMP or TIFF image.
+    /// Not a PNG, JPEG, GIF, WebP, BMP, TIFF or AVIF image.
     Unsupported,
     /// More than 200 megapixels.
     TooLarge,
@@ -92,6 +95,9 @@ impl PartialEq for Image {
 impl Image {
     /// Reads the format and size of image data without decoding it.
     pub fn probe(data: Arc<Vec<u8>>) -> Result<Self, ImageError> {
+        if crate::avif::is_avif(&data) {
+            return Self::probe_avif(data);
+        }
         let format = match imagesize::image_type(&data).map_err(|_| ImageError::Unsupported)? {
             imagesize::ImageType::Png => ImageFormat::Png,
             imagesize::ImageType::Jpeg => ImageFormat::Jpeg,
@@ -134,6 +140,30 @@ impl Image {
         })
     }
 
+    /// Reads the size and orientation of an AVIF image from its container.
+    fn probe_avif(data: Arc<Vec<u8>>) -> Result<Self, ImageError> {
+        let avif = crate::avif::parse(&data).ok_or(ImageError::Unsupported)?;
+        if u64::from(avif.width) * u64::from(avif.height) > MAX_PIXELS {
+            return Err(ImageError::TooLarge);
+        }
+        let (mut width, mut height) = (avif.crop.0 as f32, avif.crop.1 as f32);
+        if avif.orientation >= 5 {
+            (width, height) = (height, width);
+        }
+        Ok(Self {
+            data,
+            format: ImageFormat::Avif,
+            width,
+            height,
+            natural: (true, true),
+            ratio: (width > 0.0 && height > 0.0).then(|| width / height),
+            inline: false,
+            orientation: avif.orientation,
+            filters: Arc::from([]),
+            pad: 0,
+        })
+    }
+
     /// The image as an element with `style` shows it: as stored with `image-orientation: none`.
     /// `image-rendering` changes nothing in print: Chrome writes every image without
     /// `/Interpolate`, smooth, pixelated, scaled up or down (Chrome 157, measured).
@@ -164,7 +194,11 @@ impl Image {
 
     pub fn styled(image: &Arc<Self>, style: &fagus_style::ComputedStyle) -> Arc<Self> {
         use fagus_style::values::ImageOrientation;
-        let unturned = style.image_orientation == ImageOrientation::None && image.orientation > 1;
+        // The `irot` and `imir` of an AVIF image are part of it, not metadata (Chrome 157,
+        // measured).
+        let unturned = style.image_orientation == ImageOrientation::None
+            && image.orientation > 1
+            && image.format != ImageFormat::Avif;
         if !unturned {
             return Arc::clone(image);
         }
@@ -230,7 +264,7 @@ fn exif_orientation(data: &[u8], format: ImageFormat) -> Option<u8> {
             }
         }
         ImageFormat::Tiff => data,
-        ImageFormat::Gif | ImageFormat::Bmp | ImageFormat::Svg => return None,
+        ImageFormat::Gif | ImageFormat::Bmp | ImageFormat::Avif | ImageFormat::Svg => return None,
     };
     // A TIFF header, then the first IFD: entries of tag, type, count and value.
     let little = match tiff.get(..2)? {
@@ -626,5 +660,27 @@ mod tests {
             let same = Image::styled(&turned, &style(ImageOrientation::FromImage, rendering));
             assert!(Arc::ptr_eq(&same, &turned));
         }
+        // The `irot` and `imir` of an AVIF image are part of the image: `image-orientation: none`
+        // keeps them (Chrome 157, measured). 24 × 16 pixels, a quarter turn anticlockwise, then
+        // top to bottom; cropped to 16 × 10 before.
+        let avif = |name: &str| {
+            let path = format!(
+                "{}/../../tests/corpus/images/media/avif/{name}",
+                env!("CARGO_MANIFEST_DIR")
+            );
+            Arc::new(Image::probe(Arc::new(std::fs::read(path).expect("fixture"))).expect("avif"))
+        };
+        let turned = avif("turned.avif");
+        assert_eq!(
+            (turned.format, turned.orientation, turned.width, turned.height),
+            (ImageFormat::Avif, 5, 16.0, 24.0)
+        );
+        let kept = Image::styled(&turned, &style(ImageOrientation::None, ImageRendering::Auto));
+        assert!(Arc::ptr_eq(&kept, &turned));
+        let cropped = avif("cropped.avif");
+        assert_eq!(
+            (cropped.orientation, cropped.width, cropped.height),
+            (1, 16.0, 10.0)
+        );
     }
 }

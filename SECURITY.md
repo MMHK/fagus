@@ -98,8 +98,10 @@ These are known and not fixed in the engine; deploy accordingly:
 - **The caller is trusted.** The worker believes the caller's `base`, `root` and data, and a
   frame may hold up to 1 GiB. Do not expose the worker's input to untrusted parties.
 - **Third-party parsers.** HTML, CSS, fonts, images and SVG are parsed by Rust crates (html5ever,
-  lightningcss, skrifa, HarfRust, png, zune-jpeg, image-webp, gif, usvg, resvg, krilla, wuff);
-  a bug in one of them is a bug in Fagus. They are fuzzed through the targets in `fuzz/`.
+  lightningcss, skrifa, HarfRust, png, zune-jpeg, image-webp, gif, rav1d, usvg, resvg, krilla,
+  wuff); a bug in one of them is a bug in Fagus. rav1d, which decodes the AV1 pictures of AVIF
+  images, is a port of dav1d's C code and has unsafe code; Fagus reads the container of AVIF
+  images itself. They are fuzzed through the targets in `fuzz/`.
 - **Without the sandbox** (macOS, Windows, Linux without Landlock or seccomp, `--no-sandbox`),
   only the checks of the engine stand between a document and the file system.
 

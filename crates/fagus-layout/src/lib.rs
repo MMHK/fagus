@@ -8,6 +8,7 @@
 
 mod anchor;
 mod annotation;
+pub mod avif;
 mod bidi;
 mod block;
 mod block_justify;

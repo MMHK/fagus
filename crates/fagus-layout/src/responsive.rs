@@ -6,8 +6,8 @@ use fagus_css::srcset::{self, Candidate};
 use fagus_dom::{Document, ElementData, NodeId};
 
 /// The image types Fagus draws, as the `type` of a `<source>` names them (parameters and case
-/// aside). A source of another type, such as AVIF, is skipped, so that the next one shows. TIFF
-/// is one, as in Safari (Chrome skips it).
+/// aside). A source of another type, such as JPEG XL, is skipped, so that the next one shows.
+/// TIFF is one, as in Safari (Chrome skips it).
 const TYPES: &[&str] = &[
     "image/png",
     "image/apng",
@@ -19,6 +19,7 @@ const TYPES: &[&str] = &[
     "image/bmp",
     "image/x-ms-bmp",
     "image/tiff",
+    "image/avif",
     "image/svg+xml",
 ];
 
@@ -153,20 +154,27 @@ mod tests {
             Some("s.jpg")
         );
         assert_eq!(pick(&format!("<img {widths}>")).as_deref(), Some("l.jpg"));
-        // The first source that applies: AVIF is skipped, a `print` source does not apply on the
-        // screen, a `screen` one does.
+        // The first source that applies: JPEG XL is skipped, a `print` source does not apply on
+        // the screen, a `screen` one does.
         let picture = |sources: &str| format!(r#"<picture>{sources}<img src="img.jpg"></picture>"#);
         assert_eq!(
-            pick(&picture(r#"<source type="image/avif" srcset="a.avif"><source type="image/webp; codecs=x" srcset="w.webp">"#)).as_deref(),
+            pick(&picture(r#"<source type="image/jxl" srcset="a.jxl"><source type="image/webp; codecs=x" srcset="w.webp">"#)).as_deref(),
             Some("w.webp")
         );
-        // BMP as in Chrome, TIFF as in Safari.
+        // AVIF and BMP as in Chrome, TIFF as in Safari.
         assert_eq!(
             pick(&picture(
-                r#"<source type="image/avif" srcset="a.avif"><source type="image/tiff" srcset="t.tif">"#
+                r#"<source type="image/jxl" srcset="a.jxl"><source type="image/tiff" srcset="t.tif">"#
             ))
             .as_deref(),
             Some("t.tif")
+        );
+        assert_eq!(
+            pick(&picture(
+                r#"<source type="image/avif" srcset="a.avif"><source srcset="w.webp">"#
+            ))
+            .as_deref(),
+            Some("a.avif")
         );
         assert_eq!(
             pick(&picture(r#"<source type="image/bmp" srcset="b.bmp">"#)).as_deref(),

@@ -70,6 +70,7 @@ fn image_set_candidate<'a>(
                     | "image/bmp"
                     | "image/x-ms-bmp"
                     | "image/tiff"
+                    | "image/avif"
                     | "image/svg+xml"
             )
         })

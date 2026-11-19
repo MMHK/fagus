@@ -1909,7 +1909,7 @@ impl Inner {
                 Err(ImageError::Unsupported) => diagnostics.push(warning(
                     "image.unsupported",
                     format!(
-                        "image `{}` is not a PNG, JPEG, GIF, WebP, BMP, TIFF or SVG image",
+                        "image `{}` is not a PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF or SVG image",
                         short(url)
                     ),
                 )),
@@ -4854,15 +4854,67 @@ mod tests {
                 .expect("rendered without the image");
             assert_eq!(codes(&output), [code], "{name}");
         }
-        // AVIF is still unsupported.
-        let output = engine()
-            .render(
-                &Document::html("<img src=i>")
-                    .resource("i", b"\0\0\0\x1cftypavif\0\0\0\0avifmif1miaf".to_vec())
-                    .created(CREATED),
-            )
-            .expect("rendered");
-        assert_eq!(codes(&output), ["image.unsupported"]);
+    }
+
+    #[test]
+    fn draws_avif_images() {
+        // As an element, a background, a mask, a border image and in an SVG (as a PNG of its
+        // pixels), and chosen by `<picture>` and `image-set()`.
+        let media = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/corpus/images/media/");
+        let read = |name: &str| std::fs::read(format!("{media}{name}")).expect("an image");
+        for name in [
+            "photo.avif",
+            "stamp-turned.avif",
+            "avif/alpha.avif",
+            "avif/grid.avif",
+            "avif/icc.avif",
+            "avif/pq.avif",
+        ] {
+            let output = engine()
+                .render(
+                    &Document::html(
+                        "<img src=i style='width: 40px'>\
+                         <picture><source type=image/avif srcset=i><img src=missing.png style='width: 30px'></picture>\
+                         <div style='width: 20px; height: 20px; background: image-set(\"i\" type(\"image/avif\")); mask-image: url(i)'></div>\
+                         <div style='width: 10px; border: 5px solid; border-image: url(i) 30%'></div>\
+                         <svg width=20 height=20><image href=i width=20 height=20 /></svg>",
+                    )
+                    .resource("i", read(name))
+                    .created(CREATED)
+                    .tagged(false),
+                )
+                .expect("rendered");
+            assert_eq!(codes(&output), Vec::<&str>::new(), "{name}");
+            let objects = String::from_utf8_lossy(&decoded(&output.pdf)).replace(' ', "");
+            assert!(
+                objects.matches("/Subtype/Image").count() >= 2,
+                "{name}: {objects}"
+            );
+            // The ICC profile goes with the pixels.
+            assert_eq!(objects.contains("/ICCBased"), name.contains("icc"), "{name}");
+        }
+        // A file of the brand without its items is not an image Fagus (or Chrome) reads; one
+        // whose AV1 data is broken does not decode.
+        let mut broken = read("avif/opaque.avif");
+        let mdat = broken.windows(4).position(|kind| kind == b"mdat").expect("mdat") + 4;
+        broken[mdat..mdat + 8].fill(0xFF);
+        for (name, data, code) in [
+            (
+                "empty.avif",
+                b"\0\0\0\x1cftypavif\0\0\0\0avifmif1miaf".to_vec(),
+                "image.unsupported",
+            ),
+            ("broken.avif", broken, "image.broken"),
+        ] {
+            let output = engine()
+                .render(
+                    &Document::html("<img src=i style='width: 40px'>")
+                        .resource("i", data)
+                        .created(CREATED),
+                )
+                .expect("rendered without the image");
+            assert_eq!(codes(&output), [code], "{name}");
+        }
     }
 
     #[test]

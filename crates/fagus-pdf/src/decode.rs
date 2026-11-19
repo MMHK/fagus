@@ -253,13 +253,30 @@ pub(crate) fn rgba(data: &[u8], format: ImageFormat) -> Option<(u32, u32, Vec<u8
         ImageFormat::Webp => webp(data),
         ImageFormat::Bmp => fagus_layout::bmp::decode(data),
         ImageFormat::Tiff => tiff(data),
+        ImageFormat::Avif => crate::avif::decode(data).map(|avif| (avif.width, avif.height, avif.pixels)),
         ImageFormat::Svg => None,
     }
 }
 
-/// A BMP or TIFF image as its pixels, which krilla cannot read itself: RGB, with an alpha channel
-/// unless all its pixels are opaque. `None` for other images and those that do not decode.
+/// A BMP, TIFF or AVIF image as its pixels, which krilla cannot read itself: RGB, with an alpha
+/// channel unless all its pixels are opaque, and an AVIF image's ICC profile. `None` for other
+/// images and those that do not decode.
 pub(crate) fn decoded(data: &[u8], format: ImageFormat, interpolate: bool) -> Option<Image> {
+    if format == ImageFormat::Avif {
+        let avif = crate::avif::decode(data)?;
+        let (color, alpha) = split(&avif.pixels);
+        return Image::from_custom(
+            FlatImage {
+                color,
+                alpha,
+                icc: avif.icc,
+                width: avif.width,
+                height: avif.height,
+            },
+            interpolate,
+        )
+        .ok();
+    }
     if !matches!(format, ImageFormat::Bmp | ImageFormat::Tiff) {
         return None;
     }
@@ -285,9 +302,41 @@ pub(crate) fn decoded(data: &[u8], format: ImageFormat, interpolate: bool) -> Op
     .ok()
 }
 
-/// The data of a BMP or TIFF image as a PNG of its pixels, for SVG images, which only take PNG,
-/// JPEG, GIF and WebP. `None` for other data and images that do not decode.
+/// RGBA pixels as RGB and alpha, the alpha empty where all of them are opaque.
+fn split(pixels: &[u8]) -> (Vec<u8>, Vec<u8>) {
+    let mut color = Vec::with_capacity(pixels.len() / 4 * 3);
+    let mut alpha = Vec::with_capacity(pixels.len() / 4);
+    for [r, g, b, a] in pixels.as_chunks::<4>().0 {
+        color.extend([*r, *g, *b]);
+        alpha.push(*a);
+    }
+    if alpha.iter().all(|value| *value == 255) {
+        alpha.clear();
+    }
+    (color, alpha)
+}
+
+/// The data of a BMP, TIFF or AVIF image as a PNG of its pixels, for SVG images, which only take
+/// PNG, JPEG, GIF and WebP: an AVIF image turned as its `irot` and `imir` say, with its ICC
+/// profile. `None` for other data and images that do not decode.
 pub(crate) fn as_png(data: &[u8]) -> Option<Vec<u8>> {
+    if fagus_layout::avif::is_avif(data) {
+        let orientation = fagus_layout::avif::parse(data)?.orientation;
+        let avif = crate::avif::decode(data)?;
+        let (width, height, pixels) = turned(avif.width, avif.height, &avif.pixels, orientation);
+        let mut info = png::Info::with_size(width, height);
+        info.color_type = png::ColorType::Rgba;
+        info.bit_depth = png::BitDepth::Eight;
+        info.icc_profile = avif.icc.map(std::borrow::Cow::Owned);
+        let mut png = Vec::new();
+        {
+            let mut encoder = png::Encoder::with_info(&mut png, info).ok()?;
+            encoder.set_compression(png::Compression::Fastest);
+            let mut writer = encoder.write_header().ok()?;
+            writer.write_image_data(&pixels).ok()?;
+        }
+        return Some(png);
+    }
     let format = if data.starts_with(b"BM") {
         ImageFormat::Bmp
     } else if data.starts_with(b"II*\0") || data.starts_with(b"MM\0*") {
@@ -340,7 +389,9 @@ pub(crate) fn flat(data: &[u8], format: ImageFormat) -> Option<Image> {
             (decoder.has_alpha(), decoder.icc_profile().ok()?)
         }
         // Embedded as their pixels (see [`decoded`]), already as PDF/A-1 takes them.
-        ImageFormat::Jpeg | ImageFormat::Bmp | ImageFormat::Tiff | ImageFormat::Svg => (false, None),
+        ImageFormat::Jpeg | ImageFormat::Bmp | ImageFormat::Tiff | ImageFormat::Avif | ImageFormat::Svg => {
+            (false, None)
+        }
     };
     if !needed {
         return None;
@@ -691,6 +742,39 @@ fn tiff(data: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
         pixels.extend([rgb[0], rgb[1], rgb[2], alpha]);
     }
     Some((width, height, pixels))
+}
+
+/// RGBA pixels of `width` by `height` turned as the EXIF `orientation` says: the pixels as they
+/// are seen, and their width and height.
+fn turned(width: u32, height: u32, pixels: &[u8], orientation: u8) -> (u32, u32, Vec<u8>) {
+    if orientation <= 1 || orientation > 8 {
+        return (width, height, pixels.to_vec());
+    }
+    let (columns, rows) = (width as usize, height as usize);
+    let (wide, high) = if orientation >= 5 {
+        (rows, columns)
+    } else {
+        (columns, rows)
+    };
+    let mut out = vec![0; pixels.len()];
+    for y in 0..high {
+        for x in 0..wide {
+            // The stored pixel seen at (x, y).
+            let (column, row) = match orientation {
+                2 => (columns - 1 - x, y),
+                3 => (columns - 1 - x, rows - 1 - y),
+                4 => (x, rows - 1 - y),
+                5 => (y, x),
+                6 => (y, rows - 1 - x),
+                7 => (columns - 1 - y, rows - 1 - x),
+                _ => (columns - 1 - y, x),
+            };
+            let from = (row * columns + column) * 4;
+            let to = (y * wide + x) * 4;
+            out[to..to + 4].copy_from_slice(&pixels[from..from + 4]);
+        }
+    }
+    (wide as u32, high as u32, out)
 }
 
 /// Gray pixels of `depth` bits (1, 2 or 4) packed into bytes, each row starting at a byte, as

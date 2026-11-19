@@ -5,6 +5,7 @@
 
 #![forbid(unsafe_code)]
 
+mod avif;
 mod clip_text;
 mod compact;
 mod decode;
@@ -1276,7 +1277,7 @@ struct ImageCache {
     /// The images embedded so far, by their data, whether they are smoothed, and what their
     /// pixels go through (their filters, written out, and their padding).
     images: FxHashMap<(usize, bool, String), Option<Embedded>>,
-    /// The data of BMP and TIFF images that did not decode: Fagus decodes them itself, so krilla
+    /// The data of BMP, TIFF and AVIF images that did not decode: Fagus decodes them itself, so krilla
     /// does not find them broken as it writes the PDF.
     undecoded: Vec<Arc<Vec<u8>>>,
     /// SVG images with non-scaling strokes drawn at another width than their natural one, by
@@ -1394,7 +1395,9 @@ fn embedded_image(image: &fagus_layout::Image, fonts: &FontDb, cache: &mut Image
                 ImageFormat::Jpeg => memo::Kind::Jpeg(interpolate),
                 ImageFormat::Gif => memo::Kind::Gif(interpolate),
                 ImageFormat::Webp => memo::Kind::Webp(interpolate),
-                ImageFormat::Bmp | ImageFormat::Tiff => memo::Kind::Decoded(image.format, interpolate),
+                ImageFormat::Bmp | ImageFormat::Tiff | ImageFormat::Avif => {
+                    memo::Kind::Decoded(image.format, interpolate)
+                }
                 ImageFormat::Svg => {
                     return svg::parse_kept(&image.data, fonts, &cache.memo, true, image.inline)
                         .map(|tree| Embedded::Svg(tree, svg::fit(&image.data, image.inline)));

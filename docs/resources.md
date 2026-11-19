@@ -155,20 +155,21 @@ files load as resources.
 | JPEG | CMYK JPEGs without a profile are converted to sRGB as in Chrome. |
 | GIF | |
 | WebP | |
+| AVIF | 8, 10 and 12 bits, 4:2:0, 4:2:2, 4:4:4 and monochrome, with alpha, grids and the first frame of an animation, as in Chrome. |
 | BMP | 1 to 32 bits per pixel, RLE, bottom-up and top-down, with alpha where a mask says so, as in Chrome. |
 | TIFF | Not shown by Chrome, but by Safari: scans and receipts, uncompressed, LZW, Deflate, PackBits, CCITT Group 4 (fax) and JPEG; gray, RGB and CMYK, 1 to 16 bits. The first image of a file with several pages. |
 | SVG | Drawn as vector graphics. An SVG image does not see the document's `@font-face` fonts; its own `@font-face` rules load fonts only from `data:` URLs, as in Chrome. |
 
-JPEG, PNG, WebP and TIFF images stand as their EXIF or TIFF orientation says. `<picture>` sources and `srcset`
-are chosen as Chrome chooses them; AVIF and JPEG XL sources are skipped, as Fagus cannot decode
-them, and TIFF sources are taken, as in Safari.
+JPEG, PNG, WebP and TIFF images stand as their EXIF or TIFF orientation says, AVIF images as their
+`irot` and `imir` say. `<picture>` sources and `srcset` are chosen as Chrome chooses them; JPEG XL
+sources are skipped, as Fagus cannot decode them, and TIFF sources are taken, as in Safari.
 
 An image that cannot be used is left out, and a diagnostic says why:
 
 | Code | Message |
 |---|---|
 | `resource.not-loaded` | image `…` could not be loaded |
-| `image.unsupported` | image `…` is not a PNG, JPEG, GIF, WebP, BMP, TIFF or SVG image |
+| `image.unsupported` | image `…` is not a PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF or SVG image |
 | `image.unsupported` | image `…` is not a valid SVG image |
 | `image.too-large` | image `…` has more than 200 megapixels |
 | `image.broken` | image `…` could not be decoded and is left out |

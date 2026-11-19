@@ -1210,9 +1210,9 @@ The binary compresses on two threads of its own while it draws the pages; the en
 
 ## Images in the PDF
 
-Fagus reads PNG, JPEG, GIF, WebP, BMP, TIFF and SVG images. Other formats (AVIF, JPEG XL, ICO …)
-report `image.unsupported` and are left out; `<picture>` and `srcset` skip AVIF and JPEG XL
-sources, as Chrome chooses among the formats it can show. An image of more than 200 megapixels reports
+Fagus reads PNG, JPEG, GIF, WebP, AVIF, BMP, TIFF and SVG images. Other formats (JPEG XL, ICO …)
+report `image.unsupported` and are left out; `<picture>` and `srcset` skip JPEG XL sources, as
+Chrome chooses among the formats it can show. An image of more than 200 megapixels reports
 `image.too-large`, one that does not decode `image.broken`.
 
 How images go into the PDF:
@@ -1222,6 +1222,7 @@ How images go into the PDF:
 - PNG, GIF and WebP as their pixels, compressed without loss; transparency becomes a soft mask.
   A PNG whose `gAMA` chunk Chrome corrects for is corrected the same way. An animated GIF shows
   its first frame.
+- AVIF as its pixels, decoded by Fagus, compressed without loss (see [AVIF](#avif)).
 - BMP and TIFF as their pixels, decoded by Fagus, compressed without loss. BMP is read as Chrome
   reads it; TIFF, which Chrome does not show, as Safari shows it: its first image, gray, RGB, CMYK
   (converted to RGB as CMYK JPEGs) or YCbCr, uncompressed or compressed with LZW, Deflate,
@@ -1231,6 +1232,33 @@ How images go into the PDF:
 - At their full resolution: Fagus does not scale images down. Scale large photos before you hand
   them to the document.
 - Without interpolation (`/Interpolate`), as Chrome writes them: viewers decide how to smooth.
+
+### AVIF
+
+AVIF images are read as Chrome 157 reads them:
+
+- 8, 10 and 12 bits, 4:2:0, 4:2:2, 4:4:4 and monochrome, of full or limited range. The chroma of
+  subsampled images is upsampled bilinearly, and YUV becomes RGB with the matrix the image names
+  (BT.601, BT.709, BT.2020, FCC, SMPTE 240M, YCgCo, YCgCo-R, identity, or derived from the
+  primaries), as libavif converts it.
+- An alpha channel (an auxiliary image), also premultiplied; a grid of images in one; an
+  animation (`avis`) shows its first frame.
+- `irot` and `imir` turn the image as Chrome turns it; they are part of the image, not metadata,
+  so `image-orientation: none` keeps them. A clean aperture (`clap`) crops the image where it
+  starts at its top left corner, the only ones Chrome applies.
+- An ICC profile goes into the PDF with the pixels, as for PNG and JPEG. Without one, the color
+  code points (`nclx`, or the AV1 sequence header) say what the colors are: sRGB and the BT.709
+  family of transfer functions stay as they are, as Chrome draws them; other primaries (Display P3,
+  BT.2020 …) and transfer functions (gamma 2.2 and 2.8, linear, SMPTE 240M and 428) are converted
+  to sRGB. HDR images (PQ and HLG) are tone mapped to SDR as Chrome 157 maps them on an SDR
+  display. Logarithmic transfer functions, IEC 61966-2-4 and BT.1361, which Chrome does not show,
+  report `image.broken`, as do constant-luminance matrices and ICtCp.
+
+The AV1 pictures are decoded by [rav1d](https://github.com/memorysafety/rav1d), the Rust port of
+dav1d, without its assembly: the build needs no C compiler or assembler, and AV1 decoding gives
+the same pixels on every platform. It is several times slower than Chrome's dav1d: a photo of 6
+megapixels takes 0.2 to 0.7 seconds on one core. Decoded images are kept for the next document,
+as other images are.
 
 ## Gradients, filters and differences from Chrome
 

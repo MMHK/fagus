@@ -18,7 +18,7 @@ THIRD-PARTY NOTICES
 Fagus is licensed under the MIT license or the Apache License 2.0 (LICENSE-MIT, LICENSE-APACHE).
 The fagus binary also contains the code and data of others listed here, each under its own
 license: parts ported from Chromium and Blink, data of Unicode, a part ported from HarfBuzz, the
-user agent style sheet of the HTML Standard, the font Inter, the hyphenation dictionaries of Chromium, and the Rust crates it is built from.
+user agent style sheet of the HTML Standard, the font Inter, the hyphenation dictionaries of Chromium, the Rust API of dav1d-rs, and the Rust crates it is built from.
 TEXT
   section "Chromium (Blink): the predefined counter styles and the algorithms of the complex ones, the marks of form controls, the distribution of the height of cells spanning table rows, the spacing of East Asian punctuation and text (fagus-layout, fagus-paint, fagus-style, fagus-text)" crates/fagus-layout/CHROMIUM-LICENSE
   section "Blink's shapes (Adobe): the geometry of shape-outside (fagus-layout)" crates/fagus-layout/ADOBE-SHAPES-LICENSE
@@ -53,6 +53,30 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 TEXT
   section "Inter, the built-in font (fagus-text)" crates/fagus-text/fonts/Inter-LICENSE.txt
+  printf '\n################################################################################\n%s\n################################################################################\n\n' "dav1d-rs: the Rust API of re_rav1d, which decodes AVIF images (fagus-pdf)"
+  cat <<'TEXT'
+MIT License
+
+Copyright (c) 2018 Luca Barbato
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+TEXT
   section "Hyphenation dictionaries of Chromium (fagus-text)" crates/fagus-text/hyphenation/LICENSE.txt
   printf '\n################################################################################\nRust crates the fagus binary is built from\n################################################################################\n'
   cargo about generate --frozen -c tools/notices/about.toml -m crates/fagus-cli/Cargo.toml tools/notices/about.hbs

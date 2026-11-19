@@ -1,5 +1,6 @@
-//! Decodes arbitrary image data (PNG, JPEG, GIF, WebP, BMP, TIFF) as the image of an element, a background,
-//! a mask, a border image, an image in SVG and an image whose pixels a filter changes.
+//! Decodes arbitrary image data (PNG, JPEG, GIF, WebP, BMP, TIFF, AVIF) as the image of an
+//! element, a background, a mask, a border image, an image in SVG and an image whose pixels a
+//! filter changes.
 #![no_main]
 
 use fagus::Document;

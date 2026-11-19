@@ -13,7 +13,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-target="${1:?usage: run.sh <render|css|font|image|svg|worker> [seconds] [options...]}"
+target="${1:?usage: run.sh <render|css|font|image|avif|svg|worker> [seconds] [options...]}"
 seconds="${2:-600}"
 shift $(($# < 2 ? $# : 2))
 
@@ -22,6 +22,7 @@ case "$target" in
     css) options=(-max_len=4096 -dict=dicts/css.dict) ;;
     font) options=(-max_len=524288) ;;
     image) options=(-max_len=262144) ;;
+    avif) options=(-max_len=65536 -dict=dicts/avif.dict) ;;
     svg) options=(-max_len=32768 -dict=dicts/html.dict) ;;
     worker) options=(-max_len=16384) ;;
     *)
