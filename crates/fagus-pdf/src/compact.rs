@@ -472,7 +472,7 @@ mod tests {
             title: Some("Rechnung (endobj) \\".to_owned()),
             ..Metadata::default()
         };
-        crate::write_uncompacted(&[page.clone(), page], &FontDb::new(), &metadata, &options)
+        crate::write_uncompacted(&mut [page.clone(), page], &FontDb::new(), &metadata, &options)
             .expect("written")
             .pdf
     }

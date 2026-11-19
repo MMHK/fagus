@@ -326,7 +326,7 @@ pub struct Written {
 /// Writes display lists as a PDF document. The lists are dropped once written, before the PDF
 /// is compacted, so that a document of many pages does not hold both at once.
 pub fn write(
-    pages: Vec<PageList>,
+    mut pages: Vec<PageList>,
     fonts: &FontDb,
     metadata: &Metadata,
     options: &Options,
@@ -343,7 +343,7 @@ pub fn write(
         .as_ref()
         .map(encrypt::Encryptor::new)
         .transpose()?;
-    let written = write_uncompacted(&pages, fonts, metadata, options)?;
+    let written = write_uncompacted(&mut pages, fonts, metadata, options)?;
     drop(pages);
     // A viewer shows the title in place of the file name, as with Chrome's PDFs.
     let catalog: &[(&str, &str)] = if metadata.title.is_some() {
@@ -379,34 +379,25 @@ pub fn write(
 
 /// The PDF as krilla writes it, with every object on its own. An image whose data turns out
 /// not to decode only as the PDF is written is left out, as browsers leave such images out, and
-/// the PDF written again without it.
+/// the PDF written again without it. Pages without images are let go of as they are written: a
+/// long document then need not hold the display lists of all its pages until the end.
 pub(crate) fn write_uncompacted(
-    pages: &[PageList],
+    pages: &mut [PageList],
     fonts: &FontDb,
     metadata: &Metadata,
     options: &Options,
 ) -> Result<Written, PdfError> {
-    let mut image_cache = ImageCache {
-        interpolate: options.conformance.is_none(),
-        opaque: options
-            .conformance
-            .is_some_and(|conformance| conformance.part() == 1),
-        images: FxHashMap::default(),
-        strokes: FxHashMap::default(),
-        sized: FxHashMap::default(),
-        unclipped: FxHashMap::default(),
-        memo: options.images.clone(),
-        shadows: FxHashMap::default(),
-        text_shadows: FxHashMap::default(),
-        morphology: FxHashMap::default(),
-        svgs: FxHashMap::default(),
-        svg_traits: FxHashMap::default(),
-    };
+    // Only images make the PDF be written again, with every page drawn again.
+    let release = !pages.iter().any(|page| page.items.iter().any(draws_image));
+    let mut image_cache = ImageCache::new(options);
     let mut broken_images = Vec::new();
     loop {
-        match attempt(pages, fonts, metadata, options, &mut image_cache) {
+        match attempt(pages, fonts, metadata, options, &mut image_cache, release) {
             Ok(pdf) => return Ok(Written { pdf, broken_images }),
             Err(Failure::Pdf(error)) => return Err(error),
+            // Not without the pages let go of; there are none to draw again where nothing
+            // draws an image.
+            Err(Failure::Image(_, message)) if release => return Err(PdfError::Write(message)),
             Err(Failure::Image(image, message)) => {
                 let mut found = false;
                 for ((_, _, _), embedded) in &mut image_cache.images {
@@ -441,13 +432,48 @@ impl From<PdfError> for Failure {
     }
 }
 
-/// Writes the PDF once, with the images prepared so far.
+impl ImageCache {
+    /// An empty cache for a PDF written with `options`.
+    fn new(options: &Options) -> Self {
+        Self {
+            interpolate: options.conformance.is_none(),
+            opaque: options
+                .conformance
+                .is_some_and(|conformance| conformance.part() == 1),
+            images: FxHashMap::default(),
+            strokes: FxHashMap::default(),
+            sized: FxHashMap::default(),
+            unclipped: FxHashMap::default(),
+            memo: options.images.clone(),
+            shadows: FxHashMap::default(),
+            text_shadows: FxHashMap::default(),
+            morphology: FxHashMap::default(),
+            svgs: FxHashMap::default(),
+            svg_traits: FxHashMap::default(),
+        }
+    }
+}
+
+/// Whether `item` draws an image, itself or in a tile, a mask or a filtered group.
+fn draws_image(item: &Item) -> bool {
+    match item {
+        Item::Image { .. } => true,
+        Item::Tiles { tile, .. } => draws_image(tile),
+        Item::PushMask(mask) => mask.items.iter().any(draws_image),
+        Item::Filtered(filtered) => filtered.items.iter().any(draws_image),
+        _ => false,
+    }
+}
+
+/// Writes the PDF once, with the images prepared so far. With `release`, the items of each page
+/// go once it is drawn; the pages keep their sizes, which links and bookmarks need.
 fn attempt(
-    pages: &[PageList],
+    pages: &mut [PageList],
     fonts: &FontDb,
     metadata: &Metadata,
     options: &Options,
     image_cache: &mut ImageCache,
+    release: bool,
 ) -> Result<Vec<u8>, Failure> {
     let fallback = Structure::default();
     let structure = options.structure.as_ref().or_else(|| {
@@ -498,7 +524,8 @@ fn attempt(
     let mut tagger = structure.map(|structure| tagging::Tagger::new(structure, pages));
     let mut font_cache = FontCache::new(pages, fonts);
     font_cache.seed_notdef = options.conformance.is_none() && !options.accessible;
-    for (index, page) in pages.iter().enumerate() {
+    for index in 0..pages.len() {
+        let page = &pages[index];
         // Every page is written, so that page indices stay those of the layout. With bleed or
         // marks, the sheet is larger: the page is its trim box, inside its bleed box, with room
         // for the marks around it. A turned page lies on its sheet turned.
@@ -588,6 +615,9 @@ fn attempt(
             }
         }
         pdf_page.finish();
+        if release {
+            pages[index].items = Vec::new();
+        }
     }
     if let Some(tagger) = tagger {
         document.set_tag_tree(tagger.finish());
@@ -3358,6 +3388,99 @@ mod tests {
         .expect("pdf");
         let text = inflated(&written.pdf);
         assert!(!text.contains("] 0 d") && !text.contains("]0 d"), "{text}");
+    }
+
+    #[test]
+    fn lets_go_of_pages_without_images_as_they_are_written() {
+        use fagus_paint::{Item, PageList};
+        use fagus_style::values::Rgba;
+        let rect = |x: f32| Item::Rect {
+            rect: RectF {
+                x,
+                y: 10.0,
+                width: 20.0,
+                height: 20.0,
+            },
+            color: Rgba::from_u8(0x27, 0x41, 0xd9, 1.0),
+            radii: None,
+        };
+        let pages: Vec<PageList> = (0..3)
+            .map(|index| PageList {
+                width: 100.0,
+                height: 100.0 + index as f32,
+                items: vec![rect(index as f32 * 10.0), rect(50.0)],
+                bleed: 0.0,
+                marks: fagus_layout::PageMarks::default(),
+                orientation: fagus_layout::PageOrientation::Upright,
+            })
+            .collect();
+        let (fonts, metadata, options) = (
+            fagus_text::FontDb::new(),
+            super::Metadata {
+                created: Some(Date::from_unix(1_793_618_400)),
+                ..super::Metadata::default()
+            },
+            super::Options::default(),
+        );
+        let mut released = pages.clone();
+        let mut kept = pages.clone();
+        let mut cache = super::ImageCache::new(&options);
+        let written = super::attempt(&mut released, &fonts, &metadata, &options, &mut cache, true);
+        let mut cache = super::ImageCache::new(&options);
+        let same = super::attempt(&mut kept, &fonts, &metadata, &options, &mut cache, false);
+        let (Ok(written), Ok(same)) = (written, same) else {
+            panic!("not written");
+        };
+        assert_eq!(written, same, "the same PDF");
+        assert!(released.iter().all(|page| page.items.is_empty()));
+        assert!(
+            kept.iter()
+                .zip(&pages)
+                .all(|(kept, page)| kept.items == page.items)
+        );
+        // The pages keep their sizes.
+        assert_eq!(
+            released.iter().map(|page| page.height).collect::<Vec<_>>(),
+            [100.0, 101.0, 102.0]
+        );
+        // Pages without images are let go of when the PDF is written.
+        let mut written = pages.clone();
+        super::write_uncompacted(&mut written, &fonts, &metadata, &options).expect("written");
+        assert!(written.iter().all(|page| page.items.is_empty()));
+        // Images, which may turn out not to decode, keep all pages for drawing them again.
+        let image = Item::Image {
+            rect: RectF {
+                x: 0.0,
+                y: 0.0,
+                width: 10.0,
+                height: 10.0,
+            },
+            image: std::sync::Arc::new(fagus_layout::Image {
+                data: std::sync::Arc::new(Vec::new()),
+                format: fagus_layout::ImageFormat::Png,
+                width: 10.0,
+                height: 10.0,
+                natural: (true, true),
+                ratio: Some(1.0),
+                inline: false,
+                orientation: 1,
+                filters: std::sync::Arc::new([]),
+                pad: 0,
+            }),
+        };
+        assert!(super::draws_image(&image));
+        assert!(super::draws_image(&Item::Tiles {
+            area: RectF {
+                x: 0.0,
+                y: 0.0,
+                width: 30.0,
+                height: 30.0,
+            },
+            origin: (0.0, 0.0),
+            step: (10.0, 10.0),
+            tile: std::sync::Arc::new(image),
+        }));
+        assert!(!super::draws_image(&rect(0.0)));
     }
 
     #[test]

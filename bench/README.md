@@ -91,11 +91,23 @@ Results of 2026-11-19 on the same Apple M2 Pro, macOS 27, at commit 36c4647 (Fag
 | Start of a new process until it is ready (`fagus worker` to its first message) | ≤ 3 ms | 3.3 ms, of which 1.8 ms start any process (`/usr/bin/true`) | 2.4 |
 | The same, until the first byte of a trivial PDF, minus the render | | 3.5 ms | 2.4 |
 | Invoice with 1 page, with the start of the process | ≤ 10 ms | `fagus render` 9.1 ms, the worker 8.5 ms, from PHP (new `Engine`) 8.4 ms | 2.3–2.4 |
-| Peak memory at 100 pages, one render | ≤ 64 MB | **98 MB** footprint, 127 MB RSS (modern CSS: 108 MB, 135 MB) | 1.8–1.9 |
-| Peak memory at 100 pages, 21 renders by one worker | ≤ 64 MB | **116 MB** footprint, 211 MB RSS (124 MB, 223 MB) | 1.9–10 |
+| Peak memory at 100 pages, one render | ≤ 64 MB | **96 MB** footprint, 121 MB RSS (modern CSS: 102 MB, 129 MB); before the changes below 98 MB, 127 MB RSS (108 MB, 135 MB) | 40–90 |
+| Peak memory at 100 pages, 21 renders by one worker | ≤ 64 MB | **102 MB** footprint (112 MB); before 116 MB, 211 MB RSS (124 MB, 223 MB) | 40–90 |
 | Binary size (macOS, arm64) | ≤ 30 MB | 25.3 MB | |
 
-At 1 and 10 pages the peak is 9 and 20 MB footprint (19 and 30 MB RSS). The budget for memory at 100 pages is missed by half: the footprint grows steadily while the document is styled and laid out (about 0.7 MB per page of this invoice) and peaks while the PDF is written. With `MallocSpaceEfficient=1`, which hands freed memory back at once, the peak is still 85 MB, so most of it is memory in use, not memory the allocator keeps.
+The two rows of peak memory were measured again after the changes described in [Where the memory goes](#where-the-memory-goes), on the same machine under heavy load (other builds), which changes memory little: one render as above (the median of three), 21 renders with the worker driven through its protocol from Python (the median of three runs, which ranged from 96 to 108 MB, and 104 to 124 MB with modern CSS; the worker before the changes, measured the same way, from 113 to 200 MB). At 1 and 10 pages the peak is 9 and 20 MB footprint (19 and 30 MB RSS). The budget for memory at 100 pages is missed by half: the footprint grows steadily while the document is styled and laid out (about 0.7 MB per page of this invoice). With `MallocSpaceEfficient=1`, which hands freed memory back at once, the peak is still 85 MB, so most of it is memory in use, not memory the allocator keeps.
+
+### Where the memory goes
+
+Measured with [dhat](https://docs.rs/dhat) as the global allocator of a small program around the `fagus` crate, on the 100-page classic invoice (the modern one in parentheses), and with the footprint of `fagus render` sampled every few tenths of a millisecond against its `--timings`. The heap peaks at 78 MB (84 MB) while the pages are laid out:
+
+| Held at the peak | Heap |
+|---|--:|
+| Computed styles: 14,278 elements (13,488) of 2,704 bytes each, the size of `ComputedStyle` with its 250 properties | 37 MB (35 MB) |
+| The DOM | 6 MB (6 MB) |
+| The fragments of the pages, the box tree and what table layout keeps until the table is done | 35 MB (43 MB) |
+
+The footprint, which also counts memory the allocator holds after freeing it, reached 96 MB during layout and 100 MB while the PDF was written: the DOM and the computed styles were still held then, and the display lists of all pages until the end. Now the PDF's links, bookmarks, structure tree and metadata are taken from the DOM before the pages are painted, so that the DOM and the styles go with the laid-out pages before the PDF is written (while it is written, the heap now peaks at 47 MB instead of 64, the footprint at 83 MB instead of 100); and the display list of a page goes once the page is written, unless the document has images (an image that turns out not to decode makes every page be drawn again). The peak is now that of layout: 96 MB footprint for the classic invoice, 102 MB for the modern one (before: 97 and 110 MB, measured the same way on the same busy machine). The PDFs are the same bytes (`tools/determinism.sh` and the benchmark invoices), and the render times did not change beyond the noise: `fagus render --repeat 10` of both binaries in turn, six times each under load, gave medians of 0.97 and 1.03 times those before. Below 64 MB needs smaller computed styles: with the properties that are rarely set kept in groups that elements share, as Blink keeps them (`StyleRareNonInheritedData` and its kin), most of the 2.7 KB per element would be shared.
 
 ### Memory a worker keeps
 
@@ -107,7 +119,9 @@ After the 100-page invoice, a worker keeps a footprint of 52 MB (125 MB RSS) at 
 | `MallocLargeCache=0` | 14 MB (120 MB RSS) | 12 MB (121 MB RSS) | 91 MB |
 | `MallocSpaceEfficient=1` | 6 MB (119 MB RSS) | 6 MB (119 MB RSS) | 86 MB |
 
-`MallocNanoZone=0`, `MallocMaxMagazines=1` and `RAYON_NUM_THREADS=1` change nothing. With either setting above, the render times differed by no more than the noise of the busy machine they were compared on (load 10 to 13). Linux, where Fagus runs in production, was not measured: glibc's allocator also keeps freed memory in its arenas (one per thread that allocates) and returns it only from the top of the heap or through `malloc_trim()`.
+`MallocNanoZone=0`, `MallocMaxMagazines=1` and `RAYON_NUM_THREADS=1` change nothing. With either setting above, the render times differed by no more than the noise of the busy machine they were compared on (load 10 to 13). Linux, where Fagus runs in production, was not measured here: glibc's allocator also keeps freed memory in its arenas (one per thread that allocates) and returns it only from the top of the heap or through `malloc_trim()`. The benchmark job of CI runs `tools/worker-memory.py`, which prints what a worker keeps on Linux from the resident size the worker reports with each document (`rss`, [protocol.md](../docs/protocol.md)).
+
+The worker does not hand freed memory back itself. `malloc_zone_pressure_relief(NULL, 0)`, which is to give back the free pages of all malloc zones, releases nothing on macOS 27: it returns 0 at once, and the footprint stays where it is, after the 100-page invoice in the worker as in a C program that frees a million small or forty 2 MB blocks first (the settings above give the large blocks back). Calling it, or glibc's `malloc_trim(0)`, would also need the only unsafe code of the workspace. A worker that has grown is replaced instead: the PHP engine starts a new one after `maxDocuments` documents or once the worker reports more than `maxMemory` megabytes ([deployment.md](../docs/deployment.md#restart-workers)); the start costs 3 to 4 ms.
 
 ## Fagus
 
