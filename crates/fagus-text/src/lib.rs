@@ -469,33 +469,51 @@ impl Face {
     }
 
     /// The advance of a shaped glyph along a horizontal line at a font size of `size` pixels,
-    /// as Chrome on macOS has it: the glyph's own advance at the size (from Core Text, in single
-    /// precision) cut to 1/65536 pixel, where Skia hands it to the shaper
-    /// (`SkiaScalarToHarfBuzzPosition`), plus what positioning (kerning) adds, which the shaper
-    /// scales to 1/65536 pixel at the size cut to that precision (`em_mult`). Over a line these
-    /// add up to a little less than the font's advances times the size, which decides whether
-    /// a word still fits.
+    /// as Chrome on Linux has it: the glyph's own advance as `FreeType` scales it (its linear
+    /// advance in 1/65536 pixel) at the size Skia sets, cut to 1/64 pixel (`SkScalarToFDot6`),
+    /// which Skia hands to the shaper (`SkiaScalarToHarfBuzzPosition`), plus what positioning
+    /// (kerning) adds, which the shaper scales to 1/65536 pixel at the size cut to that
+    /// precision (`em_mult`). At 11pt (14.67px, set as 14.66px) a line is 0.07 % narrower than
+    /// the font's advances times the size, which decides whether a word still fits.
     pub fn layout_advance(&self, glyph: &ShapedGlyph, size: f32) -> f32 {
         let size = size * self.size_adjust;
-        let units_per_em = f64::from(self.metrics.units_per_em);
+        #[allow(clippy::cast_possible_truncation, reason = "font units of an em")]
+        let units_per_em = (self.metrics.units_per_em as i64).max(1);
+        // `FreeType`'s rounding fixed-point arithmetic (`FT_MulDiv`, `FT_DivFix`).
+        let mul_div = |a: i64, b: i64, c: i64| {
+            let product = a * b;
+            let half = c / 2;
+            if product < 0 {
+                -((-product + half) / c)
+            } else {
+                (product + half) / c
+            }
+        };
         #[allow(
             clippy::cast_possible_truncation,
-            reason = "Core Text's advance as Skia's float"
+            reason = "the size in 26.6 fixed point, glyph advances in font units"
         )]
-        let own = (f64::from(glyph.own_advance) * f64::from(size) / units_per_em) as f32;
-        let own = (f64::from(own) * 65536.0).trunc();
+        let own = {
+            let size = (f64::from(size) * 64.0) as i64;
+            let x_scale = mul_div(size, 0x10000, units_per_em);
+            mul_div(f64::from(glyph.own_advance).round() as i64, x_scale, 64)
+        };
         #[allow(
             clippy::cast_possible_truncation,
             reason = "HarfBuzz positions, 16.16 fixed point"
         )]
         let positioned = {
             let scale = (f64::from(size) * 65536.0).trunc() as i64;
-            let multiplier = (scale << 16) / (units_per_em as i64).max(1);
+            let multiplier = (scale << 16) / units_per_em;
             let delta = f64::from(glyph.x_advance - glyph.own_advance).round() as i64;
             (delta * multiplier + 32768) >> 16
         };
-        #[allow(clippy::cast_possible_truncation, reason = "a glyph's advance in pixels")]
-        let advance = ((own + positioned as f64) / 65536.0) as f32;
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_precision_loss,
+            reason = "a glyph's advance in pixels"
+        )]
+        let advance = ((own + positioned) as f64 / 65536.0) as f32;
         advance
     }
 
@@ -4469,24 +4487,46 @@ mod tests {
     }
 
     #[test]
-    fn measures_advances_as_chrome_on_macos() {
-        // At 13.33px, Inter's space (576 units) is 3.7490625 pixels: Chrome takes 245698/65536.
+    fn measures_advances_as_chrome_on_linux() {
+        // Chrome 157 on Linux measures Inter at 11pt (14.67px, which Skia sets as 938/64px):
+        // "comment" 64.84375px wide and the hyphen 5.265625px (in layout units, rounded up),
+        // where the font's advances times the size give 64.88px and 5.2565px.
         let Some(db) = test_db() else { return };
         let face = db.query(&["Inter"], 400.0, FontStyle::Normal).expect("Inter");
+        let width = |text: &str| {
+            let shaped = db.shape(face, text);
+            let sum: f32 = shaped
+                .glyphs
+                .iter()
+                .map(|glyph| db.face(face).layout_advance(glyph, 11.0 * 96.0 / 72.0))
+                .sum();
+            (sum * 64.0).ceil() / 64.0
+        };
+        assert_eq!(width("comment"), 64.843_75);
+        assert_eq!(width("\u{2010}"), 5.265_625);
+        assert_eq!(
+            width("equipment and the decisions behind each picture; the tutors com\u{2010}"),
+            29_169.0 / 64.0
+        );
+        // At 13.33px (853/64px), Inter's space (576 units) is 3.7485352 pixels.
         let shaped = db.shape(face, " ");
         let space = &shaped.glyphs[0];
         assert_eq!(space.own_advance, 576.0);
-        assert_eq!(db.face(face).layout_advance(space, 13.33), 245_698.0 / 65536.0);
+        assert_eq!(db.face(face).layout_advance(space, 13.33), 245_664.0 / 65536.0);
         // Kerning (here of `T` with `o`) counts at the size cut to 1/65536 pixel, rounded.
         let pair = db.shape(face, "To");
         let kerned = &pair.glyphs[0];
         let kerning = kerned.x_advance - kerned.own_advance;
         assert!(kerning < 0.0, "{pair:?}");
         let scale = (13.33_f64 * 65536.0).trunc();
-        let own = ((f64::from(kerned.own_advance) * 13.33 / 2048.0) as f32 * 65536.0).trunc();
         let positioned = (f64::from(kerning) * scale / 2048.0).round();
+        let unkerned = ShapedGlyph {
+            x_advance: kerned.own_advance,
+            ..*kerned
+        };
+        let own = f64::from(db.face(face).layout_advance(&unkerned, 13.33)) * 65536.0;
         let advance = db.face(face).layout_advance(kerned, 13.33);
-        assert!((f64::from(advance) - (f64::from(own) + positioned) / 65536.0).abs() < 1e-6);
+        assert!((f64::from(advance) - (own + positioned) / 65536.0).abs() < 1e-6);
     }
 
     #[test]

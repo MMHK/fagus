@@ -5,5 +5,4 @@
 # use print features Chrome lacks are left out without being listed here.
 
 FAIL documents/certificate.html  # pdftoppm: Chrome draws the repeated 18mm tile as one tiling pattern, Fagus each tile; the tiles lie at the same place in both PDFs (the first at x -12.76pt), but pdftoppm rasterizes the pattern's tiles a pixel off; drawing the tiles as a pattern too makes images.html and diploma-fullbleed differ, whose patterns Chrome lays out otherwise
-FAIL documents/diploma-fullbleed.html  # engine: Chrome on Linux ends a justified line of the left column with "com‐", 455.77px of text in a column of 455.44px (measured with getBoundingClientRect), Fagus moves "comment" to the next line; both hyphenate the word "com-ment"
 FAIL documents/report-ledger-sticky.html  # Chrome on Linux keeps the room of the vertical scroll bar the table wrapper gets on the screen (a rule for the screen gives it a max-height) while the wrapper breaks across the printed pages, 15px without a bar; Fagus does not lay the document out for the screen

@@ -3019,8 +3019,10 @@ mod tests {
     fn shrinks_pages_where_justified_items_round_past_the_line() {
         // Chrome rounds each item of a justified line up to layout units once it has widened
         // it: the line of the generated `(3) ` and the paragraph's text reaches 1/64 pixel past
-        // its 446 pixels, which shrinks the page by as much (Chrome 157: lines laid out 447
-        // pixels wide, drawn at 446/446.016).
+        // its 446 pixels, which shrinks the page by as much (Chrome 157 on macOS at 9.5pt: lines
+        // laid out 447 pixels wide, drawn at 446/446.016). Inter at 9.5pt is set narrower on
+        // Linux, where the items of this line fit; at 13px, a size of whole 1/64 pixels, they
+        // round past it again.
         let mut fonts = FontDb::new();
         fonts
             .add_font_dir(Path::new(concat!(
@@ -3029,7 +3031,7 @@ mod tests {
             )))
             .expect("fonts");
         let html =
-            "<style>@page { size: 548px 300px; margin: 0 51px } body { margin: 0; font: 9.5pt/1.5 Inter }
+            "<style>@page { size: 548px 300px; margin: 0 51px } body { margin: 0; font: 13px/1.5 Inter }
                       p { margin: 0; text-align: justify } p::before { content: '(3) ' }</style>
                     <p>Es darf keine Person durch Ausgaben, die dem Zweck des Vereins fremd sind, oder durch
                     unverhältnismäßig hohe Vergütungen begünstigt werden.</p>";

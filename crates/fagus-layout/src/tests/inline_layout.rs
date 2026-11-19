@@ -352,8 +352,10 @@ fn leaves_less_room_for_annotations_after_a_block_with_top_padding() {
 
 #[test]
 fn fits_text_up_to_a_layout_unit_wider_than_the_line() {
-    // The text is 439.011 pixels wide: Chrome fits it on a line 439 pixels wide (1/64 more
-    // than the room), but not on one of 438.984 (measured).
+    // The text is 438.953 pixels wide in layout units, as Chrome on Linux measures Inter at
+    // 10pt (set at 853/64 pixels): it fits on a line 1/64 pixel narrower, 438.9375 pixels, but
+    // not on one of 438.921875 (on macOS, where it is 439.011 pixels wide, on 439 but not on
+    // 438.984375).
     let lines = |width: &str| {
         let pages = render(&format!(
             "<style>body {{ font: 10pt Inter; margin: 0 }} p {{ margin: 0; width: {width} }}</style>
@@ -363,8 +365,8 @@ fn fits_text_up_to_a_layout_unit_wider_than_the_line() {
         line_texts(&pages[0].fragments[0], &mut lines);
         lines.len()
     };
-    assert_eq!(lines("439px"), 1);
-    assert_eq!(lines("438.984375px"), 2);
+    assert_eq!(lines("438.9375px"), 1);
+    assert_eq!(lines("438.921875px"), 2);
 }
 
 #[test]
