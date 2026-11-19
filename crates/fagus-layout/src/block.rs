@@ -822,7 +822,7 @@ pub struct Layouter<'a> {
     pub(crate) table_widths: RefCell<FxHashMap<BoxId, Au>>,
     /// Whether the header and the footer of each table repeat, as decided where the table
     /// starts.
-    pub(crate) table_repeats: RefCell<FxHashMap<BoxId, (bool, bool)>>,
+    pub(crate) table_repeats: RefCell<FxHashMap<BoxId, (crate::table::Repeating, crate::table::Repeating)>>,
     /// How many more lines the box with `line-clamp` being laid out shows; `None` outside one.
     pub(crate) line_budget: std::cell::Cell<Option<usize>>,
     /// Whether content follows the last line that the `line-clamp` being laid out shows, which

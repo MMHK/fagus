@@ -666,3 +666,85 @@ fn draws_the_borders_of_a_breaking_row_without_a_carry_over_row_above_it() {
         .map(|(_, middle)| middle);
     assert_eq!(head, Some(top + 1.0));
 }
+
+/// The pages (from 0) that show an element with class `class`.
+fn pages_of(document: &fagus_dom::Document, pages: &[Page], class: &str) -> Vec<usize> {
+    (0..pages.len())
+        .filter(|&index| find(&pages[index], document, class).is_some())
+        .collect()
+}
+
+/// A table of `rows` rows 20px tall with a carry-over row in its header and footer, its head
+/// row `head` pixels tall and its total `total` pixels tall, with `style`.
+fn carry_over_table(rows: usize, (head, total): (u32, u32), style: &str) -> String {
+    format!(
+        "<style>@page {{ size: 400px 300px; margin: 20px }} body {{ margin: 0; font: 14px/20px Inter }}
+         table {{ border-spacing: 0 }} td, th {{ padding: 0 }} .carry {{ -fagus-repeat: at-break }}
+         th {{ height: {head}px }} .sum td {{ height: {total}px }} {style}</style>
+         <table><thead><tr><th>Item</th></tr><tr class=carry><td class=forward>Brought forward</td></tr></thead>
+         <tfoot><tr class=carry><td class=over>Carried over</td></tr><tr class=sum><td class=total>Total</td></tr></tfoot>
+         <tbody>{}<tr><td class=last>r</td></tr></tbody></table>",
+        "<tr><td>r</td></tr>".repeat(rows - 1)
+    )
+}
+
+#[test]
+fn shows_the_footers_carry_over_rows_where_the_table_breaks_before_its_closing_footer() {
+    // The head row and ten rows (220px) fit on the page area (260px) with the footer as it
+    // repeats where the table breaks (40px), but not with the total and the table's bottom
+    // padding (50px): the table breaks before its footer, which goes on to the next page. The
+    // table breaks there, so the footer's carry-over row shows below the rows, and the header's
+    // on the next page.
+    let (document, pages) =
+        render_document(&carry_over_table(10, (20, 20), "table { padding-bottom: 30px }"));
+    assert_eq!(pages.len(), 2);
+    assert_eq!(pages_of(&document, &pages, "last"), [0]);
+    assert_eq!(pages_of(&document, &pages, "total"), [1]);
+    assert_eq!(pages_of(&document, &pages, "over"), [0]);
+    assert_eq!(pages_of(&document, &pages, "forward"), [1]);
+    let (_, below_rows, _) = find(&pages[0], &document, "last").expect("last row");
+    let (_, over, _) = find(&pages[0], &document, "over").expect("carry-over row");
+    assert_eq!(over, below_rows + 20.0);
+}
+
+#[test]
+fn repeats_carry_over_rows_on_their_own_where_their_header_or_footer_is_too_tall() {
+    // A header or footer taller than a quarter of the page does not repeat, as in Chrome: its
+    // rows come once, before and after the others. Its carry-over rows still show only where
+    // the table breaks: the header's on the pages after the first, the footer's on the pages
+    // before the last.
+    for (head, total) in [(80, 20), (20, 80), (80, 80)] {
+        let (document, pages) = render_document(&carry_over_table(30, (head, total), ""));
+        let count = pages.len();
+        assert!(count > 2, "{head} {total}");
+        assert_eq!(
+            pages_of(&document, &pages, "forward"),
+            (1..count).collect::<Vec<_>>(),
+            "{head} {total}"
+        );
+        assert_eq!(
+            pages_of(&document, &pages, "over"),
+            (0..count - 1).collect::<Vec<_>>(),
+            "{head} {total}"
+        );
+        // The total repeats with its footer where that is short enough.
+        let totals = if total > 20 {
+            vec![count - 1]
+        } else {
+            (0..count).collect()
+        };
+        assert_eq!(pages_of(&document, &pages, "total"), totals, "{head} {total}");
+    }
+}
+
+#[test]
+fn leaves_out_carry_over_rows_of_a_header_or_footer_that_does_not_repeat() {
+    // A header and footer that may break inside do not repeat, as in Chrome: their carry-over
+    // rows show nowhere, as the table never shows the header or footer where it breaks.
+    let style = "thead, tfoot { break-inside: auto }";
+    let (document, pages) = render_document(&carry_over_table(30, (20, 20), style));
+    assert!(pages.len() > 2);
+    assert_eq!(pages_of(&document, &pages, "forward"), Vec::<usize>::new());
+    assert_eq!(pages_of(&document, &pages, "over"), Vec::<usize>::new());
+    assert_eq!(pages_of(&document, &pages, "total"), [pages.len() - 1]);
+}

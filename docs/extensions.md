@@ -40,6 +40,8 @@ The running totals come from the code that writes the HTML, for example as an at
 
 A footer row without `-fagus-repeat` shows `string()` on every page, with the final value on the last one: a subtotal per page and the total at the end.
 
+A header or footer repeats only where it is no taller than a quarter of the page and avoids breaks inside (`break-inside: avoid`, the default for `<thead>` and `<tfoot>`), as in Chrome. One that does not repeat comes once, at the start or end of the table, without its carry-over rows; those repeat on their own where the table breaks, if they are short enough and their row group avoids breaks inside, and show nowhere otherwise. Where a table breaks right before its footer, which then goes on to the next page, the carry-over rows of the footer show below the last rows, as on any page before a break.
+
 The table's columns are measured with the values at the end of the table, usually the widest totals. Keep carry-over rows to one line: their height is that of the row as measured.
 
 With `border-collapse: collapse`, the borders on each page are resolved as if the carry-over rows that do not show there were not in the table: on the first page, the bottom border of the head row meets the first row of the body; on the last page, the last row meets the rows of the footer that remain.

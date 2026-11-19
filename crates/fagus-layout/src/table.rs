@@ -238,6 +238,20 @@ impl Collapsed {
     }
 }
 
+/// How a table's header or footer repeats where the table breaks, as decided where the table
+/// starts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Repeating {
+    /// All its rows repeat (those with `-fagus-repeat: at-break` only where the table breaks).
+    Whole,
+    /// It is too tall to repeat, or does not avoid breaks inside: its rows come once, before or
+    /// after the others, but its rows with `-fagus-repeat: at-break` repeat where the table
+    /// breaks on their own, being short enough.
+    AtBreak,
+    /// Nothing repeats: its rows come once, those with `-fagus-repeat: at-break` never.
+    No,
+}
+
 /// Which rows that show only where the table breaks (`-fagus-repeat: at-break`) a page of a
 /// table leaves out: those of the header on the table's first page, those of the footer on its
 /// last.
@@ -2574,23 +2588,67 @@ impl Layouter<'_> {
                 repeats(&footer)
             }
         };
+        // Rows of a header or footer that does not repeat come once, with the others, except for
+        // those that show only where the table breaks: they repeat on their own where they are
+        // short enough to (and their row group avoids breaks inside), else they never show.
+        let at_break_rows = |rows: &[usize]| -> Vec<usize> {
+            rows.iter()
+                .copied()
+                .filter(|&row| self.shows_at_break(&laid.grid.rows[row]))
+                .collect()
+        };
+        let repeating = |whole: bool, rows: &[usize]| {
+            let carried = at_break_rows(rows);
+            if whole {
+                Repeating::Whole
+            } else if repeats(&carried) {
+                Repeating::AtBreak
+            } else {
+                Repeating::No
+            }
+        };
         // Whether they repeat is decided where the table starts, as in Chrome: in columns, by the
         // height of its first one.
         let decided = continuing
             .then(|| self.table_repeats.borrow().get(&id).copied())
             .flatten();
-        let (header_repeats, footer_repeats) =
-            decided.unwrap_or_else(|| (repeats(&header), footer_repeats_now()));
+        let (header_repeating, footer_repeating) = decided.unwrap_or_else(|| {
+            (
+                repeating(repeats(&header), &header),
+                repeating(footer_repeats_now(), &footer),
+            )
+        });
         if !continuing {
             self.table_repeats
                 .borrow_mut()
-                .insert(id, (header_repeats, footer_repeats));
+                .insert(id, (header_repeating, footer_repeating));
         }
-        if !header_repeats {
-            body.splice(0..0, header.drain(..));
+        let footer_repeats = footer_repeating != Repeating::No;
+        // Rows that show only where the table breaks and that the page leaves out whether it
+        // breaks or not.
+        let header_dropped = header_repeating == Repeating::No && !at_break_rows(&header).is_empty();
+        let footer_dropped = footer_repeating == Repeating::No && !at_break_rows(&footer).is_empty();
+        if header_repeating != Repeating::Whole {
+            let (carried, once): (Vec<usize>, Vec<usize>) = header
+                .iter()
+                .partition(|&&row| self.shows_at_break(&laid.grid.rows[row]));
+            body.splice(0..0, once);
+            header = if header_repeating == Repeating::AtBreak {
+                carried
+            } else {
+                Vec::new()
+            };
         }
-        if !footer_repeats {
-            body.append(&mut footer);
+        if footer_repeating != Repeating::Whole {
+            let (carried, mut once): (Vec<usize>, Vec<usize>) = footer
+                .iter()
+                .partition(|&&row| self.shows_at_break(&laid.grid.rows[row]));
+            body.append(&mut once);
+            footer = if footer_repeating == Repeating::AtBreak {
+                carried
+            } else {
+                Vec::new()
+            };
         }
         let rows_height =
             |rows: &[usize]| -> Au { rows.iter().map(|&row| laid.heights[row] + laid.spacing.1).sum() };
@@ -2700,8 +2758,10 @@ impl Layouter<'_> {
             && matches!(token, Some(BreakToken::Table { covered: true, cells, .. }) if cells.is_empty());
         // On the table's first page, the collapsed borders are those of the table without the
         // header's rows that show only where it breaks; on its last, without the footer's.
-        let hides_header = !continuing && header.iter().any(|&row| at_break(row));
-        let hides_footer = footer.iter().any(|&row| at_break(row));
+        // Where a header or footer does not repeat, its rows that show only where the table
+        // breaks are left out on every page.
+        let hides_header = header_dropped || !continuing && header.iter().any(|&row| at_break(row));
+        let hides_footer = footer_dropped || footer.iter().any(|&row| at_break(row));
         let header: Vec<usize> = header
             .into_iter()
             .filter(|&row| (continuing || !at_break(row)) && !frame_only && !rest_alone && !end_after_cover)
@@ -2847,7 +2907,7 @@ impl Layouter<'_> {
             // draws them on the page: the closing footer follows the last rows where they end.
             let hiding = Hiding {
                 header: hides_header,
-                footer: hides_footer && end + 1 == body.len(),
+                footer: hides_footer && (footer_dropped || end + 1 == body.len()),
             };
             // Rows that break need no spacing below them, nor the table's bottom border and
             // padding; if they end on the page after all, they need room for those.
@@ -3324,9 +3384,14 @@ impl Layouter<'_> {
                 y.min(latest).max(y - laid.spacing.1)
             };
         }
+        // Where the table breaks right before its closing footer, which goes on to the next
+        // page, the footer's rows that show where it breaks show here.
+        let carried_footer: Vec<usize> = footer.iter().copied().filter(|&row| at_break(row)).collect();
         place_repeated(
-            if frame_only || before_footer {
+            if frame_only {
                 &[]
+            } else if before_footer {
+                &carried_footer
             } else if broken {
                 &footer
             } else {
@@ -3382,7 +3447,7 @@ impl Layouter<'_> {
         let placed = placed.into_inner();
         let without = laid.without(Hiding {
             header: hides_header,
-            footer: hides_footer && !broken && !frame_only && !before_footer,
+            footer: hides_footer && (footer_dropped || !broken && !frame_only && !before_footer),
         });
         let (borders, bottoms) = without.map_or((&laid.borders, &laid.bottoms), |without| {
             (&without.borders, &without.bottoms)
