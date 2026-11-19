@@ -650,10 +650,11 @@ mod tests {
             let (x, y, fragment) = find(&pages[0], &document, class).expect(class);
             (x, y, fragment.rect.width.to_px(), fragment.rect.height.to_px())
         };
-        // Inter at 13.33px: an `x` is 7.28px wide and the ascent 13px; 20 characters, the
-        // ascent less a character, a 1px padding and a 2px border on each side.
-        assert_eq!(rect("text").2, 160.0);
-        assert_eq!(rect("small").2, 21.0);
+        // Inter at 13.33px on Linux: 8.54px a character (its OS/2 table), 9 rounded up, and the
+        // box around its glyphs 44px wide; 20 characters, the box less a character, a 2px
+        // padding and a 2px border on each side.
+        assert_eq!(rect("text").2, 9.0 * 20.0 + 44.0 - 9.0 + 8.0);
+        assert_eq!(rect("small").2, 44.0 + 8.0);
         // One line of text, 16px high, in the frame.
         assert_eq!(rect("text").3, 22.0);
         // The checkbox is 13px square, its bottom on the baseline of the text field.
@@ -671,7 +672,7 @@ mod tests {
         // Ten characters and a scrollbar (16px in Chrome 157) wide, three lines high, in a 2px
         // padding and a 1px border.
         let area = rect("area");
-        assert!((area.2 - (73.0 + 16.0 + 6.0)).abs() < 0.5, "{area:?}");
+        assert!((area.2 - (90.0 + 16.0 + 6.0)).abs() < 0.5, "{area:?}");
         assert_eq!(area.3, 3.0 * 16.0 + 6.0);
         // Author borders replace the native frame.
         assert_eq!(rect("styled").2, 50.0 + 4.0 + 6.0);

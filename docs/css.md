@@ -476,7 +476,9 @@ checkboxes and radio buttons (with `accent-color`), buttons, `<select>` and list
 `<textarea>`, `<progress>`, `<meter>`, range sliders, color and file inputs, `<fieldset>` with
 `<legend>`, `<details>` and `<summary>`, `<dialog>`. `appearance: none` or author borders and
 backgrounds give the CSS look instead of the native one, as in Chrome. `field-sizing: content`
-works.
+works. A text field of `size` characters is as wide as Chrome on Linux makes it, from the average
+character width of the font's OS/2 table and the width of the box around its glyphs (`head`);
+the spin button of a number field and the room for the arrow of a `<select>` are 15px wide.
 
 **Differs from Chrome:** the texts controls show of their own (the labels of submit and reset
 buttons, "Choose File", date placeholders such as `mm/dd/yyyy`, the decimal separator) are written

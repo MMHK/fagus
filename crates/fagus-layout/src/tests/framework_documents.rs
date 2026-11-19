@@ -106,7 +106,7 @@ fn unthemed_selects_keep_their_line_height() {
 
 #[test]
 fn themed_selects_keep_room_for_their_arrow_as_chrome_does() {
-    // Chrome keeps 4px before the text of a themed select, and 1px and the arrow's 11px after
+    // Chrome keeps 4px before the text of a themed select, and 1px and the arrow's 15px after
     // it, inside the author's padding; a list box keeps 2px on either side of its options and no
     // room for a scroll bar.
     let (document, pages) = render_document(
@@ -125,7 +125,7 @@ fn themed_selects_keep_room_for_their_arrow_as_chrome_does() {
             .to_px()
     };
     assert!(
-        (width("themed") - width("plain") - 16.0).abs() < 0.01,
+        (width("themed") - width("plain") - 20.0).abs() < 0.01,
         "{}",
         width("themed")
     );

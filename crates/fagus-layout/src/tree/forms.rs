@@ -114,10 +114,10 @@ const PLACEHOLDER: Rgba = gray(0x75);
 /// The size of a checkbox or radio button.
 const CHECK_SIZE: f32 = 13.0;
 /// The width Chrome keeps at the end of a `<select>` for its arrow
-/// (`ClampedMenuListArrowPaddingSize`, the width of a scroll bar's arrow on macOS).
-const ARROW_WIDTH: f32 = 11.0;
-/// The width of the spin button of a number field (Chrome 157, measured).
-const SPIN_BUTTON: f32 = 11.0;
+/// (`ClampedMenuListArrowPaddingSize`, the thickness of a scroll bar on Linux).
+const ARROW_WIDTH: f32 = 15.0;
+/// The width of the spin button of a number field (Chrome 157 on Linux, measured).
+const SPIN_BUTTON: f32 = 15.0;
 /// The width of a scroll bar, which Chrome 157 adds to that of a `<textarea>` (measured), at
 /// any zoom: scroll bars are not zoomed.
 const SCROLLBAR: f32 = 16.0;
@@ -468,11 +468,11 @@ const INVALID_CHAR_WIDTH: [&str; 34] = [
 /// What sizes text controls in a style's font, in pixels.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct CharWidths {
-    /// The width of an average character: of an `x` as Chrome on macOS measures it, not less
-    /// than that rounded; of a `0` for fonts without a trusted average.
+    /// The width of an average character, as Chrome on Linux takes it: the OS/2 table's (else
+    /// an `x`'s), not less than that rounded; of a `0` for fonts without a trusted average.
     pub average: f32,
-    /// The widest character, as Chrome on macOS takes it (the `x` or the ascent); 0 for fonts
-    /// without a trusted average.
+    /// The widest character, as Chrome on Linux takes it: the width of the box around all
+    /// glyphs (the `head` table's), rounded; 0 for fonts without a trusted average.
     pub max: f32,
 }
 
@@ -496,17 +496,23 @@ pub(super) fn char_widths(fonts: Option<&FontDb>, style: &ComputedStyle) -> Char
             .then(|| fonts.shape(face_id, &character.to_string()).advance * scale)
     };
     let zero = advance('0');
-    let x = advance('x').unwrap_or_else(|| face.x_height_at(size));
+    // Skia's average width from the OS/2 table, else Blink's from the "x" (`PlatformInit`).
+    let average = if face.metrics.average_width > 0.0 {
+        face.metrics.average_width * scale
+    } else {
+        advance('x').unwrap_or_else(|| face.x_height_at(size))
+    };
+    let average = average.max(average.round());
     let family = style.font_family.first().map_or("", String::as_str);
     let trusted = !family.is_empty()
         && !INVALID_CHAR_WIDTH
             .iter()
             .any(|invalid| invalid.eq_ignore_ascii_case(family))
-        && !zero.is_some_and(|zero| x > zero * 1.7);
+        && !zero.is_some_and(|zero| average > zero * 1.7);
     if trusted {
         CharWidths {
-            average: x.max(x.round()),
-            max: x.max(face.rounded_ascent_descent(size).0),
+            average,
+            max: (face.metrics.bounding_width * scale).round(),
         }
     } else {
         CharWidths {
@@ -2449,19 +2455,20 @@ mod tests {
 
     #[test]
     fn field_width_follows_chrome() {
-        // Arial at 13.33px: an `x` is 6.67px (7 rounded), the ascent 12px.
+        // Liberation Sans (Arial) at 13.33px on Linux: 7.73px a character (8 rounded), the box
+        // around its glyphs 24.61px (25).
         let arial = CharWidths {
-            average: 7.0,
-            max: 12.0,
+            average: 8.0,
+            max: 25.0,
         };
-        assert!((field_width(arial, 20) - 145.0).abs() < 1e-3);
-        assert!((field_width(arial, 1) - 12.0).abs() < 1e-3);
-        // Menlo: 8.03px a character.
-        let menlo = CharWidths {
+        assert!((field_width(arial, 20) - 177.0).abs() < 1e-3);
+        assert!((field_width(arial, 1) - 25.0).abs() < 1e-3);
+        // DejaVu Sans Mono: 8.03px a character, 17.02px (17) for its glyphs.
+        let mono = CharWidths {
             average: 8.027_344,
-            max: 12.0,
+            max: 17.0,
         };
-        assert!((field_width(menlo, 20) - 165.0).abs() < 1e-3);
+        assert!((field_width(mono, 20) - 170.0).abs() < 1e-3);
     }
 
     #[test]
@@ -2639,11 +2646,11 @@ mod tests {
                 numbers[3] - numbers[1],
             )
         };
-        // Measured in Chrome 157: 8px wide in a room of 11px, 2px in; zoomed, 16px in 22px, 5px
-        // in, 24px in 33px, 7px in; the stroke stays 2px wide.
-        assert_eq!(arrow(1.0), (11.0, 2.0, 8.0, 4.0));
-        assert_eq!(arrow(2.0), (22.0, 5.0, 16.0, 8.0));
-        assert_eq!(arrow(3.0), (33.0, 7.0, 24.0, 12.0));
+        // Measured in Chrome 157 on Linux: 8px wide in a room of 15px, 4px in; zoomed, 16px in
+        // 30px, 9px in; the stroke stays 2px wide.
+        assert_eq!(arrow(1.0), (15.0, 4.0, 8.0, 4.0));
+        assert_eq!(arrow(2.0), (30.0, 9.0, 16.0, 8.0));
+        assert_eq!(arrow(3.0), (45.0, 13.0, 24.0, 12.0));
         assert_eq!(arrow_padding(1.0), 1.0);
         assert_eq!(arrow_padding(1.5), 1.5);
     }

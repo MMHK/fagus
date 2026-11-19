@@ -15,4 +15,3 @@ FAIL documents/paper-pandoc-mathml.html  # MathML: Chrome on Linux draws STIX Tw
 FAIL documents/quote-persian.html  # bold Persian text: Chrome on Linux falls back to DejaVu Sans and makes it bold, Fagus takes DejaVu Sans Bold
 FAIL documents/readme-github.html  # Chrome on Linux prints a classic scrollbar under the overflowing code block; Fagus draws none, as Chrome on macOS
 FAIL documents/report-ledger-sticky.html  # Chrome on Linux rounds glyph advances to whole pixels (no subpixel positioning), so the columns of the auto-sized table differ by a pixel; Fagus measures as Chrome on macOS
-FAIL documents/survey-likert.html  # a text field of size=12 is wider in Chrome on Linux, which takes the average and widest character from the font's OS/2 and head tables; Fagus takes them from the x as Chrome on macOS

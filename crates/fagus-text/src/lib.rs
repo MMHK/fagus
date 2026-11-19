@@ -153,6 +153,11 @@ pub struct FaceMetrics {
     pub typo_descender: f32,
     pub x_height: f32,
     pub cap_height: f32,
+    /// The average width of a character of the OS/2 table (`xAvgCharWidth`), 0 where the face
+    /// has none.
+    pub average_width: f32,
+    /// The width of the box around all glyphs of the `head` table (`xMax - xMin`).
+    pub bounding_width: f32,
     /// Position of the underline below the baseline (positive = below).
     pub underline_position: f32,
     pub underline_thickness: f32,
@@ -3034,6 +3039,18 @@ fn face_metrics(font: &Font) -> FaceMetrics {
         .unwrap_or(units_per_em * 0.7);
     let underline = style.underline;
     let strike = style.strike_through;
+    let (average_width, bounding_width) = {
+        use skrifa::raw::TableProvider;
+        let tables = font.tables();
+        (
+            tables
+                .os2()
+                .map_or(0.0, |os2| f32::from(os2.x_avg_char_width().max(0))),
+            tables
+                .head()
+                .map_or(0.0, |head| f32::from(head.x_max()) - f32::from(head.x_min())),
+        )
+    };
     FaceMetrics {
         units_per_em,
         ascender,
@@ -3043,6 +3060,8 @@ fn face_metrics(font: &Font) -> FaceMetrics {
         typo_descender,
         x_height,
         cap_height,
+        average_width,
+        bounding_width,
         underline_position: underline.map_or(units_per_em * 0.1, |decoration| {
             -(decoration.position.to_f64() as f32)
         }),
