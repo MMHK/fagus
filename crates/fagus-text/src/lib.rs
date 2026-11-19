@@ -268,6 +268,9 @@ pub struct Face {
     /// size and of the band: underlined text crosses the same glyphs at the same heights again
     /// and again.
     intercepts: Mutex<Intercepts>,
+    /// The ink boxes of glyphs as Chrome on Linux measures them for math (see
+    /// [`Face::glyph_ink_box`]).
+    ink_boxes: Mutex<math::InkBoxes>,
     /// The heights that `FreeType`'s auto-hinter fits to the pixel grid where Chrome on Linux
     /// measures the x-height and the cap height from glyphs (see [`Face::x_height_at`]).
     grid_fit: GridFit,
@@ -2884,6 +2887,7 @@ fn make_face(font: Font, data: Arc<Vec<u8>>, index: u32) -> Face {
         latin,
         bounds: Mutex::default(),
         intercepts: Mutex::default(),
+        ink_boxes: Mutex::default(),
         grid_fit: GridFit::default(),
     };
     // Where the OS/2 table gives no x-height or cap height (before its version 2, or 0), Chrome

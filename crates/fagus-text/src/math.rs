@@ -10,6 +10,18 @@ pub use skrifa::raw::tables::math::MathConstant;
 
 use crate::Face;
 
+/// The ink boxes [`Face::glyph_ink_box`] found, by glyph and the bits of the size (with
+/// `size_adjust`), and the hinting of the face at each size (by the bits of the size cut to
+/// 1/64 pixel): math lays out the same few glyphs at a few sizes again and again.
+#[derive(Default)]
+pub(crate) struct InkBoxes {
+    instances: rustc_hash::FxHashMap<u32, Option<skrifa::outline::HintingInstance>>,
+    boxes: rustc_hash::FxHashMap<(u32, u32), Option<[f32; 4]>>,
+}
+
+/// How many ink boxes a face keeps at most; then it starts over.
+const MAX_INK_BOXES: usize = 1 << 16;
+
 /// One part of a glyph assembly (OpenType `GlyphPartRecord`), in font units.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GlyphPart {
@@ -134,17 +146,47 @@ impl Face {
         .unwrap_or(0.0)
     }
 
-    /// The box around all the points of a glyph's outline at `size` pixels, the control points
-    /// of its curves too, as Core Text measures glyphs: left, top, right and bottom from the
-    /// glyph's origin with y down. `None` for a glyph without outline. The box is measured in
-    /// font units and scaled as Core Text scales it, without the fixed-point rounding of
-    /// outlines drawn at a size.
-    pub fn glyph_control_box(&self, glyph: u32, size: f32) -> Option<[f32; 4]> {
-        struct Points(Option<[f32; 4]>);
+    /// The box of a glyph's ink at a font size of `size` pixels as Chrome on Linux measures it
+    /// for `MathML` (Skia's glyph bounds through `FreeType`, which fontconfig's `hintslight` has
+    /// hint lightly): the outline at the size cut to 1/64 pixel, hinted by the face's own hinter
+    /// for CFF outlines and by the auto-hinter for TrueType outlines, the box around all its
+    /// points (the control points of curves too) in 1/64 pixel, rounded out to whole pixels.
+    /// Left, top, right and bottom from the glyph's origin with y down; `None` for a glyph
+    /// without outline. Hinting moves the tops and bottoms of glyphs by up to half a pixel and
+    /// rounding out by up to a pixel more, which shifts scripts, limits and fraction parts.
+    pub fn glyph_ink_box(&self, glyph: u32, size: f32) -> Option<[f32; 4]> {
+        let key = (glyph, (size * self.size_adjust).to_bits());
+        if let Some(found) = self
+            .ink_boxes
+            .lock()
+            .ok()
+            .and_then(|cache| cache.boxes.get(&key).copied())
+        {
+            return found;
+        }
+        let ink = self.measure_ink(glyph, size);
+        if let Ok(mut cache) = self.ink_boxes.lock() {
+            if cache.boxes.len() >= MAX_INK_BOXES {
+                cache.boxes.clear();
+            }
+            cache.boxes.insert(key, ink);
+        }
+        ink
+    }
+
+    /// Measures [`Face::glyph_ink_box`].
+    fn measure_ink(&self, glyph: u32, size: f32) -> Option<[f32; 4]> {
+        use skrifa::MetadataProvider;
+        use skrifa::outline::{DrawSettings, Engine, HintingInstance, HintingOptions, SmoothMode, Target};
+
+        /// The box around the points of an outline, in 1/64 pixel as `FreeType` keeps them.
+        struct Points(Option<[i64; 4]>);
         impl Points {
+            #[allow(clippy::cast_possible_truncation, reason = "a coordinate in 26.6 fixed point")]
             fn add(&mut self, x: f32, y: f32) {
-                let [left, top, right, bottom] = self.0.unwrap_or([x, -y, x, -y]);
-                self.0 = Some([left.min(x), top.min(-y), right.max(x), bottom.max(-y)]);
+                let (x, y) = ((x * 64.0).round() as i64, (-y * 64.0).round() as i64);
+                let [left, top, right, bottom] = self.0.unwrap_or([x, y, x, y]);
+                self.0 = Some([left.min(x), top.min(y), right.max(x), bottom.max(y)]);
             }
         }
         impl skrifa::outline::OutlinePen for Points {
@@ -165,19 +207,69 @@ impl Face {
             }
             fn close(&mut self) {}
         }
-        let mut points = Points(None);
-        // Drawn at one pixel per font unit.
-        let units = self.metrics.units_per_em / self.size_adjust;
-        if !units.is_finite() || !self.draw_glyph(glyph, units, &[], &mut points) {
+
+        // Skia sets the size in 26.6 points, cut (`SkScalarToFDot6`).
+        #[allow(clippy::cast_possible_truncation, reason = "a font size in 26.6 fixed point")]
+        let pixels = ((size * self.size_adjust * 64.0) as i64) as f32 / 64.0;
+        if !(pixels > 0.0 && pixels.is_finite()) {
             return None;
         }
-        let scale = f64::from(size) * f64::from(self.size_adjust) / f64::from(self.metrics.units_per_em);
-        #[allow(clippy::cast_possible_truncation, reason = "a length in pixels")]
-        let scaled = |value: f32| (f64::from(value) * scale) as f32;
-        points
-            .0
-            .map(|[left, top, right, bottom]| [scaled(left), scaled(top), scaled(right), scaled(bottom)])
-            .filter(|[left, top, right, bottom]| right > left && bottom > top)
+        let mut points = Points(None);
+        let font = skrifa::FontRef::from_index(&self.data, self.index).ok()?;
+        let outlines = font.outline_glyphs();
+        let truetype = outlines.format() == Some(skrifa::outline::OutlineGlyphFormat::Glyf);
+        // Chrome on Linux does not hint TrueType outlines below 8 pixels (see `grid_fitted`).
+        let hinted = !(truetype && pixels < 8.0)
+            && matches!(self.outlines, crate::Outlines::Standard)
+            && outlines.get(skrifa::GlyphId::new(glyph)).is_some_and(|outline| {
+                let mut cache = self.ink_boxes.lock().ok();
+                let instance = cache.as_mut().and_then(|cache| {
+                    cache
+                        .instances
+                        .entry(pixels.to_bits())
+                        .or_insert_with(|| {
+                            // `FreeType` hints CFF outlines lightly with their own hints, TrueType
+                            // outlines with the auto-hinter (`FT_LOAD_TARGET_LIGHT`).
+                            let engine = if truetype {
+                                Engine::Auto(None)
+                            } else {
+                                Engine::Interpreter
+                            };
+                            let options = HintingOptions {
+                                engine,
+                                target: Target::Smooth {
+                                    mode: SmoothMode::Light,
+                                    symmetric_rendering: true,
+                                    preserve_linear_metrics: false,
+                                },
+                            };
+                            HintingInstance::new(
+                                &outlines,
+                                skrifa::instance::Size::new(pixels),
+                                skrifa::instance::LocationRef::default(),
+                                options,
+                            )
+                            .ok()
+                        })
+                        .as_ref()
+                });
+                instance.is_some_and(|instance| {
+                    outline
+                        .draw(DrawSettings::hinted(instance, false), &mut points)
+                        .is_ok()
+                })
+            });
+        if !hinted {
+            points = Points(None);
+            if !self.draw_glyph(glyph, pixels / self.size_adjust, &[], &mut points) {
+                return None;
+            }
+        }
+        let [left, top, right, bottom] = points.0?;
+        let floor = |value: i64| (value.div_euclid(64)) as f32;
+        let ceil = |value: i64| ((value + 63).div_euclid(64)) as f32;
+        let ink = [floor(left), floor(top), ceil(right), ceil(bottom)];
+        (ink[2] > ink[0] && ink[3] > ink[1]).then_some(ink)
     }
 
     /// The advance of a glyph along a horizontal line, in font units.

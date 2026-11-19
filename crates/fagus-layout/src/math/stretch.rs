@@ -85,10 +85,10 @@ impl<'a> MathFont<'a> {
     }
 }
 
-/// The box of a glyph's outline at `size` pixels as Core Text gives it to Chrome on macOS (see
-/// [`Face::glyph_control_box`]).
+/// The box of a glyph's ink at `size` pixels as Chrome on Linux measures it (see
+/// [`Face::glyph_ink_box`]).
 pub(crate) fn glyph_box(face: &Face, glyph: u32, size: f32) -> Option<[f32; 4]> {
-    face.glyph_control_box(glyph, size)
+    face.glyph_ink_box(glyph, size)
 }
 
 /// A stretched operator: its glyphs with their origins (from the operator's origin, y down) and

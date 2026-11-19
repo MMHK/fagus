@@ -205,8 +205,9 @@ fn lays_out_deeply_nested_formulas() {
 #[test]
 fn measures_the_ink_of_tokens_by_their_own_characters() {
     // Chrome measures `<mi>x</mi>` by the ink of "x", not of the italic it draws: both boxes
-    // are as high, and the sum of 11pt is 733/64 px high above its baseline, not 734/64 (its
-    // outline scaled from font units, as Core Text scales it).
+    // are as high, and the sum of 11pt reaches 12px above its baseline: its outline hinted
+    // (11.77px) and rounded out to whole pixels, as Chrome on Linux measures glyphs, not
+    // 11.47px as it is drawn.
     let (_, pages) = render(
         "<p><math><mi mathbackground='red'>x</mi><mi mathvariant='normal' mathbackground='blue'>x</mi>\
          <mo mathbackground='green' style='font-size: 14.6667px'>∑</mo></math></p>",
@@ -220,9 +221,26 @@ fn measures_the_ink_of_tokens_by_their_own_characters() {
     );
     let sum = run(&runs, "∑");
     assert!(
-        (sum.baseline - rules[2][1] - 733.0 / 64.0).abs() < 0.001,
+        (sum.baseline - rules[2][1] - 12.0).abs() < 0.001,
         "{rules:?} {runs:?}"
     );
+}
+
+#[test]
+fn shifts_scripts_by_the_ink_of_hinted_glyphs() {
+    // Chrome 157 on Linux (paper-pandoc-mathml): the limits of an inline sum of 11pt stand as
+    // scripts whose baselines it draws 9px above and 6px below the sum's. The sum reaches 12px
+    // up (see above), so the superscript goes up by that less SuperscriptBaselineDropMax
+    // (3.37px), which rounds to 9px; with the unhinted outline (11.47px) it rounds to 8px. The
+    // subscript goes down by the sum's descent (4px, from 3.45px) and SubscriptBaselineDropMin.
+    let (_, pages) = render(
+        "<p style='font: 11pt Inter'><math style='font-family: \"STIX Two Math\"'><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo>\
+         <mn>1</mn></mrow><mi>L</mi></munderover></math></p>",
+    );
+    let (runs, _) = contents(&pages[0]);
+    let (sum, over, under) = (run(&runs, "∑"), run(&runs, "𝐿"), run(&runs, "𝑖"));
+    assert_eq!((sum.baseline - over.baseline).round(), 9.0, "{runs:?}");
+    assert_eq!((under.baseline - sum.baseline).round(), 6.0, "{runs:?}");
 }
 
 #[test]
