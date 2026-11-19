@@ -160,6 +160,8 @@ struct Request {
     /// Whether to report where the elements with an `id` ended up.
     #[serde(default)]
     layout: bool,
+    #[serde(default)]
+    encryption: Option<Encryption>,
 }
 
 /// The default of fields that are on unless the caller turns them off.
@@ -199,6 +201,18 @@ struct FacturX {
     version: Option<String>,
     #[serde(default)]
     description: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Encryption {
+    #[serde(default)]
+    user_password: Option<String>,
+    #[serde(default)]
+    owner_password: Option<String>,
+    /// Every permission if left out.
+    #[serde(default)]
+    permissions: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]
@@ -272,11 +286,18 @@ where
         match frame.kind {
             RENDER => {
                 let id = frame.header.get("id").and_then(Value::as_u64);
+                // Tells the caller that the PDF is encrypted, which a worker without encryption
+                // would not say: it ignores the field it does not know.
+                let encrypted = frame
+                    .header
+                    .get("encryption")
+                    .is_some_and(|encryption| !encryption.is_null());
                 let reply = render(&engine, &channel, frame);
                 let mut channel = lock(&channel)?;
                 match reply {
                     Ok(output) => {
                         let mut header = json!({
+                            "encrypted": encrypted,
                             "id": id,
                             "pages": output.pages,
                             "diagnostics": diagnostics(&output.diagnostics),
@@ -434,6 +455,25 @@ where
     }
     if request.layout {
         document = document.report_layout(true);
+    }
+    if let Some(encryption) = request.encryption {
+        let mut protection = fagus::Encryption::new();
+        if let Some(password) = encryption.user_password {
+            protection = protection.user_password(password);
+        }
+        if let Some(password) = encryption.owner_password {
+            protection = protection.owner_password(password);
+        }
+        if let Some(names) = encryption.permissions {
+            let permissions = names
+                .iter()
+                .map(|name| {
+                    fagus::Permission::from_name(name).ok_or_else(|| format!("unknown permission `{name}`"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            protection = protection.permissions(permissions);
+        }
+        document = document.encrypt(protection);
     }
     Ok(document)
 }
@@ -619,6 +659,57 @@ mod tests {
         assert_eq!(
             frames[3].header["message"],
             "the document does not meet Factur-X: the invoice version is empty"
+        );
+    }
+
+    #[test]
+    fn encrypts_with_passwords_and_permissions() {
+        let mut input = Vec::new();
+        for (id, encryption) in [
+            (
+                1,
+                json!({ "userPassword": "user", "ownerPassword": "owner", "permissions": ["print", "copy"] }),
+            ),
+            (2, json!({ "ownerPassword": "owner" })),
+            (3, Value::Null),
+            (
+                4,
+                json!({ "userPassword": "user", "permissions": ["everything"] }),
+            ),
+            (5, json!({})),
+        ] {
+            input.extend(frame(
+                RENDER,
+                &json!({ "id": id, "html": 0, "encryption": encryption }),
+                &[b"<p>Gehalt</p>"],
+            ));
+        }
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 6, "html": 0, "conformance": "2b", "encryption": { "userPassword": "user" } }),
+            &[b"<p>Archiv</p>"],
+        ));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
+        assert_eq!(kinds, "HPPPEEE");
+        let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
+        assert!(has(&frames[1].blobs[0], "/Filter/Standard/V 5/R 6"));
+        assert!(has(&frames[1].blobs[0], "/P -1324/"), "print and copy");
+        assert_eq!(frames[1].header["encrypted"], true);
+        assert!(has(&frames[2].blobs[0], "/P -4/"), "everything");
+        assert_eq!(frames[3].header["encrypted"], false);
+        assert!(!has(&frames[3].blobs[0], "/Encrypt"));
+        assert_eq!(frames[4].header["message"], "unknown permission `everything`");
+        assert_eq!(
+            frames[5].header["message"],
+            "the PDF could not be written: encryption needs a user password or an owner password"
+        );
+        assert_eq!(
+            frames[6].header["message"],
+            "the document does not meet PDF/A-2b: the PDF cannot be encrypted (PDF/A forbids encryption)"
         );
     }
 

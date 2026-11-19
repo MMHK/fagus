@@ -94,6 +94,8 @@ enum Command {
         /// `2026-11-13T14:00:00+02:00` (default: now), so that the same input gives the same file.
         #[arg(long)]
         created: Option<String>,
+        #[command(flatten)]
+        encryption: EncryptionArgs,
     },
     /// Renders documents for another program over standard input and output (docs/protocol.md).
     Worker {
@@ -120,6 +122,84 @@ enum Command {
         #[arg(long)]
         monospace: Option<String>,
     },
+}
+
+/// Password protection. Arguments of a process are visible to other users of the machine, so the
+/// passwords can come from files or the environment too.
+#[derive(clap::Args)]
+struct EncryptionArgs {
+    /// Encrypt the PDF (AES-256) with this password, needed to open it [default: the
+    /// environment variable `FAGUS_USER_PASSWORD`].
+    #[arg(long)]
+    user_password: Option<String>,
+    /// Read the user password from this file (its first line).
+    #[arg(long, value_name = "FILE", conflicts_with = "user_password")]
+    user_password_file: Option<PathBuf>,
+    /// Encrypt the PDF (AES-256) with this password, which lifts the restrictions of
+    /// `--permissions` [default: the environment variable `FAGUS_OWNER_PASSWORD`].
+    #[arg(long)]
+    owner_password: Option<String>,
+    /// Read the owner password from this file (its first line).
+    #[arg(long, value_name = "FILE", conflicts_with = "owner_password")]
+    owner_password_file: Option<PathBuf>,
+    /// What an encrypted PDF allows without the owner password, separated by commas: print,
+    /// print-low-quality, modify, copy, annotate, fill-forms, assemble, or none (default:
+    /// everything).
+    #[arg(
+        long,
+        value_delimiter = ',',
+        value_parser = ["print", "print-low-quality", "modify", "copy", "annotate", "fill-forms", "assemble", "none"]
+    )]
+    permissions: Option<Vec<String>>,
+}
+
+impl EncryptionArgs {
+    /// The encryption the arguments ask for, if any, with the passwords of the environment
+    /// variables where the command line gives none.
+    fn encryption(self) -> Result<Option<fagus::Encryption>> {
+        self.encryption_with(|name| std::env::var(name).ok())
+    }
+
+    fn encryption_with(
+        self,
+        environment: impl Fn(&str) -> Option<String>,
+    ) -> Result<Option<fagus::Encryption>> {
+        let read = |path: Option<PathBuf>| -> Result<Option<String>> {
+            let Some(path) = path else { return Ok(None) };
+            let text =
+                std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+            Ok(Some(text.lines().next().unwrap_or_default().to_owned()))
+        };
+        let user = read(self.user_password_file)?
+            .or(self.user_password)
+            .or_else(|| environment("FAGUS_USER_PASSWORD"))
+            .filter(|password| !password.is_empty());
+        let owner = read(self.owner_password_file)?
+            .or(self.owner_password)
+            .or_else(|| environment("FAGUS_OWNER_PASSWORD"))
+            .filter(|password| !password.is_empty());
+        if user.is_none() && owner.is_none() {
+            if self.permissions.is_some() {
+                bail!("--permissions needs --user-password or --owner-password");
+            }
+            return Ok(None);
+        }
+        let mut encryption = fagus::Encryption::new();
+        if let Some(user) = user {
+            encryption = encryption.user_password(user);
+        }
+        if let Some(owner) = owner {
+            encryption = encryption.owner_password(owner);
+        }
+        if let Some(names) = self.permissions {
+            if names.len() > 1 && names.iter().any(|name| name == "none") {
+                bail!("--permissions none cannot go with other permissions");
+            }
+            encryption =
+                encryption.permissions(names.iter().filter_map(|name| fagus::Permission::from_name(name)));
+        }
+        Ok(Some(encryption))
+    }
 }
 
 /// The message of `--strict` when the document has `count` diagnostics.
@@ -194,6 +274,7 @@ fn main() -> Result<()> {
             timings,
             repeat,
             created,
+            encryption,
         } => {
             let html =
                 std::fs::read_to_string(&input).with_context(|| format!("reading {}", input.display()))?;
@@ -275,6 +356,9 @@ fn main() -> Result<()> {
             }
             if layout_json.is_some() {
                 document = document.report_layout(true);
+            }
+            if let Some(encryption) = encryption.encryption()? {
+                document = document.encrypt(encryption);
             }
             let mut durations = Vec::with_capacity(repeat);
             let mut result = None;
@@ -399,6 +483,61 @@ mod tests {
         };
         assert_eq!(factur_x_version.as_deref(), Some("3.0"));
         assert_eq!(factur_x_description.as_deref(), Some("XRechnung Invoice"));
+    }
+
+    fn encryption(arguments: &[&str]) -> Result<Option<fagus::Encryption>> {
+        encryption_in(arguments, &[])
+    }
+
+    fn encryption_in(arguments: &[&str], environment: &[(&str, &str)]) -> Result<Option<fagus::Encryption>> {
+        let cli = Cli::try_parse_from(
+            ["fagus", "render", "a.html", "-o", "a.pdf"]
+                .iter()
+                .chain(arguments),
+        )?;
+        let Command::Render { encryption, .. } = cli.command else {
+            panic!("not render");
+        };
+        encryption.encryption_with(|name| {
+            environment
+                .iter()
+                .find(|(key, _)| *key == name)
+                .map(|(_, value)| (*value).to_owned())
+        })
+    }
+
+    #[test]
+    fn takes_passwords_from_arguments_and_files() {
+        let file = std::env::temp_dir().join(format!("fagus-password-{}", std::process::id()));
+        std::fs::write(&file, "aus der Datei\r\nnext line\n").expect("written");
+        let path = file.to_str().expect("a path");
+        let debug = |arguments: &[&str]| format!("{:?}", encryption(arguments).expect("parsed"));
+        assert_eq!(debug(&[]), "None");
+        assert!(debug(&["--user-password", "geheim"]).contains("user_password: Some"));
+        assert!(debug(&["--owner-password-file", path]).contains("owner_password: Some"));
+        assert!(
+            debug(&["--owner-password", "x", "--permissions", "print,copy"])
+                .contains("permissions: Some([Print, Copy])")
+        );
+        assert!(debug(&["--owner-password", "x", "--permissions", "none"]).contains("permissions: Some([])"));
+        // An empty password is none.
+        assert_eq!(debug(&["--user-password", ""]), "None");
+        assert!(encryption(&["--permissions", "print"]).is_err());
+        assert!(encryption(&["--user-password", "x", "--permissions", "none,print"]).is_err());
+        assert!(encryption(&["--user-password", "x", "--user-password-file", path]).is_err());
+        assert!(encryption(&["--user-password", "x", "--permissions", "everything"]).is_err());
+        assert!(encryption(&["--user-password-file", "/no/such/file"]).is_err());
+        // The environment stands in for options that are not given.
+        let from = |arguments: &[&str], environment: &[(&str, &str)]| {
+            format!("{:?}", encryption_in(arguments, environment).expect("parsed"))
+        };
+        assert!(from(&[], &[("FAGUS_OWNER_PASSWORD", "o")]).contains("owner_password: Some"));
+        assert!(
+            from(&["--user-password-file", path], &[("FAGUS_USER_PASSWORD", "u")])
+                .contains("user_password: Some")
+        );
+        assert_eq!(from(&[], &[("FAGUS_USER_PASSWORD", "")]), "None");
+        std::fs::remove_file(&file).expect("removed");
     }
 
     #[test]
