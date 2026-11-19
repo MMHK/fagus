@@ -44,6 +44,22 @@ pub(crate) enum LangScript {
 }
 
 impl LangScript {
+    /// Whether `character` is of the script, for which Chrome on Linux finds a font of the
+    /// weight and style of the text (Han and kana for Japanese, Han and Hangul for Korean, Han
+    /// and Bopomofo for Chinese, Devanagari).
+    pub(crate) fn writes(self, character: char) -> bool {
+        use harfrust::Script;
+        let script = harfrust::unicode::script(character as u32);
+        match self {
+            Self::Japanese => [Script::HAN, Script::HIRAGANA, Script::KATAKANA].contains(&script),
+            Self::Korean => [Script::HAN, Script::HANGUL].contains(&script),
+            Self::SimplifiedChinese | Self::TraditionalChinese => {
+                [Script::HAN, Script::BOPOMOFO].contains(&script)
+            }
+            Self::Devanagari => script == Script::DEVANAGARI,
+        }
+    }
+
     /// The script of a BCP 47 language tag, as Chrome picks the font settings for it: Chinese
     /// is simplified unless the tag says `Hant` or a region that writes traditional characters
     /// (Taiwan, Hong Kong, Macao). A script subtag decides over the language, as in Chrome's

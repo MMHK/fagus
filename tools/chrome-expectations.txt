@@ -11,5 +11,4 @@ FAIL documents/form-tax-comb-fields.html  # engine: a few glyphs lie a pixel off
 FAIL documents/paper-katex-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/paper-mathjax-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
 FAIL documents/paper-pandoc-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
-FAIL documents/quote-persian.html  # bold Persian text: Chrome on Linux falls back to DejaVu Sans and makes it bold, Fagus takes DejaVu Sans Bold
 FAIL documents/report-ledger-sticky.html  # Chrome on Linux keeps the room of the vertical scroll bar the table wrapper gets on the screen (a rule for the screen gives it a max-height) while the wrapper breaks across the printed pages, 15px without a bar; Fagus does not lay the document out for the screen

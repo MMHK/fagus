@@ -1747,20 +1747,38 @@ impl FontDb {
             self.match_with(family, false, request, Some(character), true)
                 .and_then(accepted)
         };
-        let system = || {
-            let (_, face) = self.system.as_ref()?.covering(character)?;
-            in_family(&face.family)
-        };
         // Chrome on Linux asks fontconfig for a font with the character, which ranks the fonts
         // for the text's language first (Noto Sans CJK KR for Korean), then the families of
-        // `sans-serif` (DejaVu Sans before DejaVu Sans Mono), not the order of the files.
+        // `sans-serif` (DejaVu Sans before DejaVu Sans Mono), not the order of the files. It
+        // asks without the weight and style of the text, so that fontconfig gives the regular
+        // face, which Chrome makes bold or slanted where the text is (Blink's
+        // `PlatformFallbackFontForCharacter`); only for a character of the script of a language
+        // it has fonts of its own for (Japanese, Korean, Chinese, Hindi) does it find the face
+        // of the text's weight and style (measured with Chrome 157 on Linux: bold Persian and
+        // Thai text is DejaVu Sans and Noto Sans Thai made bold, bold Hindi text in `lang=hi` is
+        // Noto Sans Devanagari Bold).
+        let script = lang.and_then(LangScript::of);
+        let styled = script.is_some_and(|script| script.writes(character));
+        let fontconfig = |family: &str| {
+            let request = if styled {
+                request
+            } else {
+                (400.0, FontStyle::Normal, 100.0)
+            };
+            self.match_with(family, false, request, Some(character), true)
+                .and_then(accepted)
+        };
         let sans_serif = || {
             self.system.as_ref()?;
-            platform::fallback_families(lang.and_then(LangScript::of))
+            platform::fallback_families(script)
                 .iter()
                 .copied()
                 .chain(platform::generic_families(Generic::SansSerif, None))
-                .find_map(in_family)
+                .find_map(fontconfig)
+        };
+        let system = || {
+            let (_, face) = self.system.as_ref()?.covering(character)?;
+            fontconfig(&face.family)
         };
         standard()
             .or_else(cascaded)
@@ -4371,6 +4389,39 @@ mod tests {
             let found = db.fallback_in(&families, preferred, '𝑥', request, Some("fa"));
             assert_eq!(family(&db, found), "DejaVu Sans", "mono first: {mono_first}");
         }
+    }
+
+    #[test]
+    fn falls_back_to_regular_faces_as_fontconfig_gives_them_to_chrome() {
+        // Chrome on Linux asks fontconfig for a font with the character without the text's
+        // weight, takes the regular face it gives and makes it bold: bold Cyrillic text that
+        // the Latin family lacks is DejaVu Sans, not DejaVu Sans Bold.
+        let mut db = system_db(&[
+            ("Liberation Sans", "Inter-400-latin.woff2"),
+            ("DejaVu Sans", "Inter-Regular.ttf"),
+            ("DejaVu Sans", "Inter-Bold.ttf"),
+        ]);
+        // Without the built-in Inter, which has the character.
+        db.faces.retain(|face| !face.builtin);
+        db.overlaid.retain(|_| false);
+        db.overlaid.resize(db.faces.len(), false);
+        let bold = (700.0, FontStyle::Normal, 100.0);
+        let families = ["sans-serif"];
+        let preferred = db.query_in(&families, bold, Some("ru")).unwrap();
+        assert_eq!(family(&db, Some(preferred)), "Liberation Sans");
+        let found = db
+            .fallback_in(&families, preferred, 'Ж', bold, Some("ru"))
+            .expect("a face");
+        assert_eq!(db.face(found).family, "DejaVu Sans");
+        assert!(db.face(found).weight < 600.0, "{}", db.face(found).weight);
+    }
+
+    #[test]
+    fn knows_the_scripts_of_the_languages_chrome_has_fonts_for() {
+        assert!(LangScript::Japanese.writes('か') && LangScript::Japanese.writes('漢'));
+        assert!(LangScript::Korean.writes('한') && !LangScript::Korean.writes('か'));
+        assert!(LangScript::SimplifiedChinese.writes('汉'));
+        assert!(LangScript::Devanagari.writes('न') && !LangScript::Devanagari.writes('ش'));
     }
 
     #[test]

@@ -284,7 +284,10 @@ When the font of the text lacks a character, Fagus looks for it as Chrome does:
 4. with system fonts on: in Noto Sans CJK of the text's language for Chinese, Japanese and Korean,
    then in the installed families of `sans-serif` (Helvetica, Arial, Liberation Sans, DejaVu Sans,
    Noto Sans), as fontconfig ranks them for Chrome on Linux, then in the first installed font that
-   has the character;
+   has the character. As fontconfig answers Chrome there, this takes the regular face, which bold
+   or italic text makes bold or slanted (bold Persian text is DejaVu Sans made bold, not DejaVu
+   Sans Bold), except for the characters of Japanese, Korean, Chinese and Hindi text, which take
+   the face of their weight and style;
 5. in the built-in Inter.
 
 Spaces take the first font of the list that has them, and a letter with combining accents stays in
