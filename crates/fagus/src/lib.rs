@@ -1053,6 +1053,36 @@ impl Inner {
         };
         let tagged = input.tagged || input.accessible || conformance.is_some_and(Conformance::is_tagged);
 
+        // What the PDF needs of the document and its styles is taken now, so that they go with
+        // the pages, before the PDF is written: in a long document, the computed styles take
+        // more memory than anything else (about 2.7 KB per element).
+        let start = Instant::now();
+        let missing_glyph = missing_glyphs::warning(&document, &pages, &fonts);
+        let metadata = Metadata {
+            created: Some(input.created.unwrap_or_else(Date::now)),
+            ..document_metadata(&document, self.locale.as_deref())
+        };
+        let (links, bookmarks) = interactive::collect(&document, &styled, &pages);
+        let layout = input
+            .report_layout
+            .then(|| layout_info::collect(&document, &pages));
+        let mut structure = None;
+        let mut inaccessible = Vec::new();
+        if tagged {
+            let built = structure::build(&document, &styled);
+            if input.accessible {
+                inaccessible = accessibility_problems(&document, &metadata, &built);
+            }
+            structure = Some(built.structure);
+        }
+        drop(styled);
+        drop(document);
+        drop(rules);
+        drop(first_page_rules);
+        drop(references);
+        drop(sheets);
+        let prepared = start.elapsed();
+
         let start = Instant::now();
         let lists = fagus_paint::paint(&pages, &fonts, &images, tagged);
         timings.paint = start.elapsed();
@@ -1065,13 +1095,9 @@ impl Inner {
                 ),
             ));
         }
-        diagnostics.extend(missing_glyphs::warning(&document, &pages, &fonts));
+        diagnostics.extend(missing_glyph);
 
         let start = Instant::now();
-        let metadata = Metadata {
-            created: Some(input.created.unwrap_or_else(Date::now)),
-            ..document_metadata(&document, self.locale.as_deref())
-        };
         if let Some(profile) = input.factur_x {
             let problem = match input.declared_profile {
                 None => Some((
@@ -1092,30 +1118,18 @@ impl Inner {
                 diagnostics.push(pdf_warning(code, message));
             }
         }
-        let (links, bookmarks) = interactive::collect(&document, &styled, &pages);
-        let layout = input
-            .report_layout
-            .then(|| layout_info::collect(&document, &pages));
-        // The fragments are painted and their links found: what is left goes into the PDF, which
-        // a document of many pages need not hold beside them.
+        // The fragments are painted: what is left goes into the PDF, which a document of many
+        // pages need not hold beside them.
         let page_count = pages.len();
         drop(pages);
-        let mut structure = None;
-        if tagged {
-            let built = structure::build(&document, &styled);
-            if input.accessible {
-                let problems = accessibility_problems(&document, &metadata, &built);
-                if !problems.is_empty() {
-                    return Err(Failure {
-                        error: Error::Pdf(PdfError::Conformance {
-                            standard: "PDF/UA-1".to_owned(),
-                            problems: problems.join("; "),
-                        }),
-                        diagnostics,
-                    });
-                }
-            }
-            structure = Some(built.structure);
+        if !inaccessible.is_empty() {
+            return Err(Failure {
+                error: Error::Pdf(PdfError::Conformance {
+                    standard: "PDF/UA-1".to_owned(),
+                    problems: inaccessible.join("; "),
+                }),
+                diagnostics,
+            });
         }
         let options = fagus_pdf::Options {
             conformance,
@@ -1157,7 +1171,7 @@ impl Inner {
             ));
         }
         let pdf = written.pdf;
-        timings.pdf = start.elapsed();
+        timings.pdf = start.elapsed() + prepared;
 
         Ok(Output {
             pdf,
