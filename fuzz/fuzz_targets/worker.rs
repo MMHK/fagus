@@ -13,11 +13,36 @@ use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
 use serde_json::{Map, Value, json};
 
-// The protocol code of the command line program, as it is.
+// The protocol code of the command line program, as it is, with the modules it uses.
 #[path = "../../crates/fagus-cli/src/date.rs"]
 mod date;
+#[path = "../../crates/fagus-cli/src/layout_json.rs"]
+mod layout_json;
+#[path = "../../crates/fagus-cli/src/memory.rs"]
+mod memory;
 #[path = "../../crates/fagus-cli/src/worker.rs"]
 mod worker;
+
+/// The worker runs outside the sandbox here, as `fagus worker --no-sandbox` does: entering it
+/// would also shut libFuzzer out of the files it writes. The worker only asks for its status.
+mod sandbox {
+    #[derive(Clone, Copy)]
+    pub(crate) enum Status {
+        Off,
+    }
+
+    impl Status {
+        pub(crate) fn name(self) -> &'static str {
+            match self {
+                Self::Off => "off",
+            }
+        }
+    }
+
+    pub(crate) fn status() -> Status {
+        Status::Off
+    }
+}
 
 /// An invoice profile by its name (as in fagus-cli's `main.rs`).
 fn profile(name: &str) -> Option<fagus::FacturXProfile> {

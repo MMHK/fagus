@@ -2,7 +2,8 @@ name: Fuzz
 
 # Fuzzes every target of fuzz/ (cargo-fuzz, libFuzzer) for a while each night. The corpus of each
 # target is kept in the cache from one night to the next; crashes are uploaded as artifacts and
-# fail the job. Only this workflow uses a nightly toolchain.
+# fail the job. Besides this workflow, only the `fuzz` job of ci.yml (which checks that the
+# targets build) uses a nightly toolchain.
 
 on:
   schedule:

@@ -76,6 +76,20 @@ jobs:
           grep -Eq "Landlock: (Fully|Partially)Enforced" log.txt
           grep -q "seccomp: enforced" log.txt
 
+  # The fuzz targets (fuzz/, a workspace of its own on nightly) still build: the worker target
+  # includes the protocol code of fagus-cli, and fuzz.yml runs only at night.
+  fuzz:
+    name: fuzz targets build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - run: cargo +nightly check --locked --bins
+        working-directory: fuzz
+
   deny:
     name: cargo-deny
     runs-on: ubuntu-latest
