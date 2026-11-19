@@ -23,7 +23,8 @@ fagus = { git = "https://github.com/nforst/fagus", tag = "v0.2.0" }
 A checkout of the repository works as a path dependency:
 `fagus = { path = "../fagus/crates/fagus" }`.
 
-The crate needs Rust 1.97 or newer (edition 2024). Its code has no `unsafe`.
+The crate needs Rust 1.97 or newer (edition 2024); CI builds and tests it with 1.97.0 as well as
+with the current release. Its code has no `unsafe`.
 
 ### Features
 

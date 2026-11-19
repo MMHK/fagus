@@ -5,6 +5,7 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 - Run `cargo fmt`, `cargo clippy --workspace --all-targets` and `cargo test --workspace` before sending changes.
 - For changes to the PHP code, run `composer install` and `vendor/bin/phpunit` in the repository root (after `cargo build --release`, whose binary the tests use).
 - No `unsafe` code. Every crate forbids it.
+- The workspace builds with the Rust of `rust-toolchain.toml`, and must also build and pass its tests with the oldest one `rust-version` in `Cargo.toml` names (1.97.0), which CI checks: `rustup toolchain install 1.97.0` and `cargo +1.97.0 test --workspace`. Use no standard library function newer than that.
 - Trigonometry, powers, logarithms and the like come from the `libm` crate (`libm::sinf`, `libm::powf` …), not from the methods of `f32` and `f64`: those call the system's math library, whose results differ between platforms in the last bit, and the PDF must have the same bytes everywhere. `clippy.toml` refuses the methods.
 - Behaviour follows the CSS specifications; appearance is compared with Chrome. Print features that Chrome lacks follow the specifications and WeasyPrint.
 - Every bug fix comes with a test.

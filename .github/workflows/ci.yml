@@ -27,6 +27,23 @@ jobs:
       - run: cargo clippy --workspace --all-targets
       - run: cargo test --workspace
 
+  # The oldest Rust that `rust-version` in Cargo.toml promises: the workspace builds and its
+  # tests pass with exactly that release, not only with the one rust-toolchain.toml pins for
+  # development (`cargo +<version>` overrides it).
+  msrv:
+    name: Rust 1.97.0 (rust-version)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.0
+      - uses: Swatinem/rust-cache@v2
+      - name: rust-version is the version tested here
+        run: grep -qx 'rust-version = "1.97"' Cargo.toml
+      - run: cargo +1.97.0 build --workspace --all-targets --locked
+      - run: cargo +1.97.0 test --workspace --locked
+
   deny:
     name: cargo-deny
     runs-on: ubuntu-latest
