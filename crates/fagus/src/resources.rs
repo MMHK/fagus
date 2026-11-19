@@ -82,7 +82,8 @@ fn base64(input: &[u8]) -> Option<Vec<u8>> {
 /// Reads the file that a URL names, if it lies inside `root`: a relative URL resolves against
 /// `base`, a path from the root (`/images/logo.png`) against `root`, as on a web server. URLs
 /// with a scheme or a host (`//`) and anything that leads outside `root` (`..`, symbolic links)
-/// are refused.
+/// are refused, also where percent-encoding hides them: an absolute path, a drive or a network
+/// share (`%5C%5Chost%5Cshare` on Windows) is refused before the file system is asked about it.
 pub(crate) fn read_inside(base: &Path, root: &Path, url: &str) -> Option<Vec<u8>> {
     let path = url.split(['?', '#']).next()?;
     if path.is_empty() || path.contains(':') || path.starts_with("//") || path.starts_with('\\') {
@@ -90,6 +91,15 @@ pub(crate) fn read_inside(base: &Path, root: &Path, url: &str) -> Option<Vec<u8>
     }
     let root = root.canonicalize().ok()?;
     let decoded = String::from_utf8(percent_decode(path)).ok()?;
+    let relative = decoded.strip_prefix('/').unwrap_or(&decoded);
+    if relative.contains('\0')
+        || Path::new(relative).has_root()
+        || Path::new(relative)
+            .components()
+            .any(|component| matches!(component, std::path::Component::Prefix(_)))
+    {
+        return None;
+    }
     let file = match decoded.strip_prefix('/') {
         Some(from_root) => root.join(from_root),
         None => base.join(&decoded),
@@ -157,5 +167,24 @@ mod tests {
         );
         assert!(read_inside(&root, &root, "file:///etc/hosts").is_none(), "scheme");
         assert!(read_inside(&root, &root, "fonts").is_none(), "directory");
+        assert!(
+            read_inside(&root, &root, "/%2Fetc/hosts").is_none(),
+            "an absolute path, encoded"
+        );
+        assert!(
+            read_inside(&root, &root, "/%2Ffonts/Inter-LICENSE.txt").is_none(),
+            "an encoded slash makes no path from the root"
+        );
+        assert!(read_inside(&root, &root, "fonts/%00").is_none(), "NUL");
+        #[cfg(windows)]
+        for url in [
+            "%5C%5Chost%5Cshare%5Cfile.png",
+            "/%5C%5Chost%5Cshare%5Cfile.png",
+            "%5Cfonts%5CInter-LICENSE.txt",
+            "C%3A%5CWindows%5Cwin.ini",
+            "/C%3A/Windows/win.ini",
+        ] {
+            assert!(read_inside(&root, &root, url).is_none(), "{url}");
+        }
     }
 }

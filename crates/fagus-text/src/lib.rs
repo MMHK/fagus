@@ -1027,7 +1027,8 @@ pub fn hyphenation_points(text: &str, lang: &str) -> Vec<usize> {
 const MAX_UNPACKED: u32 = 64 << 20;
 
 /// The OpenType data of a font: WOFF and WOFF2 fonts are unpacked, others stay as they are. The
-/// size the font declares is checked first, so that a small file cannot unpack to gigabytes.
+/// size the font declares is checked first, so that a small file cannot unpack to gigabytes; for
+/// WOFF, whose tables are unpacked to the sizes they declare each, those too.
 pub fn unpack(data: Vec<u8>) -> Result<Vec<u8>, FontError> {
     let woff1 = data.starts_with(b"wOFF");
     if !woff1 && !data.starts_with(b"wOF2") {
@@ -1037,7 +1038,9 @@ pub fn unpack(data: Vec<u8>) -> Result<Vec<u8>, FontError> {
         .get(16..20)
         .map(|bytes| u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
         .ok_or(FontError::InvalidFont)?;
-    if declared > MAX_UNPACKED {
+    if declared > MAX_UNPACKED
+        || woff1 && woff1_tables(&data).is_none_or(|tables| tables > u64::from(MAX_UNPACKED))
+    {
         return Err(FontError::InvalidFont);
     }
     let unpacked = if woff1 {
@@ -1046,6 +1049,21 @@ pub fn unpack(data: Vec<u8>) -> Result<Vec<u8>, FontError> {
         wuff::decompress_woff2(&data)
     };
     unpacked.map_err(|_| FontError::InvalidFont)
+}
+
+/// The sum of the sizes that the tables of a WOFF font declare unpacked (`origLength` in its
+/// table directory); `None` if the directory is cut short.
+fn woff1_tables(data: &[u8]) -> Option<u64> {
+    let count = u16::from_be_bytes(data.get(12..14)?.try_into().ok()?);
+    (0..usize::from(count))
+        .map(|table| {
+            // Each entry: tag, offset, compLength, origLength, origChecksum (four bytes each).
+            let at = 44 + table * 20 + 12;
+            Some(u64::from(u32::from_be_bytes(
+                data.get(at..at + 4)?.try_into().ok()?,
+            )))
+        })
+        .sum()
 }
 
 impl FontDb {
@@ -3175,6 +3193,20 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn refuses_woff_tables_that_unpack_to_too_much() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/webfonts/Inter-Bold-Latin.woff");
+        let woff = std::fs::read(path).expect("web font");
+        assert!(unpack(woff.clone()).is_ok());
+        // The header declares the font's real size; one table claims a gigabyte.
+        let mut bomb = woff;
+        bomb[44 + 12..44 + 16].copy_from_slice(&(1u32 << 30).to_be_bytes());
+        assert!(matches!(unpack(bomb.clone()), Err(FontError::InvalidFont)));
+        // A table directory cut short.
+        bomb.truncate(50);
+        assert!(matches!(unpack(bomb), Err(FontError::InvalidFont)));
+    }
 
     #[test]
     fn shapes_with_features() {

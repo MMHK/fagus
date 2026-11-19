@@ -87,7 +87,7 @@ pub(crate) fn pixels(
     let document = document(paint, source, (grid.scale.0 * grid.scale.1).sqrt(), regions);
     let mut options = crate::svg::options(document.as_bytes(), fonts);
     options.image_href_resolver = ImageHrefResolver {
-        resolve_data: ImageHrefResolver::default_data_resolver(),
+        resolve_data: crate::svg::decodable_images(),
         resolve_string: Box::new(move |href, _| (href == SOURCE).then(|| ImageKind::PNG(Arc::clone(&png)))),
     };
     let tree = crate::svg::parse_tree(document.as_bytes(), &options).ok()?;

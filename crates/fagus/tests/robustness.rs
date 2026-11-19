@@ -693,3 +693,70 @@ fn reads_svg_images_with_other_white_space_in_their_root_tag() {
     assert!(output.is_ok(), "{:?}", output.err());
     renders(&format!("<p>x</p>{svg}"));
 }
+
+/// An `<img>` of an SVG document, as a `data:` URL.
+fn svg_image(svg: &str) -> String {
+    let encoded: String = svg
+        .bytes()
+        .map(|byte| match byte {
+            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' => char::from(byte).to_string(),
+            _ => format!("%{byte:02X}"),
+        })
+        .collect();
+    format!("<img src='data:image/svg+xml,{encoded}'>")
+}
+
+#[test]
+fn refuses_svgs_that_expand_to_gigabytes() {
+    // Entities of entities: ten levels of ten references are 10^10 characters of text.
+    let mut laughs = String::from(r#"<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY l0 "lol">"#);
+    for level in 1..10 {
+        let _ = write!(
+            laughs,
+            r#"<!ENTITY l{level} "{}">"#,
+            format!("&l{};", level - 1).repeat(10)
+        );
+    }
+    laughs.push_str(
+        r#"]><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text y="5">&l9;</text></svg>"#,
+    );
+    renders_quickly(&svg_image(&laughs), None, 5);
+    // `<use>` of `<use>`: ten to the eighth copies of a rectangle.
+    let mut uses = String::from(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10"><defs><rect id="u0" width="1" height="1"/>"#,
+    );
+    for level in 1..9 {
+        let _ = write!(
+            uses,
+            r#"<g id="u{level}">{}</g>"#,
+            format!(r##"<use xlink:href="#u{}"/>"##, level - 1).repeat(10)
+        );
+    }
+    uses.push_str(r##"</defs><use xlink:href="#u8"/></svg>"##);
+    renders_quickly(&svg_image(&uses), None, 5);
+    // A thousand primitives in a filter, each kept as an image of the filter's region.
+    let filter = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><filter id="f">{}</filter><rect width="1000" height="1000" filter="url(#f)"/></svg>"#,
+        r#"<feFlood flood-color="red"/>"#.repeat(1000)
+    );
+    renders_quickly(&svg_image(&filter), None, 5);
+    renders_quickly(&filter, None, 5);
+    // SVGZ of a few hundred kilobytes that inflates past 128 MiB.
+    let mut gzip = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+    std::io::Write::write_all(
+        &mut gzip,
+        br#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><desc>"#,
+    )
+    .expect("written");
+    let spaces = vec![b' '; 1 << 20];
+    for _ in 0..130 {
+        std::io::Write::write_all(&mut gzip, &spaces).expect("written");
+    }
+    let bomb = gzip.finish().expect("compressed");
+    assert!(bomb.len() < 4 << 20);
+    renders_quickly(
+        "<img src='bomb.svgz'><div style='background: url(bomb.svgz)'>x</div>",
+        Some(bomb),
+        5,
+    );
+}

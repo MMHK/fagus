@@ -83,9 +83,14 @@ pub(crate) fn parse_kept(
 /// as many as the document asks for, a billion of them for each pixel. Its arcs are at most
 /// [`MAX_ARC`] across (see [`capped_arcs`]). An SVG that makes usvg panic (an image of 1e30
 /// units scaled to an image as large overflows its sizes) does not parse, nor does one whose
-/// clip paths reach past [`MAX_CLIP`] (see [`clips_finite`]).
+/// clip paths reach past [`MAX_CLIP`] (see [`clips_finite`]), nor one past the limits of
+/// [`crate::svg_limits`] (an SVGZ that inflates too far, entities that expand too far, filters of
+/// too many primitives).
 pub(crate) fn parse_tree(data: &[u8], options: &Options<'_>) -> Result<Tree, usvg::Error> {
     let parse = |data: &[u8]| {
+        if !crate::svg_limits::acceptable(data) {
+            return Err(usvg::Error::ElementsLimitReached);
+        }
         fagus_css::guarded(|| Tree::from_data(&capped_arcs(&capped_octaves(data)), options))
             .unwrap_or(Err(usvg::Error::InvalidSize))
             .and_then(|tree| {
@@ -97,7 +102,7 @@ pub(crate) fn parse_tree(data: &[u8], options: &Options<'_>) -> Result<Tree, usv
             })
     };
     if data.starts_with(&[0x1f, 0x8b]) {
-        return parse(&usvg::decompress_svgz(data)?);
+        return parse(&crate::svg_limits::inflate(data).ok_or(usvg::Error::MalformedGZip)?);
     }
     parse(data)
 }
@@ -479,10 +484,19 @@ fn with_attribute(tag: &str, name: &str, value: &str) -> String {
 /// The images of `data:` URLs in an SVG, as usvg reads them (BMP and TIFF images as PNG images of
 /// their pixels), without those whose pixels do not decode: krilla only decodes them as it writes
 /// the PDF, and would fail the document for one, where Chrome leaves the image out.
-fn decodable_images() -> usvg::ImageHrefDataResolverFn<'static> {
+pub(crate) fn decodable_images() -> usvg::ImageHrefDataResolverFn<'static> {
     let resolve = ImageHrefResolver::default_data_resolver();
     Box::new(move |mime, data, options| {
         use fagus_layout::ImageFormat;
+        // An SVG image in the SVG within the same limits (usvg would inflate it without one).
+        let data = if data.starts_with(&[0x1f, 0x8b]) {
+            Arc::new(crate::svg_limits::inflate(&data)?)
+        } else {
+            data
+        };
+        if is_svg(&data) && !crate::svg_limits::acceptable(&data) {
+            return None;
+        }
         // An SVG image in the SVG is parsed with its filters and arcs capped as well.
         let data = match capped_octaves(&data) {
             std::borrow::Cow::Owned(capped) => Arc::new(capped),
@@ -1677,7 +1691,7 @@ pub use fagus_layout::SvgFit as Fit;
 pub fn fit(data: &[u8], inline: bool) -> Fit {
     let decompressed;
     let data = if data.starts_with(&[0x1f, 0x8b]) {
-        decompressed = usvg::decompress_svgz(data).ok();
+        decompressed = crate::svg_limits::inflate(data);
         match &decompressed {
             Some(data) => data.as_slice(),
             None => return Fit::Stretch,
@@ -1826,7 +1840,7 @@ pub fn image_natural_size(data: &[u8]) -> (Option<f32>, Option<f32>, Option<f32>
 fn natural_size_of(data: &[u8], image: bool) -> (Option<f32>, Option<f32>, Option<f32>) {
     let decompressed;
     let data = if data.starts_with(&[0x1f, 0x8b]) {
-        decompressed = usvg::decompress_svgz(data).ok();
+        decompressed = crate::svg_limits::inflate(data);
         match &decompressed {
             Some(data) => data.as_slice(),
             None => return (None, None, None),

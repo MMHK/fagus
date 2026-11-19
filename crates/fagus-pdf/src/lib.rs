@@ -22,6 +22,7 @@ mod shadow;
 mod small_caps;
 pub mod svg;
 pub mod svg_boxes;
+mod svg_limits;
 pub mod svg_reference;
 mod tagging;
 mod tainted;
