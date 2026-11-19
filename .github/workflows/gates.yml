@@ -156,9 +156,9 @@ jobs:
           exit $status
 
   # tools/chrome-corpus.sh: every page of the corpus printed by Chrome for Testing (the version
-  # pinned in the script) and by Fagus, both drawn by pdftoppm; at least 95 % of the documents
-  # must match within the tolerance. The fonts of tests/fonts are installed so that Chrome has
-  # them as Fagus does.
+  # pinned in the script) and by Fagus, both drawn by pdftoppm; every document must match within
+  # the tolerance, except those tools/chrome-expectations.txt lists. The fonts of tests/fonts are
+  # installed so that Chrome has them as Fagus does.
   chrome:
     name: corpus against Chrome
     needs: build
@@ -191,6 +191,7 @@ jobs:
           path: |
             chrome-corpus/results.txt
             chrome-corpus/summary.md
+            chrome-corpus/expectations.txt
             chrome-corpus/chrome
             chrome-corpus/fagus
           retention-days: 7

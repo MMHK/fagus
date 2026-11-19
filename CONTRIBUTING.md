@@ -18,7 +18,7 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 
 `tools/wpt/run.sh` runs the reftests of [web-platform-tests](https://web-platform-tests.org/) in the directories of `tools/wpt/dirs.txt`: it checks out the tests at the commit `tools/wpt/fetch.sh` pins into `target/wpt`, renders each test and its reference with Fagus and compares the pages drawn by Poppler's `pdftoppm` (install `poppler-utils`). It fails if a test fails that `tools/wpt/expectations.txt` does not list. When a fix makes listed tests pass, `tools/wpt/run.sh --update --docs docs/compatibility.md` removes them from the list and updates the table of pass rates; commit both with the fix. A test that cannot pass for a reason other than a bug (it needs scrolling or user interaction, or takes minutes) goes into the list as `SKIP` with the reason as a comment. The workflow `wpt.yml` runs all directories each night; [compatibility.md](docs/compatibility.md) explains the comparison.
 
-`tools/chrome-corpus.sh` prints the corpus with Chrome and with Fagus and compares the pages; the release gates require 95 % of the documents to match.
+`tools/chrome-corpus.sh` prints the corpus with Chrome and with Fagus and compares the pages; the release gates fail when a document differs that `tools/chrome-expectations.txt` does not list.
 
 ## Fuzzing
 

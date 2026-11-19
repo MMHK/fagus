@@ -1,0 +1,25 @@
+# The documents of tests/corpus that are known to differ from Chrome for Testing on Linux (FAIL),
+# with the reason, or that are not compared (SKIP). tools/chrome-corpus.sh fails on any other
+# document that differs, and warns about a listed one that matches now: remove it then
+# (tools/chrome-corpus.sh OUT_DIR --update rewrites the list; keep the reasons). Documents that
+# use print features Chrome lacks are left out without being listed here.
+
+FAIL documents/article-tailwind-prose.html  # Chrome on Linux prints a scrollbar under the overflowing code block; Fagus draws none
+FAIL documents/article-wikipedia-mathml.html  # MathML: sizes and positions differ from Chrome on Linux (not on macOS)
+FAIL documents/catalog-thumbnails.html  # background-attachment: fixed is placed in Chrome's window, whose size differs on Linux
+FAIL documents/certificate.html  # tiles of a centered background image of 18mm lie a pixel off
+FAIL documents/diploma-fullbleed.html  # hyphens: auto: Chrome on Linux hyphenates "com-ment", Fagus does not
+FAIL documents/form-application.html  # expected to match with metric-compatible fonts (Arial is Liberation Sans); remove when it does
+FAIL documents/form-contact-controls.html  # expected to match with metric-compatible fonts and Chrome in the document's language; remove when it does
+FAIL documents/form-tax-comb-fields.html  # a few glyphs lie a pixel off, 0.55 % of a page against 0.5 % allowed (also on macOS)
+FAIL documents/notebook-jupyter-classic.html  # expected to match with Liberation Mono for Courier New; remove when it does
+FAIL documents/notes-typora-mermaid.html  # expected to match with Liberation Mono for Courier; remove when it does
+FAIL documents/page-confluence-export.html  # expected to match with Liberation Mono for Courier; remove when it does
+FAIL documents/paper-katex-mathml.html  # MathML: sizes and positions differ from Chrome on Linux (not on macOS)
+FAIL documents/paper-mathjax-mathml.html  # MathML: sizes and positions differ from Chrome on Linux (not on macOS)
+FAIL documents/paper-pandoc-mathml.html  # MathML: sizes and positions differ from Chrome on Linux (not on macOS)
+FAIL documents/quote-persian.html  # bold Persian text: Fagus takes DejaVu Sans Bold, Chrome DejaVu Sans made bold
+FAIL documents/readme-github.html  # Chrome on Linux prints a scrollbar under the overflowing code block; Fagus draws none
+FAIL documents/reference-redoc.html  # expected to match with Liberation Mono for Courier; remove when it does
+FAIL documents/report-ledger-sticky.html  # columns of the auto-sized table are a pixel narrower or wider than in Chrome on Linux
+FAIL documents/survey-likert.html  # expected to match with metric-compatible fonts and Chrome in the document's language; remove when it does
