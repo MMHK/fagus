@@ -40,6 +40,8 @@ final class FagusServiceProvider extends ServiceProvider
                 timeout: (float) ($config['timeout'] ?? 60),
                 systemFonts: (bool) ($config['system_fonts'] ?? false),
                 locale: isset($config['locale']) && $config['locale'] !== '' ? (string) $config['locale'] : null,
+                // A binary of another release than the package, for example, goes to the log.
+                onWarning: static fn (string $message) => $app->make('log')->warning($message),
             );
         });
 

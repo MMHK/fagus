@@ -21,6 +21,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Changed
 
+- The PHP engine compares the version of the binary with the release of the package. A binary of another release that speaks the same protocol still renders, but it ignores options newer than itself without a word, so the engine now warns about it, once per process and binary: through the new `onWarning` argument of `Engine`, else to PHP's error log; the Laravel integration writes the warning to Laravel's log. A binary of another protocol is refused as before, with a message that now names the binary, both versions and how to install the binary of the package's release. `docs/protocol.md` lists the fields that came after protocol 1 began, with their release.
 - A `content` value that combines `element()` with other values, such as `element(a) element(b)` or `element(title) " – " counter(page)`, is invalid, as CSS Generated Content for Paged Media 3 specifies: the declaration is ignored with a `css.invalid-value` diagnostic. Before, the margin box showed the first running element only.
 - A `size` in `@page` that Chrome does not take, such as `80mm auto`, `A6` or three lengths, is still ignored, but now with a `css.invalid-value` diagnostic at its rule that says what is wrong: that a page's height cannot follow its content and both lengths are needed, or the size in millimetres of a paper size Chrome does not know (`105mm 148mm` for A6). Before, the page kept the size that applied before without a warning.
 

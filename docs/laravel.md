@@ -395,7 +395,8 @@ foreach ($pdf->diagnostics() as $diagnostic) {
 ```
 
 `inline()` and `download()` render and discard the diagnostics. Errors are exceptions
-(`Fagus\Exception\RenderException`, `EngineException`), which Laravel reports as usual. A
+(`Fagus\Exception\RenderException`, `EngineException`), which Laravel reports as usual. Warnings
+of the engine, such as a binary of another release than the package, go to Laravel's log. A
 `RenderException` keeps the diagnostics found before the document was refused in its
 `diagnostics()`. See [troubleshooting.md](troubleshooting.md).
 

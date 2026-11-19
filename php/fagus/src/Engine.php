@@ -6,7 +6,9 @@ namespace Fagus;
 
 use Fagus\Exception\EngineException;
 use Fagus\Exception\RenderException;
+use Closure;
 use Fagus\Internal\Channel;
+use Fagus\Internal\Release;
 use Throwable;
 
 /**
@@ -52,6 +54,14 @@ final class Engine
     private array $fonts = [];
 
     /**
+     * The binaries of another release this process has warned about, by path and version, so
+     * that each is reported once rather than with every request.
+     *
+     * @var array<string, true>
+     */
+    private static array $warned = [];
+
+    /**
      * @param  ?string  $binary  the path of the fagus binary; found through FAGUS_BINARY, next to this package or on the PATH if null
      * @param  list<string>  $fontDirectories  directories with fonts (TTF, OTF, TTC, OTC, WOFF, WOFF2), searched
      *                                         with their subdirectories; each must exist
@@ -64,6 +74,8 @@ final class Engine
      *                             (the output then depends on the machine)
      * @param  ?string  $locale  the language of the texts form controls show of their own (button labels,
      *                           date formats) where documents give no `lang`, e.g. "de-DE"; en-US if null
+     * @param  ?Closure(string): void  $onWarning  receives warnings, such as a binary of another release than
+     *                                           this package; written to PHP's error log (error_log()) if null
      */
     public function __construct(
         private readonly ?string $binary = null,
@@ -74,6 +86,7 @@ final class Engine
         private readonly float $timeout = 60.0,
         private readonly bool $systemFonts = false,
         private readonly ?string $locale = null,
+        private readonly ?Closure $onWarning = null,
     ) {}
 
     public function __destruct()
@@ -240,8 +253,9 @@ final class Engine
         $channel = new Channel($pipes[1], $pipes[0], $this->timeout);
         try {
             [$kind, $hello] = $channel->read();
+            $version = $kind === 'H' && is_string($hello['version'] ?? null) ? $hello['version'] : null;
             if ($kind !== 'H' || ($hello['protocol'] ?? null) !== self::PROTOCOL) {
-                throw EngineException::incompatible($hello['protocol'] ?? null);
+                throw EngineException::incompatible($kind === 'H' ? ($hello['protocol'] ?? null) : null, $binary, $version);
             }
             foreach ($this->fonts as $font) {
                 $this->sendFont($channel, $font);
@@ -252,9 +266,31 @@ final class Engine
 
             throw $exception;
         }
-        $this->version = (string) ($hello['version'] ?? '');
+        $this->version = (string) $version;
+        if ($this->version !== Release::VERSION) {
+            $this->warnOnce($binary, $this->version);
+        }
 
         return $this->channel = $channel;
+    }
+
+    /**
+     * Warns that the binary is of another release than this package, once per binary and
+     * version in this process: under PHP-FPM every request starts a worker of its own.
+     */
+    private function warnOnce(string $binary, string $version): void
+    {
+        $key = $binary."\0".$version;
+        if (isset(self::$warned[$key])) {
+            return;
+        }
+        self::$warned[$key] = true;
+        $message = EngineException::otherRelease($binary, $version === '' ? 'unknown' : $version);
+        if ($this->onWarning !== null) {
+            ($this->onWarning)($message);
+        } else {
+            error_log($message);
+        }
     }
 
     /**

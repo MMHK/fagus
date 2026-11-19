@@ -35,9 +35,9 @@ ends the worker with exit code 1 and the reason on its error output.
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
 
-The worker sends `H` when it starts; its `protocol` is 1 and its `version` that of the binary.
-A caller that does not know the protocol version stops there. The worker ends with
-exit code 0 when its input closes. A message of an unknown type gets an `E` without `id`.
+The worker sends `H` when it starts; its `protocol` is 1 and its `version` that of the binary
+([Versions](#versions)). The worker ends with exit code 0 when its input closes. A message of an
+unknown type gets an `E` without `id`.
 
 ### Rendering
 
@@ -193,3 +193,28 @@ families of the generic families.
 (button labels, the placeholders and formats of date fields) in documents that give a control no
 `lang`; without it they are American English, as in Chrome by default. Text without `lang` is
 shaped in that language as well, as Chrome shapes it in the language of its user interface.
+
+## Versions
+
+`protocol` changes only with a change that breaks callers or workers, which comes only in a major
+release ([stability](stability.md)). Within one protocol, the two sides stay compatible in both
+directions: a worker ignores fields of a request it does not know, and a caller ignores fields of
+an answer it does not know. A worker of an older release therefore renders a document without
+the options that are newer than itself, without a word.
+
+A caller should therefore:
+
+- stop when `protocol` is not the one it speaks, and say so;
+- compare `version` with the release it was written for, and warn when they differ.
+
+The PHP package does both: a binary of another protocol is refused with an `EngineException`
+that names the binary, both versions and how to install the binary of the package's release; a
+binary of another release with the same protocol renders, and the engine warns once per process,
+through its `onWarning` callback or to PHP's error log ([PHP API](php.md#constructor)).
+
+The fields that came after protocol 1 began, with the release that added them; a binary older
+than that ignores them:
+
+| Field | Message | Since |
+|---|---|---|
+| `facturX.version`, `facturX.description` | `R` | 0.2.0 |

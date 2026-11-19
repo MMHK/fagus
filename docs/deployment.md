@@ -138,7 +138,10 @@ back but throws:
 The fagus binary `/usr/local/bin/fagus` could not be started. It does not exist or is not executable.
 ```
 
-The binary must speak the package's protocol; use the one of the same release.
+The binary must speak the package's protocol; use the one of the same release. A binary of
+another protocol is refused; one of another release with the same protocol works, but ignores
+options newer than itself, and the engine writes a warning to the error log
+([troubleshooting.md](troubleshooting.md#another-release)).
 
 Under PHP-FPM the pool's environment is cleared by default (`clear_env = yes`), so a
 `FAGUS_BINARY` from the shell does not reach PHP. Set it in the pool

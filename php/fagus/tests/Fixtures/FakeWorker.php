@@ -1,0 +1,124 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Fagus\Tests\Fixtures;
+
+use RuntimeException;
+
+/**
+ * A stand-in for `fagus worker`: it greets with the protocol and version it is given, answers
+ * every document with a PDF that names its process and how many documents it has rendered, and
+ * reports the resident size it is given. {@see self::create()} writes a binary that runs it.
+ */
+final class FakeWorker
+{
+    /**
+     * Writes an executable that runs this worker with the given greeting and resident sizes (in
+     * bytes, one per document, the last one repeated; none if empty) and returns its path.
+     *
+     * @param  list<int>  $rss
+     */
+    public static function create(int $protocol = 1, string $version = '0.0.0', array $rss = []): string
+    {
+        $binary = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus-fake-'.bin2hex(random_bytes(6));
+        $settings = escapeshellarg((string) json_encode(['protocol' => $protocol, 'version' => $version, 'rss' => $rss]));
+        file_put_contents($binary, "#!/bin/sh\nexec ".escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__)." {$settings} \"\$@\"\n");
+        chmod($binary, 0755);
+
+        return $binary;
+    }
+
+    /**
+     * The process and the number of the document in it, from a PDF this worker wrote.
+     *
+     * @return array{0: int, 1: int}
+     */
+    public static function parse(string $pdf): array
+    {
+        if (preg_match('/^%PDF-fake pid=(\d+) n=(\d+)$/', $pdf, $match) !== 1) {
+            throw new RuntimeException("Not a PDF of the fake worker: {$pdf}");
+        }
+
+        return [(int) $match[1], (int) $match[2]];
+    }
+
+    /**
+     * @param  array{protocol: int, version: string, rss: list<int>}  $settings
+     */
+    public static function serve(array $settings): void
+    {
+        $input = STDIN;
+        $output = STDOUT;
+        self::write($output, 'H', ['protocol' => $settings['protocol'], 'version' => $settings['version']]);
+        $documents = 0;
+        while (($frame = self::read($input)) !== null) {
+            [$kind, $header] = $frame;
+            if ($kind === 'R') {
+                $documents++;
+                $reply = ['id' => $header['id'] ?? 0, 'pages' => 1, 'diagnostics' => [], 'timings' => []];
+                if ($settings['rss'] !== []) {
+                    $reply['rss'] = $settings['rss'][min($documents, count($settings['rss'])) - 1];
+                }
+                self::write($output, 'P', $reply, ['%PDF-fake pid='.getmypid()." n={$documents}"]);
+            } elseif ($kind === 'F') {
+                self::write($output, 'K', ['faces' => 1]);
+            } else {
+                self::write($output, 'E', ['message' => "unknown message `{$kind}`", 'diagnostics' => []]);
+            }
+        }
+    }
+
+    /**
+     * @param  resource  $stream
+     * @return ?array{0: string, 1: array<string, mixed>}
+     */
+    private static function read($stream): ?array
+    {
+        $length = self::exactly($stream, 4);
+        if ($length === null) {
+            return null;
+        }
+        $body = (string) self::exactly($stream, unpack('V', $length)[1]);
+        $headerLength = unpack('V', substr($body, 1, 4))[1];
+
+        return [$body[0], (array) json_decode(substr($body, 5, $headerLength), true)];
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private static function exactly($stream, int $length): ?string
+    {
+        $data = '';
+        while (strlen($data) < $length) {
+            $chunk = fread($stream, $length - strlen($data));
+            if ($chunk === false || $chunk === '') {
+                return null;
+            }
+            $data .= $chunk;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param  resource  $stream
+     * @param  array<string, mixed>  $header
+     * @param  list<string>  $blobs
+     */
+    private static function write($stream, string $kind, array $header, array $blobs = []): void
+    {
+        if ($blobs !== []) {
+            $header['blobs'] = array_map(strlen(...), $blobs);
+        }
+        $json = (string) json_encode($header === [] ? (object) [] : $header);
+        $body = $kind.pack('V', strlen($json)).$json.implode('', $blobs);
+        fwrite($stream, pack('V', strlen($body)).$body);
+        fflush($stream);
+    }
+}
+
+if (PHP_SAPI === 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    FakeWorker::serve(json_decode($argv[1], true));
+}

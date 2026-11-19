@@ -12,6 +12,8 @@ use Fagus\Laravel\Facades\Fagus;
 use Fagus\Laravel\PdfFactory;
 use Fagus\Laravel\PendingPdf;
 use Fagus\Permission;
+use Fagus\Tests\Fixtures\FakeWorker;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
@@ -235,6 +237,24 @@ final class FagusTest extends TestCase
 
         $this->assertSame(2, $pdf->pages(), 'the empty div ends before the image');
         $this->assertSame([], $pdf->diagnostics(), 'the image is found in the base directory');
+    }
+
+    #[Test]
+    public function it_logs_a_binary_of_another_release(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('The stand-in binary is a shell script.');
+        }
+        $binary = FakeWorker::create(version: '0.0.3');
+        $this->app['config']->set('fagus.binary', $binary);
+        $this->app->forgetInstance(Engine::class);
+        Log::shouldReceive('warning')->once()->withArgs(static fn (string $message): bool => str_contains($message, "`{$binary}` is version 0.0.3"));
+        try {
+            $this->assertSame('0.0.3', $this->app->make(Engine::class)->version());
+        } finally {
+            $this->app->make(Engine::class)->close();
+            unlink($binary);
+        }
     }
 
     #[Test]

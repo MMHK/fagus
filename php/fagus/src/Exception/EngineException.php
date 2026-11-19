@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Fagus\Exception;
 
+use Fagus\Engine;
+use Fagus\Internal\Release;
+
 /**
  * The engine could not be found, started or talked to.
  */
@@ -34,9 +37,36 @@ final class EngineException extends FagusException
         return new self("The fagus worker did not answer within {$seconds} seconds and was stopped.");
     }
 
-    public static function incompatible(mixed $protocol): self
+    /**
+     * @param  mixed  $protocol  the protocol the binary named in its greeting, null if it named none
+     * @param  ?string  $binary  the path of the binary
+     * @param  ?string  $version  the version of the binary, if it named one
+     */
+    public static function incompatible(mixed $protocol, ?string $binary = null, ?string $version = null): self
     {
-        return new self('The fagus binary speaks protocol '.json_encode($protocol).', this package needs protocol 1. Install the binary of the same release.');
+        $which = $binary === null ? 'The fagus binary' : "The fagus binary `{$binary}`";
+        $which .= $version === null || $version === '' ? '' : " (version {$version})";
+        $speaks = $protocol === null ? 'does not greet as a fagus worker' : 'speaks protocol '.json_encode($protocol);
+
+        return new self("{$which} {$speaks}; this package, nforst/fagus ".Release::VERSION.', needs protocol '.Engine::PROTOCOL.'. '.self::installHint());
+    }
+
+    /**
+     * The message for a binary of another release than this package, which speaks its protocol.
+     *
+     * @internal
+     */
+    public static function otherRelease(string $binary, string $version): string
+    {
+        return "The fagus binary `{$binary}` is version {$version}, this package nforst/fagus ".Release::VERSION.'. '
+            .'Both speak protocol '.Engine::PROTOCOL.', so documents render, but a binary of another release ignores options '
+            .'newer than itself and may lay out differently. '.self::installHint();
+    }
+
+    private static function installHint(): string
+    {
+        return 'Install the binary of the package\'s release with `vendor/bin/fagus-install` (in Laravel: `php artisan fagus:install`), '
+            .'or point FAGUS_BINARY at the binary of version '.Release::VERSION.'.';
     }
 
     public static function withoutEncryption(): self

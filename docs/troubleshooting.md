@@ -110,11 +110,23 @@ the old binary.
 ### Another protocol
 
 ```text
-The fagus binary speaks protocol 2, this package needs protocol 1. Install the binary of the same release.
+The fagus binary `/usr/local/bin/fagus` (version 2.0.0) speaks protocol 2; this package, nforst/fagus 0.2.0, needs protocol 1. Install the binary of the package's release with `vendor/bin/fagus-install` (in Laravel: `php artisan fagus:install`), or point FAGUS_BINARY at the binary of version 0.2.0.
 ```
 
-`FAGUS_BINARY` or the `PATH` points to a binary of another release. Use the binary of the
+`FAGUS_BINARY` or the `PATH` points to a binary of another major release. Use the binary of the
 package's release.
+
+### Another release
+
+A warning in the error log (in Laravel, in Laravel's log), once per process:
+
+```text
+The fagus binary `/usr/local/bin/fagus` is version 0.1.0, this package nforst/fagus 0.2.0. Both speak protocol 1, so documents render, but a binary of another release ignores options newer than itself and may lay out differently. Install the binary of the package's release with `vendor/bin/fagus-install` (in Laravel: `php artisan fagus:install`), or point FAGUS_BINARY at the binary of version 0.2.0.
+```
+
+The binary works, but an option that came after its release (such as the Factur-X `version`
+before 0.2.0) is ignored without an error. Install the binary of the package's release, or
+update the binary that `FAGUS_BINARY` names when you update the package.
 
 ### A binary that cannot encrypt
 
