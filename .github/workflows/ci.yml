@@ -44,6 +44,38 @@ jobs:
       - run: cargo +1.97.0 build --workspace --all-targets --locked
       - run: cargo +1.97.0 test --workspace --locked
 
+  # The sandbox of the binary on Linux (crates/fagus-cli/src/sandbox.rs, docs/cli.md#sandbox): a
+  # sandboxed thread cannot open sockets, start programs or read and write files outside its
+  # directories, and renders the corpus to the same bytes as outside; the binary limits what a
+  # worker reads with --allow-read. FAGUS_REQUIRE_LANDLOCK fails the tests where the kernel of the
+  # runner lacks Landlock instead of skipping them. tools/determinism.sh (gates.yml) renders the
+  # whole corpus with the sandbox on.
+  sandbox:
+    name: sandbox (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    env:
+      FAGUS_REQUIRE_LANDLOCK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p fagus-cli
+      - name: The binary says it is sandboxed
+        run: |
+          cargo build -p fagus-cli
+          echo '<p>Sandbox</p>' > probe.html
+          FAGUS_LOG=debug target/debug/fagus render probe.html -o probe.pdf 2> log.txt
+          cat log.txt
+          grep -Eq "Landlock: (Fully|Partially)Enforced" log.txt
+          grep -q "seccomp: enforced" log.txt
+
   deny:
     name: cargo-deny
     runs-on: ubuntu-latest

@@ -170,6 +170,30 @@ impl SystemFonts {
         self.entries.len()
     }
 
+    /// The directories that hold the files of the faces, each once and none inside another.
+    pub(crate) fn directories(&self) -> Vec<PathBuf> {
+        let mut directories: Vec<PathBuf> = self
+            .index
+            .faces()
+            .filter_map(|info| match &info.source {
+                fontdb::Source::File(path) | fontdb::Source::SharedFile(path, _) => {
+                    path.parent().map(std::path::Path::to_path_buf)
+                }
+                fontdb::Source::Binary(_) => None,
+            })
+            .collect();
+        directories.sort();
+        directories.dedup();
+        // Sorted by their components, the directories inside one follow it.
+        let mut outer: Vec<PathBuf> = Vec::new();
+        for directory in directories {
+            if !outer.last().is_some_and(|last| directory.starts_with(last)) {
+                outer.push(directory);
+            }
+        }
+        outer
+    }
+
     /// The names [`Self::unique`] looked for so far, with the entries it found.
     #[cfg(test)]
     pub(crate) fn names_looked_for(&self) -> FxHashMap<String, Option<u32>> {

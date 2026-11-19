@@ -3,9 +3,11 @@
 mod date;
 mod layout_json;
 mod memory;
+mod sandbox;
 mod worker;
 
-use std::path::PathBuf;
+use std::io::Write as _;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
@@ -97,6 +99,8 @@ enum Command {
         created: Option<String>,
         #[command(flatten)]
         encryption: EncryptionArgs,
+        #[command(flatten)]
+        confinement: Confinement,
     },
     /// Renders documents for another program over standard input and output (docs/protocol.md).
     Worker {
@@ -122,6 +126,12 @@ enum Command {
         /// Family used for `monospace`.
         #[arg(long)]
         monospace: Option<String>,
+        /// On Linux, let the sandbox read only the files in this directory (repeatable), besides
+        /// the fonts; the files of documents outside it cannot be read (default: every file).
+        #[arg(long = "allow-read", value_name = "DIR")]
+        allow_read: Vec<PathBuf>,
+        #[command(flatten)]
+        confinement: Confinement,
     },
 }
 
@@ -203,6 +213,95 @@ impl EncryptionArgs {
     }
 }
 
+/// The sandbox and the limits of a process (docs/cli.md#sandbox).
+#[derive(clap::Args)]
+struct Confinement {
+    /// Render outside the sandbox that keeps the process on Linux from the network, from
+    /// starting programs and from files it does not need (there is none on other systems).
+    #[arg(long)]
+    no_sandbox: bool,
+    /// On Linux, end the process when its memory (address space) would exceed this many MiB.
+    #[arg(long, value_name = "MIB", value_parser = clap::value_parser!(u64).range(1..))]
+    memory_limit: Option<u64>,
+    /// On Linux, end the process after this many seconds of processor time.
+    #[arg(long, value_name = "SECONDS", value_parser = clap::value_parser!(u64).range(1..))]
+    cpu_limit: Option<u64>,
+}
+
+impl Confinement {
+    /// Applies the limits.
+    fn limit(&self) -> Result<()> {
+        sandbox::limit(self.memory_limit, self.cpu_limit).context("limiting the process")
+    }
+
+    /// Enters the sandbox, unless it is turned off, then starts the threads that write PDFs, so
+    /// that they are inside it.
+    fn enter(&self, policy: &sandbox::Policy) {
+        if self.no_sandbox {
+            sandbox::debug("sandbox turned off");
+        } else {
+            sandbox::enter(policy);
+        }
+        start_threads();
+    }
+}
+
+/// The file the PDF goes to. It is opened before rendering, so that the sandbox need not let the
+/// process write files.
+struct Output {
+    file: std::fs::File,
+    path: PathBuf,
+    /// Whether it was created for the PDF.
+    created: bool,
+}
+
+impl Output {
+    fn open(path: &Path) -> std::io::Result<Self> {
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true);
+        let (file, created) = match options.clone().create_new(true).open(path) {
+            Ok(file) => (file, true),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => (options.open(path)?, false),
+            Err(error) => return Err(error),
+        };
+        Ok(Self {
+            file,
+            path: path.to_owned(),
+            created,
+        })
+    }
+
+    /// The directory in which the file is removed again if rendering fails.
+    fn directory(&self) -> Option<PathBuf> {
+        let parent = self.path.parent()?;
+        self.created.then(|| {
+            if parent.as_os_str().is_empty() {
+                PathBuf::from(".")
+            } else {
+                parent.to_owned()
+            }
+        })
+    }
+
+    /// Replaces the content of the file with the PDF.
+    fn write(mut self, pdf: &[u8]) -> std::io::Result<()> {
+        // Not a pipe or a device, such as /dev/stdout.
+        if self.file.metadata()?.is_file() {
+            self.file.set_len(0)?;
+        }
+        self.file.write_all(pdf)?;
+        self.file.flush()
+    }
+
+    /// Removes the file if it was created for the PDF; a file that was there keeps its content.
+    fn discard(self) {
+        if self.created {
+            drop(self.file);
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
 /// The message of `--strict` when the document has `count` diagnostics.
 fn strict_failure(count: usize) -> String {
     let noun = if count == 1 { "diagnostic" } else { "diagnostics" };
@@ -243,7 +342,8 @@ fn mime_type(name: &str) -> &'static str {
 #[cfg(feature = "parallel")]
 const PDF_THREADS: usize = 2;
 
-fn main() -> Result<()> {
+/// Starts the threads that write PDFs.
+fn start_threads() {
     #[cfg(feature = "parallel")]
     if std::env::var_os("RAYON_NUM_THREADS").is_none() {
         // Fails only where the pool exists already, which then serves as it is.
@@ -251,6 +351,9 @@ fn main() -> Result<()> {
             .num_threads(PDF_THREADS)
             .build_global();
     }
+}
+
+fn main() -> Result<()> {
     match Cli::parse().command {
         Command::Render {
             input,
@@ -276,7 +379,9 @@ fn main() -> Result<()> {
             repeat,
             created,
             encryption,
+            confinement,
         } => {
+            confinement.limit()?;
             let html =
                 std::fs::read_to_string(&input).with_context(|| format!("reading {}", input.display()))?;
             let mut engine = fagus::Engine::new();
@@ -309,6 +414,8 @@ fn main() -> Result<()> {
             } else {
                 fagus::Document::html(html)
             };
+            // The directory the document reads its files from.
+            let readable = root.clone().unwrap_or_else(|| base.clone());
             let mut document = document.base_directory(base);
             if let Some(root) = root {
                 document = document.root(root);
@@ -358,9 +465,32 @@ fn main() -> Result<()> {
             if layout_json.is_some() {
                 document = document.report_layout(true);
             }
+            // Before the sandbox: the password files may be anywhere.
             if let Some(encryption) = encryption.encryption()? {
                 document = document.encrypt(encryption);
             }
+            // Both outputs are opened before the sandbox, which does not let the process create
+            // files.
+            let path = output;
+            let output = Output::open(&path).with_context(|| format!("writing {}", path.display()))?;
+            let layout_output = match layout_json.as_deref().map(Output::open).transpose() {
+                Ok(layout_output) => layout_output,
+                Err(error) => {
+                    output.discard();
+                    let layout_path = layout_json.as_deref().unwrap_or(&path);
+                    return Err(error).with_context(|| format!("writing {}", layout_path.display()));
+                }
+            };
+            let mut read = vec![readable];
+            read.extend(engine.system_font_directories());
+            confinement.enter(&sandbox::Policy {
+                read: Some(read),
+                remove: output
+                    .directory()
+                    .into_iter()
+                    .chain(layout_output.as_ref().and_then(Output::directory))
+                    .collect(),
+            });
             let mut durations = Vec::with_capacity(repeat);
             let mut result = None;
             for _ in 0..repeat.max(1) {
@@ -372,6 +502,10 @@ fn main() -> Result<()> {
                         for diagnostic in &failure.diagnostics {
                             eprintln!("{diagnostic}");
                         }
+                        output.discard();
+                        if let Some(layout_output) = layout_output {
+                            layout_output.discard();
+                        }
                         return Err(failure.error.into());
                     }
                 }
@@ -382,14 +516,22 @@ fn main() -> Result<()> {
                 eprintln!("{diagnostic}");
             }
             if strict && !rendered.diagnostics.is_empty() {
+                output.discard();
+                if let Some(layout_output) = layout_output {
+                    layout_output.discard();
+                }
                 bail!("{}", strict_failure(rendered.diagnostics.len()));
             }
-            std::fs::write(&output, &rendered.pdf)
-                .with_context(|| format!("writing {}", output.display()))?;
-            if let (Some(path), Some(layout)) = (&layout_json, &rendered.layout) {
+            output
+                .write(&rendered.pdf)
+                .with_context(|| format!("writing {}", path.display()))?;
+            if let (Some(layout_output), Some(layout)) = (layout_output, &rendered.layout) {
                 let mut json = serde_json::to_string_pretty(&layout_json::layout_json(layout))?;
                 json.push('\n');
-                std::fs::write(path, json).with_context(|| format!("writing {}", path.display()))?;
+                let layout_path = layout_output.path.clone();
+                layout_output
+                    .write(json.as_bytes())
+                    .with_context(|| format!("writing {}", layout_path.display()))?;
             }
             if timings {
                 durations.sort();
@@ -414,7 +556,10 @@ fn main() -> Result<()> {
             sans_serif,
             serif,
             monospace,
+            allow_read,
+            confinement,
         } => {
+            confinement.limit()?;
             let mut engine = fagus::Engine::new();
             for directory in &font_dirs {
                 engine
@@ -428,6 +573,16 @@ fn main() -> Result<()> {
             if sans_serif.is_some() || serif.is_some() || monospace.is_some() {
                 engine.set_generic_families(sans_serif, serif, monospace);
             }
+            // The files of documents are anywhere the caller says, unless it names directories.
+            let read = (!allow_read.is_empty()).then(|| {
+                let mut read = allow_read;
+                read.extend(engine.system_font_directories());
+                read
+            });
+            confinement.enter(&sandbox::Policy {
+                read,
+                remove: Vec::new(),
+            });
             let output = std::io::BufWriter::new(std::io::stdout());
             worker::serve(engine, std::io::stdin(), output).context("serving the caller")
         }

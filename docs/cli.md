@@ -63,6 +63,9 @@ file as HTML.
 | `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
 | `--timings` | off | Print the page count and the time of each phase |
 | `--repeat <N>` | `1` | Render N times and report the median time (for benchmarks) |
+| `--no-sandbox` | off | Render outside the [sandbox](#sandbox) (Linux only; there is none elsewhere) |
+| `--memory-limit <MIB>` | none | End the process when its memory (address space) would exceed this many MiB (Linux only) |
+| `--cpu-limit <SECONDS>` | none | End the process after this many seconds of processor time (Linux only) |
 | `-h`, `--help` | | Print help |
 
 The options mean what the methods of the PHP package mean; [pdf.md](pdf.md) describes PDF/A,
@@ -231,8 +234,50 @@ a client of your own only to use Fagus from another language.
 | `--sans-serif <FAMILY>` | none | The family used for `sans-serif` |
 | `--serif <FAMILY>` | none | The family used for `serif` |
 | `--monospace <FAMILY>` | none | The family used for `monospace` |
+| `--allow-read <DIR>` | every file | Let the [sandbox](#sandbox) read only the files in this directory, besides the fonts; repeatable (Linux only) |
+| `--no-sandbox` | off | Render outside the sandbox, as for `render` |
+| `--memory-limit <MIB>` | none | End the worker when its memory would exceed this many MiB, as for `render` |
+| `--cpu-limit <SECONDS>` | none | End the worker after this many seconds of processor time in all, as for `render` |
 
 Everything else (PDF/A, attachments, resources, the creation date, passwords) comes with each
 request; the worker does not read `FAGUS_USER_PASSWORD` and `FAGUS_OWNER_PASSWORD`. The
 worker ends with exit code 0 when its input closes, and with 1 when it reads a frame that breaks
 the protocol.
+
+## Sandbox
+
+On Linux, `fagus render` and `fagus worker` render in a sandbox. Rendering needs no network,
+starts no programs and writes no files of its own, so once the input, the attachments and the
+fonts are read and the output file is open, the process gives up all of that, as far as the
+kernel allows:
+
+- **Files** ([Landlock](https://docs.kernel.org/userspace-api/landlock.html), Linux 5.13 and
+  later): `fagus render` may read only the files of `--root` (or the input's directory) and the
+  directories of the system fonts. `fagus worker` may read every file, since each request names
+  its own `base` and `root`; `--allow-read` limits it to the directories given (and the system
+  fonts), and a document's files elsewhere are then not found (`resource.not-loaded`). Neither
+  may write, create, remove (but for an output file it created, if rendering fails) or execute
+  files (nor truncate them, from Linux 6.2 on). From Linux 6.7 on, TCP is refused as well; from
+  6.12 on, connecting to abstract Unix sockets and signalling other processes.
+- **System calls** (seccomp): the calls of networking (`socket`, `connect`, …), of starting
+  programs and processes (`execve`, `fork`, `clone` without a thread), of reading other
+  processes (`ptrace`, `process_vm_readv`) and of kernel interfaces that rendering never uses
+  (`io_uring`, `bpf`, `mount`, `unshare`, `keyctl`, modules, …) fail with `EPERM`. This is a list
+  of what is refused, not of what is allowed, so that it holds with glibc, musl and new Rust
+  releases alike.
+
+The sandbox only guards in depth: the engine reads no files outside the root and has no network
+code of its own. It is a best effort. A kernel without Landlock (older than 5.13, or with
+Landlock not enabled at boot) or a container that refuses the calls renders without that part;
+`FAGUS_LOG=debug` prints which parts are in force to standard error, and the worker says so in
+its `H` frame ([protocol.md](protocol.md#messages)). On macOS and Windows there is no sandbox,
+and `--no-sandbox` changes nothing.
+
+`--memory-limit` and `--cpu-limit` set the resource limits of the process (`RLIMIT_AS`,
+`RLIMIT_CPU`), with or without the sandbox, and only on Linux; elsewhere they are an error. The
+memory limit counts the address space, which is larger than the memory in use: leave room, at
+least 1024 MiB. The processor time of a worker adds up over all its documents; the PHP package
+starts a new worker when one has ended.
+
+To render without the sandbox, for example to debug a document that reads files through a
+symbolic link out of its root, give `--no-sandbox` (in PHP, `new Engine(sandbox: false)`).

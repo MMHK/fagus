@@ -276,7 +276,11 @@ where
 
     lock(&channel)?.write(
         HELLO,
-        json!({ "protocol": PROTOCOL, "version": env!("CARGO_PKG_VERSION") }),
+        json!({
+            "protocol": PROTOCOL,
+            "version": env!("CARGO_PKG_VERSION"),
+            "sandbox": crate::sandbox::status().name(),
+        }),
         &[],
     )?;
     loop {
@@ -562,6 +566,7 @@ mod tests {
         let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
         assert_eq!(kinds, "H?PE");
         assert_eq!(frames[0].header["protocol"], PROTOCOL);
+        assert!(frames[0].header["sandbox"].is_string());
         assert_eq!(frames[1].header, json!({ "id": 7, "url": "font.ttf" }));
         assert_eq!(frames[2].header["id"], 7);
         assert_eq!(frames[2].header["pages"], 1);

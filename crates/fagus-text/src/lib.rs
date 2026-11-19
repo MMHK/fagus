@@ -1155,6 +1155,15 @@ impl FontDb {
         count
     }
 
+    /// The directories of the installed fonts that [`Self::add_system_fonts`] found, which are
+    /// read when a document uses one of their faces.
+    pub fn system_font_directories(&self) -> Vec<PathBuf> {
+        self.system
+            .as_ref()
+            .map(|system| system.directories())
+            .unwrap_or_default()
+    }
+
     /// Whether the fonts of the system were added.
     pub fn has_system_fonts(&self) -> bool {
         self.system.is_some()

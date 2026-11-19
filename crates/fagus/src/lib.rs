@@ -715,6 +715,13 @@ impl Engine {
         Arc::make_mut(&mut self.inner).fonts.add_system_fonts()
     }
 
+    /// The directories of the installed fonts that [`Self::add_system_fonts`] found: their files
+    /// are read when a document first uses one of their faces, so a sandbox around the engine
+    /// must let it read them. Empty without system fonts.
+    pub fn system_font_directories(&self) -> Vec<PathBuf> {
+        self.inner.fonts.system_font_directories()
+    }
+
     /// Adds a font file's data. Returns the number of faces added.
     pub fn add_font_data(&mut self, data: Vec<u8>) -> Result<usize, Error> {
         Ok(Arc::make_mut(&mut self.inner).fonts.add_font_data(data)?.len())

@@ -25,6 +25,12 @@ rayon = { workspace = true, optional = true }
 [target.'cfg(target_os = "macos")'.dependencies]
 nix.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+landlock.workspace = true
+seccompiler.workspace = true
+rlimit.workspace = true
+libc.workspace = true
+
 [features]
 default = ["parallel"]
 # Writes the PDF on a pool of threads (see the feature of fagus-pdf).

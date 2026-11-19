@@ -26,7 +26,7 @@ ends the worker with exit code 1 and the reason on its error output.
 
 | Type | Direction | Header | Data |
 |---|---|---|---|
-| `H` hello | worker → caller | `protocol`, `version` | – |
+| `H` hello | worker → caller | `protocol`, `version`, `sandbox` | – |
 | `R` render | caller → worker | the document, see below | HTML, stylesheets, resources, attachments, invoice XML |
 | `?` ask | worker → caller | `id`, `url` | – |
 | `r` resource | caller → worker | `found` | the resource, if found |
@@ -36,8 +36,10 @@ ends the worker with exit code 1 and the reason on its error output.
 | `K` done | worker → caller | `faces` | – |
 
 The worker sends `H` when it starts; its `protocol` is 1 and its `version` that of the binary
-([Versions](#versions)). The worker ends with exit code 0 when its input closes. A message of an
-unknown type gets an `E` without `id`.
+([Versions](#versions)). `sandbox` says how much of the [sandbox](cli.md#sandbox) is in force:
+`on`, `partial` (the kernel lacks Landlock or seccomp) or `off` (turned off, or not Linux). The
+worker ends with exit code 0 when its input closes. A message of an unknown type gets an `E`
+without `id`.
 
 ### Rendering
 
@@ -231,3 +233,4 @@ than that ignores them:
 | `encryption` | `R` | 0.3.0 |
 | `encrypted` | `P` | 0.3.0 |
 | `rss`, `maxRss` | `P`, `E` | 0.3.0 |
+| `sandbox` | `H` | 0.3.0 |
