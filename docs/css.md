@@ -89,7 +89,8 @@ with table layouts render as in Chrome.
   `pattern`).
 - Pseudo-elements: `::before`, `::after`, `::marker`, `::first-letter`, `::first-line`,
   `::placeholder`, the `::-webkit-` parts of progress bars, meters and range sliders, and
-  `::scroll-marker`, `::scroll-marker-group` and `::scroll-button()` as far as Chrome prints them.
+  `::scroll-marker`, `::scroll-marker-group` and `::scroll-button()` as far as Chrome prints them,
+  and `::footnote-call` and `::footnote-marker` of footnotes.
 - CSS nesting (`&`, nested rules and nested at-rules).
 - The cascade with origins, `!important`, specificity, order, inline styles, cascade layers
   (`@layer`, also anonymous and nested, with `revert-layer`) and `@scope` (with `:scope`, limits,
@@ -177,8 +178,10 @@ that break across pages and columns, and `shape-outside` (basic shapes, `path()`
 `rect()`, `shape()`, box keywords, images and gradients with `shape-image-threshold`, and
 `shape-margin`).
 
-**Not supported:** `float: footnote` (an invalid value, as in Chrome, which leaves an earlier
-`float` in force) and the other footnote properties (see [Paged media](paged-media.md#footnotes)).
+**Footnotes:** `float: footnote` with `footnote-display`, `footnote-policy`, `::footnote-call`,
+`::footnote-marker` and the `@footnote` area of `@page` (see
+[Paged media](paged-media.md#footnotes)). Chrome has no footnotes. `float-reference` is not
+supported.
 
 ### Flexbox
 
@@ -523,8 +526,8 @@ A short list of what Fagus does not do. Most of it is also absent in Chrome's pr
   [Resources](resources.md)).
 - **Interaction:** `:hover`, `:focus`, `:active`, `:visited` never match; transitions do nothing;
   animations print their state at time zero.
-- **Footnotes:** `float: footnote`, `@footnote`, `footnote-display`, `footnote-policy` and
-  `float-reference` (see [Paged media](paged-media.md#footnotes)).
+- **Footnotes:** `float-reference` (footnotes go on the page of their call, see
+  [Paged media](paged-media.md#footnotes)).
 - **Layout:** `display: grid-lanes` (masonry), `display: run-in`, unprefixed `line-clamp`,
   `shape-inside`, `block-step`.
 - **Text:** `text-align: justify-all`, `-webkit-text-stroke`, `paint-order` for HTML text,

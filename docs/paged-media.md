@@ -742,10 +742,106 @@ of its own, a page with `marks` gets a bleed of 6pt, as CSS Paged Media specifie
 
 ## Footnotes
 
-Fagus has no footnotes, as Chrome has none: `float: footnote` is an invalid value, and
-`footnote-display`, `footnote-policy` and `float-reference` are unknown properties. Each is
-reported as a diagnostic and ignored, so a `float: footnote` leaves an earlier `float` value in
-force. `@footnote` rules have no effect. The text of a "footnote" stays where it is in the flow.
+`float: footnote` takes an element out of the text and puts it at the bottom of the page, in the
+footnote area. A call, a number in superscript, stays where the element was, and the footnote
+starts with the same number. This follows CSS Generated Content for Paged Media 3, as WeasyPrint
+and Prince print footnotes; Chrome has no footnotes and leaves the element in the text.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  @page {
+    size: A5;
+    margin: 20mm;
+    @footnote {
+      border-top: 0.5pt solid #999;
+      padding-top: 2mm;
+    }
+  }
+  .note {
+    float: footnote;
+    font-size: 8pt;
+  }
+</style>
+</head>
+<body>
+  <p>
+    Payment is due within 14 days<span class="note">From the date of the invoice.</span>
+    at a flat rate<span class="note">Up to 30 kg; heavier parcels are charged by weight.</span>.
+  </p>
+</body>
+</html>
+```
+
+The footnote area grows from the bottom of the page area up, and the text of the page gets the
+room above it. A page whose calls do not leave room for their footnotes ends earlier, and the
+footnotes that still do not fit go on the next page.
+
+**Calls and markers.** `::footnote-call` is the call in the text, `::footnote-marker` the number at
+the start of the footnote. Both take styles and `content`; by default they are:
+
+```css
+::footnote-call {
+  content: counter(footnote);
+  vertical-align: super;
+  font-size: smaller;
+  line-height: inherit;
+}
+::footnote-marker { content: counter(footnote) ". "; }
+```
+
+`::footnote-call { content: none }` leaves the call out. The pseudo-elements inherit from the
+footnote's element, so `font-size: 8pt` on the footnote makes its call smaller too.
+
+**Numbering.** The `footnote` counter counts the footnotes through the document; each footnote
+counts itself unless its own `counter-increment` names the counter. To number the footnotes of each
+page from 1, reset the counter in `@page`:
+
+```css
+@page { counter-reset: footnote; }
+```
+
+`counter-reset: footnote` on an element (a chapter) starts the count again there, and
+`counter(footnote, lower-roman)` writes the numbers in another style. WeasyPrint numbers through the
+document whatever `@page` says; Prince numbers from each page, as Fagus does.
+
+**The footnote area.** `@footnote` in an `@page` rule styles the area: margins, borders, padding
+and a background. It has a top margin of `1em` by default, as in WeasyPrint. `max-height` limits
+it; the footnotes that do not fit below it go on the next page. A page without footnotes has no
+area.
+
+**When a footnote does not fit** on the page of its call, `footnote-policy` on the footnote says
+what happens:
+
+| `footnote-policy` | What happens |
+|---|---|
+| `auto` (default) | The footnote goes on the next page; the call stays. |
+| `line` | The line of the call goes to the next page with the footnote. |
+| `block` | The paragraph of the call goes to the next page with the footnote. |
+
+With `line` and `block`, a call on the first line of a page stays and its footnote moves, as no
+page would hold both. A footnote taller than a page breaks across pages. Once the content of the
+document ends, the footnotes still waiting get pages of their own.
+
+**Footnotes side by side.** `footnote-display: inline` puts footnotes on the lines of the footnotes
+beside them, `compact` does so with those that fit on one line, and `block` (default) gives each
+footnote lines of its own. Inline footnotes do not break across pages.
+
+**Tagged PDF.** Each footnote is a `Note` in the structure of the document, after the text with its
+call and with its marker as a label, as PDF/UA asks (see [PDF output](pdf.md#tagged-pdf)).
+
+**Details:**
+
+- `float` does not apply to absolutely positioned boxes and to flex and grid items: there,
+  `float: footnote` makes no footnote, as other `float` values make no float.
+- A call in a table header that repeats on every page calls its footnote once, on the first page.
+- `float-reference` is not supported: footnotes go on the page of their call. The footnote area
+  spans the page area; in multi-column layouts too.
+- Footnotes cost a few extra layouts of each page that holds calls: a page is laid out, the calls
+  on it are found and it is laid out again with room for their footnotes. The result is the same
+  every time.
 
 Endnotes work with links and `target-counter()`. The note references show the numbers of the list
 items they point to:
@@ -785,6 +881,7 @@ items they point to:
 | `@page :blank` | rule ignored | matches the inserted blank pages |
 | `@page :nth()`, page groups | rule ignored | supported |
 | Running elements (`position: running()`) | not supported | supported |
+| Footnotes (`float: footnote`, `@footnote`) | not supported, the element stays in the text | supported |
 | Fonts | installed fonts of the machine | only the fonts you configure, unless system fonts are on (see [Fonts](fonts.md)) |
 | Texts of form controls | the language of Chrome's user interface | the control's `lang`, else the engine's `locale` |
 

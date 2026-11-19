@@ -176,7 +176,8 @@ Documents as applications print them, each written the way such documents usuall
   `counter(list-item)` and `counters(list-item, ".")` in `::marker` with colours and tabular
   figures, sub-clauses lettered and numbered in Roman by a counter of their own, definitions
   quoted by `::before` and `::after`, footnote references with their notes at the end (and a
-  span of `float: footnote`, which Chrome leaves in the text), justified and hyphenated text,
+  span of `float: footnote`, a footnote at the bottom of its page, which Chrome leaves in the
+  text), justified and hyphenated text,
   and "Page x / y" in the page margins but on the first page;
 - `ledger-long-table.html`: an invoice ledger of 180 rows over six pages whose header of two rows
   and footer repeat on every page, zebra rows (`nth-child(even)`), status badges, a caption below

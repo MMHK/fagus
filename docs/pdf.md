@@ -117,6 +117,8 @@ What Fagus tags:
 
 - headings (`<h1>` to `<h6>`, `role="heading"`) and paragraphs;
 - lists with their labels (the markers) and bodies;
+- footnotes as notes with their markers as labels, after the text that calls them (see
+  [Paged media](paged-media.md#footnotes));
 - data tables, with header cells and their scope, row and column spans, captions, and header and
   footer groups; a header repeated on every page counts once;
 - images (`<img>`, inline `<svg>`) as figures with their alternative text, MathML formulas with

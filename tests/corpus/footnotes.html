@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gutachten zur Aufbewahrung elektronischer Rechnungen</title>
+<style>
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Bold.ttf); font-weight: 700; }
+  @font-face { font-family: Inter; src: url(../fonts/Inter-Italic.ttf); font-weight: 400; font-style: italic; }
+  @page {
+    size: A5;
+    margin: 18mm 16mm 20mm;
+    counter-reset: footnote;
+    @footnote { border-top: 0.5pt solid #94a3b8; padding-top: 2mm; margin-top: 4mm; max-height: 60%; }
+    @bottom-center { content: "Seite " counter(page) " von " counter(pages); font: 7.5pt Inter, sans-serif; color: #64748b; }
+  }
+  body { margin: 0; font: 9.5pt/1.5 Inter, sans-serif; color: #0f172a; text-align: justify; hyphens: auto; }
+  h1 { font-size: 15pt; line-height: 1.25; margin: 0 0 2mm; color: #1e3a8a; text-align: left; }
+  h2 { font-size: 11pt; margin: 5mm 0 2mm; color: #1e3a8a; break-after: avoid; }
+  .meta { color: #64748b; font-size: 8pt; margin: 0 0 5mm; text-align: left; }
+  p { margin: 0 0 2.5mm; orphans: 2; widows: 2; }
+
+  .fn { float: footnote; font-size: 7.5pt; line-height: 1.4; text-align: left; color: #334155; }
+  .fn::footnote-call { color: #1e3a8a; font-weight: 700; }
+  .fn::footnote-marker { content: counter(footnote) "\2002"; font-weight: 700; color: #1e3a8a; }
+  /* Footnotes whose line goes with them, and those of the sources set side by side. */
+  .keep { footnote-policy: line; }
+  .src { footnote-display: inline; }
+  .src::after { content: "\2003"; }
+  .fn a { color: inherit; }
+  blockquote { margin: 0 0 2.5mm 6mm; font-style: italic; color: #334155; }
+</style>
+</head>
+<body>
+  <h1>Gutachten zur Aufbewahrung elektronischer Rechnungen</h1>
+  <p class="meta">Erstellt für die Muster Handels GmbH · Stand: 14. November 2026</p>
+
+  <h2>1. Ausgangslage</h2>
+  <p>Die Gesellschaft empfängt seit dem 1. Januar 2025 Rechnungen überwiegend in elektronischer
+  Form<span class="fn">Gemeint sind strukturierte Formate nach EN 16931, also XRechnung und
+  ZUGFeRD ab dem Profil EN 16931; reine PDF-Dateien gelten als sonstige Rechnungen.</span> und
+  versendet eigene Rechnungen im Format ZUGFeRD<span class="fn">Hybride Rechnung aus PDF/A-3 mit
+  eingebetteter XML-Datei, siehe <a href="https://www.ferd-net.de">ferd-net.de</a>.</span>. Zu klären
+  ist, in welcher Form diese Rechnungen aufzubewahren sind und welche Fristen gelten.</p>
+  <p>Die bisherige Praxis, eingehende Rechnungen auszudrucken und in Papierordnern abzulegen, soll
+  aufgegeben werden. Die Geschäftsführung wünscht eine Lösung, die den gesetzlichen Anforderungen
+  genügt und den Aufwand der Buchhaltung verringert.</p>
+
+  <h2>2. Rechtliche Grundlagen</h2>
+  <p>Rechnungen sind Buchungsbelege und als solche aufzubewahren<span class="fn">§ 147 Abs. 1
+  Nr. 4 AO; § 257 Abs. 1 Nr. 4 HGB.</span>. Die Frist beträgt seit dem Inkrafttreten des Vierten
+  Bürokratieentlastungsgesetzes acht Jahre<span class="fn">Zuvor zehn Jahre; die Verkürzung gilt
+  für alle Unterlagen, deren Frist am Tag des Inkrafttretens noch nicht abgelaufen war.</span>.
+  Elektronische Rechnungen sind in dem Format aufzubewahren, in dem sie empfangen wurden; ein
+  Ausdruck genügt nicht.</p>
+  <blockquote>„Die Unterlagen sind so aufzubewahren, dass sie während der Dauer der
+  Aufbewahrungsfrist jederzeit verfügbar, unverzüglich lesbar und maschinell auswertbar
+  sind.“<span class="fn keep">§ 147 Abs. 2 Nr. 2 AO, sinngemäß für die Unterlagen nach
+  Abs. 1.</span></blockquote>
+  <p>Die Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern, Aufzeichnungen und
+  Unterlagen in elektronischer Form (GoBD) konkretisieren diese Pflichten<span class="fn">Schreiben
+  des Bundesministeriums der Finanzen vom 28. November 2019 in der jeweils geltenden Fassung. Die
+  GoBD binden die Finanzverwaltung, nicht aber die Gerichte; in der Praxis richten sich
+  Betriebsprüfungen dennoch nach ihnen. Für elektronische Rechnungen sind insbesondere die
+  Randnummern zur Unveränderbarkeit, zur Indexierung und zur Verfahrensdokumentation von
+  Bedeutung. Die Finanzverwaltung hat angekündigt, die GoBD an die Pflicht zur elektronischen
+  Rechnung anzupassen; bis dahin gelten die bisherigen Randnummern sinngemäß. Zu beachten ist
+  auch, dass eine Konvertierung in ein anderes Format nur zulässig ist, wenn die ursprüngliche
+  Datei ebenfalls aufbewahrt wird und die Konvertierung dokumentiert ist.</span>. Danach muss das
+  Archiv die Unveränderbarkeit der Belege sicherstellen, eine Verfahrensdokumentation ist zu
+  führen, und der Zugriff der Finanzverwaltung muss möglich sein.</p>
+
+  <h2>3. Bewertung</h2>
+  <p>Ein revisionssicheres Archiv, das die eingehenden Dateien unverändert speichert und mit den
+  Buchungen verknüpft, erfüllt diese Anforderungen<span class="fn keep">Vorausgesetzt, die
+  Verfahrensdokumentation beschreibt Eingang, Prüfung, Buchung und Archivierung.</span>. Die
+  Prüfung der Rechnungen auf ihre Pflichtangaben sollte vor der Archivierung erfolgen, damit
+  fehlerhafte Rechnungen zurückgewiesen werden können.</p>
+  <p>Für die eigenen Ausgangsrechnungen genügt es, die erzeugten ZUGFeRD-Dateien abzulegen; eine
+  zusätzliche Kopie im Druckformat ist nicht erforderlich. Werden Rechnungen nachträglich
+  korrigiert, sind sowohl die ursprüngliche Rechnung als auch die Korrektur aufzubewahren.</p>
+  <p>Eine Übergangsregelung erlaubt bis Ende 2026 noch Papierrechnungen im Ausgang; danach
+  müssen Unternehmen mit einem Vorjahresumsatz über 800 000 Euro elektronische Rechnungen
+  versenden. Ab 2028 gilt dies für alle Unternehmen.</p>
+
+  <h2>4. Empfehlung</h2>
+  <p>Wir empfehlen, ein Archiv einzuführen, das die genannten Anforderungen erfüllt, und die
+  Verfahrensdokumentation bis zum Ende des laufenden Geschäftsjahres zu erstellen. Die
+  Papierablage kann danach entfallen.</p>
+  <p>Quellen: Abgabenordnung<span class="fn src">AO in der Fassung vom 1. Oktober 2002.</span>,
+  Handelsgesetzbuch<span class="fn src">HGB vom 10. Mai 1897.</span>, Umsatzsteuergesetz<span
+  class="fn src">UStG, § 14 zur Rechnung.</span>.</p>
+</body>
+</html>
