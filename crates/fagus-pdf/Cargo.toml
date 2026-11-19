@@ -42,6 +42,12 @@ aes.workspace = true
 cbc.workspace = true
 sha2.workspace = true
 getrandom.workspace = true
+cms.workspace = true
+x509-cert.workspace = true
+der.workspace = true
+rsa.workspace = true
+p256.workspace = true
+p12-keystore.workspace = true
 
 [features]
 default = ["parallel"]

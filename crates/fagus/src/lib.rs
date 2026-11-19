@@ -39,6 +39,7 @@ use fagus_text::{Face, FontDb};
 use rustc_hash::{FxHashMap, FxHasher};
 
 pub use fagus_css::{Diagnostic, Severity};
+pub use fagus_pdf::sign::{Algorithm, Signature, Signer, Timestamper, timestamp_request};
 pub use fagus_pdf::{Attachment, Conformance, Date, Encryption, PdfError, Permission, Relationship};
 pub use fagus_text::FontError;
 pub use layout_info::{Layout, LayoutBox, LayoutElement, LayoutPage, LayoutRow, RowSection};
@@ -99,6 +100,8 @@ pub struct Document {
     /// Whether to report where the elements ended up (see [`Document::report_layout`]).
     report_layout: bool,
     encryption: Option<Encryption>,
+    /// The digital signature of the PDF, if any.
+    signature: Option<Signature>,
     /// How deep the document lies in SVG images with HTML in them (see [`svg_document`]): 0
     /// for the document itself.
     svg_depth: u8,
@@ -214,6 +217,7 @@ impl Document {
             created: None,
             report_layout: false,
             encryption: None,
+            signature: None,
             svg_depth: 0,
             nesting: frames::Nesting::default(),
         }
@@ -242,6 +246,14 @@ impl Document {
     #[must_use]
     pub fn report_layout(mut self, report: bool) -> Self {
         self.report_layout = report;
+        self
+    }
+
+    /// Signs the PDF digitally (`PAdES`), with an invisible signature. The time of signing is the
+    /// creation date (see [`Document::created`]) unless the signature gives its own.
+    #[must_use]
+    pub fn sign(mut self, signature: Signature) -> Self {
+        self.signature = Some(signature);
         self
     }
 
@@ -1177,7 +1189,19 @@ impl Inner {
                 format!("image `{}` could not be decoded and is left out", short(url)),
             ));
         }
-        let pdf = written.pdf;
+        let mut pdf = written.pdf;
+        if let Some(signature) = &input.signature {
+            let time = metadata.created.unwrap_or_else(Date::now);
+            pdf = match fagus_pdf::sign::sign(&pdf, signature, time) {
+                Ok(signed) => signed,
+                Err(error) => {
+                    return Err(Failure {
+                        error: error.into(),
+                        diagnostics,
+                    });
+                }
+            };
+        }
         timings.pdf = start.elapsed() + prepared;
 
         Ok(Output {
@@ -2826,6 +2850,63 @@ mod tests {
             FacturXProfile::detect(&corpus.expect("corpus")),
             Some(FacturXProfile::En16931)
         );
+    }
+
+    #[test]
+    fn signs_documents() {
+        let p12 = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/signing/rsa.p12"
+        ))
+        .expect("fixture");
+        let signature = Signature::pkcs12(&p12, "fagus-test-only").expect("PKCS#12 file");
+        let document = Document::html("<title>Rechnung</title><p>Rechnung RE-1</p>")
+            .created(CREATED)
+            .conformance(Conformance::PdfA3b)
+            .factur_x(invoice("urn:cen.eu:en16931:2017"))
+            .sign(signature.clone().reason("Rechnung"));
+        let first = engine().render(&document).expect("rendered").pdf;
+        assert_eq!(
+            engine().render(&document).expect("rendered").pdf,
+            first,
+            "reproducible"
+        );
+        let unsigned = engine()
+            .render(&Document {
+                signature: None,
+                ..document.clone()
+            })
+            .expect("rendered")
+            .pdf;
+        // The signature follows the file as it would be without it, at the creation date.
+        assert!(first.starts_with(&unsigned));
+        let update = String::from_utf8_lossy(&first[unsigned.len()..]).into_owned();
+        assert!(
+            update.contains("/M(D:20261102120000Z)/Reason(Rechnung)"),
+            "{update}"
+        );
+        // A signature of its own time.
+        let later = Date { day: 3, ..CREATED };
+        let dated = engine()
+            .render(&document.sign(signature.time(later)))
+            .expect("rendered")
+            .pdf;
+        assert!(String::from_utf8_lossy(&dated).contains("/M(D:20261103120000Z)"));
+        // A signer that fails fails the render.
+        let failing = Signature::with_signer(
+            vec![
+                std::fs::read(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../../tests/signing/rsa.pem"
+                ))
+                .expect("fixture"),
+            ],
+            |_: &[u8], _| Err("offline".to_owned()),
+        );
+        let error = engine()
+            .render(&Document::html("<p>x</p>").sign(failing))
+            .expect_err("failed");
+        assert!(matches!(error, Error::Pdf(PdfError::Sign(_))), "{error}");
     }
 
     #[test]

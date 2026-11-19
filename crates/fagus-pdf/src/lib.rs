@@ -19,6 +19,7 @@ mod problems;
 mod raster;
 mod rasterizer;
 mod shadow;
+pub mod sign;
 mod small_caps;
 pub mod svg;
 pub mod svg_boxes;
@@ -314,6 +315,8 @@ pub enum PdfError {
     Write(String),
     #[error("the document does not meet {standard}: {problems}")]
     Conformance { standard: String, problems: String },
+    #[error("the PDF could not be signed: {0}")]
+    Sign(String),
 }
 
 /// A PDF document, written.

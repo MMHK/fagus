@@ -75,12 +75,21 @@ fontdb = { version = "0.23.0", default-features = false, features = ["std", "fs"
 wuff = "0.2.9"
 # Decompresses the embedded hyphenation dictionaries (wuff already uses it for WOFF2).
 brotli-decompressor = { version = "5.0.3", default-features = false }
+# Digital signatures (PAdES): CMS signed data with X.509 certificates, RSA and ECDSA P-256 keys,
+# read from PKCS#12 files.
+cms = "=0.3.0-rc.2"
+x509-cert = { version = "=0.3.0", default-features = false, features = ["std", "pem"] }
+der = { version = "=0.8.3", features = ["std", "derive", "oid"] }
+rsa = { version = "=0.10.0", default-features = false, features = ["std", "encoding", "getrandom", "pkcs1v15"] }
+p256 = { version = "=0.14.0", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+p12-keystore = "=0.4.1"
 smallvec = "1.16.4"
 thiserror = "2.0.21"
 # Password protection (AES-256, the standard security handler of PDF 2.0). Pinned exactly: the
 # cryptography is updated on purpose, not along with other dependencies.
 aes = "=0.9.4"
 cbc = { version = "=0.2.1", features = ["alloc"] }
+# The hashes of encryption keys and of signed data.
 sha2 = "=0.11.1"
 # The salts, keys and initialization vectors of encryption; ahash already depends on it.
 getrandom = "0.3.4"
