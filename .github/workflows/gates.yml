@@ -162,3 +162,6 @@ jobs:
           path: bin
       - run: chmod +x bin/fagus
       - run: python3 tools/bench-smoke.py bench-smoke
+      # What a worker keeps after large documents on Linux (glibc), as it reports it: a
+      # measurement for the job summary, not a check.
+      - run: python3 tools/worker-memory.py worker-memory
