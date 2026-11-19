@@ -214,6 +214,91 @@ one that is not a font Fagus can read too ("`…` is not a font Fagus can read",
 `font.unsupported`). Fonts from directories, generic families and system fonts are described in
 [fonts.md](fonts.md).
 
+## Load web fonts through the resolver
+
+A stylesheet of Google Fonts, Bunny Fonts or a similar service is a resource like any other:
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+<style>
+  body { font-family: Roboto, sans-serif; }
+</style>
+```
+
+Fagus does not fetch it, so without a resolver the text falls back to the next family and the
+diagnostics report the stylesheet as `resource.not-loaded`. A resolver can fetch it:
+
+1. Fagus asks the resolver for the stylesheet's URL, as written in the `<link>` or in an
+   `@import url(…)`.
+2. The stylesheet's `@font-face` rules name the font files, on Google Fonts with URLs of
+   `https://fonts.gstatic.com/…`. Fagus asks the resolver for each file the text needs. Relative
+   URLs in the stylesheet resolve against the stylesheet's URL first, as in browsers.
+
+The resolver answers both kinds of URL, for the hosts you allow, with a timeout, and keeps what it
+fetched: Fagus asks again for every document.
+
+```php
+use Fagus\Fagus;
+
+$hosts = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+$cache = __DIR__.'/storage/web-fonts';
+
+$pdf = Fagus::html($html)
+    ->resolver(function (string $url) use ($hosts, $cache): ?string {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if (! str_starts_with($url, 'https://') || ! in_array($host, $hosts, true)) {
+            return null;
+        }
+        $file = $cache.'/'.hash('sha256', $url);
+        if (is_file($file)) {
+            return file_get_contents($file);
+        }
+        $context = stream_context_create(['http' => ['timeout' => 5]]);
+        $data = @file_get_contents($url, false, $context);
+        if ($data === false) {
+            return null;
+        }
+        if (! is_dir($cache)) {
+            mkdir($cache, 0775, true);
+        }
+        file_put_contents($file, $data);
+
+        return $data;
+    })
+    ->render();
+```
+
+In Laravel, with the HTTP client and the cache:
+
+```php
+use Fagus\Laravel\Facades\Fagus;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+
+Fagus::view('invoices.show', $data)->resolver(function (string $url): ?string {
+    $hosts = ['fonts.bunny.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+    $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+    if (! str_starts_with($url, 'https://') || ! in_array($host, $hosts, true)) {
+        return null;
+    }
+
+    return Cache::remember('web-font:'.hash('sha256', $url), now()->addWeek(), fn (): ?string => rescue(
+        fn () => Http::timeout(5)->get($url)->throw()->body(),
+        report: false,
+    ));
+});
+```
+
+Google Fonts chooses the format of the files by the `User-Agent` of the request: WOFF2 in pieces by
+`unicode-range` for a browser, other formats such as TrueType for a client it does not know, such
+as PHP without a `User-Agent`. Fagus reads either.
+
+Fonts from a service can change from one request to the next, and every render that misses the
+cache waits for the network. For PDFs that must look the same every time, such as invoices,
+download the font files once and load them with `@font-face` from the base directory, or put them
+into a font directory ([fonts.md](fonts.md#load-fonts-with-font-face)). Then no network is needed
+when the PDF is rendered.
+
 ## Frames: `<iframe>`, `<object>` and `<embed>`
 
 An `<iframe>` (its `srcdoc`, else its `src`), and an `<object>` or `<embed>` whose resource is an

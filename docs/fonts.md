@@ -96,8 +96,9 @@ and hands it to a new worker whenever one starts. Prefer font directories for fo
 
 A document can bring its own fonts. The URLs resolve like those of images: against the base
 directory, from resources handed over, or through the resolver (see [Resources](resources.md)).
-Fagus never loads fonts from the network, so a `<link>` to Google Fonts does not work; download the
-font files and serve them locally.
+Fagus never loads fonts from the network, so a `<link>` to Google Fonts works only through a
+resolver that fetches it ([Resources](resources.md#load-web-fonts-through-the-resolver)); for
+output that stays the same, download the font files and serve them locally.
 
 ```html
 <style>

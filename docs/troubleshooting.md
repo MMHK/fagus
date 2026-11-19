@@ -443,4 +443,6 @@ Chrome print the same in Fagus; what changes is everything around them:
 With spatie/laravel-pdf, you can also keep the code as it is and switch to its `fagus` driver
 (see [laravel.md](laravel.md#use-fagus-with-spatielaravel-pdf)).
 
+For Snappy and wkhtmltopdf, [Coming from wkhtmltopdf](from-wkhtmltopdf.md) maps its flags to CSS and to the PHP API.
+
 Remove Chrome, Node, Puppeteer or wkhtmltopdf from the servers once nothing else needs them.
