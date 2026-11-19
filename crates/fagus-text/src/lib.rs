@@ -1826,7 +1826,13 @@ impl FontDb {
     ) -> Option<FaceId> {
         match self.resolve_generic(family, lang) {
             Some(resolved) => self.match_named(resolved, true, request, character),
-            None if self.system.is_some() && !self.has_family(family) => None,
+            // A family the system lacks takes an installed one with the same metrics, as
+            // fontconfig substitutes it on Linux and Chrome accepts it (Liberation Sans for
+            // Arial, Liberation Mono for Courier New).
+            None if self.system.is_some() && !self.has_family(family) => platform::metric_equivalents(family)
+                .iter()
+                .find(|equivalent| self.has_family(equivalent))
+                .and_then(|equivalent| self.match_named(equivalent, false, request, character)),
             None => self.match_named(family, false, request, character),
         }
     }
@@ -4122,6 +4128,24 @@ mod tests {
             family(&db, db.query(&["sans-serif"], 400.0, FontStyle::Normal)),
             "Helvetica"
         );
+    }
+
+    #[test]
+    fn takes_metric_compatible_families_for_missing_ones_as_chrome_on_linux() {
+        let db = system_db(&[
+            ("Liberation Sans", "Inter-Regular.ttf"),
+            ("Liberation Mono", "Inter-Bold.ttf"),
+            ("DejaVu Serif", "Inter-Italic.ttf"),
+        ]);
+        let request = (400.0, FontStyle::Normal, 100.0);
+        let named = |names: &[&str]| family(&db, db.query_in(names, request, None));
+        assert_eq!(named(&["Arial"]), "Liberation Sans");
+        assert_eq!(named(&["Helvetica", "serif"]), "Liberation Sans");
+        assert_eq!(named(&["Menlo", "Courier New", "monospace"]), "Liberation Mono");
+        assert_eq!(named(&["Courier", "serif"]), "Liberation Mono");
+        // Not a family of the same metrics: the next of the list.
+        assert_eq!(named(&["Tahoma", "Courier"]), "Liberation Mono");
+        assert_eq!(named(&["Times New Roman", "Courier"]), "Liberation Mono");
     }
 
     #[test]

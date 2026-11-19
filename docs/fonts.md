@@ -254,6 +254,11 @@ With system fonts:
   (Times New Roman, Arial, Consolas, Liberation, DejaVu, Noto …). For Japanese, Korean and Chinese
   text (by `lang`) they are the fonts Chrome takes for these languages (Hiragino, Apple SD Gothic
   Neo, PingFang, Yu Gothic, Malgun Gothic, Microsoft YaHei, Noto CJK …).
+- A family the system lacks takes an installed family with the same glyph widths, as fontconfig
+  substitutes it on Linux and Chrome accepts it there: Liberation Sans (or Arimo) for Arial and
+  Helvetica, Liberation Serif (or Tinos) for Times New Roman and Times, Liberation Mono (or
+  Cousine) for Courier New and Courier, Carlito for Calibri and Caladea for Cambria. Form
+  controls, whose font is Arial, get Liberation Sans on Linux.
 - Text without `font-family` is set in the standard font of its language, as in Chrome.
 - `ui-sans-serif`, `ui-serif`, `ui-monospace`, `ui-rounded` and `-apple-system` match nothing, as in
   Chrome, so Tailwind's default `font-sans` stack gets the system font.

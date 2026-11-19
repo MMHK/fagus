@@ -85,6 +85,46 @@ impl LangScript {
     }
 }
 
+/// The families whose glyphs have the same widths as those of `family`, which fontconfig puts in
+/// its place on Linux where it is not installed and which Chrome accepts there (Skia's
+/// `kFontEquivMap`): the free Liberation, Croscore and Caladea/Carlito families for Microsoft's
+/// and Adobe's core fonts. Empty for other families.
+pub(crate) fn metric_equivalents(family: &str) -> &'static [&'static str] {
+    const CLASSES: [&[&str]; 6] = [
+        &[
+            "Arial",
+            "Helvetica",
+            "Liberation Sans",
+            "Arimo",
+            "Albany AMT",
+            "Albany",
+        ],
+        &[
+            "Times New Roman",
+            "Times",
+            "Liberation Serif",
+            "Tinos",
+            "Thorndale AMT",
+            "Thorndale",
+        ],
+        &[
+            "Courier New",
+            "Courier",
+            "Liberation Mono",
+            "Cousine",
+            "Cumberland AMT",
+            "Cumberland",
+        ],
+        &["Cambria", "Caladea"],
+        &["Calibri", "Carlito"],
+        &["Symbol", "Symbol Neu"],
+    ];
+    CLASSES
+        .into_iter()
+        .find(|class| class.iter().any(|member| member.eq_ignore_ascii_case(family)))
+        .unwrap_or(&[])
+}
+
 /// The families that stand for a generic family in text of a language, the first one installed
 /// first: the family of the language's script where Chrome has one, then the default.
 pub(crate) fn generic_families(generic: Generic, script: Option<LangScript>) -> Vec<&'static str> {
