@@ -247,9 +247,9 @@ the protocol.
 ## Sandbox
 
 On Linux, `fagus render` and `fagus worker` render in a sandbox. Rendering needs no network,
-starts no programs and writes no files of its own, so once the input, the attachments and the
-fonts are read and the output file is open, the process gives up all of that, as far as the
-kernel allows:
+starts no programs and writes no files of its own, so once the input, the attachments, the
+password files and the fonts are read and the output files (the PDF and the `--layout-json`) are
+open, the process gives up all of that, as far as the kernel allows:
 
 - **Files** ([Landlock](https://docs.kernel.org/userspace-api/landlock.html), Linux 5.13 and
   later): `fagus render` may read only the files of `--root` (or the input's directory) and the
