@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Renders the corpus plain, encrypted, as PDF/A (1b, 2a, 2b, 2u, 3a, 3b, 3u, 4, 4e, 4f), as PDF/UA-1 and
-# as Factur-X invoices, and checks the files: every one with `qpdf --check` (https://qpdf.sourceforge.io),
+# as Factur-X invoices, the invoices also signed (with the test keys of tests/signing), and checks
+# the files: every one with `qpdf --check` (https://qpdf.sourceforge.io), the signatures with
+# `openssl cms -verify` (tests/signing/verify.py),
 # the PDF/A and PDF/UA files with veraPDF (https://verapdf.org) against the profile of the level
 # they were written for, and the invoices with Mustang (https://www.mustangproject.org).
 #
@@ -136,6 +138,9 @@ for page in "$root"/tests/corpus/invoice/*.html; do
   name=factur-x-$(basename "$page" .html)
   echo "factur-x $name $page"
   echo "factur-x-ua $name $page"
+  echo "factur-x-signed $name $page"
+  echo "factur-x-ua-signed $name $page"
+  echo "1b-signed $name $page"
 done >> "$out/renders.txt"
 
 # shellcheck disable=SC2329 # run by xargs
@@ -147,11 +152,14 @@ render() { # variant name page
     ua) options=(--accessible) ;;
     factur-x) options=(--pdfa 3b --factur-x "$xml") ;;
     factur-x-ua) options=(--pdfa 3a --accessible --factur-x "$xml") ;;
+    factur-x-signed) options=(--pdfa 3b --factur-x "$xml" --sign-p12 "$root/tests/signing/rsa.p12" --sign-reason Rechnung) ;;
+    factur-x-ua-signed) options=(--pdfa 3a --accessible --factur-x "$xml" --sign-p12 "$root/tests/signing/ecdsa.p12") ;;
+    1b-signed) options=(--pdfa 1b --sign-p12 "$root/tests/signing/rsa.p12") ;;
     *) options=(--pdfa "$1") ;;
   esac
   # The root is tests/, so that pages may use the fonts and images next to the corpus.
-  "$fagus" render "$3" -o "$pdfs/$2.$1.pdf" --font-dir "$fonts" --root "$root/tests" ${options[@]+"${options[@]}"} \
-    2> "$pdfs/$2.$1.log" || true
+  FAGUS_SIGN_PASSWORD=fagus-test-only "$fagus" render "$3" -o "$pdfs/$2.$1.pdf" --font-dir "$fonts" \
+    --root "$root/tests" ${options[@]+"${options[@]}"} 2> "$pdfs/$2.$1.log" || true
 }
 export -f render
 export fagus fonts root xml pdfs
@@ -184,6 +192,16 @@ while read -r variant name _; do
       echo "$pdf" >> "$out/files.3a"
       echo "$pdf" >> "$out/files.ua1"
       echo "$pdf" >> "$out/files.invoices" ;;
+    factur-x-signed)
+      echo "$pdf" >> "$out/files.3b"
+      echo "$pdf" >> "$out/files.invoices"
+      echo "$pdf" >> "$out/files.signed" ;;
+    factur-x-ua-signed)
+      echo "$pdf" >> "$out/files.3a"
+      echo "$pdf" >> "$out/files.ua1"
+      echo "$pdf" >> "$out/files.invoices"
+      echo "$pdf" >> "$out/files.signed" ;;
+    1b-signed) echo "$pdf" >> "$out/files.1b"; echo "$pdf" >> "$out/files.signed" ;;
     *) echo "$pdf" >> "$out/files.$variant" ;;
   esac
 done < "$out/renders.txt"
@@ -205,6 +223,21 @@ total=$(wc -l < "$out/files.all" | tr -d ' ')
 echo "qpdf --check: $((total - qpdf_failed)) of $total passed"
 summary+=("| qpdf --check | $total | $((total - qpdf_failed)) | $qpdf_failed |")
 [[ $qpdf_failed == 0 ]] || failed=1
+
+# The signatures: the byte range covers the file, and OpenSSL accepts the CMS signature with the
+# test CA.
+signed_failed=0
+count=0
+while read -r pdf; do
+  count=$((count + 1))
+  if ! python3 "$root/tests/signing/verify.py" "$pdf" > "${pdf%.pdf}.signature.txt" 2>&1; then
+    cat "${pdf%.pdf}.signature.txt"
+    signed_failed=$((signed_failed + 1))
+  fi
+done < "$out/files.signed"
+echo "openssl cms -verify: $((count - signed_failed)) of $count signatures passed"
+summary+=("| openssl cms -verify (signatures) | $count | $((count - signed_failed)) | $signed_failed |")
+[[ $signed_failed == 0 ]] || failed=1
 
 # veraPDF, each set of files against the profile of its level, so that the identification in the
 # metadata must match it too.
