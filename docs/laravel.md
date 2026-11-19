@@ -67,7 +67,8 @@ These forward to `Fagus\Document` and take the same arguments; [php.md](php.md#d
 describes each one:
 
 `baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `resolver()`, `pdfA()`, `tagged()`,
-`accessible()`, `attach()`, `facturX()`, `encrypt()`, `created()`, `strict()`, `reportLayout()`.
+`accessible()`, `attach()`, `facturX()`, `encrypt()`, `created()`, `sign()`, `strict()`,
+`reportLayout()`.
 
 ```php
 use Fagus\Conformance;
@@ -89,6 +90,26 @@ return Fagus::view('payslips.show', ['payslip' => $payslip])
     ->encrypt(userPassword: $employee->pdf_password, permissions: [Permission::Print])
     ->name("payslip-{$payslip->month}.pdf")
     ->download();
+```
+
+`sign()` takes a `Fagus\Signature` ([php.md](php.md#signature)). A signed invoice, with the
+timestamp of a public time-stamping authority through Laravel's HTTP client:
+
+```php
+use Fagus\Signature;
+use Illuminate\Support\Facades\Http;
+
+$signature = Signature::fromPkcs12(storage_path('app/private/signing.p12'), config('services.signing.password'))
+    ->reason('Rechnung')
+    ->timestamp(fn (string $digest): string => Http::withBody(Signature::timestampRequest($digest), 'application/timestamp-query')
+        ->post('https://freetsa.org/tsr')
+        ->throw()
+        ->body());
+
+return Fagus::view('invoices.show', ['invoice' => $invoice])
+    ->pdfA('3b')
+    ->sign($signature)
+    ->download("rechnung-{$invoice->number}.pdf");
 ```
 
 ### `name(string $filename): PendingPdf`

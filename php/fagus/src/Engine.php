@@ -127,6 +127,14 @@ final class Engine
                         $resource = $document->resolve((string) ($reply['url'] ?? ''));
                         $channel->write('r', ['found' => $resource !== null], $resource === null ? [] : [$resource]);
                         break;
+                    case 'S':
+                        $signature = $document->signature() ?? throw EngineException::unexpected($kind);
+                        $channel->write('s', [], [$signature->signDigest($data[0] ?? '', (string) ($reply['algorithm'] ?? ''))]);
+                        break;
+                    case 'T':
+                        $signature = $document->signature() ?? throw EngineException::unexpected($kind);
+                        $channel->write('t', [], [$signature->timestampDigest($data[0] ?? '')]);
+                        break;
                     case 'P':
                         // A binary older than encryption ignores the passwords: never hand
                         // out such a PDF as protected.

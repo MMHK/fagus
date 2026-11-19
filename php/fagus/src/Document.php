@@ -48,6 +48,8 @@ final class Document
 
     private ?DateTimeInterface $created = null;
 
+    private ?Signature $signature = null;
+
     private bool $strict = false;
 
     private bool $reportLayout = false;
@@ -276,6 +278,17 @@ final class Document
     }
 
     /**
+     * Signs the PDF digitally (PAdES) with an invisible signature.
+     */
+    public function sign(Signature $signature): self
+    {
+        $copy = clone $this;
+        $copy->signature = $signature;
+
+        return $copy;
+    }
+
+    /**
      * Fails with a {@see RenderException} when the document has diagnostics (CSS that is
      * ignored, resources that are missing).
      */
@@ -394,6 +407,9 @@ final class Document
                 ->setTimezone(new DateTimeZone('UTC'))
                 ->format('Y-m-d\TH:i:s\Z');
         }
+        if ($this->signature !== null) {
+            $header['signature'] = $this->signature->header($add);
+        }
 
         return [$header, $blobs];
     }
@@ -406,5 +422,15 @@ final class Document
     public function resolve(string $url): ?string
     {
         return $this->resolver === null ? null : ($this->resolver)($url);
+    }
+
+    /**
+     * The signature, for the engine's questions while it signs.
+     *
+     * @internal
+     */
+    public function signature(): ?Signature
+    {
+        return $this->signature;
     }
 }

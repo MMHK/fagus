@@ -12,6 +12,7 @@ use Fagus\InvoiceProfile;
 use Fagus\Pdf;
 use Fagus\Permission;
 use Fagus\Relationship;
+use Fagus\Signature;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
@@ -106,6 +107,11 @@ final class PendingPdf implements Responsable
     public function created(DateTimeInterface $date): self
     {
         return $this->with($this->document->created($date));
+    }
+
+    public function sign(Signature $signature): self
+    {
+        return $this->with($this->document->sign($signature));
     }
 
     public function strict(bool $strict = true): self

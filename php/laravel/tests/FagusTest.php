@@ -12,6 +12,7 @@ use Fagus\Laravel\Facades\Fagus;
 use Fagus\Laravel\PdfFactory;
 use Fagus\Laravel\PendingPdf;
 use Fagus\Permission;
+use Fagus\Signature;
 use Fagus\Tests\Fixtures\FakeWorker;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -181,6 +182,15 @@ final class FagusTest extends TestCase
         $this->assertMatchesRegularExpression('~/Filter/Standard/V 5/R 6/.*/P -1340/~', $bytes);
         $this->assertStringNotContainsString('Gehalt', $bytes, 'the metadata is encrypted too');
         $this->assertSame(['userPassword' => 'user', 'permissions' => ['print']], $pdf->document()->request(1)[0]['encryption']);
+    }
+
+    #[Test]
+    public function it_signs_pdfs(): void
+    {
+        $signature = Signature::fromPkcs12(__DIR__.'/../../../tests/signing/ecdsa.p12', 'fagus-test-only')->reason('Rechnung');
+        $bytes = Fagus::html('<p>Rechnung</p>')->sign($signature)->pdfA('3b')->render()->bytes();
+        $this->assertStringContainsString('/SubFilter/ETSI.CAdES.detached', $bytes);
+        $this->assertStringContainsString('/Reason(Rechnung)', $bytes);
     }
 
     #[Test]
