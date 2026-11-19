@@ -1037,6 +1037,29 @@ pub(crate) enum Mark {
     },
 }
 
+/// The mark of a checkbox or radio button of `style` drawn in a content box of `width` ×
+/// `height`, checked or not, as Chrome's theme draws it for a control with its native look: what
+/// the control shows in the other state, for the field of an interactive form.
+pub fn control_mark(
+    style: &ComputedStyle,
+    radio: bool,
+    checked: bool,
+    disabled: bool,
+    (width, height): (f32, f32),
+) -> Arc<Image> {
+    let accent = style
+        .accent_color
+        .unwrap_or(if style.dark { DARK_ACCENT } else { ACCENT });
+    Mark::Check {
+        radio,
+        checked,
+        accent,
+        disabled,
+        dark: style.dark,
+    }
+    .image(width, height, [0.0, 0.0, width, height], style.zoom)
+}
+
 impl Mark {
     /// Whether the mark is drawn across the border box, not the content box: Chrome's theme
     /// paints a slider over its padding and border.
