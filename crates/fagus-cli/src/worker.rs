@@ -754,6 +754,11 @@ mod tests {
         assert_eq!(frames[1].header["id"], 4);
         assert_eq!(frames[1].header["diagnostics"][0]["code"], "css.unknown-property");
         assert_eq!(frames[1].header["diagnostics"][0]["severity"], "warning");
+        // The worker's memory comes with failures too, where the system tells it.
+        assert_eq!(
+            frames[1].header.get("maxRss").is_some(),
+            cfg!(any(target_os = "linux", target_os = "macos"))
+        );
     }
 
     #[test]
