@@ -6,7 +6,6 @@
 
 FAIL documents/article-tailwind-prose.html  # Chrome on Linux prints a classic scrollbar under the overflowing code block; Fagus draws none, as Chrome on macOS
 FAIL documents/article-wikipedia-mathml.html  # MathML: Chrome on Linux draws STIX Two Math as Type 3 glyphs and lays formulas out slightly differently than on macOS, which Fagus follows
-FAIL documents/catalog-thumbnails.html  # background-attachment: fixed is placed in Chrome's window, which Fagus takes as on macOS (756 x 469); Chrome's window on Linux differs
 FAIL documents/certificate.html  # engine: the tiles of a centered background image of 18mm lie a pixel off (also against Chrome on macOS)
 FAIL documents/diploma-fullbleed.html  # engine: with hyphens: auto, Chrome on Linux hyphenates "com-ment", Fagus does not
 FAIL documents/form-tax-comb-fields.html  # engine: a few glyphs lie a pixel off, 0.55 % of a page against 0.5 % allowed (also against Chrome on macOS)

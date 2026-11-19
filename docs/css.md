@@ -237,7 +237,8 @@ properties, `clip: rect()`, and anchor positioning (`anchor-name`, `position-anc
 `position-try-fallbacks`, `position-try-order`, `position-visibility`).
 
 **In print:** a `position: fixed` box repeats on every page, as in Chrome. Absolutely positioned
-boxes break across pages. Sticky boxes stick in Chrome's print window.
+boxes break across pages. Sticky boxes stick in Chrome's print window, 380 pixels tall at the start
+of the first page.
 
 ### Overflow and containment
 
@@ -265,7 +266,8 @@ first layout and lays the document out again with them.
 
 - Several background layers with `background-image`, `-size`, `-position`, `-repeat` (`space` and
   `round` too), `-origin`, `-clip` (including `text` and `border-area`), `-attachment`
-  (`fixed` is placed as Chrome places it in print, `local` in the scrollable overflow) and
+  (`fixed` is placed as Chrome places it in print, in its window of 780 × 380 pixels at the top
+  left of every page; `local` in the scrollable overflow) and
   `background-blend-mode`.
 - Gradients: `linear-gradient()`, `radial-gradient()`, `conic-gradient()` and their repeating
   forms, with color hints and interpolation methods (`in oklch longer hue`); `image()`,
@@ -314,7 +316,8 @@ as an isolated group.
   orientation says (`image-orientation: none` turns this off); AVIF as its `irot` and `imir`
   say, which `image-orientation: none` keeps, as in Chrome.
 - `srcset`, `sizes` and `<picture>` with `media` and `type`, chosen as Chrome chooses them when it
-  loads the page (on screen, before printing). `(min-resolution)` queries see 300 dpi.
+  loads the page (on screen, before printing): in a window of 780 × 380 pixels, as Chrome on Linux
+  opens it. `(min-resolution)` queries see 300 dpi.
 - `object-fit` and `object-position`, `image-rendering: pixelated` and `crisp-edges`.
 - Inline `<svg>`, drawn as vectors in the text's color (`currentColor`) and font, styled by the
   document's CSS (`fill`, `stroke`, Tailwind's `fill-current`), with `<use>` across documents,

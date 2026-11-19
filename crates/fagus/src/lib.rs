@@ -5219,9 +5219,9 @@ mod tests {
 
     #[test]
     fn positions_fixed_backgrounds_in_the_window_chrome_loaded_the_page_in() {
-        // `background-attachment: fixed` is positioned in the 756 × 469 pixels of the window,
-        // from the top left of the page (Chrome 157): centered, a 378 × 234.5 image lies at
-        // (189, 117.25) px, (141.75, 36.1875) pt from the bottom of a page 300 pt high.
+        // `background-attachment: fixed` is positioned in the 780 × 380 pixels of the window,
+        // from the top left of the page (Chrome 157 on Linux): centered, a 378 × 234.5 image
+        // lies at (201, 72.75) px, (150.75, 69.5625) pt from the bottom of a page 300 pt high.
         let content = streams(
             &engine()
                 .render(
@@ -5236,7 +5236,7 @@ mod tests {
                 .pdf,
         );
         assert!(
-            content.contains("283.49997 0 0 175.87498 141.74998 36.18753 cm"),
+            content.contains("283.49997 0 0 175.87498 150.74998 69.562515 cm"),
             "{content}"
         );
         // In a transformed box a fixed background scrolls with it (CSS Transforms 1, §6; WPT

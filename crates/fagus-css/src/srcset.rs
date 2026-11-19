@@ -10,12 +10,13 @@ use lightningcss::values::length::{Length, LengthValue};
 
 use crate::MediaEnvironment;
 
-/// The window Chrome loads a document in when it prints it headless (`--print-to-pdf`): 756 by
-/// 469 CSS pixels at one device pixel per CSS pixel (Chrome 157, measured with `innerWidth`).
+/// The window Chrome loads a document in when it prints it headless (`--print-to-pdf`): 780 by
+/// 380 CSS pixels at one device pixel per CSS pixel (Chrome 157 on Linux, measured with
+/// `innerWidth` and `innerHeight`, which include the scroll bars).
 /// `sizes` and the `media` of `<picture>` sources are evaluated on this screen.
 pub const LOAD_SCREEN: MediaEnvironment = MediaEnvironment {
-    width: 756.0,
-    height: 469.0,
+    width: 780.0,
+    height: 380.0,
 };
 
 /// The font size `em` and `rem` in `sizes` refer to: the initial one.
@@ -397,25 +398,25 @@ mod tests {
 
     #[test]
     fn sizes_images_on_the_screen_chrome_loads_them_on() {
-        // Measured in Chrome 157 printing: 10vw is 75.6 px, `(min-width: 700px)` holds, the
-        // window is landscape and not print.
+        // Measured in Chrome 157 printing on Linux: 10vw is 78 px, `(min-width: 770px)` holds,
+        // the window is landscape and not print.
         let size = |sizes: &str| source_size(Some(sizes), &LOAD_SCREEN, true);
-        assert!((size("10vw") - 75.6).abs() < 1e-3);
-        assert!((size("calc(10vw + 100px)") - 175.6).abs() < 1e-3);
+        assert!((size("10vw") - 78.0).abs() < 1e-3);
+        assert!((size("calc(10vw + 100px)") - 178.0).abs() < 1e-3);
         assert_eq!(size("min(50vw, 300px)"), 300.0);
         assert_eq!(size("clamp(100px, 10vw, 200px)"), 100.0);
-        assert_eq!(size("(min-width: 700px) 50px, 70px"), 50.0);
+        assert_eq!(size("(min-width: 770px) 50px, 70px"), 50.0);
         assert_eq!(size("(orientation: portrait) 60px, 90px"), 90.0);
         assert_eq!(
-            size("(min-width: 760px) 40px, (min-width: 600px) 80px, 120px"),
+            size("(min-width: 790px) 40px, (min-width: 600px) 80px, 120px"),
             80.0
         );
         assert_eq!(size("20em"), 320.0);
         assert_eq!(size("(print) 33px, 66px"), 66.0);
         // Invalid entries are skipped; without a valid one the image is 100vw.
         assert_eq!(size("50%, (min-width: 1px) -4px, 12px"), 12.0);
-        assert_eq!(size("nonsense"), 756.0);
-        assert_eq!(source_size(None, &LOAD_SCREEN, true), 756.0);
+        assert_eq!(size("nonsense"), 780.0);
+        assert_eq!(source_size(None, &LOAD_SCREEN, true), 780.0);
         // On an A4 page, which is portrait and printed at 300 dpi.
         let page = MediaEnvironment::default();
         assert_eq!(

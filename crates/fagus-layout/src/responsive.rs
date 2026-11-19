@@ -147,7 +147,7 @@ mod tests {
             chosen(r#"<img srcset="b.png 2x">"#, screen),
             Some(("b.png".into(), 2.0))
         );
-        // Widths with `sizes` on the 756 px window.
+        // Widths with `sizes` on the 780 px window.
         let widths = r#"srcset="s.jpg 320w, m.jpg 640w, l.jpg 1280w""#;
         assert_eq!(
             pick(&format!(r#"<img src="x.jpg" {widths} sizes="200px">"#)).as_deref(),

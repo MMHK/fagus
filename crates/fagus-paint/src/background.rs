@@ -407,14 +407,15 @@ fn text_mask_edges(text: &Arc<MaskPaint>, border_box: RectF, items: &mut Vec<Ite
 }
 
 /// The area a fixed background layer (`background-attachment: fixed`) is sized and positioned
-/// in when Chrome prints: the window it loaded the document in, 756 × 469 CSS pixels, at the top
-/// left of every page, margins included (Chrome 157, measured: `center / 50% 50%` draws an
-/// image 378 × 234.5 pixels large at (189, 117.25) on each page).
+/// in when Chrome prints: the window it loaded the document in, 780 × 380 CSS pixels on Linux
+/// (scroll bars included), at the top left of every page, margins included (Chrome 157,
+/// measured: `center / 50% 50%` draws an image 390 × 190 pixels large at (195, 95) on each
+/// page).
 const FIXED_VIEWPORT: RectF = RectF {
     x: 0.0,
     y: 0.0,
-    width: 756.0,
-    height: 469.0,
+    width: 780.0,
+    height: 380.0,
 };
 
 /// Where and how an image layer is painted: the properties of a background layer (CSS

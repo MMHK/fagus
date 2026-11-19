@@ -73,7 +73,7 @@ fn table_parts_resolve_percentage_offsets_against_specified_heights() {
 
 #[test]
 fn sticky_boxes_stick_in_the_window_and_in_fixed_boxes() {
-    // Outside scroll containers, the window Chrome prints from (469px tall) is the viewport of
+    // Outside scroll containers, the window Chrome prints from (380px tall) is the viewport of
     // the flow, at the start of the first page; that of a fixed box's content is the page area.
     let (document, pages) = render(
         ".t { position: sticky; top: 30px; height: 20px; width: 50px }
@@ -99,15 +99,15 @@ fn sticky_boxes_stick_in_the_window_and_in_fixed_boxes() {
 fn sticky_boxes_stick_in_the_window_in_the_flow_of_pages() {
     // A sticky box on a later page moves in the flow of pages laid end to end, where the window
     // lies at the start of the first page, within its containing block whole: from 600px down
-    // that flow (the top of the third page) to 469px less its `bottom` and height, 220px up, onto
-    // the page before (page4 probes st8, st9; Chrome 157).
+    // that flow (the top of the third page) to 380px less its `bottom` and height, 310px up,
+    // across the end of the first page (page4 probes st8, st9; Chrome 157 on Linux).
     let (document, pages) = render(
         ".c { height: 700px; width: 200px } .s { position: sticky; bottom: 50px; height: 40px }",
         "<div class=c><div style='height: 600px'></div><div class=s></div></div>",
     );
     assert_eq!(pages.len(), 3);
     let (_, top, _) = find(&pages[2], &document, "s").expect("sticky box");
-    assert_eq!(top, -221.0);
+    assert_eq!(top, -310.0);
     // Chrome keeps the offsets of the screen it loads the document on: where rules for the
     // screen only lay the document out otherwise there, the box keeps its place (corpus
     // report-ledger-sticky, whose table scrolls on the screen).

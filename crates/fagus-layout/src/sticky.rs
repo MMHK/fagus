@@ -38,8 +38,10 @@ impl Area {
 }
 
 /// The window Chrome prints a document from, in CSS pixels: the viewport of the sticky boxes in
-/// the flow of the pages (Chrome 157, measured; the same window as that of fixed backgrounds).
-pub(crate) const WINDOW: (f32, f32) = (756.0, 469.0);
+/// the flow of the pages (Chrome 157 on Linux, measured; the same window as that of fixed
+/// backgrounds). Chrome takes 15 pixels off its height where the document is wider than the
+/// window on the screen, for the scroll bar below it, which Fagus does not lay out.
+pub(crate) const WINDOW: (f32, f32) = (780.0, 380.0);
 
 /// Where the content of the pages lies in the flow of pages, laid end to end as Chrome lays
 /// them out (its stitched coordinates): there the window is the viewport of the sticky boxes,
