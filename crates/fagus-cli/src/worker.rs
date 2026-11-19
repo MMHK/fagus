@@ -156,6 +156,8 @@ struct Request {
     #[serde(default)]
     accessible: bool,
     #[serde(default)]
+    forms: bool,
+    #[serde(default)]
     attachments: Vec<Attachment>,
     #[serde(default)]
     factur_x: Option<FacturX>,
@@ -506,7 +508,7 @@ where
             fagus::Conformance::from_level(&level).ok_or_else(|| format!("unknown PDF/A level `{level}`"))?;
         document = document.conformance(level);
     }
-    document = document.tagged(request.tagged);
+    document = document.tagged(request.tagged).forms(request.forms);
     if request.accessible {
         document = document.accessible();
     }
@@ -902,6 +904,26 @@ mod tests {
             frames[1].header.get("maxRss").is_some(),
             cfg!(any(target_os = "linux", target_os = "macos"))
         );
+    }
+
+    #[test]
+    fn makes_form_fields_when_asked() {
+        let html: &[u8] = b"<input name=city value=Berlin>";
+        let mut input = frame(RENDER, &json!({ "id": 1, "html": 0 }), &[html]);
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 2, "html": 0, "forms": true }),
+            &[html],
+        ));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        // The field's appearance is a stream of its own beside the page's.
+        assert_eq!(frames[1].header["pages"], 1);
+        assert_eq!(frames[2].header["pages"], 1);
+        let streams = |pdf: &[u8]| pdf.windows(9).filter(|window| window == b"endstream").count();
+        assert_eq!(streams(&frames[2].blobs[0]), streams(&frames[1].blobs[0]) + 1);
     }
 
     #[test]

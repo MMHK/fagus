@@ -64,6 +64,9 @@ enum Command {
         /// alternative text for images).
         #[arg(long)]
         accessible: bool,
+        /// Make the form controls fields of an interactive form, which readers fill in.
+        #[arg(long)]
+        forms: bool,
         /// Attach a file (repeatable).
         #[arg(long = "attach")]
         attachments: Vec<PathBuf>,
@@ -445,6 +448,7 @@ fn main() -> Result<()> {
             pdfa,
             untagged,
             accessible,
+            forms,
             attachments,
             factur_x,
             profile,
@@ -509,7 +513,7 @@ fn main() -> Result<()> {
             if let Some(level) = pdfa.as_deref().and_then(fagus::Conformance::from_level) {
                 document = document.conformance(level);
             }
-            document = document.tagged(!untagged);
+            document = document.tagged(!untagged).forms(forms);
             if accessible {
                 document = document.accessible();
             }
