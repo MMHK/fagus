@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Renders the corpus plain, encrypted, as PDF/A (1b, 2a, 2b, 2u, 3a, 3b, 3u, 4, 4e, 4f), as PDF/UA-1 and
-# as Factur-X invoices, the invoices also signed (with the test keys of tests/signing), and checks
+# Renders the corpus plain, encrypted, as PDF/A (1b, 2a, 2b, 2u, 3a, 3b, 3u, 4, 4e, 4f), as PDF/UA-1
+# (also encrypted, once without and once with a user password) and as Factur-X invoices, the invoices also signed (with the test keys of tests/signing), and checks
 # the files: every one with `qpdf --check` (https://qpdf.sourceforge.io), the signatures with
 # `openssl cms -verify` (tests/signing/verify.py),
 # the PDF/A and PDF/UA files with veraPDF (https://verapdf.org) against the profile of the level
-# they were written for, and the invoices with Mustang (https://www.mustangproject.org).
+# they were written for, and the invoices with Mustang (https://www.mustangproject.org). veraPDF
+# reads encrypted files only without a user password: the PDF/UA files with one are checked
+# decrypted by qpdf, after qpdf has shown that they allow the extraction for accessibility.
 #
 # Usage: tools/validate.sh [--subset] OUT_DIR
 #
@@ -130,7 +132,7 @@ else
 fi
 for page in "${pages[@]}"; do
   name=$(basename "$(dirname "$page")")-$(basename "$page" .html)
-  for variant in plain encrypted 1b 2a 2b 2u 3a 3b 3u 4 4e 4f ua; do
+  for variant in plain encrypted 1b 2a 2b 2u 3a 3b 3u 4 4e 4f ua ua-encrypted ua-password; do
     echo "$variant $name $page"
   done
 done > "$out/renders.txt"
@@ -150,6 +152,8 @@ render() { # variant name page
     plain) ;;
     encrypted) options=(--user-password user --owner-password owner --permissions print,copy) ;;
     ua) options=(--accessible) ;;
+    ua-encrypted) options=(--accessible --owner-password owner --permissions print) ;;
+    ua-password) options=(--accessible --user-password user --owner-password owner --permissions print,copy) ;;
     factur-x) options=(--pdfa 3b --factur-x "$xml") ;;
     factur-x-ua) options=(--pdfa 3a --accessible --factur-x "$xml") ;;
     factur-x-signed) options=(--pdfa 3b --factur-x "$xml" --sign-p12 "$root/tests/signing/rsa.p12" --sign-reason Rechnung) ;;
@@ -186,7 +190,18 @@ while read -r variant name _; do
   echo "$pdf" >> "$out/files.all"
   case $variant in
     plain | encrypted) ;;
-    ua) echo "$pdf" >> "$out/files.ua1" ;;
+    ua | ua-encrypted) echo "$pdf" >> "$out/files.ua1" ;;
+    ua-password)
+      # veraPDF reads it decrypted, so qpdf checks the permission PDF/UA asks for (7.16).
+      decrypted=${pdf%.pdf}.decrypted.pdf
+      encryption=$("$QPDF" --password=user --show-encryption "$pdf" 2>&1 || true)
+      if grep -q '^extract for accessibility: allowed$' <<< "$encryption" \
+        && "$QPDF" --password=user --decrypt "$pdf" "$decrypted"; then
+        echo "$decrypted" >> "$out/files.ua1"
+      else
+        echo "qpdf: $(basename "$pdf") does not allow the extraction for accessibility or cannot be decrypted"
+        failed=1
+      fi ;;
     factur-x) echo "$pdf" >> "$out/files.3b"; echo "$pdf" >> "$out/files.invoices" ;;
     factur-x-ua)
       echo "$pdf" >> "$out/files.3a"
@@ -210,10 +225,13 @@ echo "$refused renders refused by Fagus as not conforming, see $out/refused.txt"
 summary+=("| Refused by Fagus as not conforming | $refused | | |")
 
 # qpdf: the structure of every file (cross-reference table, streams, object streams), decrypted
-# with the user password where it is encrypted. Warnings (exit status 3) count as errors.
+# with the user password where it is encrypted (the owner password where there is no user
+# password). Warnings (exit status 3) count as errors.
 qpdf_failed=0
 while read -r pdf; do
-  if ! "$QPDF" --password=user --check "$pdf" > "${pdf%.pdf}.qpdf.txt" 2>&1; then
+  password=user
+  [[ $pdf == *.ua-encrypted.pdf ]] && password=owner
+  if ! "$QPDF" --password="$password" --check "$pdf" > "${pdf%.pdf}.qpdf.txt" 2>&1; then
     echo "qpdf: $(basename "$pdf"):"
     grep -v '^checking\|^PDF Version\|^File is not encrypted\|^File is not linearized\|^R = \|^P = \|^User password = ' "${pdf%.pdf}.qpdf.txt" | head -5
     qpdf_failed=$((qpdf_failed + 1))

@@ -778,16 +778,25 @@ makes a PDF that opens for everyone but cannot be printed, copied from or change
 | `Permission::Assemble` (`assemble`) | Inserting, deleting and rotating pages, changing bookmarks |
 
 Screen readers and other assistive technology may always extract the text: PDF 2.0 says to allow
-it in every encrypted file, and Fagus does.
+it in every encrypted file, and Fagus does. No permission takes it away, so `accessible()` and
+`encrypt()` go together (see below).
 
 What to know about encrypted PDFs:
 
 - The permissions are a request to the PDF viewer, which Acrobat and most other viewers honour.
   Anyone who can open the file can read its content, and tools exist that ignore the
   permissions. Only the user password keeps people out.
-- Passwords are used as UTF-8, up to 127 bytes; longer ones are cut there. Viewers differ in how
-  they treat characters beyond ASCII (PDF 2.0 asks for SASLprep, which Fagus does not apply), so
-  passwords of ASCII characters are the safest.
+- Passwords are prepared with SASLprep (RFC 4013), as PDF 2.0 requires, and used as UTF-8, up to
+  127 bytes; longer ones are cut there. SASLprep makes passwords that look the same the same:
+  `ä` typed as one character or as `a` and a combining mark, a no-break space or another space
+  (the ASCII space), ligatures and full-width letters (`ﬁ` is `fi`); soft hyphens and zero-width
+  spaces go. Right-to-left passwords (Arabic, Hebrew) work; one that mixes right-to-left
+  letters with Latin ones, or has a control character, a private-use character or a direction
+  mark, is refused when the PDF is rendered (``the user password cannot be used: …``, which
+  does not show the password). Emoji and other characters newer than Unicode 3.2 are kept.
+  Viewers that follow PDF 2.0 prepare a typed password in the same way; others, and tools such
+  as qpdf, take its UTF-8 as it is, so they need the prepared form, which for most passwords is
+  the password itself.
 - Everything is encrypted: the content of the pages, fonts, images, attachments, the XMP metadata
   and the strings of the document information (title, author), so a search engine or a file
   manager sees no title either.
@@ -798,8 +807,14 @@ What to know about encrypted PDFs:
 - PDF/A forbids encryption, so `encrypt()` cannot go with `pdfA()` or `facturX()` (which
   writes PDF/A-3): rendering fails with ``the document does not meet PDF/A-3b: the PDF cannot be
   encrypted (PDF/A forbids encryption)``. Encrypt a copy of the archived invoice if you need
-  one. Fagus refuses `accessible()` with `encrypt()` as well, so that PDF/UA files stay readable
-  by every assistive technology.
+  one.
+- PDF/UA (`accessible()`) allows encryption, as long as assistive technology may extract the
+  text (ISO 14289-1, §7.16), which every encrypted PDF of Fagus allows, whatever the
+  permissions. The XMP metadata, with the PDF/UA identification and the title, is encrypted
+  like everything else and readable once the PDF is opened, with the user password or without
+  one where there is none; PDF/UA does not ask for more. veraPDF reads encrypted files only
+  without a user password: check the others decrypted (`qpdf --password=… --decrypt`), after
+  `qpdf --show-encryption` has shown `extract for accessibility: allowed`.
 - An encrypted PDF cannot be signed yet: `encrypt()` with `sign()` fails with ``the PDF could
   not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it`` (see
   [Sign the PDF](#sign-the-pdf)).

@@ -324,7 +324,8 @@ pub struct Options {
     /// Images prepared for earlier documents, and where those of this one are kept.
     pub images: Images,
     /// The passwords and permissions of an encrypted PDF. PDF/A forbids encryption, so it
-    /// cannot go with `conformance` (nor, in Fagus, with `accessible`).
+    /// cannot go with `conformance`; with `accessible`, it allows the extraction for
+    /// accessibility, as PDF/UA requires.
     pub encryption: Option<Encryption>,
     /// The fields of an interactive form.
     pub fields: Vec<Field>,
@@ -409,7 +410,7 @@ pub fn write(
     metadata: &Metadata,
     options: &Options,
 ) -> Result<Written, PdfError> {
-    if options.encryption.is_some() && (options.conformance.is_some() || options.accessible) {
+    if options.encryption.is_some() && options.conformance.is_some() {
         return Err(PdfError::Conformance {
             standard: standards(options),
             problems: "the PDF cannot be encrypted (PDF/A forbids encryption)".to_owned(),

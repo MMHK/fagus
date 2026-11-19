@@ -245,9 +245,9 @@ or write PDF/A-2b, which keeps it (see [pdf.md](pdf.md#pdfa-1b)).
 the document does not meet PDF/A-3b: the PDF cannot be encrypted (PDF/A forbids encryption)
 ```
 
-`encrypt()` goes with neither `pdfA()` nor `facturX()`, and not with `accessible()` either (the
-message then names Factur-X or PDF/UA-1). Leave out one of them; see
-[pdf.md](pdf.md#protect-the-pdf-with-a-password).
+`encrypt()` goes with neither `pdfA()` nor `facturX()` (the message then names Factur-X). Leave
+out one of them; see [pdf.md](pdf.md#protect-the-pdf-with-a-password). `accessible()` goes with
+`encrypt()`.
 
 ### Encryption without a password
 
@@ -258,6 +258,17 @@ Encryption needs a user password or an owner password.
 `encrypt()` got neither password, or only empty ones. It throws a
 `Fagus\Exception\InvalidArgumentException` when it is called. An unknown permission, such as
 `'everything'`, throws one too, with the list of permissions.
+
+### A password that cannot be used
+
+```text
+the PDF could not be written: the user password cannot be used: it contains a character that SASLprep (RFC 4013) does not allow in passwords, such as a control character, a private-use character or a direction mark
+```
+
+Passwords are prepared with SASLprep, as PDF 2.0 requires, which refuses control characters
+(a tab, a line break), characters of the private use area, direction marks and the like, and
+right-to-left letters mixed with left-to-right ones. Choose another password; the message never
+shows it. See [pdf.md](pdf.md#protect-the-pdf-with-a-password).
 
 ### An unknown PDF/A level
 

@@ -133,9 +133,12 @@ their values. A file option and the option it reads for cannot be given together
 over the environment variable. An empty password counts as none;
 `--permissions` without a password is an error.
 
-An encrypted PDF differs from run to run, also with `--created`: its keys are random. PDF/A,
-Factur-X and PDF/UA cannot be encrypted: `--pdfa`, `--factur-x` or `--accessible` with a password
-fail with exit code 1.
+An encrypted PDF differs from run to run, also with `--created`: its keys are random. PDF/A and
+Factur-X cannot be encrypted: `--pdfa` or `--factur-x` with a password fail with exit code 1.
+`--accessible` goes with a password: PDF/UA allows encryption, and assistive technology may
+always extract the text. Passwords are prepared with SASLprep, as PDF 2.0 requires (see
+[pdf.md](pdf.md#protect-the-pdf-with-a-password)); one with a control character fails with exit
+code 1.
 
 ## Read and write
 

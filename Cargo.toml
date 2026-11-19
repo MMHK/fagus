@@ -93,6 +93,9 @@ cbc = { version = "=0.2.1", features = ["alloc"] }
 sha2 = "=0.11.1"
 # The salts, keys and initialization vectors of encryption; ahash already depends on it.
 getrandom = "0.3.4"
+# SASLprep (RFC 4013) of passwords: the tables of stringprep (RFC 3454) and NFKC.
+stringprep = "0.1.5"
+unicode-normalization = "0.1.25"
 clap = { version = "4.6.7", features = ["derive"] }
 # The peak resident size of the worker on macOS (getrusage), which it reports with every document.
 nix = { version = "0.31.4", default-features = false, features = ["resource"] }

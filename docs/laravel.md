@@ -92,6 +92,9 @@ return Fagus::view('payslips.show', ['payslip' => $payslip])
     ->download();
 ```
 
+Add `accessible()` for a payslip that screen readers read too: PDF/UA allows encryption, and
+assistive technology may always extract the text, whatever the permissions.
+
 `sign()` takes a `Fagus\Signature` ([php.md](php.md#signature)). A signed invoice, with the
 timestamp of a public time-stamping authority through Laravel's HTTP client:
 

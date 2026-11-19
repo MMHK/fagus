@@ -1,5 +1,5 @@
 # Product and standard names that are not code.
-doc-valid-idents = ["ZUGFeRD", "XRechnung", "PingFang", ".."]
+doc-valid-idents = ["ZUGFeRD", "XRechnung", "PingFang", "SASLprep", ".."]
 # The transcendental functions of the standard library go to the system's libm, whose last bits
 # differ between glibc versions and macOS: what reaches the PDF would differ between platforms.
 # Use the `libm` crate's (libm::sinf, libm::powf …), the same everywhere. `sqrt`, `mul_add` and

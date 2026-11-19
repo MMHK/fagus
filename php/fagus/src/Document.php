@@ -249,9 +249,12 @@ final class Document
      * random password nobody knows is used. The permissions are what the reader may do without
      * the owner password: everything if null, nothing beyond reading if empty. A permission
      * given as a string is a value of {@see Permission} ('print', 'print-low-quality', 'modify',
-     * 'copy', 'annotate', 'fill-forms', 'assemble'). The bytes of an encrypted PDF differ from
-     * run to run. PDF/A, Factur-X and PDF/UA cannot be encrypted: rendering them fails with a
-     * {@see RenderException}.
+     * 'copy', 'annotate', 'fill-forms', 'assemble'). Passwords are prepared with SASLprep, as
+     * PDF 2.0 requires, so that they open the PDF however their characters were typed; one with
+     * a character SASLprep forbids (such as a control character) fails to render. The bytes of
+     * an encrypted PDF differ from run to run. PDF/A and Factur-X cannot be encrypted: rendering
+     * them fails with a {@see RenderException}. An accessible PDF ({@see self::accessible()})
+     * can; assistive technology may always extract its text.
      *
      * @param  list<Permission|string>|null  $permissions
      *

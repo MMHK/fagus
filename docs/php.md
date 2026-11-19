@@ -287,9 +287,13 @@ Fagus::html($html)->encrypt(userPassword: $password, ownerPassword: $admin, perm
 Fagus::html($html)->encrypt(ownerPassword: $admin, permissions: []);  // opens for everyone, read only
 ```
 
-The bytes of an encrypted PDF differ from run to run, since its keys are random. PDF/A forbids
-encryption: with `pdfA()` or `facturX()`, and with `accessible()`, `render()` throws a
-`RenderException`. The passwords are marked `#[\SensitiveParameter]`, so stack traces leave
+Passwords are prepared with SASLprep (RFC 4013), as PDF 2.0 requires, so that a password opens
+the PDF however its characters were typed (`ä` composed or decomposed, a no-break space or a
+space); a password with a character SASLprep forbids, such as a control character, makes
+`render()` throw a `RenderException`. The bytes of an encrypted PDF differ from run to run, since
+its keys are random. PDF/A forbids encryption: with `pdfA()` or `facturX()`, `render()` throws a
+`RenderException`. `accessible()` and `encrypt()` go together: assistive technology may always
+extract the text, as PDF/UA requires. The passwords are marked `#[\SensitiveParameter]`, so stack traces leave
 them out. See [pdf.md](pdf.md#protect-the-pdf-with-a-password).
 
 ### `created(DateTimeInterface $date): Document`

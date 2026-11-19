@@ -126,8 +126,10 @@ The header of `R`; fields other than `id` and `html` may be left out:
   `ownerPassword` lifts the restrictions; either may be left out (or be `null` or empty), but
   not both. `permissions` lists what the PDF allows without the owner password: `print`,
   `print-low-quality`, `modify`, `copy`, `annotate`, `fill-forms` and `assemble`; everything if
-  left out or `null`, nothing beyond reading if empty. An unknown permission, no password, and
-  `encryption` together with `conformance`, `facturX` or `accessible` are answered with `E`.
+  left out or `null`, nothing beyond reading if empty. The passwords are prepared with SASLprep
+  (RFC 4013), as PDF 2.0 requires. An unknown permission, no password, a password that SASLprep
+  refuses, and `encryption` together with `conformance` or `facturX` are answered with `E`;
+  together with `accessible` it writes an encrypted PDF/UA file.
   Added in 0.3.0: an older worker ignores the field and writes the PDF unencrypted, which the
   caller notices by the missing `encrypted` in `P`.
 

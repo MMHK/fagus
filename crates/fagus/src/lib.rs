@@ -317,8 +317,9 @@ impl Document {
 
     /// Protects the PDF with passwords: encrypted with AES-256, as PDF 2.0 defines it. The
     /// key, salts and initialization vectors are random, so the bytes differ from run to run
-    /// (unless [`Encryption::seed`] fixes them, for tests). PDF/A, Factur-X and PDF/UA cannot be
-    /// encrypted: rendering such a document fails.
+    /// (unless [`Encryption::seed`] fixes them, for tests). PDF/A and Factur-X cannot be
+    /// encrypted: rendering such a document fails. An accessible PDF ([`Document::accessible`])
+    /// can: assistive technology may always extract its text, whatever the permissions say.
     ///
     /// ```
     /// use fagus::{Document, Encryption, Permission};
@@ -420,11 +421,6 @@ impl Document {
             (
                 "Factur-X",
                 "the invoice cannot be encrypted (it is PDF/A-3, which forbids encryption)",
-            )
-        } else if self.accessible {
-            (
-                "PDF/UA-1",
-                "the PDF cannot be encrypted (Fagus writes PDF/UA unencrypted, for every assistive technology)",
             )
         } else {
             return None;

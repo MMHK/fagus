@@ -127,6 +127,10 @@ impl Encryption {
 
     /// The password needed to open the PDF. Without one (or with an empty one), the PDF opens
     /// without a password, with only the permissions given.
+    ///
+    /// Both passwords are prepared with SASLprep (RFC 4013), as PDF 2.0 requires, and cut to
+    /// 127 bytes of UTF-8; one with a character SASLprep forbids (a control or private-use
+    /// character, a direction mark) makes writing the PDF fail.
     #[must_use]
     pub fn user_password(mut self, password: impl Into<String>) -> Self {
         self.user_password = Some(password.into());
@@ -160,7 +164,8 @@ impl Encryption {
     }
 
     /// The value of `P`: the permissions, with the bits that must be set (7, 8, 13 to 32) and
-    /// bit 10, the extraction for accessibility, which PDF 2.0 says to set always.
+    /// bit 10, the extraction for accessibility, which PDF 2.0 says to set always and PDF/UA
+    /// requires (ISO 14289-1, §7.16): no permission takes it away.
     fn p(&self) -> u32 {
         let reserved = 0xFFFF_F0C0;
         let accessibility = 1 << 9;
@@ -235,6 +240,8 @@ impl Encryptor {
                 "encryption needs a user password or an owner password".to_owned(),
             ));
         }
+        let user = prepared(user, "user")?;
+        let owner = owner.map(|owner| prepared(owner, "owner")).transpose()?;
         let mut random = match encryption.seed {
             Some(seed) => Random::Seeded { seed, counter: 0 },
             None => Random::System,
@@ -242,9 +249,8 @@ impl Encryptor {
         let key: [u8; 32] = random.bytes()?;
         // Without an owner password, one nobody knows.
         let random_owner: [u8; 32] = random.bytes()?;
-        let owner = owner.map_or(&random_owner[..], str::as_bytes);
-        let user = password(user.as_bytes());
-        let owner = password(owner);
+        let owner = owner.as_deref().unwrap_or(&random_owner[..]);
+        let user = &user[..];
 
         // Algorithm 8: U and UE.
         let user_validation: [u8; 8] = random.bytes()?;
@@ -360,9 +366,76 @@ impl Encryptor {
     }
 }
 
-/// A password as the security handler takes it: its UTF-8 bytes, at most 127 of them.
-fn password(password: &[u8]) -> &[u8] {
-    &password[..password.len().min(127)]
+/// A password as the security handler takes it (ISO 32000-2, §7.6.4.3.3): prepared with
+/// SASLprep, as UTF-8, at most 127 bytes of it; the error names the password (`which`) and why
+/// it cannot be used, without showing any of it.
+fn prepared(password: &str, which: &str) -> Result<Vec<u8>, PdfError> {
+    let mut bytes = saslprep(password)
+        .map_err(|reason| PdfError::Write(format!("the {which} password cannot be used: {reason}")))?
+        .into_bytes();
+    if bytes.is_empty() && !password.is_empty() {
+        return Err(PdfError::Write(format!(
+            "the {which} password cannot be used: it has only characters that SASLprep (RFC 4013) \
+             removes, such as soft hyphens and zero-width spaces"
+        )));
+    }
+    bytes.truncate(127);
+    Ok(bytes)
+}
+
+/// A password prepared with SASLprep (RFC 4013), the profile of stringprep (RFC 3454) that PDF
+/// 2.0 asks for: spaces of other kinds become the ASCII space, characters such as the soft
+/// hyphen go, the rest is normalized to NFKC, and characters that a password may not contain
+/// are refused. As for a query, characters that Unicode 3.2 had not yet assigned (such as
+/// emoji) are allowed: a viewer that prepares the typed password keeps them the same way.
+fn saslprep(password: &str) -> Result<String, &'static str> {
+    use stringprep::tables;
+    use unicode_normalization::UnicodeNormalization as _;
+
+    let mapped = password
+        .chars()
+        .filter(|&c| !tables::commonly_mapped_to_nothing(c))
+        .map(|c| {
+            if tables::non_ascii_space_character(c) {
+                ' '
+            } else {
+                c
+            }
+        });
+    let normalized: String = mapped.nfkc().collect();
+    let prohibited = |c: char| {
+        tables::non_ascii_space_character(c)
+            || tables::ascii_control_character(c)
+            || tables::non_ascii_control_character(c)
+            || tables::private_use(c)
+            || tables::non_character_code_point(c)
+            || tables::surrogate_code(c)
+            || tables::inappropriate_for_plain_text(c)
+            || tables::inappropriate_for_canonical_representation(c)
+            || tables::change_display_properties_or_deprecated(c)
+            || tables::tagging_character(c)
+    };
+    if normalized.chars().any(prohibited) {
+        return Err(
+            "it contains a character that SASLprep (RFC 4013) does not allow in \
+                    passwords, such as a control character, a private-use character or a \
+                    direction mark",
+        );
+    }
+    // Right-to-left text: no letters written left to right with it, and right-to-left
+    // characters at both ends (RFC 3454, §6).
+    if normalized.chars().any(tables::bidi_r_or_al)
+        && (normalized.chars().any(tables::bidi_l)
+            || !normalized.chars().next().is_some_and(tables::bidi_r_or_al)
+            || !normalized.chars().next_back().is_some_and(tables::bidi_r_or_al))
+    {
+        return Err(
+            "it mixes right-to-left letters with left-to-right ones, or does not start \
+                    and end with a right-to-left character, which SASLprep (RFC 4013) does not \
+                    allow",
+        );
+    }
+    Ok(normalized)
 }
 
 /// Algorithm 2.B of ISO 32000-2: the hash of a password with a salt (and, for the owner
@@ -519,7 +592,7 @@ pub(crate) mod tests {
             value("/UE"),
             value("/Perms"),
         );
-        let password = super::password(password.as_bytes());
+        let password = &prepared(password, "user").expect("a usable password")[..];
         let salt = |bytes: &[u8]| -> [u8; 8] { bytes.try_into().expect("8 bytes") };
         let (intermediate, encrypted, owner) = if hash(password, &salt(&o[32..40]), &u[..48]) == o[..32] {
             (hash(password, &salt(&o[40..48]), &u[..48]), oe, true)
@@ -685,6 +758,56 @@ pub(crate) mod tests {
         assert_eq!(decrypt(&encryptor.key, &string("/CheckSum")), [1, 2]);
         assert_eq!(parse::entry(&text, "/Length"), Some(" 3"));
         assert_eq!(encryptor.encrypt_strings(b"<</T(open"), None);
+    }
+
+    #[test]
+    fn prepares_passwords_with_saslprep() {
+        let prepared = |password: &str| saslprep(password).map_err(|_| ());
+        assert_eq!(prepared("open sesame").as_deref(), Ok("open sesame"));
+        // Composed and decomposed umlauts are the same password.
+        assert_eq!(prepared("Pa\u{308}sswo\u{308}rd").as_deref(), Ok("Pässwörd"));
+        assert_eq!(prepared("Pässwörd").as_deref(), Ok("Pässwörd"));
+        // Other spaces are the ASCII space; soft hyphens and zero-width spaces go.
+        assert_eq!(prepared("a\u{a0}b\u{3000}c").as_deref(), Ok("a b c"));
+        assert_eq!(prepared("pass\u{ad}wo\u{200b}rd").as_deref(), Ok("password"));
+        // NFKC: the ligature ﬁ and the full-width A.
+        assert_eq!(prepared("\u{fb01}\u{ff21}").as_deref(), Ok("fiA"));
+        // The examples of RFC 4013, §3.
+        assert_eq!(prepared("I\u{ad}X").as_deref(), Ok("IX"));
+        assert_eq!(prepared("\u{aa}").as_deref(), Ok("a"));
+        assert_eq!(prepared("\u{2168}").as_deref(), Ok("IX"));
+        assert!(prepared("\u{7}").is_err());
+        assert!(prepared("\u{627}1").is_err());
+        // Right-to-left passwords, and emoji, which Unicode 3.2 did not have.
+        assert_eq!(prepared("كلمة السر").as_deref(), Ok("كلمة السر"));
+        assert_eq!(prepared("\u{627}1\u{628}").as_deref(), Ok("\u{627}1\u{628}"));
+        assert!(prepared("كلمةabc").is_err());
+        assert_eq!(prepared("geheim 🙂").as_deref(), Ok("geheim 🙂"));
+        // Private use, tabs and direction marks are refused.
+        assert!(prepared("\u{e000}").is_err());
+        assert!(prepared("a\tb").is_err());
+        assert!(prepared("a\u{200e}b").is_err());
+
+        // 127 bytes at most, after the preparation.
+        let long = "ä".repeat(100);
+        assert_eq!(super::prepared(&long, "user").expect("usable").len(), 127);
+        let error = super::prepared("geheim\u{7}", "owner")
+            .expect_err("refused")
+            .to_string();
+        assert!(error.contains("the owner password cannot be used"), "{error}");
+        assert!(!error.contains("geheim"), "{error}");
+        assert!(super::prepared("\u{ad}", "user").is_err());
+        assert!(
+            Encryptor::new(&Encryption::new().user_password("a\u{1}b")).is_err(),
+            "a control character"
+        );
+        // The prepared password opens the file, however it was written.
+        let encryptor =
+            Encryptor::new(&Encryption::new().user_password("Pa\u{308}ss\u{a0}1")).expect("encryptor");
+        assert_eq!(
+            file_key(encryptor.dictionary(), "Päss 1"),
+            Some((encryptor.key, false))
+        );
     }
 
     #[test]

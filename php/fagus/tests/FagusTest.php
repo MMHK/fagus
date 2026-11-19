@@ -641,6 +641,30 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_encrypts_accessible_pdfs_with_passwords_beyond_ascii(): void
+    {
+        $html = '<!DOCTYPE html><html lang="de"><title>Gehalt</title><h1>Gehalt</h1><p>Gehaltsabrechnung</p>';
+        // Decomposed umlauts and a no-break space: SASLprep makes them "Pässwörd 1".
+        $pdf = Fagus::html($html)->accessible()->encrypt("Pa\u{308}sswo\u{308}rd\u{a0}1", permissions: [])->render();
+        // Nothing allowed but the extraction for accessibility, which PDF/UA requires.
+        $this->assertMatchesRegularExpression('~/P -3392/~', $pdf->bytes());
+
+        $qpdf = trim((string) shell_exec('command -v qpdf 2>/dev/null'));
+        if ($qpdf !== '') {
+            $file = tempnam(sys_get_temp_dir(), 'fagus');
+            $pdf->save($file);
+            exec(escapeshellarg($qpdf).' --password='.escapeshellarg('Pässwörd 1').' --show-encryption '.escapeshellarg($file).' 2>&1', $output, $status);
+            $this->assertSame(0, $status, implode("\n", $output));
+            $this->assertContains('extract for accessibility: allowed', $output);
+            unlink($file);
+        }
+
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('the user password cannot be used: it contains a character that SASLprep');
+        Fagus::html($html)->encrypt("geheim\u{7}")->render();
+    }
+
+    #[Test]
     public function it_names_the_pdf_a_levels_for_an_unknown_one(): void
     {
         try {
