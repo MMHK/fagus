@@ -73,6 +73,7 @@ document can be rendered with variations.
 | `conformance(Conformance)` | PDF/A |
 | `tagged(bool)` | Whether the PDF is tagged (default `true`) |
 | `accessible()` | PDF/UA-1 |
+| `forms(bool)` | Whether form controls become the fields of an interactive form (default `false`) |
 | `attach(Attachment)` | Attaches a file |
 | `factur_x(Vec<u8>)` | A ZUGFeRD / Factur-X invoice with this XML, its profile read from the XML |
 | `factur_x_profile(Vec<u8>, FacturXProfile)` | The same with the profile given |

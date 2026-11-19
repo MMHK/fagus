@@ -48,6 +48,7 @@ file as HTML.
 | `--pdfa <LEVEL>` | none | Write PDF/A: `1b`, `2b`, `2u`, `2a`, `3b`, `3u`, `3a`, `4`, `4e` or `4f` |
 | `--untagged` | off | Write a PDF without tags (the logical structure screen readers read) |
 | `--accessible` | off | Write PDF/UA-1; needs a title, a language and alternative text for images |
+| `--forms` | off | Make the form controls fields of an interactive form, which readers fill in ([pdf.md](pdf.md#fill-in-forms)) |
 | `--attach <FILE>` | none | Attach a file; repeatable |
 | `--factur-x <FILE>` | none | Make a ZUGFeRD / Factur-X invoice with this XML |
 | `--profile <PROFILE>` | the XML's | The invoice profile: `minimum`, `basicwl`, `basic`, `en16931`, `extended` or `xrechnung` |

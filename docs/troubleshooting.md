@@ -308,6 +308,8 @@ first `<style>` element, the URL of a linked or imported stylesheet, the name gi
 | `font.missing-glyph` | No font has a glyph for some characters; they are drawn as empty boxes ([fonts.md](fonts.md)). |
 | `frame.limit` | The documents in frames reach their limit; later frames show nothing. |
 | `layout.too-many-pages` | The document reaches the limit of 10,000 pages; what follows is left out. |
+| `pdf.layers-unsupported` | PDF/A-1 has no layers: what `-fagus-layer` puts on one is printed as if it had none ([extensions.md](extensions.md#layers-that-show-on-screen-or-in-print)). |
+| `pdf.layer-shown` | PDF/A and PDF/UA do not let layers depend on printing: a layer with `screen` or `print` shows in both. |
 | `pdf.conformance-raised` | Factur-X needs PDF/A-3; a PDF/A-2 level was raised to the PDF/A-3 level of the same letter, PDF/A-1b to PDF/A-3b. |
 | `invoice.profile-mismatch` | The invoice XML declares another profile than the one given. |
 | `invoice.profile-unknown` | The invoice XML declares no Factur-X profile. |

@@ -1,6 +1,6 @@
 # Extensions
 
-Fagus renders standard CSS. Where a document needs something that no CSS specification offers, Fagus has an extension. Its name starts with `-fagus-`, browsers ignore it, and `@supports` tells whether it is there (see [ADR 4](adr/0004-extensions-only-where-css-has-no-way.md)).
+Fagus renders standard CSS. Where a document needs something that no CSS specification offers, Fagus has an extension: carry-over rows where a table breaks, and layers that show on screen or in print only. Its name starts with `-fagus-`, browsers ignore it, and `@supports` tells whether it is there (see [ADR 4](adr/0004-extensions-only-where-css-has-no-way.md)).
 
 ## Carry-over rows at page breaks
 
@@ -77,3 +77,49 @@ A receipt printer prints on a roll and cuts the paper where the document ends. *
 
 Without Fagus, a browser prints the page at the size of `size`. `@supports (-fagus-page-height: fit-content)` tells the two apart. There is no need to render a document several times to find the height that fits it on one page: one render with `fit-content` gives that page, and the [layout](php.md#find-where-elements-landed) of the PDF tells where its content ended up.
 
+## Layers that show on screen or in print
+
+A PDF can hold content on layers (optional content groups), which a reader shows and hides in the
+viewer's list of layers, and which may show on screen only or in print only: a note "Pay online
+with the link below" that a printout leaves out, or a "Copy" stamp that only the printout has.
+**`-fagus-layer`** puts what an element paints on such a layer:
+
+| Value | Effect |
+|---|---|
+| `none` (initial) | No layer of its own |
+| `<string>` | A layer of that name, shown on screen and in print until the reader hides it |
+| `<string> screen` | A layer shown on screen only: printing leaves it out |
+| `<string> print` | A layer shown in print only: the viewer hides it on screen |
+
+```html
+<style>
+  .online-note { -fagus-layer: "Notes" screen; }
+  .copy-stamp { -fagus-layer: "Copy" print; position: fixed; top: 40mm; right: 20mm; }
+  .details { -fagus-layer: "Details"; }
+  /* Browsers would print the note and show the stamp. */
+  @supports not (-fagus-layer: none) { .online-note, .copy-stamp { display: none; } }
+</style>
+<p class="online-note">Pay online with the link below.</p>
+<div class="copy-stamp">COPY</div>
+```
+
+- Everything the element paints is on the layer: its background, borders, text and images and
+  those of its descendants. Like `opacity` below 1, a layer makes the element a stacking context.
+- Elements with the same name share one layer. Give them the same `screen` or `print`: where
+  they differ, the first one painted decides. The viewer lists the layers in the order they are
+  first painted.
+- A layer inside another shows only where both are shown.
+- The content stays in the logical structure of a tagged PDF, and links stay where they are.
+  Form fields (see [The PDF](pdf.md#fill-in-forms)) on a layer show and hide with it.
+- PDF/A-2, PDF/A-3, PDF/A-4 and PDF/UA-1 allow layers, but not ones that depend on printing: there,
+  `screen` and `print` are ignored, the layer shows on screen and in print, and the PDF gets a
+  `pdf.layer-shown` warning. PDF/A-1 has no layers at all: the content is printed as if it had
+  none, with a `pdf.layers-unsupported` warning.
+
+CSS has no way to say this. `@media screen` and `@media print` choose the styles of a whole
+rendering for a medium, and Fagus renders for print: rules in `@media screen` describe how a
+browser shows the page, often a different layout (navigation, a narrower column), not content
+that the PDF should show on a screen. Taking them for layers would change the PDFs of existing
+documents and could not work where the two media lay out differently. `visibility` and `display`
+hide content for every reader. So the layer is an extension, with the reasons in
+[ADR 7](adr/0007-layers-for-screen-and-print.md).

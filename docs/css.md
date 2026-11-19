@@ -475,6 +475,9 @@ buttons, "Choose File", date placeholders such as `mm/dd/yyyy`, the decimal sepa
 in the language of the control's `lang`, else the engine's `locale`, else American English. Chrome
 writes them in the language of its user interface. See [Fonts](fonts.md#the-language-of-form-controls).
 
+With `forms()`, the controls become fields that a reader fills in, and look the same
+([The PDF](pdf.md#fill-in-forms)).
+
 ## Media queries and feature queries
 
 Media queries are evaluated for print:
@@ -499,7 +502,7 @@ A Tailwind document with `print:` variants or a stylesheet with `@media print { 
 its print styles.
 
 `@supports` knows the properties and values Fagus parses (also its own, such as
-`-fagus-repeat` and `-fagus-page-height`), and answers `selector()`, `font-tech()`, `font-format()` and `at-rule()` as
+`-fagus-repeat`, `-fagus-page-height` and `-fagus-layer`), and answers `selector()`, `font-tech()`, `font-format()` and `at-rule()` as
 Chrome does.
 
 ## Animations and transitions

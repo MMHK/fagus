@@ -213,6 +213,18 @@ the document does not meet PDF/UA-1: the document has no title (add a <title>); 
 `accessible()` also works together with PDF/A-2a, PDF/A-3a and Factur-X, but not with PDF/A-1b
 and PDF/A-4, which are based on other PDF versions than PDF/UA-1. See [pdf.md](pdf.md).
 
+### `forms(bool $forms = true): Document`
+
+Makes the form controls of the document the fields of an interactive form, which a reader fills
+in in a PDF viewer: text fields, text areas, checkboxes, radio buttons and drop-down lists, named
+after their `name`, with their values and with `readonly`, `disabled`, `required` and
+`maxlength`. The PDF looks the same as without it. Off by default, as Chrome prints controls as
+they look; controls in an `inert` element stay so. See [pdf.md](pdf.md#fill-in-forms).
+
+```php
+Fagus::html('<label>Name <input name="name" required></label>')->forms()->save('form.pdf');
+```
+
 ### `attach(string $name, string $data, string $mime = 'application/octet-stream', Relationship $relationship = Relationship::Unspecified, ?string $description = null): Document`
 
 Attaches a file to the PDF. `$relationship` says how the file relates to the document (PDF 2.0

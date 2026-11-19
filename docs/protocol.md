@@ -68,6 +68,7 @@ The header of `R`; fields other than `id` and `html` may be left out:
   "conformance": "3b",
   "tagged": true,
   "accessible": false,
+  "forms": false,
   "attachments": [{ "name": "data.csv", "mime": "text/csv", "relationship": "supplement", "description": "Rohdaten", "blob": 3 }],
   "facturX": { "blob": 4, "profile": "en16931", "version": "1.0", "description": "Factur-X/ZUGFeRD invoice" },
   "created": "2026-11-02T12:00:00Z",
@@ -97,6 +98,9 @@ The header of `R`; fields other than `id` and `html` may be left out:
   left out).
 - `accessible`: whether the PDF conforms to PDF/UA-1 (and is tagged). The document needs a
   title, a language and alternative text for every image; otherwise the answer is `E`.
+- `forms`: whether the form controls become the fields of an interactive form (`false` if left
+  out; see [pdf.md](pdf.md#fill-in-forms)). A worker of an older release ignores it and prints
+  the controls as they look.
 - `attachments`: `name` and `mime` are required. `relationship` is `source`, `data`,
   `alternative`, `supplement` or `unspecified` (`unspecified` if left out). `description` may be
   left out (or be `null` or empty): PDF/A-3 and PDF/UA require one, so the worker then describes

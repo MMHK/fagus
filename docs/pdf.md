@@ -1,10 +1,10 @@
 # The PDF
 
 This page describes the PDF file Fagus writes and the options that change it: metadata, links and
-bookmarks, tagged and accessible PDF, PDF/A, attachments, electronic invoices, passwords and
-digital signatures. How the pages look is up to the HTML and CSS (see [css.md](css.md) and
-[paged-media.md](paged-media.md)); the methods of the document builder are described in
-[php.md](php.md).
+bookmarks, fill-in forms, tagged and accessible PDF, PDF/A, attachments, electronic invoices,
+passwords and digital signatures. How the pages look is up to the HTML and CSS (see
+[css.md](css.md) and [paged-media.md](paged-media.md)); the methods of the document builder are
+described in [php.md](php.md).
 
 Every PDF Fagus writes is a PDF 1.7 file (PDF 1.4 for PDF/A-1b, PDF 2.0 for PDF/A-4) with:
 
@@ -12,6 +12,8 @@ Every PDF Fagus writes is a PDF 1.7 file (PDF 1.4 for PDF/A-1b, PDF 2.0 for PDF/
 - the title, language, author, subject and keywords of the document;
 - links and the document outline (bookmarks) from the headings;
 - the logical structure for screen readers (tagged PDF), unless you turn it off;
+- with `forms()`, the fields of an interactive form; with `-fagus-layer`, layers
+  ([extensions.md](extensions.md#layers-that-show-on-screen-or-in-print));
 - compressed streams and object streams (not in PDF/A-1b, which PDF 1.4 lacks them for).
 
 ```php
@@ -110,6 +112,63 @@ Deeper levels nest under the entry before them. Elements in margin boxes make no
 entry with an empty title is left out. A document without entries has no outline, except in
 PDF/UA, which asks for one.
 
+## Fill-in forms
+
+Chrome prints form controls as they look, and so does Fagus by default. With `forms()`, the
+controls become the fields of an interactive form, which a reader fills in in a PDF viewer (an
+AcroForm), and the PDF looks the same as without it:
+
+```php
+Fagus::html($html)->forms()->save('application.pdf');
+```
+
+On the command line, the flag is `--forms`; in Rust, `Document::forms(true)`.
+
+| Control | Field |
+|---|---|
+| `<input>` of type `text`, `search`, `email`, `url`, `tel`, `number`, `password`, `date`, `time`, `datetime-local`, `month` or `week` | A text field with the `value` |
+| `<textarea>` | A text field of several lines with its text |
+| `<input type=checkbox>` | A checkbox, on where `checked` |
+| `<input type=radio>` | A radio button; those with the same `name` are one field, of which one is on |
+| `<select>` (without `multiple` and `size`) | A drop-down list with its options, the `selected` one chosen |
+
+Buttons, file inputs, sliders, color wells, list boxes and `<select multiple>` stay as they look.
+So does every control inside an element with `inert`, for a sample that is filled in for
+illustration:
+
+```html
+<p>Example: <span inert><input value="DE89 3704 0044 0532 0130 00"></span></p>
+<p>Your IBAN: <input name="iban" maxlength="34" required></p>
+```
+
+What the fields get from the controls:
+
+- **The name** is the `name`, else the `id`, else `field1`, `field2`, … in document order.
+  Periods make a tree of fields, as PDF reads names: `customer.name` and `customer.email` are
+  `name` and `email` in `customer`. A name that is taken gets `_2`, `_3`, …
+- **The value** is the `value` (a number only if it is valid, an email address trimmed), the text
+  of a `<textarea>`, the `value` (or text) of the chosen option; a checkbox or radio button is on
+  in the state named by its `value` (`on` without one). A password field stores no value; it
+  shows its dots. A date stays as its `value` is written (`2026-11-19`), while the field shows it
+  as the control does.
+- **Flags:** `readonly` and `disabled` (also of a `<fieldset>`) make the field read-only,
+  `required` required, `maxlength` its maximum length.
+- **The description** for screen readers is the `aria-label`, the `title`, the text of the
+  `<label>`, the `placeholder` or the name.
+- **The text** a reader types has the font size, color and `text-align` of the control, in
+  Helvetica, the font every viewer has.
+
+Every field shows what the control shows, its value or placeholder in the control's fonts, drawn
+in the field's appearance; the frame of the control (its border and background, the arrow of a
+`<select>`) stays on the page below it. A viewer shows the PDF as it is printed, and redraws a
+field only when a reader changes it. A control that is repeated, such as one in a header that
+shows on every page, is one field with a place on each page: filling one fills all.
+
+Fields go with PDF/A-1b to PDF/A-4 and with PDF/UA-1: in a tagged PDF each field is a form field
+of the logical structure (`Form`) with its widget, and the description is its alternative text.
+A control inside a transformed box (`transform`) stays as it looks, since a field cannot be
+turned.
+
 ## Tagged PDF
 
 A tagged PDF contains the logical structure of the document: what is a heading, a paragraph, a
@@ -128,6 +187,7 @@ What Fagus tags:
   their `alttext` (or TeX annotation, or text);
 - links, with their annotations and a description (their `aria-label`, `title`, text, or the
   `alt` of their images);
+- with `forms()`, form fields with their widgets (see [Fill-in forms](#fill-in-forms));
 - `<blockquote>`, `<q>`, `<article>`, `<section>`, `<figcaption>`, `<code>`, `<kbd>`, `<samp>`,
   `<em>`, `<strong>`, and `<abbr title>` with its expansion;
 - changes of language (`lang` on an element);

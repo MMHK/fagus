@@ -67,7 +67,7 @@ These forward to `Fagus\Document` and take the same arguments; [php.md](php.md#d
 describes each one:
 
 `baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `resolver()`, `pdfA()`, `tagged()`,
-`accessible()`, `attach()`, `facturX()`, `encrypt()`, `created()`, `sign()`, `strict()`,
+`accessible()`, `forms()`, `attach()`, `facturX()`, `encrypt()`, `created()`, `sign()`, `strict()`,
 `reportLayout()`.
 
 ```php
