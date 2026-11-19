@@ -50,6 +50,11 @@ krilla = { version = "0.8.2", default-features = false, features = ["raster-imag
 # Reads the PDF files shown as images (their pages, sizes and content streams); krilla's `pdf`
 # already depends on it.
 hayro-syntax = { version = "0.7.2", default-features = false, features = ["std"] }
+# Extracts the page of a PDF image as krilla does, to check before that every object it refers to
+# exists (krilla cannot write a page that refers to missing objects); krilla's `pdf` already
+# depends on both.
+hayro-write = "0.7.0"
+pdf-writer = "0.15.0"
 rayon = "1.12.0"
 imagesize = "0.14.0"
 krilla-svg = "0.8.1"

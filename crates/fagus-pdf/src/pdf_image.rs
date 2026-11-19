@@ -12,7 +12,7 @@ use std::io::Read;
 use std::sync::Arc;
 
 use fagus_layout::{Image, ImageFormat};
-use hayro_syntax::object::{Array, Name, Stream};
+use hayro_syntax::object::{Array, Dict, MaybeRef, Name, ObjRef, Object, Stream};
 use hayro_syntax::{LoadPdfError, Pdf, PdfVersion};
 
 /// The largest PDF file shown as an image.
@@ -76,6 +76,9 @@ pub fn probe(data: Arc<Vec<u8>>, fragment: Option<&str>) -> Result<Image, PdfIma
         return Err(PdfImageError::NoPage(page + 1, pages.len()));
     };
     content_size(chosen.raw())?;
+    if !readable(&pdf, page as usize) || !complete(&pdf, page as usize) {
+        return Err(PdfImageError::Broken);
+    }
     let (width, height) = chosen.render_dimensions();
     // A user unit makes the units of the page larger than a point (PDF 1.6).
     let unit = chosen
@@ -114,18 +117,132 @@ pub(crate) fn open(data: &Arc<Vec<u8>>) -> Result<Pdf, PdfImageError> {
     if pdf.pages().is_empty() {
         return Err(PdfImageError::Broken);
     }
+    // hayro-syntax repairs a broken cross-reference table the first time it fails to read an
+    // object through it, which changes what later reads find. Reading every object once does
+    // that now: what [`complete`] finds for a page is then what krilla finds as it writes it.
+    for _ in pdf.objects() {}
     Ok(pdf)
+}
+
+/// Whether every object that krilla's extraction of the page `page` of `pdf` reads can be read
+/// as it reads it: hayro-write takes the entries of a dictionary that cannot be read, and a
+/// stream where a direct object stands, for granted. It reads the page's resources, those of
+/// the pages above it, and what they refer to, as [`complete`] does.
+fn readable(pdf: &Pdf, page: usize) -> bool {
+    // The keys whose values hayro-write leaves out (its `IGNORE_KEYS`).
+    const IGNORED: [&[u8]; 10] = [
+        b"Metadata",
+        b"StructParent",
+        b"OC",
+        b"AF",
+        b"PtData",
+        b"Ref",
+        b"LastModified",
+        b"PieceInfo",
+        b"StructParents",
+        b"OPI",
+    ];
+    fn dict<'a>(dict: &Dict<'a>, stream: bool, pending: &mut Vec<MaybeRef<Object<'a>>>) -> bool {
+        for key in dict.keys() {
+            let Some(value) = dict.get_raw::<Object<'_>>(key.as_ref()) else {
+                return false;
+            };
+            let skipped = IGNORED.contains(&key.as_ref()) || (stream && key.as_ref() == b"Length");
+            if !skipped {
+                pending.push(value);
+            }
+        }
+        true
+    }
+    let Some(chosen) = pdf.pages().get(page) else {
+        return false;
+    };
+    let mut pending: Vec<MaybeRef<Object<'_>>> = Vec::new();
+    let mut resources = Some(chosen.resources());
+    while let Some(level) = resources {
+        for kind in [
+            &level.ext_g_states,
+            &level.shadings,
+            &level.patterns,
+            &level.x_objects,
+            &level.color_spaces,
+            &level.fonts,
+            &level.properties,
+        ] {
+            if !dict(kind, false, &mut pending) {
+                return false;
+            }
+        }
+        resources = level.parent();
+    }
+    let mut visited: rustc_hash::FxHashSet<ObjRef> = rustc_hash::FxHashSet::default();
+    while let Some(value) = pending.pop() {
+        let (object, indirect) = match value {
+            MaybeRef::NotRef(object) => (object, false),
+            MaybeRef::Ref(reference) => {
+                if !visited.insert(reference) {
+                    continue;
+                }
+                // A missing object is written as `null`.
+                let Some(object) = pdf.xref().get::<Object<'_>>(reference.into()) else {
+                    continue;
+                };
+                (object, true)
+            }
+        };
+        let read = match &object {
+            Object::Dict(entries) => dict(entries, false, &mut pending),
+            Object::Array(items) => {
+                pending.extend(items.raw_iter());
+                true
+            }
+            Object::Stream(stream) => indirect && dict(stream.dict(), true, &mut pending),
+            _ => true,
+        };
+        if !read {
+            return false;
+        }
+    }
+    true
+}
+
+/// Whether the page `page` of `pdf`, extracted as krilla extracts it, refers only to objects that
+/// exist. krilla cannot write one that refers to missing objects (a reference to an object that
+/// is not in the file, which readers take as `null`).
+fn complete(pdf: &Pdf, page: usize) -> bool {
+    let mut next = pdf_writer::Ref::new(1);
+    let Ok(extracted) = hayro_write::extract(
+        pdf,
+        Box::new(|| next.bump()),
+        hayro_write::ChunkSettings { pretty: false },
+        |group| {
+            group.color_space().device_rgb();
+        },
+        &[hayro_write::ExtractionQuery::new_xobject(page)],
+    ) else {
+        return false;
+    };
+    if !extracted.root_refs.iter().all(Result::is_ok) {
+        return false;
+    }
+    let written: rustc_hash::FxHashSet<pdf_writer::Ref> = extracted.chunk.refs().collect();
+    let mut missing = false;
+    let _ = extracted.chunk.renumber(|old| {
+        missing |= !written.contains(&old);
+        old
+    });
+    !missing
 }
 
 /// How many bytes the content of the page `page` (its dictionary) holds decoded, an estimate
 /// that decodes no more than [`MAX_CONTENT_BYTES`]: a content stream compressed with Flate is
 /// decoded without being kept.
-pub(crate) fn content_size(page: &hayro_syntax::object::Dict<'_>) -> Result<u64, PdfImageError> {
+pub(crate) fn content_size(page: &Dict<'_>) -> Result<u64, PdfImageError> {
     content_size_within(page, MAX_CONTENT_BYTES)
 }
 
 /// [`content_size`] with a limit of `limit` bytes.
-fn content_size_within(page: &hayro_syntax::object::Dict<'_>, limit: u64) -> Result<u64, PdfImageError> {
+fn content_size_within(page: &Dict<'_>, limit: u64) -> Result<u64, PdfImageError> {
     let streams: Vec<Stream<'_>> = match page.get::<Stream<'_>>(b"Contents") {
         Some(stream) => vec![stream],
         None => page
@@ -273,6 +390,21 @@ mod tests {
             ],
         );
         assert_eq!(probe(Arc::new(newer), None).err(), Some(PdfImageError::Version));
+    }
+
+    #[test]
+    fn takes_references_to_missing_objects_as_null() {
+        // Object 9 is not in the file: readers take it as `null`.
+        let missing = pdf(
+            "1.4",
+            &[
+                b"<< /Type /Catalog /Pages 2 0 R >>",
+                b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Resources << /XObject << /X 9 0 R >> >> >>",
+            ],
+        );
+        // hayro-write writes a reference to a missing object as `null`.
+        assert!(probe(Arc::new(missing), None).is_ok());
     }
 
     #[test]

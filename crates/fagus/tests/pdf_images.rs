@@ -272,3 +272,16 @@ fn survives_broken_pdf_files() {
         render(html, &[("t.pdf", changed)]);
     }
 }
+
+#[test]
+fn leaves_out_pdf_files_that_krilla_cannot_write() {
+    // A cross-reference table that hayro-syntax repairs halfway through, after which an object
+    // the page refers to is a broken one further down the file: shown without it, without a
+    // dangling reference in the PDF (found by the fuzz target `pdf`).
+    let output = render("<img src=t.pdf>", &[("t.pdf", fixture("pdf/repaired.pdf"))]);
+    assert_eq!(codes(&output), Vec::<&str>::new());
+    Pdf::new(output.pdf).expect("a PDF hayro reads");
+    // A resource whose value hayro-syntax lists but cannot read (`/Bad#zz`).
+    let output = render("<img src=t.pdf>", &[("t.pdf", fixture("pdf/bad-name.pdf"))]);
+    assert_eq!(codes(&output), ["image.broken"]);
+}
