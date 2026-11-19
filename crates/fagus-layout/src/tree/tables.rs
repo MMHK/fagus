@@ -7,11 +7,11 @@
 use std::sync::Arc;
 
 use fagus_dom::{ElementData, NodeId};
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     Appearance, Display, DisplayInside, DisplayOutside, InternalDisplay, LengthPercentage,
     LengthPercentageAuto, WhiteSpaceCollapse,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use super::{
     BoxId, BoxKind, BoxTree, Builder, Collected, ColumnBackground, InlineItem, LayoutBox, TableCell,
@@ -94,10 +94,10 @@ enum Level {
 
 /// The style of an anonymous box in a table: the properties `parent` passes on, with `display`.
 fn anonymous(parent: &ComputedStyle, display: Display) -> Arc<ComputedStyle> {
-    Arc::new(ComputedStyle {
+    Arc::new(ComputedStyle::from(ComputedValues {
         display,
-        ..parent.inherit()
-    })
+        ..ComputedValues::from(parent.inherit())
+    }))
 }
 
 /// The `display` of a table laid out as a block, or placed on a line as an atomic inline.
@@ -223,10 +223,10 @@ impl Builder<'_> {
             InternalDisplay::TableCaption => {
                 // A caption is a formatting context of its own: the margins of its content stay
                 // inside it, as in Chrome.
-                let caption_style = Arc::new(ComputedStyle {
+                let caption_style = Arc::new(ComputedStyle::from(ComputedValues {
                     display: CAPTION,
-                    ..(**style).clone()
-                });
+                    ..ComputedValues::clone(style)
+                }));
                 // The outside marker of a list item that starts with the table goes to the
                 // table's first row, past the caption, as Chrome aligns it with the table.
                 let marker = self.pending_marker.borrow_mut().take();
@@ -355,10 +355,10 @@ impl Builder<'_> {
             InternalDisplay::TableCaption => {
                 // A caption is a formatting context of its own: the margins of its content stay
                 // inside it, as in Chrome.
-                let caption_style = Arc::new(ComputedStyle {
+                let caption_style = Arc::new(ComputedStyle::from(ComputedValues {
                     display: CAPTION,
-                    ..(**style).clone()
-                });
+                    ..ComputedValues::clone(style)
+                }));
                 TablePart::Caption(generated(
                     tree,
                     caption_style,

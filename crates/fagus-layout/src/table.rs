@@ -16,11 +16,11 @@ use std::ops::Range;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     BorderCollapse, BorderStyle, BoxSizing, BreakBetween, BreakInside, CaptionSide, Display, EmptyCells,
     LengthPercentage, MaxSize, Position, Repeat, Rgba, Size, TableLayout, VerticalAlign, Visibility,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::block::{BreakToken, Layouter, Margin, Outcome, Space, first_baseline};
@@ -2181,7 +2181,7 @@ impl Layouter<'_> {
                 let row_style = &self.tree.get(row.id).style;
                 let outer = row_style.box_shadow.iter().any(|shadow| !shadow.inset);
                 (outer && row_style.visibility == Visibility::Visible).then(|| {
-                    Arc::new(ComputedStyle {
+                    Arc::new(ComputedStyle::from(ComputedValues {
                         box_shadow: row_style
                             .box_shadow
                             .iter()
@@ -2189,8 +2189,8 @@ impl Layouter<'_> {
                             .cloned()
                             .collect(),
                         color: row_style.color,
-                        ..ComputedStyle::default()
-                    })
+                        ..ComputedValues::default()
+                    }))
                 })
             })
             .collect();
@@ -2213,7 +2213,7 @@ impl Layouter<'_> {
                         span: last + 1 - part.start,
                         x: lines[left],
                         width: lines[right + 1] - spacing.0 - lines[left],
-                        style: Arc::new(ComputedStyle {
+                        style: Arc::new(ComputedStyle::from(ComputedValues {
                             background_color: part.style.background_color,
                             background_image: Arc::clone(&part.style.background_image),
                             background_position_x: Arc::clone(&part.style.background_position_x),
@@ -2223,8 +2223,8 @@ impl Layouter<'_> {
                             background_origin: Arc::clone(&part.style.background_origin),
                             background_clip: Arc::clone(&part.style.background_clip),
                             background_blend_mode: Arc::clone(&part.style.background_blend_mode),
-                            ..ComputedStyle::default()
-                        }),
+                            ..ComputedValues::default()
+                        })),
                     }
                 })
                 .collect(),
@@ -3790,15 +3790,15 @@ impl Layouter<'_> {
             .into_iter()
             .map(|(id, top, bottom)| {
                 let style = &self.tree.get(id).style;
-                let outline = ComputedStyle {
+                let outline = ComputedStyle::from(ComputedValues {
                     color: style.color,
                     outline_width: style.outline_width,
                     outline_style: style.outline_style,
                     outline_color: style.outline_color,
                     outline_offset: style.outline_offset,
                     visibility: style.visibility,
-                    ..ComputedStyle::default()
-                };
+                    ..ComputedValues::default()
+                });
                 Fragment {
                     rect: Rect::new(laid.grid_left, top, laid.grid_width, bottom - top),
                     kind: FragmentKind::Box {
@@ -4153,7 +4153,8 @@ fn resolved_part_insets(style: &ComputedStyle, parent: &ComputedStyle) -> Option
         _ => None,
     };
     let mut own = style.clone();
-    for inset in [&mut own.inset.top, &mut own.inset.bottom] {
+    let values = own.values_mut();
+    for inset in [&mut values.inset.top, &mut values.inset.bottom] {
         if let LengthPercentageAuto::Length(length) = inset
             && length.fixed().is_none()
         {
@@ -4253,7 +4254,7 @@ fn wrapper(rect: Rect, children: Vec<Fragment>, style: &ComputedStyle) -> Fragme
         FragmentKind::Anonymous
     } else {
         FragmentKind::Box {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 overflow_x: if style.overflow_x == fagus_style::values::Overflow::Visible {
                     fagus_style::values::Overflow::Visible
                 } else {
@@ -4264,8 +4265,8 @@ fn wrapper(rect: Rect, children: Vec<Fragment>, style: &ComputedStyle) -> Fragme
                 } else {
                     fagus_style::values::Overflow::Clip
                 },
-                ..ComputedStyle::default()
-            }),
+                ..ComputedValues::default()
+            })),
             node: None,
             sides: VisibleSides::ALL,
         }
@@ -4297,16 +4298,16 @@ fn part_background(style: &Arc<ComputedStyle>, cell: Rect, part: impl FnOnce() -
         };
     }
     let part = part();
-    let clip = ComputedStyle {
+    let clip = ComputedStyle::from(ComputedValues {
         overflow_x: fagus_style::values::Overflow::Hidden,
         overflow_y: fagus_style::values::Overflow::Hidden,
         background_color: style.background_color,
-        ..ComputedStyle::default()
-    };
-    let image = ComputedStyle {
+        ..ComputedValues::default()
+    });
+    let image = ComputedStyle::from(ComputedValues {
         background_color: Rgba::TRANSPARENT,
-        ..ComputedStyle::clone(style)
-    };
+        ..ComputedValues::clone(style)
+    });
     Fragment {
         rect: cell,
         kind: FragmentKind::Box {

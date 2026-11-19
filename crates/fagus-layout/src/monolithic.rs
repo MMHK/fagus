@@ -450,10 +450,10 @@ mod tests {
     }
 
     fn block(node_index: usize, y: f32, height: f32, ends: bool, children: Vec<Fragment>) -> Fragment {
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(fagus_style::ComputedValues {
             display: Display::BLOCK,
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         Fragment {
             rect: Rect::new(Au::ZERO, Au::from_px(y), Au::from_px(100.0), Au::from_px(height)),
             kind: FragmentKind::Box {

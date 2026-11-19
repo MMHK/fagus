@@ -6,8 +6,8 @@
 use std::sync::Arc;
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
 use fagus_style::values::WhiteSpace;
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use super::{BoxId, BoxKind, BoxTree, Builder, InlineItem, LayoutBox, anonymous_style, process_white_space};
 use crate::fragment::SymbolShape;
@@ -49,10 +49,10 @@ impl Builder<'_> {
         let own = anonymous_style(style);
         let label = self.ui_locale(&own).details;
         let text = Arc::new(own.inherit());
-        let marker = Arc::new(ComputedStyle {
+        let marker = Arc::new(ComputedStyle::from(ComputedValues {
             white_space: WhiteSpace::PRE,
-            ..own.inherit()
-        });
+            ..ComputedValues::from(own.inherit())
+        }));
         let symbol = if open { "\u{25BE}" } else { "\u{25B8}" };
         let items = vec![
             InlineItem::Marker {

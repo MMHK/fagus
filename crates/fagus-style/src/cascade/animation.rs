@@ -19,7 +19,7 @@ use lightningcss::vendor_prefix::VendorPrefix;
 
 use super::{Declared, Expansions, Ordered, cascade_declarations, cascade_id, expand, resolve};
 use crate::functions::Functions;
-use crate::style::ComputedStyle;
+use crate::style::{ComputedStyle, ComputedValues};
 use crate::values::{CalcNode, LengthPercentage, Rgba, Size};
 use crate::variables::Registry;
 use fagus_css::{CascadeBand, Precedence, RuleSet};
@@ -163,7 +163,7 @@ fn is_animation(property: &Property<'static>) -> bool {
 fn settings(
     ordered: &Ordered<'_>,
     expansions: &Expansions,
-    style: &ComputedStyle,
+    style: &ComputedValues,
     (registry, functions): (&Registry, &Functions<'_>),
 ) -> Vec<Settings> {
     let declarations = cascade_declarations(ordered, expansions);
@@ -480,7 +480,7 @@ pub(super) fn animate(
             .iter()
             .filter_map(|step| {
                 let name = custom_name(&step.id)?;
-                let value = |style: &ComputedStyle| {
+                let value = |style: &ComputedValues| {
                     style
                         .custom_properties
                         .get(name)
@@ -630,7 +630,7 @@ fn interpolate(
     id: &PropertyId<'static>,
     (from, to): (&ComputedStyle, &ComputedStyle),
     progress: f32,
-    style: &mut ComputedStyle,
+    style: &mut ComputedValues,
 ) {
     // A side without a color of its own has the element's (`currentcolor`).
     let mix_side = |a: Option<Rgba>, b: Option<Rgba>| {

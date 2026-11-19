@@ -9,8 +9,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::Visibility;
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::{FaceId, FontDb, MathConstant};
 
 use super::stretch::{MathFont, Stretched, stretch, vertical_width};
@@ -411,13 +411,13 @@ fn fragment(item: Item) -> Fragment {
             style,
         } => {
             // A rule is a box filled with the color of the text.
-            let rule = ComputedStyle {
+            let rule = ComputedStyle::from(ComputedValues {
                 display: fagus_style::values::Display::BLOCK,
                 background_color: style.color,
                 visibility: style.visibility,
                 math_bar: true,
                 ..ComputedStyle::initial_values().clone()
-            };
+            });
             Fragment {
                 rect: Rect::new(
                     Au::from_px(x),
@@ -447,12 +447,12 @@ fn fragment(item: Item) -> Fragment {
                 Au::from_px(height),
             ),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     display: fagus_style::values::Display::BLOCK,
                     padding: ComputedStyle::initial_values().padding.clone(),
                     margin: ComputedStyle::initial_values().margin.clone(),
-                    ..(*style).clone()
-                }),
+                    ..ComputedValues::clone(&style)
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },

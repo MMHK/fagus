@@ -5,10 +5,10 @@
 //! background is clipped to the shape (the outer one), and `border-radius` does not apply.
 
 use fagus_layout::PathSegment;
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     BorderShape, BorderStyle, BoxArea, ClipPath, ClipShape, Rgba, ShapeReference, TransformBox, WritingMode,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use crate::{ClipGeometry, Item, RectF};
 
@@ -493,11 +493,11 @@ fn outline(shape: &ClipShape, reference: RectF) -> Option<(Vec<PathSegment>, boo
         svg_reference: TransformBox::BorderBox,
     };
     // Without the box's own border and rounded corners: the reference is the box.
-    let plain = ComputedStyle {
+    let plain = ComputedStyle::from(ComputedValues {
         border_radius: fagus_style::values::Corners::default(),
         border_width: fagus_style::values::Sides::all(0.0),
-        ..ComputedStyle::default()
-    };
+        ..ComputedValues::default()
+    });
     Some(match crate::clip_item(&plain, &clip, reference) {
         Item::PushClip(rect, radii) => (rounded_rect(rect, radii), false),
         Item::PushClipShape(ClipGeometry::Ellipse { center, radii }) => (ellipse(center, radii), false),
@@ -716,10 +716,10 @@ mod tests {
         );
         // Vertical writing without a border at the block start (right) strokes with the inline
         // start's (top).
-        let mut style = ComputedStyle {
+        let mut style = ComputedStyle::from(ComputedValues {
             writing_mode: WritingMode::VerticalRl,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         style.border_width.top = 18.0;
         style.border_style.top = BorderStyle::Solid;
         style.border_width.left = 10.0;
@@ -732,10 +732,10 @@ mod tests {
 
     #[test]
     fn lays_out_shapes_in_their_boxes() {
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: fagus_style::values::Sides::all(10.0),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,

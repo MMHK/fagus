@@ -10,7 +10,7 @@ use lightningcss::properties::custom::{Function, Token, TokenList, TokenOrValue}
 use lightningcss::values::length::LengthValue;
 
 use crate::compute::Context;
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{LengthPercentage, MaxSize, Size};
 
 /// The calculations of `calc-size()` in a box's sizes, innermost first: `width`, `height`,
@@ -97,7 +97,7 @@ fn pixels(tokens: &TokenList<'static>, context: &Context) -> TokenList<'static> 
 pub(crate) fn apply(
     id: &PropertyId<'_>,
     tokens: &TokenList<'static>,
-    style: &mut ComputedStyle,
+    style: &mut ComputedValues,
     context: &Context,
 ) -> bool {
     let index = match id {

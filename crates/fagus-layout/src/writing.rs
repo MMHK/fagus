@@ -18,10 +18,10 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     Display, DisplayInside, DisplayOutside, LengthPercentage, MaxSize, Sides, Size, WritingMode,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 use rustc_hash::FxHashMap;
 
 use crate::block::{BOTTOM, BoxModel, LEFT, Layouter, Outcome, RIGHT, Space, TOP};
@@ -241,7 +241,7 @@ fn content_style(style: &ComputedStyle, orthogonal: bool) -> ComputedStyle {
         },
         _ => DisplayInside::FlowRoot,
     };
-    let mut content = ComputedStyle {
+    let mut content = ComputedStyle::from(ComputedValues {
         display: Display::Normal {
             outside: DisplayOutside::Block,
             inside,
@@ -283,8 +283,8 @@ fn content_style(style: &ComputedStyle, orthogonal: bool) -> ComputedStyle {
         // turned after.
         width: fill((flex_or_grid && vertical) || (table && !vertical)),
         height: fill((flex_or_grid && !vertical) || (table && vertical)),
-        ..style.inherit()
-    };
+        ..ComputedValues::from(style.inherit())
+    });
     // Lines that overflow a flow root that clips them end with an ellipsis: its content box,
     // where they are, clips them too (in the flow root's content box, which is its own).
     if style.text_overflow == fagus_style::values::TextOverflow::Ellipsis
@@ -318,7 +318,7 @@ fn collapses(style: &ComputedStyle) -> bool {
 fn outer_style(style: &ComputedStyle) -> ComputedStyle {
     let initial = ComputedStyle::initial_values();
     let collapsed = collapses(style);
-    ComputedStyle {
+    ComputedStyle::from(ComputedValues {
         border_width: if collapsed {
             initial.border_width
         } else {
@@ -333,8 +333,8 @@ fn outer_style(style: &ComputedStyle) -> ComputedStyle {
         column_width: None,
         line_clamp: None,
         text_box_trim: initial.text_box_trim,
-        ..style.clone()
-    }
+        ..ComputedValues::from(style.clone())
+    })
 }
 
 /// The writing modes in which the containing blocks of absolutely positioned and fixed boxes
@@ -1556,11 +1556,11 @@ mod tests {
 
     #[test]
     fn turns_styles_and_finds_upright_characters() {
-        let mut style = ComputedStyle {
+        let mut style = ComputedStyle::from(ComputedValues {
             writing_mode: WritingMode::VerticalRl,
             width: Size::Length(LengthPercentage::Px(10.0)),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         style.margin.right = fagus_style::values::LengthPercentageAuto::Length(LengthPercentage::Px(4.0));
         let turned = logical_style(&style, WritingMode::VerticalRl);
         assert_eq!(turned.height, Size::Length(LengthPercentage::Px(10.0)));

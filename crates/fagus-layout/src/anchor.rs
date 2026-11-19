@@ -13,7 +13,7 @@
 //! as in Chrome.
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
+use fagus_style::{ComputedStyle, ComputedValues};
 use rustc_hash::FxHashMap;
 use std::sync::Arc;
 
@@ -483,7 +483,7 @@ impl Layouter<'_> {
                     LengthPercentageAuto::Length(LengthPercentage::Px(px))
                 }),
         };
-        let mut used = style.clone();
+        let mut used = ComputedValues::clone(style);
         used.inset.top = resolve(&placement.insets[0], Slot::Inset(0));
         used.inset.right = resolve(&placement.insets[1], Slot::Inset(1));
         used.inset.bottom = resolve(&placement.insets[2], Slot::Inset(2));
@@ -578,6 +578,7 @@ impl Layouter<'_> {
                 };
                 (used.inset.left, used.inset.right) = sides(align[0]);
                 (used.inset.top, used.inset.bottom) = sides(align[1]);
+                let used = ComputedStyle::from(used);
                 let mut fragment =
                     self.absolute_styled(id, imcb.width, imcb.height, (Au::ZERO, Au::ZERO), &used);
                 let anchor_center = (
@@ -612,6 +613,7 @@ impl Layouter<'_> {
             }
         } else {
             {
+                let used = ComputedStyle::from(used);
                 let mut fragment = self.absolute_styled(id, cb_width, cb_height, static_position, &used);
                 let left = inset(&used.inset.left, cb_width);
                 let right = inset(&used.inset.right, cb_width);
@@ -652,10 +654,10 @@ fn overlaps(a: &Rect, b: &Rect) -> bool {
 fn hide(fragment: &mut Fragment) {
     fragment.children.clear();
     if let FragmentKind::Box { style, .. } = &mut fragment.kind {
-        *style = Arc::new(ComputedStyle {
+        *style = Arc::new(ComputedStyle::from(ComputedValues {
             visibility: Visibility::Hidden,
-            ..(**style).clone()
-        });
+            ..ComputedValues::clone(style)
+        }));
     }
 }
 

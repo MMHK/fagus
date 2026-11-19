@@ -397,11 +397,11 @@ mod tests {
             padding: (px(8.0), px(8.0)),
             absolute: Vec::new(),
         };
-        let style = fagus_style::ComputedStyle {
+        let style = fagus_style::ComputedStyle::from(fagus_style::ComputedValues {
             grid_column_start: GridLine::Line(2),
             grid_row_end: GridLine::Line(2),
-            ..fagus_style::ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         // The padding box is 116px square; the content box starts 8px into it.
         let rect = grid.area(&style, (px(116.0), px(116.0)));
         assert_eq!(rect, Rect::new(px(48.0), px(0.0), px(68.0), px(38.0)));

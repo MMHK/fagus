@@ -31,10 +31,83 @@ use crate::values::{
 pub type CustomProperties =
     Arc<FxHashMap<Arc<str>, Arc<lightningcss::properties::custom::TokenList<'static>>>>;
 
+/// The computed style of an element or a box: its [`ComputedValues`], shared copy-on-write with the
+/// boxes whose values are the same.
+///
+/// Elements of the same kind come out of the cascade with the same values (the rows of a table,
+/// their cells, the items of a list), and about 2.7 KB of values each made most of the memory of
+/// a long document. A `ComputedStyle` reads like its values (through `Deref`); changing a value
+/// copies them first if another style shares them. Each element keeps a `ComputedStyle` of its
+/// own, as layout tells boxes apart by the address of their style.
+#[derive(Clone)]
+pub struct ComputedStyle(Arc<ComputedValues>);
+
+impl ComputedStyle {
+    /// The initial values of all properties, shared.
+    pub fn initial_values() -> &'static ComputedValues {
+        ComputedValues::initial_values()
+    }
+
+    /// A style for a child: inherited properties come from `self`, all others are initial.
+    #[must_use]
+    pub fn inherit(&self) -> Self {
+        Self::from(self.0.inherit())
+    }
+
+    /// The values, to change many of them at once (copied first if they are shared).
+    pub fn values_mut(&mut self) -> &mut ComputedValues {
+        Arc::make_mut(&mut self.0)
+    }
+
+    /// Whether two styles share their values.
+    pub fn shares_values(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl From<ComputedValues> for ComputedStyle {
+    fn from(values: ComputedValues) -> Self {
+        Self(Arc::new(values))
+    }
+}
+
+impl From<ComputedStyle> for ComputedValues {
+    /// The values, copied only if another style shares them.
+    fn from(style: ComputedStyle) -> Self {
+        Arc::unwrap_or_clone(style.0)
+    }
+}
+
+impl std::ops::Deref for ComputedStyle {
+    type Target = ComputedValues;
+
+    fn deref(&self) -> &ComputedValues {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for ComputedStyle {
+    fn deref_mut(&mut self) -> &mut ComputedValues {
+        Arc::make_mut(&mut self.0)
+    }
+}
+
+impl PartialEq for ComputedStyle {
+    fn eq(&self, other: &Self) -> bool {
+        *self.0 == *other.0
+    }
+}
+
+impl std::fmt::Debug for ComputedStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 /// The computed values of all properties Fagus supports.
 #[derive(Clone, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools, reason = "flags of independent properties")]
-pub struct ComputedStyle {
+pub struct ComputedValues {
     // Box model and layout.
     pub display: Display,
     pub position: Position,
@@ -531,16 +604,24 @@ pub struct ComputedStyle {
 }
 
 /// The initial values, made once: a style starts as a copy, which only counts references.
-static INITIAL: std::sync::LazyLock<ComputedStyle> = std::sync::LazyLock::new(ComputedStyle::initial);
+static INITIAL: std::sync::LazyLock<Arc<ComputedValues>> =
+    std::sync::LazyLock::new(|| Arc::new(ComputedValues::initial()));
 
 impl Default for ComputedStyle {
-    /// The initial values of all properties.
+    /// The initial values of all properties, shared.
     fn default() -> Self {
-        INITIAL.clone()
+        Self(Arc::clone(&INITIAL))
     }
 }
 
-impl ComputedStyle {
+impl Default for ComputedValues {
+    /// The initial values of all properties.
+    fn default() -> Self {
+        (**INITIAL).clone()
+    }
+}
+
+impl ComputedValues {
     /// The initial values of all properties, shared.
     pub fn initial_values() -> &'static Self {
         &INITIAL
@@ -815,7 +896,7 @@ impl ComputedStyle {
     }
 }
 
-impl ComputedStyle {
+impl ComputedValues {
     /// A style for a child: inherited properties come from `self`, all others are initial.
     #[must_use]
     pub fn inherit(&self) -> Self {

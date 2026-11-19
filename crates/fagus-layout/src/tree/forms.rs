@@ -21,7 +21,7 @@ use fagus_style::values::{
     Appearance, BorderStyle, BoxSizing, Content, Display, DisplayInside, DisplayOutside, ItemAlignment,
     LengthPercentage, LengthPercentageAuto, LineHeight, Overflow, Position, Rgba, Size, WhiteSpace,
 };
-use fagus_style::{ComputedStyle, PseudoKey};
+use fagus_style::{ComputedStyle, ComputedValues, PseudoKey};
 use fagus_text::FontDb;
 
 use super::{BoxId, BoxKind, BoxTree, Builder, InlineItem, LayoutBox, anonymous_style};
@@ -261,7 +261,7 @@ fn frame_border(disabled: bool) -> Rgba {
 ///
 /// Chrome prints the 1px stroke of a field as a hairline at three quarters of its alpha (Skia
 /// draws a stroke thinner than a device unit, 0.75pt here, so), that of a button as a stroke.
-fn native_frame(style: &mut ComputedStyle, frame: Frame, disabled: bool) {
+fn native_frame(style: &mut ComputedValues, frame: Frame, disabled: bool) {
     let zoom = style.zoom;
     let stroke = frame_width(zoom);
     let hairline = frame == Frame::Field && stroke * 0.75 < 1.0;
@@ -396,7 +396,7 @@ fn fixed_size(style: &ComputedStyle) -> (Option<f32>, Option<f32>) {
 
 /// Sets an `auto` width or height of a style to a content size, as a border-box size if the
 /// box is sized so.
-fn set_content_size(style: &mut ComputedStyle, width: Option<f32>, height: Option<f32>) {
+fn set_content_size(style: &mut ComputedValues, width: Option<f32>, height: Option<f32>) {
     let border_box = style.box_sizing == BoxSizing::BorderBox;
     if let Some(width) = width
         && style.width == Size::Auto
@@ -1130,10 +1130,10 @@ impl Builder<'_> {
         let Some(data) = self.document.element(element) else {
             return self.replaced(tree, element, style);
         };
-        let mut own = ComputedStyle {
+        let mut own = ComputedStyle::from(ComputedValues {
             display: style.display.blockify(),
-            ..(**style).clone()
-        };
+            ..ComputedValues::clone(style)
+        });
         let native = native(style);
         let dark = style.dark;
         let accent = style
@@ -1390,7 +1390,7 @@ impl Builder<'_> {
     /// and font, its spacing, case and decorations, faded by its opacity. The line keeps the control's height, as
     /// Chrome's placeholder has the line height of the field (`line-height: initial` in an
     /// `<input>`). Without the pseudo-element's style, the placeholder is gray.
-    fn placeholder_style(&self, element: NodeId, text: &mut ComputedStyle) {
+    fn placeholder_style(&self, element: NodeId, text: &mut ComputedValues) {
         let Some(own) = self.styled.pseudo(element, PseudoKey::Placeholder) else {
             text.color = PLACEHOLDER;
             return;
@@ -1885,10 +1885,10 @@ impl Builder<'_> {
         button.white_space = WhiteSpace::PRE;
         let button_text = Arc::new(button.inherit());
         let button = tree.push(LayoutBox {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 display: button.display.blockify(),
-                ..button
-            }),
+                ..ComputedValues::from(button)
+            })),
             node: None,
             generated: true,
             kind: BoxKind::Inline {
@@ -1896,10 +1896,10 @@ impl Builder<'_> {
             },
         });
         let mut items = vec![InlineItem::Atomic(button)];
-        let text = Arc::new(ComputedStyle {
+        let text = Arc::new(ComputedStyle::from(ComputedValues {
             white_space: WhiteSpace::PRE,
-            ..own.inherit()
-        });
+            ..ComputedValues::from(own.inherit())
+        }));
         items.extend(text_items(none.to_owned(), &text));
         // As wide as 34 digits, or as the button and the text if they are wider
         // (`FileUploadControlIntrinsicInlineSize`); with `field-sizing: content`, as the button
@@ -1915,10 +1915,10 @@ impl Builder<'_> {
             set_content_size(&mut own, Some(width), None);
         }
         tree.push(LayoutBox {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 white_space: WhiteSpace::PRE,
-                ..own
-            }),
+                ..ComputedValues::from(own)
+            })),
             node: Some(element),
             generated: false,
             kind: BoxKind::Inline { items },
@@ -2133,6 +2133,7 @@ impl Builder<'_> {
         if own.appearance == Appearance::Auto {
             // The padding Chrome keeps inside a menu list (`PopupInternalPadding*`): 4px at its
             // start, 1px at its end, where the arrow is.
+            let own = own.values_mut();
             let (start, end) = if own.is_rtl() {
                 (&mut own.padding.right, &mut own.padding.left)
             } else {
@@ -2192,7 +2193,7 @@ impl Builder<'_> {
                 &own.padding.right
             };
             if let Some(gap) = end.fixed().map(|end| end - internal).filter(|gap| *gap > 0.0) {
-                let style = Arc::make_mut(&mut tree.box_mut(icon).style);
+                let style = Arc::make_mut(&mut tree.box_mut(icon).style).values_mut();
                 let (before, after) = if rtl {
                     (&mut style.margin.right, &mut style.margin.left)
                 } else {
@@ -2227,10 +2228,10 @@ impl Builder<'_> {
         // An option is a line high, at least 1.2em, with a pixel of padding below.
         let item_height = line_height(
             self.fonts,
-            &ComputedStyle {
+            &ComputedStyle::from(ComputedValues {
                 line_height: LineHeight::Normal,
-                ..own.clone()
-            },
+                ..ComputedValues::from(own.clone())
+            }),
         )
         .max(1.2 * own.font_size)
             + own.zoom;
@@ -2575,12 +2576,12 @@ mod tests {
 
     #[test]
     fn native_frame_keeps_the_size() {
-        let mut style = ComputedStyle {
+        let mut style = ComputedStyle::from(ComputedValues {
             border_width: fagus_style::values::Sides::all(2.0),
             border_style: fagus_style::values::Sides::all(BorderStyle::Inset),
             padding: fagus_style::values::Sides::all(LengthPercentage::Px(1.0)),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         native_frame(&mut style, Frame::Field, false);
         assert_eq!(style.border_width.top, 1.0);
         assert_eq!(style.padding.left, LengthPercentage::Px(2.0));
@@ -2590,13 +2591,13 @@ mod tests {
     #[test]
     fn strokes_native_frames_as_chrome_prints_them() {
         let framed = |frame, zoom: f32| {
-            let mut style = ComputedStyle {
+            let mut style = ComputedStyle::from(ComputedValues {
                 border_width: fagus_style::values::Sides::all((2.0 * zoom).floor().max(1.0)),
                 border_style: fagus_style::values::Sides::all(BorderStyle::Inset),
                 padding: fagus_style::values::Sides::all(LengthPercentage::Px(zoom)),
                 zoom,
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             native_frame(&mut style, frame, false);
             style
         };

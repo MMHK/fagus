@@ -6,8 +6,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{AnnotationSide, Display, RubyAlign, RubyDisplay};
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::FontDb;
 
 use crate::block::{Atomic, Layouter};
@@ -396,10 +396,10 @@ pub(crate) fn annotation_items(items: Vec<InlineItem>) -> Vec<InlineItem> {
             *style = Arc::clone(done);
             return;
         }
-        let done = Arc::new(ComputedStyle {
+        let done = Arc::new(ComputedStyle::from(ComputedValues {
             text_autospace: false,
-            ..(**style).clone()
-        });
+            ..ComputedValues::clone(style)
+        }));
         styles.push((Arc::clone(style), Arc::clone(&done)));
         *style = done;
     };
@@ -543,13 +543,13 @@ fn laid_out(
             Au::from_px(annotation_over + annotation_under),
         ),
         kind: FragmentKind::Box {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 display: Display::BLOCK,
                 ruby_display: RubyDisplay::Annotation,
                 // The side is the ruby's, as the annotation goes there whatever its own says.
                 ruby_position: style.ruby_position,
-                ..column.style.inherit()
-            }),
+                ..ComputedValues::from(column.style.inherit())
+            })),
             node: None,
             sides: VisibleSides::ALL,
         },

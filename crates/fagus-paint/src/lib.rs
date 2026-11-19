@@ -36,11 +36,11 @@ use std::sync::Arc;
 use fagus_dom::NodeId;
 use fagus_layout::units::Au;
 use fagus_layout::{Fragment, FragmentKind, Glyph, Page};
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     AnnotationSide, BorderStyle, DecorationThickness, ObjectFit, OutlineStyle, Rgba, RubyDisplay, SkipInk,
     TextDecorationStyle, Visibility,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::{FaceId, FontDb};
 use rustc_hash::FxHashMap;
 
@@ -3374,9 +3374,11 @@ fn css_clip(fragment: &Fragment, x: f32, y: f32) -> Option<RectF> {
 /// (CSS Transforms 1, §6: a transform makes fixed backgrounds act as `scroll`, as in Chrome);
 /// `None` where nothing changes.
 fn scrolled_fixed_backgrounds(style: &ComputedStyle, transformed: bool) -> Option<ComputedStyle> {
-    (transformed && style.background_fixed.iter().any(|fixed| *fixed)).then(|| ComputedStyle {
-        background_fixed: Arc::from([false]),
-        ..style.clone()
+    (transformed && style.background_fixed.iter().any(|fixed| *fixed)).then(|| {
+        ComputedStyle::from(ComputedValues {
+            background_fixed: Arc::from([false]),
+            ..ComputedValues::from(style.clone())
+        })
     })
 }
 
@@ -4945,15 +4947,15 @@ mod tests {
         use fagus_layout::VisibleSides;
         use fagus_style::values::Sides;
         let cyan = Rgba::from_u8(0, 255, 255, 1.0);
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: Sides::all(10.0),
             border_style: Sides::all(BorderStyle::Solid),
             border_color: Sides {
                 bottom: Some(cyan),
                 ..Sides::all(Some(Rgba::BLACK))
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -4989,12 +4991,12 @@ mod tests {
         use fagus_style::values::Sides;
         // `<td>` of `<table border=1>`: 1px inset, dark at the top and left, light at the
         // bottom and right.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: Sides::all(1.0),
             border_style: Sides::all(BorderStyle::Inset),
             border_color: Sides::all(Some(Rgba::from_u8(128, 128, 128, 1.0))),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -5030,7 +5032,7 @@ mod tests {
         use fagus_style::values::Sides;
         // An `<hr>` with a translucent solid bottom: Chrome draws the bottom first, across the
         // corners, and the inset sides after it, cut along the diagonal.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: Sides {
                 top: 0.0,
                 ..Sides::all(1.0)
@@ -5043,8 +5045,8 @@ mod tests {
                 bottom: Some(Rgba::from_u8(0, 0, 0, 0.07)),
                 ..Sides::all(Some(Rgba::from_u8(128, 128, 128, 1.0)))
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -5133,10 +5135,10 @@ mod tests {
         let margin_box = |z_index: Option<i32>| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(10.0), Au::from_px(10.0)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     z_index,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -5176,13 +5178,13 @@ mod tests {
     fn strokes_native_frames_along_the_middle_of_the_border() {
         use fagus_layout::VisibleSides;
         use fagus_style::values::Sides;
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: Sides::all(1.0),
             border_style: Sides::all(BorderStyle::Solid),
             border_color: Sides::all(Some(Rgba::BLACK)),
             native_frame: Some(0.0),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -5221,15 +5223,17 @@ mod tests {
     fn strokes_borders_of_one_width_and_color_as_chrome() {
         use fagus_layout::VisibleSides;
         use fagus_style::values::Sides;
-        let style = |widths: [f32; 4]| ComputedStyle {
-            border_width: Sides {
-                top: widths[0],
-                right: widths[1],
-                bottom: widths[2],
-                left: widths[3],
-            },
-            border_style: Sides::all(BorderStyle::Solid),
-            ..ComputedStyle::default()
+        let style = |widths: [f32; 4]| {
+            ComputedStyle::from(ComputedValues {
+                border_width: Sides {
+                    top: widths[0],
+                    right: widths[1],
+                    bottom: widths[2],
+                    left: widths[3],
+                },
+                border_style: Sides::all(BorderStyle::Solid),
+                ..ComputedValues::default()
+            })
         };
         let rect = RectF {
             x: 0.0,
@@ -5271,7 +5275,7 @@ mod tests {
         );
         assert_eq!(sliced_radii(round, sides(true, false, true, false)), None);
         // A callout's one solid side is its wedge of the area between the curved edges.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_width: Sides {
                 top: 0.0,
                 right: 0.0,
@@ -5284,8 +5288,8 @@ mod tests {
                 bottom: BorderStyle::None,
                 left: BorderStyle::Solid,
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -5320,20 +5324,20 @@ mod tests {
             interpolation: None,
         }));
         let url = Image::Url(Arc::from("mark.png"), 1.0);
-        let style = Arc::new(ComputedStyle {
+        let style = Arc::new(ComputedStyle::from(ComputedValues {
             background_color: Rgba::from_u8(0xdd, 0xff, 0xdd, 1.0),
             background_image: Arc::from([gradient.clone(), url.clone()]),
-            ..ComputedStyle::default()
-        });
+            ..ComputedValues::default()
+        }));
         // The gradient's layer stays, empty, so that the image keeps its size and position.
         let painted = page_background(&style);
         assert_eq!(&*painted.background_image, &[Image::None, url.clone()]);
         assert_eq!(painted.background_color, style.background_color);
         // A background without gradients is the page's own.
-        let plain = Arc::new(ComputedStyle {
+        let plain = Arc::new(ComputedStyle::from(ComputedValues {
             background_image: Arc::from([url]),
-            ..ComputedStyle::default()
-        });
+            ..ComputedValues::default()
+        }));
         assert!(matches!(page_background(&plain), std::borrow::Cow::Borrowed(_)));
     }
 
@@ -5342,10 +5346,10 @@ mod tests {
         use fagus_layout::units::Rect;
         use fagus_layout::{PageMarks, VisibleSides};
         let colored = |color: Rgba| {
-            Arc::new(ComputedStyle {
+            Arc::new(ComputedStyle::from(ComputedValues {
                 background_color: color,
-                ..ComputedStyle::default()
-            })
+                ..ComputedValues::default()
+            }))
         };
         let red = Rgba {
             r: 1.0,
@@ -5527,7 +5531,7 @@ mod tests {
         // A table wrapper box: a caption above the table box, which a negative margin pulls
         // over the table's top border, and one below it.
         let order = |float: Float| {
-            let table = ComputedStyle {
+            let table = ComputedStyle::from(ComputedValues {
                 display: Display::Normal {
                     outside: DisplayOutside::Block,
                     inside: DisplayInside::Table,
@@ -5535,11 +5539,13 @@ mod tests {
                 },
                 float,
                 background_color: color(0.5),
-                ..ComputedStyle::default()
-            };
-            let caption = |g| ComputedStyle {
-                background_color: color(g),
-                ..ComputedStyle::default()
+                ..ComputedValues::default()
+            });
+            let caption = |g| {
+                ComputedStyle::from(ComputedValues {
+                    background_color: color(g),
+                    ..ComputedValues::default()
+                })
             };
             let wrapper = Fragment {
                 rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(70.0)),
@@ -5608,15 +5614,15 @@ mod tests {
                         Au::from_px(50.0),
                     ),
                     kind: FragmentKind::Box {
-                        style: Arc::new(ComputedStyle {
+                        style: Arc::new(ComputedStyle::from(ComputedValues {
                             background_color: Rgba {
                                 r: 0.0,
                                 g: 1.0,
                                 b: 0.0,
                                 a: 1.0,
                             },
-                            ..ComputedStyle::default()
-                        }),
+                            ..ComputedValues::default()
+                        })),
                         node: None,
                         sides: VisibleSides::ALL,
                     },
@@ -5662,11 +5668,11 @@ mod tests {
         let clipping = |overflow_x: Overflow, overflow_y: Overflow| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(50.0), Au::from_px(100.0)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     overflow_x,
                     overflow_y,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -5697,11 +5703,11 @@ mod tests {
         let fragment = Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.4), Au::from_px(50.45)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     overflow_x: Overflow::Hidden,
                     overflow_y: Overflow::Hidden,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -5722,13 +5728,13 @@ mod tests {
         let clipping = |display: Display| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(90.0), Au::from_px(90.0)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     display,
                     overflow_x: Overflow::Hidden,
                     overflow_y: Overflow::Hidden,
                     border_width: Sides::all(20.0),
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -5770,12 +5776,12 @@ mod tests {
                 Au::from_px(40.0),
             ),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     position: Position::Absolute,
                     clip: Some(clip),
                     background_color: colored(g),
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -5891,10 +5897,10 @@ mod tests {
         let text = &mut page.fragments[0].children[0];
         text.rect.width = Au::from_px(20.0);
         if let FragmentKind::Text(run) = &mut text.kind {
-            run.style = Arc::new(ComputedStyle {
+            run.style = Arc::new(ComputedStyle::from(ComputedValues {
                 writing_mode: fagus_style::values::WritingMode::VerticalRl,
-                ..ComputedStyle::default()
-            });
+                ..ComputedValues::default()
+            }));
         }
         assert!((content_extent(&page) - 20.0).abs() < 1e-4);
     }
@@ -5903,15 +5909,15 @@ mod tests {
     fn keeps_the_radii_of_slices_shorter_than_their_corners() {
         use fagus_layout::VisibleSides;
         let round = (LengthPercentage::Px(80.0), LengthPercentage::Px(80.0));
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             border_radius: fagus_style::values::Corners {
                 top_left: round.clone(),
                 top_right: round.clone(),
                 bottom_right: round.clone(),
                 bottom_left: round,
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         // A box 200px wide whose first slice is 100px tall: its top corners keep their 80px, the
         // bottom ones being square where it is cut (WPT css-break borders-005, Chrome 157).
         let first = VisibleSides {
@@ -5955,10 +5961,10 @@ mod tests {
                 ..rect
             }
         );
-        let vertical = ComputedStyle {
+        let vertical = ComputedStyle::from(ComputedValues {
             writing_mode: fagus_style::values::WritingMode::VerticalRl,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         assert_eq!(Flow::of(&vertical), Flow::Left);
         // Cut on its left, a slice of a `vertical-rl` box is broken; cut on its top, it is not.
         let sides = |top, left| fagus_layout::VisibleSides {
@@ -5977,7 +5983,7 @@ mod tests {
         use fagus_style::values::BoxShadow;
         let document = fagus_dom::Document::parse_html("<div></div>");
         let node = document.descendants(NodeId::DOCUMENT).last();
-        let style = Arc::new(ComputedStyle {
+        let style = Arc::new(ComputedStyle::from(ComputedValues {
             box_shadow: Arc::from([BoxShadow {
                 color: Some(Rgba::BLACK),
                 x: 0.0,
@@ -5986,8 +5992,8 @@ mod tests {
                 spread: 10.0,
                 inset: false,
             }]),
-            ..ComputedStyle::default()
-        });
+            ..ComputedValues::default()
+        }));
         // A box 60px tall in two slices of 30px, one on each page.
         let slice = |sides: VisibleSides| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(30.0)),
@@ -6071,12 +6077,12 @@ mod tests {
             |node: usize, position: Position, blend: BlendMode, g: f32, children: Vec<Fragment>| Fragment {
                 rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(40.0)),
                 kind: FragmentKind::Box {
-                    style: Arc::new(ComputedStyle {
+                    style: Arc::new(ComputedStyle::from(ComputedValues {
                         position,
                         mix_blend_mode: blend,
                         background_color: colored(g),
-                        ..ComputedStyle::default()
-                    }),
+                        ..ComputedValues::default()
+                    })),
                     node: Some(nodes[node]),
                     sides: VisibleSides::ALL,
                 },
@@ -6190,11 +6196,11 @@ mod tests {
         let fragment = |node: Option<NodeId>, position: Position, g: f32, children: Vec<Fragment>| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(40.0)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     position,
                     background_color: colored(g),
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node,
                 sides: VisibleSides::ALL,
             },
@@ -6268,12 +6274,12 @@ mod tests {
             Fragment {
                 rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(40.0)),
                 kind: FragmentKind::Box {
-                    style: Arc::new(ComputedStyle {
+                    style: Arc::new(ComputedStyle::from(ComputedValues {
                         position,
                         background_color: colored(g),
                         before_of,
-                        ..ComputedStyle::default()
-                    }),
+                        ..ComputedValues::default()
+                    })),
                     node,
                     sides: VisibleSides::ALL,
                 },
@@ -6325,10 +6331,10 @@ mod tests {
             height,
             fragments: Vec::new(),
             margin: [Au::ZERO; 4],
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 background_color: color,
-                ..ComputedStyle::default()
-            }),
+                ..ComputedValues::default()
+            })),
             canvas: None,
             bleed: 0.0,
             marks: PageMarks::default(),
@@ -6369,11 +6375,11 @@ mod tests {
         let block = |node: usize, position: Position, g: f32, children: Vec<Fragment>| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(40.0)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     position,
                     background_color: colored(g),
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: Some(nodes[node]),
                 sides: VisibleSides::ALL,
             },
@@ -6435,15 +6441,15 @@ mod tests {
         let filled = |y: f32, height: f32, children: Vec<Fragment>| Fragment {
             rect: Rect::new(Au::ZERO, px(y), px(100.0), px(height)),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     background_color: Rgba {
                         r: 0.0,
                         g: 1.0,
                         b: 0.0,
                         a: 1.0,
                     },
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -6512,10 +6518,12 @@ mod tests {
     fn strokes_rounded_dashed_borders_along_their_middle() {
         use fagus_layout::VisibleSides;
         use fagus_style::values::Sides;
-        let style = |border_style| ComputedStyle {
-            border_width: Sides::all(3.0),
-            border_style: Sides::all(border_style),
-            ..ComputedStyle::default()
+        let style = |border_style| {
+            ComputedStyle::from(ComputedValues {
+                border_width: Sides::all(3.0),
+                border_style: Sides::all(border_style),
+                ..ComputedValues::default()
+            })
         };
         let rect = RectF {
             x: 20.0,
@@ -6605,12 +6613,12 @@ mod tests {
             height: 40.0,
         };
         let outline = |width: f32, offset: f32, style: OutlineStyle| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(ComputedValues {
                 outline_width: width,
                 outline_style: style,
                 outline_offset: offset,
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             let mut items = Vec::new();
             paint_outline(&style, rect, None, &mut items);
             bounds(&items)
@@ -6650,15 +6658,15 @@ mod tests {
             height: 50.0,
         };
         let clip = |shape: ClipShape, reference: BoxArea| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(ComputedValues {
                 border_width: fagus_style::values::Sides {
                     top: 5.0,
                     right: 5.0,
                     bottom: 5.0,
                     left: 5.0,
                 },
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             clip_item(
                 &style,
                 &ClipPath {
@@ -6715,15 +6723,15 @@ mod tests {
             })
         );
         // The margin box, with corners that grow less than its margins where they are smaller.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             margin: fagus_style::values::Sides {
                 top: fagus_style::values::LengthPercentageAuto::Length(px(50.0)),
                 right: fagus_style::values::LengthPercentageAuto::Length(percent(0.1)),
                 bottom: fagus_style::values::LengthPercentageAuto::Auto,
                 left: fagus_style::values::LengthPercentageAuto::Length(px(50.0)),
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let (margin_box, radii) =
             background::area(&style, border_box, Some([(10.0, 10.0); 4]), BoxArea::MarginBox);
         assert_eq!(
@@ -6775,7 +6783,7 @@ mod tests {
         let run = TextRun {
             face,
             size: 16.0,
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 font_family: Arc::from(["Inter".to_owned()]),
                 text_emphasis_style: Some(EmphasisMark::Shape {
                     shape: EmphasisShape::Dot,
@@ -6787,8 +6795,8 @@ mod tests {
                     blur: 0.0,
                     color: Some(red),
                 }]),
-                ..ComputedStyle::default()
-            }),
+                ..ComputedValues::default()
+            })),
             glyphs,
             text: "ab".to_owned(),
             baseline: Au::from_px(15.0),
@@ -6880,11 +6888,11 @@ mod tests {
         let bar = |y: f32, height: f32| Fragment {
             rect: rect(5.0, y, 20.0, height),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     background_color: Rgba::BLACK,
                     math_bar: true,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -6986,10 +6994,10 @@ mod tests {
         let block = Fragment {
             rect: rect(10.375, 10.3125, 30.25, 20.375),
             kind: FragmentKind::Box {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     background_color: Rgba::BLACK,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 node: None,
                 sides: VisibleSides::ALL,
             },
@@ -7059,11 +7067,11 @@ mod tests {
         let rect =
             |y: f32, height: f32| Rect::new(Au::ZERO, Au::from_px(y), Au::from_px(20.0), Au::from_px(height));
         let style = |font_size: f32| {
-            Arc::new(ComputedStyle {
+            Arc::new(ComputedStyle::from(ComputedValues {
                 font_family: vec!["Inter".to_owned()].into(),
                 font_size,
-                ..ComputedStyle::default()
-            })
+                ..ComputedValues::default()
+            }))
         };
         let text = Fragment {
             rect: rect(0.0, 20.0),
@@ -7183,22 +7191,22 @@ mod tests {
             }]
             .into(),
         };
-        let block = ComputedStyle {
+        let block = ComputedStyle::from(ComputedValues {
             display: Display::BLOCK,
-            ..ComputedStyle::default()
-        };
-        let flex = ComputedStyle {
+            ..ComputedValues::default()
+        });
+        let flex = ComputedStyle::from(ComputedValues {
             display: Display::Normal {
                 outside: DisplayOutside::Block,
                 inside: DisplayInside::Flex,
                 list_item: false,
             },
-            ..ComputedStyle::default()
-        };
-        let filled = ComputedStyle {
+            ..ComputedValues::default()
+        });
+        let filled = ComputedStyle::from(ComputedValues {
             background_color: Rgba::BLACK,
-            ..block.clone()
-        };
+            ..ComputedValues::from(block.clone())
+        });
         let container = boxed(
             flex,
             0.0,
@@ -7249,19 +7257,21 @@ mod tests {
             },
             children: children.into(),
         };
-        let filled = |color: Rgba| ComputedStyle {
-            display: Display::BLOCK,
-            background_color: color,
-            ..ComputedStyle::default()
+        let filled = |color: Rgba| {
+            ComputedStyle::from(ComputedValues {
+                display: Display::BLOCK,
+                background_color: color,
+                ..ComputedValues::default()
+            })
         };
-        let flex = ComputedStyle {
+        let flex = ComputedStyle::from(ComputedValues {
             display: Display::Normal {
                 outside: DisplayOutside::Block,
                 inside: DisplayInside::Flex,
                 list_item: false,
             },
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         // A flex item, and a block after its container pulled up over it.
         let content = Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(100.0)),
@@ -7326,7 +7336,7 @@ mod tests {
             let run = fagus_layout::TextRun {
                 face,
                 size: 16.0,
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     decorations: Arc::from([Decoration {
                         line: TextDecorationLine {
                             underline: true,
@@ -7342,8 +7352,8 @@ mod tests {
                     }]),
                     font_family: Arc::from(["Inter".to_owned()]),
                     text_decoration_skip_ink: skip,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 glyphs,
                 text: text.to_owned(),
                 baseline: Au::ZERO,
@@ -7393,14 +7403,14 @@ mod tests {
             let run = fagus_layout::TextRun {
                 face,
                 size,
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     decorations: Arc::from([Decoration {
                         font_size: size,
                         ..decoration
                     }]),
                     font_size: size,
-                    ..ComputedStyle::default()
-                }),
+                    ..ComputedValues::default()
+                })),
                 glyphs: Vec::new(),
                 text: String::new(),
                 baseline: Au::ZERO,
@@ -7523,10 +7533,10 @@ mod tests {
         let run = fagus_layout::TextRun {
             face,
             size: 16.0,
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 decorations: Arc::from([dotted]),
-                ..ComputedStyle::default()
-            }),
+                ..ComputedValues::default()
+            })),
             glyphs: Vec::new(),
             text: String::new(),
             baseline: Au::ZERO,
@@ -7560,10 +7570,10 @@ mod tests {
         // Blink's `ComputedStyleUtils::BorderSideColor`: `inset`, `outset`, `groove` and `ridge`
         // in `currentcolor` are `#eee`, whatever the text's color (measured: `#9a9a9a` and
         // `#eeeeee` for `border: 2px inset` in red text); a color of their own is theirs.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             color: Rgba::from_u8(255, 0, 0, 1.0),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let gray = Rgba::from_u8(238, 238, 238, 1.0);
         for border_style in [
             BorderStyle::Inset,
@@ -7576,14 +7586,14 @@ mod tests {
         }
         assert_eq!(side_color(&style, None, BorderStyle::Solid), style.color);
         // Tables and their parts keep the text's color (`<table border>`).
-        let table = ComputedStyle {
+        let table = ComputedStyle::from(ComputedValues {
             display: fagus_style::values::Display::Normal {
                 outside: fagus_style::values::DisplayOutside::Block,
                 inside: fagus_style::values::DisplayInside::Table,
                 list_item: false,
             },
-            ..style.clone()
-        };
+            ..ComputedValues::from(style.clone())
+        });
         assert_eq!(side_color(&table, None, BorderStyle::Outset), style.color);
         let bytes = |color: Rgba| [color.r, color.g, color.b].map(|channel| (channel * 255.0).round() as u8);
         let (dark, light) = shades(gray);
@@ -7661,14 +7671,14 @@ mod tests {
             height: 60.0,
         };
         let place = |fit: ObjectFit, position: (f32, f32)| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(ComputedValues {
                 object_fit: fit,
                 object_position: (
                     LengthPercentage::Percent(position.0),
                     LengthPercentage::Percent(position.1),
                 ),
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             let (rect, overflows) = object_rect(&style, &image, content);
             ((rect.x, rect.y, rect.width, rect.height), overflows)
         };
@@ -7718,11 +7728,11 @@ mod tests {
             height: 32.0,
         };
         let place = |fit: ObjectFit, image: &fagus_layout::Image| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(ComputedValues {
                 object_fit: fit,
                 object_position: (LengthPercentage::Percent(0.0), LengthPercentage::Percent(0.0)),
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             let (rect, _) = object_rect(&style, image, content);
             (rect.width, rect.height)
         };
@@ -7844,15 +7854,15 @@ mod tests {
         use fagus_layout::VisibleSides;
         use fagus_layout::units::Rect;
         use fagus_style::values::{BoxArea, ClipPath, ClipShape, Display};
-        let style = Arc::new(ComputedStyle {
+        let style = Arc::new(ComputedStyle::from(ComputedValues {
             display: Display::INLINE,
             clip_path: Some(Arc::new(ClipPath {
                 shape: ClipShape::Box,
                 reference: BoxArea::BorderBox,
                 svg_reference: fagus_style::values::TransformBox::StrokeBox,
             })),
-            ..ComputedStyle::default()
-        });
+            ..ComputedValues::default()
+        }));
         let node = NodeId::DOCUMENT;
         let span = |x: f32, width: f32| Fragment {
             rect: Rect::new(Au::from_px(x), Au::ZERO, Au::from_px(width), Au::from_px(20.0)),
@@ -7921,10 +7931,10 @@ mod tests {
             .query(&["Inter"], 400.0, fagus_text::FontStyle::Normal)
             .expect("Inter");
         // A title in transparent text whose gradient shows through its glyphs.
-        let text_style = ComputedStyle {
+        let text_style = ComputedStyle::from(ComputedValues {
             color: Rgba::TRANSPARENT,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let line = Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(20.0)),
             kind: FragmentKind::Line {
@@ -7948,12 +7958,12 @@ mod tests {
             }]
             .into(),
         };
-        let title = ComputedStyle {
+        let title = ComputedStyle::from(ComputedValues {
             display: Display::BLOCK,
             background_color: Rgba::from_u8(0xb0, 0x8d, 0x57, 1.0),
             background_clip_text: Arc::from([true]),
-            ..text_style
-        };
+            ..ComputedValues::from(text_style)
+        });
         let page = test_page(200.0, vec![test_box(title, 0.0, 200.0, vec![line])]);
         let lists = paint(&[page], &fonts, &fagus_layout::Images::default(), false);
         let items = &lists[0].items;
@@ -7993,10 +8003,10 @@ mod tests {
         let face = fonts
             .query(&["Inter"], 400.0, fagus_text::FontStyle::Normal)
             .expect("Inter");
-        let text_style = ComputedStyle {
+        let text_style = ComputedStyle::from(ComputedValues {
             color: Rgba::TRANSPARENT,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let line = |text: &str| Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(20.0)),
             kind: FragmentKind::Line {
@@ -8020,18 +8030,20 @@ mod tests {
             }]
             .into(),
         };
-        let block = |position: Position, opacity: f32| ComputedStyle {
-            display: Display::BLOCK,
-            position,
-            opacity,
-            ..text_style.clone()
+        let block = |position: Position, opacity: f32| {
+            ComputedStyle::from(ComputedValues {
+                display: Display::BLOCK,
+                position,
+                opacity,
+                ..ComputedValues::from(text_style.clone())
+            })
         };
-        let title = ComputedStyle {
+        let title = ComputedStyle::from(ComputedValues {
             display: Display::BLOCK,
             background_color: Rgba::from_u8(0xb0, 0x8d, 0x57, 1.0),
             background_clip_text: Arc::from([true]),
-            ..text_style.clone()
-        };
+            ..ComputedValues::from(text_style.clone())
+        });
         let children = vec![
             test_box(block(Position::Relative, 1.0), 0.0, 50.0, vec![line("relative")]),
             test_box(
@@ -8077,15 +8089,15 @@ mod tests {
             luminance: false,
         });
         let paint = |clips: [bool; 2]| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(ComputedValues {
                 background_color: Rgba::from_u8(0xb0, 0x8d, 0x57, 1.0),
                 background_image: Arc::from([
                     fagus_style::values::Image::None,
                     fagus_style::values::Image::None,
                 ]),
                 background_clip_text: Arc::from(clips),
-                ..ComputedStyle::default()
-            };
+                ..ComputedValues::default()
+            });
             let rect = RectF {
                 x: 0.0,
                 y: 0.0,
@@ -8146,13 +8158,15 @@ mod tests {
             width: 100.0,
             height: 60.0,
         };
-        let style = |border: BorderStyle| ComputedStyle {
-            background_color: Rgba::from_u8(0, 0, 255, 1.0),
-            border_width: Sides::all(10.0),
-            border_style: Sides::all(border),
-            border_color: Sides::all(Some(Rgba::TRANSPARENT)),
-            background_clip_border_area: Arc::from([true]),
-            ..ComputedStyle::default()
+        let style = |border: BorderStyle| {
+            ComputedStyle::from(ComputedValues {
+                background_color: Rgba::from_u8(0, 0, 255, 1.0),
+                border_width: Sides::all(10.0),
+                border_style: Sides::all(border),
+                border_color: Sides::all(Some(Rgba::TRANSPARENT)),
+                background_clip_border_area: Arc::from([true]),
+                ..ComputedValues::default()
+            })
         };
         // The mask: the transparent border, painted opaque; dashes for a dashed one.
         let solid = background::border_area(&style(BorderStyle::Solid), rect, None, VisibleSides::ALL);
@@ -8203,7 +8217,7 @@ mod tests {
             .expect("Inter");
         // Gradient text, underlined: transparent glyphs and line, through which the
         // background shows.
-        let text_style = ComputedStyle {
+        let text_style = ComputedStyle::from(ComputedValues {
             text_fill_color: Some(Rgba::TRANSPARENT),
             decorations: Arc::from([Decoration {
                 line: TextDecorationLine {
@@ -8218,8 +8232,8 @@ mod tests {
                 under: false,
                 font_size: 16.0,
             }]),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let line = Fragment {
             rect: Rect::new(Au::ZERO, Au::ZERO, Au::from_px(100.0), Au::from_px(20.0)),
             kind: FragmentKind::Line {
@@ -8243,12 +8257,12 @@ mod tests {
             }]
             .into(),
         };
-        let title = ComputedStyle {
+        let title = ComputedStyle::from(ComputedValues {
             display: Display::BLOCK,
             background_color: Rgba::from_u8(0xb0, 0x8d, 0x57, 1.0),
             background_clip_text: Arc::from([true]),
-            ..text_style
-        };
+            ..ComputedValues::from(text_style)
+        });
         let page = test_page(200.0, vec![test_box(title, 0.0, 200.0, vec![line])]);
         let lists = paint(&[page], &fonts, &fagus_layout::Images::default(), false);
         let items = &lists[0].items;
@@ -8282,18 +8296,20 @@ mod tests {
         fonts.add_default_fonts();
         // A header cell turned upside down, as in timetables, with collapsed borders of 2px
         // above and below and 6px at the sides, which the table draws.
-        let cell = |collapse: BorderCollapse| ComputedStyle {
-            display: Display::Internal(InternalDisplay::TableCell),
-            border_collapse: collapse,
-            border_width: Sides {
-                top: 2.0,
-                right: 6.0,
-                bottom: 2.0,
-                left: 6.0,
-            },
-            background_color: Rgba::from_u8(0xee, 0xee, 0xff, 1.0),
-            transform: Arc::from([TransformFunction::Rotate(180.0)]),
-            ..ComputedStyle::default()
+        let cell = |collapse: BorderCollapse| {
+            ComputedStyle::from(ComputedValues {
+                display: Display::Internal(InternalDisplay::TableCell),
+                border_collapse: collapse,
+                border_width: Sides {
+                    top: 2.0,
+                    right: 6.0,
+                    bottom: 2.0,
+                    left: 6.0,
+                },
+                background_color: Rgba::from_u8(0xee, 0xee, 0xff, 1.0),
+                transform: Arc::from([TransformFunction::Rotate(180.0)]),
+                ..ComputedValues::default()
+            })
         };
         let background = |style: ComputedStyle| {
             let page = test_page(200.0, vec![test_box(style, 10.0, 100.0, Vec::new())]);
@@ -8324,7 +8340,7 @@ mod tests {
         fonts.add_default_fonts();
         // A header cell above a collapsed border of 1px: its box ends half a pixel into the
         // border, which Chrome rounds down to the border's bottom.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             display: Display::Internal(InternalDisplay::TableCell),
             border_collapse: BorderCollapse::Collapse,
             border_width: Sides {
@@ -8334,8 +8350,8 @@ mod tests {
                 left: 0.0,
             },
             background_color: Rgba::from_u8(0x22, 0x33, 0x33, 1.0),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let page = test_page(200.0, vec![test_box(style, 10.0, 100.0, Vec::new())]);
         let lists = paint(&[page], &fonts, &fagus_layout::Images::default(), false);
         let rect = lists[0]
@@ -8360,15 +8376,15 @@ mod tests {
         fonts.add_default_fonts();
         // A cell between collapsed borders of 2px, whose fragment spans them whole: Chrome's
         // border box ends in the middle of each, and the outline 5px inside it.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             display: Display::Internal(InternalDisplay::TableCell),
             border_collapse: BorderCollapse::Collapse,
             border_width: Sides::all(2.0),
             outline_width: 1.0,
             outline_style: OutlineStyle::Line(BorderStyle::Solid),
             outline_offset: -5.0,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         let page = test_page(200.0, vec![test_box(style, 10.0, 100.0, Vec::new())]);
         let lists = paint(&[page], &fonts, &fagus_layout::Images::default(), false);
         let outer = lists[0].items.iter().find_map(|item| match item {

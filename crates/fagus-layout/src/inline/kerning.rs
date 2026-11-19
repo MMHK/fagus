@@ -122,11 +122,11 @@ mod tests {
         fonts.add_font_file(&path).expect("test font");
         let mut pieces = Vec::new();
         for text in texts {
-            let style = Arc::new(ComputedStyle {
+            let style = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
                 font_family: vec!["Inter".to_owned()].into(),
                 font_size: 20.0,
-                ..ComputedStyle::default()
-            });
+                ..fagus_style::ComputedValues::default()
+            }));
             shape_text(
                 &fonts,
                 text,

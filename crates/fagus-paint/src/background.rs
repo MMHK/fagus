@@ -1479,15 +1479,15 @@ mod tests {
         use fagus_layout::{Fragment, FragmentKind, VisibleSides};
         use fagus_style::values::{Overflow, Sides};
         // A box 100 × 100 with a 5px border and 10px padding, holding a block 200 × 180.
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(fagus_style::ComputedValues {
             background_color: Rgba::from_u8(238, 238, 238, 1.0),
             background_local: Arc::from([true]),
             border_width: Sides::all(5.0),
             padding: Sides::all(LengthPercentage::Px(10.0)),
             overflow_x: Overflow::Hidden,
             overflow_y: Overflow::Hidden,
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let px = Au::from_px;
         let child = Fragment {
             rect: Rect::new(px(15.0), px(15.0), px(200.0), px(180.0)),
@@ -1520,16 +1520,16 @@ mod tests {
             })
         );
         // Not in a box that does not clip its overflow, nor without local layers.
-        let visible = ComputedStyle {
+        let visible = ComputedStyle::from(fagus_style::ComputedValues {
             overflow_x: Overflow::Visible,
             overflow_y: Overflow::Visible,
-            ..style.clone()
-        };
+            ..fagus_style::ComputedValues::from(style.clone())
+        });
         assert_eq!(scrollable_border_box(&visible, &fragment, border_box), None);
-        let scrolling = ComputedStyle {
+        let scrolling = ComputedStyle::from(fagus_style::ComputedValues {
             background_local: Arc::from([]),
-            ..style.clone()
-        };
+            ..fagus_style::ComputedValues::from(style.clone())
+        });
         assert_eq!(scrollable_border_box(&scrolling, &fragment, border_box), None);
         // The color, under a local bottom layer, stays inside the padding box.
         let mut items = Vec::new();
@@ -1557,11 +1557,11 @@ mod tests {
     fn ends_the_color_halfway_into_an_opaque_rounded_border() {
         // A checkbox of Obsidian's: 1px border and background of one color, rounded by 4px.
         let purple = Rgba::from_u8(139, 108, 239, 1.0);
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(fagus_style::ComputedValues {
             background_color: purple,
             border_width: fagus_style::values::Sides::all(1.0),
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let border_box = RectF {
             x: 10.0,
             y: 10.0,

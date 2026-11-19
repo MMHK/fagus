@@ -3,7 +3,7 @@
 use lightningcss::properties::custom::{Token, TokenList, TokenOrValue};
 
 use crate::compute::Context;
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{
     AnnotationSide, RubyAlign, TextBoxTrim, TextEdge, TextOrientation, TextSpacingTrim, WritingMode,
 };
@@ -19,7 +19,7 @@ use crate::values::{
 };
 
 /// Applies a declaration of a property that lightningcss does not parse.
-pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut ComputedStyle, context: &Context) {
+pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut ComputedValues, context: &Context) {
     let name = name.to_ascii_lowercase();
     if crate::anchor::apply_property(&name, tokens, style) {
         return;

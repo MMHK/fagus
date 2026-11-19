@@ -17,8 +17,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{Display, FootnoteDisplay, FootnotePolicy, MaxSize};
+use fagus_style::{ComputedStyle, ComputedValues};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::block::{BreakToken, Layouter, Margin, Outcome, Space};
@@ -488,10 +488,10 @@ fn inline_run(layouter: &Layouter<'_>, notes: &[Note], width: Au) -> InlineRun {
         let style = &layout_box.style;
         let mut own = Vec::with_capacity(items.len() + 2);
         own.push(InlineItem::Open {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 display: Display::INLINE,
-                ..(**style).clone()
-            }),
+                ..ComputedValues::clone(style)
+            })),
             node: layout_box.node,
         });
         own.extend(items.iter().cloned());

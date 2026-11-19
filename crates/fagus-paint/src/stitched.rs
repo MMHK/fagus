@@ -233,18 +233,18 @@ mod tests {
     fn shows_moved_boxes_on_the_pages_they_reach() {
         // On the second page, a box moved 30px up by its relative offset, and one moved 60px down
         // by a transform from 70px down.
-        let relative = ComputedStyle {
+        let relative = ComputedStyle::from(fagus_style::ComputedValues {
             position: Position::Relative,
             inset: fagus_style::values::Sides {
                 top: LengthPercentageAuto::Length(LengthPercentage::Px(-30.0)),
-                ..ComputedStyle::default().inset
+                ..ComputedStyle::default().inset.clone()
             },
-            ..ComputedStyle::default()
-        };
-        let transformed = ComputedStyle {
+            ..fagus_style::ComputedValues::default()
+        });
+        let transformed = ComputedStyle::from(fagus_style::ComputedValues {
             transform: Arc::from([TransformFunction::Matrix([1.0, 0.0, 0.0, 1.0, 0.0, 60.0])]),
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let root = |children| boxed(ComputedStyle::default(), (0.0, 100.0), children);
         let pages = [
             page(root(Vec::new())),

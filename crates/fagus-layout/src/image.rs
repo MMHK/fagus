@@ -613,10 +613,12 @@ mod tests {
         assert_eq!(jpeg(9).orientation, 1, "no such orientation");
         // `image-orientation: none` shows the pixels as stored; `image-rendering` changes nothing.
         let turned = Arc::new(turned);
-        let style = |orientation, rendering| fagus_style::ComputedStyle {
-            image_orientation: orientation,
-            image_rendering: rendering,
-            ..fagus_style::ComputedStyle::default()
+        let style = |orientation, rendering| {
+            fagus_style::ComputedStyle::from(fagus_style::ComputedValues {
+                image_orientation: orientation,
+                image_rendering: rendering,
+                ..fagus_style::ComputedValues::default()
+            })
         };
         let stored = Image::styled(&turned, &style(ImageOrientation::None, ImageRendering::Auto));
         assert_eq!((stored.orientation, stored.width, stored.height), (1, 4.0, 2.0));

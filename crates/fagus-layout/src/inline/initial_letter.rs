@@ -14,7 +14,7 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use super::{
     InlineItem, Layouter, PieceKind, TextLevels, face_for, face_metrics, font_variations, metrics,
@@ -126,15 +126,15 @@ pub(super) fn initial_letter(
     if line_height <= 0.0 {
         return None;
     }
-    let style = Arc::new(ComputedStyle {
+    let style = Arc::new(ComputedStyle::from(ComputedValues {
         font_size: letter_font_size(
             size,
             (line_height, cap),
             letter_cap,
             (letter_style.font_size, used_font_size(fonts, letter_style)),
         )?,
-        ..(**letter_style).clone()
-    });
+        ..ComputedValues::clone(letter_style)
+    }));
     // Preserved tabs before the letter take their room in its box, to the tab stops of the
     // paragraph, as Blink lays them out as items of their own beside the letter's ink
     // (`CalculateInitialLetterBoxInlineSize`).

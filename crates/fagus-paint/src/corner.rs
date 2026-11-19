@@ -1276,10 +1276,10 @@ mod tests {
     #[test]
     fn knows_boxes_with_one_shaped_corner() {
         // A scoop at the top left alone, the only corner with a radius.
-        let scoop = ComputedStyle {
+        let scoop = ComputedStyle::from(fagus_style::ComputedValues {
             corner_shape: [0.5, 2.0, 2.0, 2.0],
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let radii = [(40.0, 40.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)];
         assert!(is_shaped(&scoop, Some(&radii)));
         let round_there = [(0.0, 0.0), (40.0, 40.0), (0.0, 0.0), (0.0, 0.0)];
@@ -1289,10 +1289,10 @@ mod tests {
     #[test]
     fn scales_concave_opposite_corners_apart() {
         // Two scoops of 220 pixels in a box of 240 meet in the middle: scaled down (Chrome 157).
-        let scoop = ComputedStyle {
+        let scoop = ComputedStyle::from(fagus_style::ComputedValues {
             corner_shape: [0.5, 2.0, 0.5, 2.0],
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let radii = [(220.0, 220.0), (0.0, 0.0), (220.0, 220.0), (0.0, 0.0)];
         let factor = opposite_scale(240.0, 240.0, &radii, &scoop);
         assert!(factor < 0.9 && factor > 0.4, "{factor}");
@@ -1303,10 +1303,10 @@ mod tests {
     }
 
     fn style(shape: f32) -> ComputedStyle {
-        ComputedStyle {
+        ComputedStyle::from(fagus_style::ComputedValues {
             corner_shape: [shape; 4],
-            ..ComputedStyle::default()
-        }
+            ..fagus_style::ComputedValues::default()
+        })
     }
 
     fn points(path: &[PathSegment]) -> Vec<Point> {
@@ -1381,10 +1381,10 @@ mod tests {
     fn clips_out_overlapping_cuts_whole() {
         // Corners of half the box: the scoop's cut (top right) reaches into the notch's
         // (bottom right), and both reach out of the inset box into the border.
-        let shapes = ComputedStyle {
+        let shapes = ComputedStyle::from(fagus_style::ComputedValues {
             corner_shape: [1.0, 0.5, NOTCH, STRAIGHT],
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let rect = RectF {
             x: 0.0,
             y: 0.0,
@@ -1488,11 +1488,11 @@ mod tests {
     #[test]
     fn strokes_dashes_along_the_shape() {
         use fagus_style::values::{BorderStyle, Sides};
-        let dashed = ComputedStyle {
+        let dashed = ComputedStyle::from(fagus_style::ComputedValues {
             border_width: Sides::all(6.0),
             border_style: Sides::all(BorderStyle::Dashed),
-            ..style(1.0)
-        };
+            ..fagus_style::ComputedValues::from(style(1.0))
+        });
         let mut items = Vec::new();
         assert!(styled_border(&dashed, BOX, &[(20.0, 20.0); 4], &mut items).is_some());
         let [
@@ -1510,13 +1510,13 @@ mod tests {
         let (x, y) = points(centerline)[0];
         assert!((x - 78.0).abs() < 1.0 && (y - 3.0).abs() < 1e-3, "{x} {y}");
         // A side of another color strokes the middle in its wedge.
-        let mixed = ComputedStyle {
+        let mixed = ComputedStyle::from(fagus_style::ComputedValues {
             border_color: Sides {
                 top: Some(Rgba::WHITE),
                 ..Sides::all(None)
             },
-            ..dashed
-        };
+            ..fagus_style::ComputedValues::from(dashed)
+        });
         let mut items = Vec::new();
         assert!(styled_border(&mixed, BOX, &[(20.0, 20.0); 4], &mut items).is_some());
         assert_eq!(
@@ -1527,17 +1527,17 @@ mod tests {
             4
         );
         // Double borders are drawn square.
-        let double = ComputedStyle {
+        let double = ComputedStyle::from(fagus_style::ComputedValues {
             border_style: Sides::all(BorderStyle::Double),
-            ..mixed
-        };
+            ..fagus_style::ComputedValues::from(mixed)
+        });
         assert!(styled_border(&double, BOX, &[(20.0, 20.0); 4], &mut Vec::new()).is_none());
     }
 
     #[test]
     fn blurred_shadows_and_outlines_take_the_shape() {
         use fagus_style::values::{BorderStyle, BoxShadow, Rgba};
-        let shadowed = ComputedStyle {
+        let shadowed = ComputedStyle::from(fagus_style::ComputedValues {
             box_shadow: Arc::from([BoxShadow {
                 x: 0.0,
                 y: 0.0,
@@ -1546,8 +1546,8 @@ mod tests {
                 color: Some(Rgba::BLACK),
                 inset: false,
             }]),
-            ..style(1.0)
-        };
+            ..fagus_style::ComputedValues::from(style(1.0))
+        });
         let mut items = Vec::new();
         shadows(&shadowed, BOX, &[(20.0, 20.0); 4], false, &mut items);
         let [Item::BoxShadow(shadow)] = items.as_slice() else {

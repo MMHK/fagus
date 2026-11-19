@@ -184,7 +184,7 @@ time, as PHP sends them one after another.
 
 A worker that has rendered a large document keeps much of the memory it needed: not in caches,
 but in the allocator, which holds freed memory for later rather than handing it back to the
-system. After a 100-page invoice, a worker on macOS keeps about 52 MB at rest, and more after many
+system. After a 100-page invoice, a worker on macOS keeps about 47 MB at rest, and more after many
 of them ([bench/README.md](https://github.com/nforst/fagus/blob/main/bench/README.md#memory-a-worker-keeps));
 glibc's allocator on Linux keeps freed memory in its arenas too. In a queue worker or under
 Octane, where one worker lives for hours, the engine can replace it with a new one, which starts

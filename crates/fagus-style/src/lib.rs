@@ -59,7 +59,7 @@ pub use cascade::{
 pub use controls::{MeterRegion, meter_value, progress_fraction};
 pub use extra::font_face_features;
 pub use math::descriptor_number;
-pub use style::{ComputedStyle, CustomProperties};
+pub use style::{ComputedStyle, ComputedValues, CustomProperties};
 
 /// The sRGB color of an absolute color as Chrome draws it (see the computed values of colors),
 /// in the light color scheme; `None` for `currentcolor`.
@@ -106,6 +106,27 @@ mod tests {
             })
             .expect("element with id");
         styled.style(node).expect("styled element")
+    }
+
+    #[test]
+    fn elements_with_the_same_values_share_them() {
+        let (document, styled) = styles(
+            "<table><tr><td id=a>1<td id=b>2<tr><td id=c>3<td id=d style='color: red'>4</table>",
+            "td { padding: 2px }",
+        );
+        let style = |id| by_id(&document, &styled, id);
+        // Siblings and cousins (the cells of other rows) share their values; an inline style does
+        // not.
+        assert!(style("a").shares_values(style("b")));
+        assert!(style("a").shares_values(style("c")));
+        assert!(!style("a").shares_values(style("d")));
+        // Each element keeps a style of its own, and a change copies the values first.
+        assert!(!std::ptr::eq(style("a"), style("b")));
+        let mut changed = style("a").clone();
+        changed.z_index = Some(1);
+        assert!(!changed.shares_values(style("a")));
+        assert_eq!(style("a").z_index, None);
+        assert!(style("a").shares_values(style("b")));
     }
 
     #[test]

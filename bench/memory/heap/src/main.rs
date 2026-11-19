@@ -23,8 +23,9 @@ fn main() {
     let usage = "usage: fagus-heap peak DOCUMENT OUT.json | phases DOCUMENT | sizes";
     match args.get(1).map(String::as_str) {
         Some("sizes") => println!(
-            "ComputedStyle: {} bytes",
-            std::mem::size_of::<fagus_style::ComputedStyle>()
+            "ComputedStyle: {} bytes, the ComputedValues it shares: {} bytes",
+            std::mem::size_of::<fagus_style::ComputedStyle>(),
+            std::mem::size_of::<fagus_style::ComputedValues>()
         ),
         Some("peak") if args.len() == 4 => peak(Path::new(&args[2]), &args[3]),
         Some("phases") if args.len() == 3 => phases(Path::new(&args[2])),

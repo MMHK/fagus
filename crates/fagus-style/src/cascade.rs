@@ -18,7 +18,7 @@ use rustc_hash::FxHashMap;
 use crate::background;
 use crate::compute::{self, Context};
 use crate::functions::Functions;
-use crate::style::ComputedStyle;
+use crate::style::{ComputedStyle, ComputedValues};
 use crate::values::{
     Display, Float, FontMetrics, FontRequest, FontSizeBasis, FontStyle, FontUnits, Position,
 };
@@ -656,7 +656,7 @@ struct Containers<'a> {
 impl Containers<'_> {
     /// The size of a container as laid out, without its zoom: in the pixels of its own lengths,
     /// which container queries and container query units refer to.
-    fn unzoomed(&self, node: NodeId, style: &ComputedStyle) -> Option<fagus_css::ContainerSize> {
+    fn unzoomed(&self, node: NodeId, style: &ComputedValues) -> Option<fagus_css::ContainerSize> {
         let size = self.sizes.get(&node)?;
         let zoom = style.zoom;
         Some(fagus_css::ContainerSize {
@@ -684,7 +684,7 @@ impl Containers<'_> {
         rule.container.as_ref().is_none_or(|queries| {
             queries.iter().all(|query| {
                 let sized = query.condition.as_ref().is_none_or(fagus_css::asks_size);
-                let named = |style: &ComputedStyle| {
+                let named = |style: &ComputedValues| {
                     query
                         .name
                         .as_ref()
@@ -719,7 +719,7 @@ impl Containers<'_> {
 /// `style(--name)`): Chrome asks custom properties alone.
 fn style_query(
     query: &lightningcss::rules::container::StyleQuery<'static>,
-    container: &ComputedStyle,
+    container: &ComputedValues,
     registry: &Registry,
 ) -> bool {
     use lightningcss::media_query::Operator;
@@ -814,7 +814,7 @@ impl<'a> FontUnitsCache<'a> {
 
     /// The computed line height of a style in pixels, which `lh` refers to: `line-height:
     /// normal` is the line spacing of its first available font, 1.2 em without fonts.
-    fn line_height(&self, style: &ComputedStyle) -> f32 {
+    fn line_height(&self, style: &ComputedValues) -> f32 {
         let key = (
             (
                 Arc::clone(&style.font_family),
@@ -852,7 +852,7 @@ impl<'a> FontUnitsCache<'a> {
     /// The metrics that the font-relative lengths of a style refer to: those of its first
     /// available font, scaled as `font-size-adjust` scales the font, as Chrome scales `ex`,
     /// `ch`, `cap` and `ic` (not `em`).
-    fn adjusted_units(&self, style: &ComputedStyle) -> FontUnits {
+    fn adjusted_units(&self, style: &ComputedValues) -> FontUnits {
         use crate::values::{FontMetric, FontSizeAdjust};
         let units = style.font_units;
         let metric_of = |units: &FontUnits, metric: FontMetric| match metric {
@@ -884,7 +884,7 @@ impl<'a> FontUnitsCache<'a> {
     }
 
     /// The metrics of the first available font of a style.
-    fn units(&self, style: &ComputedStyle) -> FontUnits {
+    fn units(&self, style: &ComputedValues) -> FontUnits {
         let optical_size = optical_size(style);
         let key = (
             (
@@ -914,7 +914,7 @@ impl<'a> FontUnitsCache<'a> {
 
 /// The size on the `opsz` axis of a style's font: its font size, unless `font-optical-sizing`
 /// is `none`.
-fn optical_size(style: &ComputedStyle) -> Option<f32> {
+fn optical_size(style: &ComputedValues) -> Option<f32> {
     (style.font_optical_sizing == crate::values::OpticalSizing::Auto).then_some(style.font_size)
 }
 
@@ -1022,12 +1022,12 @@ pub fn compute_styles_with(
                 root_font_size,
                 viewport,
             ) {
-                let pseudo = ComputedStyle {
+                let pseudo = ComputedStyle::from(ComputedValues {
                     before_of: (key == PseudoKey::Before).then_some(element),
                     // Only elements are footnotes.
                     footnote: false,
-                    ..pseudo
-                };
+                    ..ComputedValues::from(pseudo)
+                });
                 // A `::before` or `::after` that is a list item has a marker too.
                 if matches!(pseudo.display, Display::Normal { list_item: true, .. })
                     && let Some(marker) = compute_pseudo_of(
@@ -1073,10 +1073,10 @@ pub fn compute_styles_with(
                     root_font_size,
                     viewport,
                 ) {
-                    let pseudo = ComputedStyle {
+                    let pseudo = ComputedStyle::from(ComputedValues {
                         footnote_marker: key == PseudoKey::FootnoteMarker,
-                        ..pseudo
-                    };
+                        ..ComputedValues::from(pseudo)
+                    });
                     styled.pseudo.insert((element, key), Arc::new(pseudo));
                 }
             }
@@ -1421,7 +1421,7 @@ fn propagate_overflow(document: &Document, styled: &mut StyledDocument) {
 /// that apply in a page context are kept, as Chrome keeps them.
 pub fn style_from_declarations(
     blocks: &[&lightningcss::declaration::DeclarationBlock<'static>],
-    parent: &ComputedStyle,
+    parent: &ComputedValues,
     viewport: (f32, f32),
 ) -> ComputedStyle {
     let expansions = Expansions::default();
@@ -1457,7 +1457,8 @@ pub fn style_from_declarations(
 /// list). Styles are grouped in classes: two styles of one class are equal, as they were built
 /// from the same declarations, in the same order, on parents of one class, and adjusted alike
 /// for their elements. Each element still gets a style of its own (layout tells elements apart
-/// by their styles), cloned from the shared one.
+/// by their styles), which shares the values of the built style unless an adjustment changes
+/// them (see [`ComputedStyle`]).
 #[derive(Default)]
 struct SharedStyles {
     /// The class of each style computed so far, by its address (the styles stay alive while
@@ -1679,15 +1680,23 @@ fn compute_element(
         &build,
     );
     position_tries(&mut style, rules, &ordered, &build);
-    if let Some(lang) = lang {
+    // The adjustments below change a style only where they change a value, so that a style
+    // shared with the elements of its class stays shared.
+    if let Some(lang) = lang
+        && style.lang.as_deref() != Some(lang)
+    {
         style.lang = Some(lang.into());
     }
     // A shadow turns off the native look of a text field, a text area or a `<select>` too
     // (`LayoutTheme::IsControlStyled`).
     let author_frame = author_frame
         || (!style.box_shadow.is_empty() && document.element(element).is_some_and(is_text_control));
-    style.author_frame = author_frame;
-    style.quirky_margins = quirky_margins;
+    if style.author_frame != author_frame {
+        style.author_frame = author_frame;
+    }
+    if style.quirky_margins != quirky_margins {
+        style.quirky_margins = quirky_margins;
+    }
     // A `table` does not take `-webkit-left`, `-webkit-center` or `-webkit-right`: it is placed
     // by them, but its own text goes back to `start` (as Blink's style adjuster does).
     let table = document
@@ -1923,7 +1932,7 @@ fn compute_pseudo(
     element: NodeId,
     kind: PseudoElementKind,
     extra: &[(Precedence, &Property<'static>)],
-    parent: &ComputedStyle,
+    parent: &ComputedValues,
     root_font_size: RootFont,
     viewport: (f32, f32),
 ) -> Option<ComputedStyle> {
@@ -1963,12 +1972,12 @@ impl ScrollPseudos {
 /// The style of the marker of list item `item` as Blink's `AdjustStyleForMarker` leaves it: an
 /// outside marker does not break and keeps its spaces; an inside one takes the item's
 /// `white-space`.
-fn marker_style(marker: ComputedStyle, item: &ComputedStyle) -> ComputedStyle {
+fn marker_style(marker: ComputedStyle, item: &ComputedValues) -> ComputedStyle {
     if item.list_style_position == crate::values::ListStylePosition::Outside {
-        ComputedStyle {
+        ComputedStyle::from(ComputedValues {
             white_space: crate::values::WhiteSpace::PRE,
-            ..marker
-        }
+            ..ComputedValues::from(marker)
+        })
     } else {
         marker
     }
@@ -1985,7 +1994,7 @@ fn compute_pseudo_of(
     (expansions, registry, units, ancestors): (&Expansions, &Registry, &FontUnitsCache<'_>, &Ancestors),
     (element, kind, user_agent): (NodeId, PseudoElementKind, bool),
     extra: &[(Precedence, &Property<'static>)],
-    parent: &ComputedStyle,
+    parent: &ComputedValues,
     root_font_size: RootFont,
     viewport: (f32, f32),
 ) -> Option<ComputedStyle> {
@@ -2263,7 +2272,7 @@ fn subgrid_shorthand(
 
 fn build_style(
     declarations: &Declarations<'_>,
-    (parent, lang): (&ComputedStyle, Option<&str>),
+    (parent, lang): (&ComputedValues, Option<&str>),
     root: RootFont,
     (viewport, container): ((f32, f32), (f32, f32)),
     is_root: bool,
@@ -2747,7 +2756,7 @@ fn build_style(
         stretch_subgrid(&mut style, parent);
     }
     style.decorations = decorations(&style, parent);
-    style
+    ComputedStyle::from(style)
 }
 
 /// The value of a declared `background-color` that depends on `currentcolor`, kept for the
@@ -2788,7 +2797,7 @@ fn current_background<'v>(
 /// A subgrid fills the tracks it spans along its subgridded axes: its sizes there and its
 /// self-alignment across them are ignored (CSS Grid 2, §9). A grid that is absolutely
 /// positioned or contains its layout is an independent formatting context and no subgrid.
-fn stretch_subgrid(style: &mut ComputedStyle, parent: &ComputedStyle) {
+fn stretch_subgrid(style: &mut ComputedValues, parent: &ComputedValues) {
     use crate::values::{ContainerType, DisplayInside, ItemAlignment, MaxSize, Size};
     let grid = |display: Display| {
         matches!(
@@ -2885,7 +2894,7 @@ const FONT_SELECTION: [PropertyId<'static>; 4] = [
 /// The cascade's key of `writing-mode`, which lightningcss keeps as tokens.
 /// Whether a style sets its text upright in vertical lines, where `ch` refers to the vertical
 /// advance of the "0" (Blink's `IsVerticalUpright` of the "0").
-fn sets_upright(style: &ComputedStyle) -> bool {
+fn sets_upright(style: &ComputedValues) -> bool {
     style.is_vertical()
         && !style.writing_mode.is_sideways()
         && style.text_orientation == crate::values::TextOrientation::Upright
@@ -2931,7 +2940,7 @@ fn flow_root_display(display: Display) -> Display {
 
 /// The decorations drawn over a box's text: its ancestors' (unless it is an atomic inline, a
 /// float or absolutely positioned, which they do not reach) and its own.
-fn decorations(style: &ComputedStyle, parent: &ComputedStyle) -> Arc<[crate::values::Decoration]> {
+fn decorations(style: &ComputedValues, parent: &ComputedValues) -> Arc<[crate::values::Decoration]> {
     let atomic = matches!(
         style.display,
         Display::Normal {
@@ -2986,7 +2995,7 @@ fn decorations(style: &ComputedStyle, parent: &ComputedStyle) -> Arc<[crate::val
 
 /// Whether the decorations a box takes from its ancestors follow its own font: those of a box
 /// that is not inline-level (and not `display: contents`), or of a flex or grid item.
-fn starts_own_font(style: &ComputedStyle, parent: &ComputedStyle) -> bool {
+fn starts_own_font(style: &ComputedValues, parent: &ComputedValues) -> bool {
     let item = matches!(
         parent.display,
         Display::Normal {
@@ -3002,7 +3011,7 @@ fn starts_own_font(style: &ComputedStyle, parent: &ComputedStyle) -> bool {
 }
 
 /// Fixes up values that depend on other properties.
-fn finish(style: &mut ComputedStyle, is_root: bool) {
+fn finish(style: &mut ComputedValues, is_root: bool) {
     // Spacing given as a percentage is that of the element's own font size.
     if let Some((pixels, fraction)) = style.spacing_percentages[0] {
         style.letter_spacing = pixels + fraction * style.font_size;
@@ -3109,9 +3118,9 @@ fn finish(style: &mut ComputedStyle, is_root: bool) {
 fn apply_keyword(
     id: &PropertyId<'static>,
     keyword: Keyword,
-    style: &mut ComputedStyle,
-    parent: &ComputedStyle,
-    initial: &ComputedStyle,
+    style: &mut ComputedValues,
+    parent: &ComputedValues,
+    initial: &ComputedValues,
 ) {
     // A logical property takes the keyword to the physical property it stands for in the
     // element's writing mode and direction, as in Chrome.
@@ -3203,8 +3212,8 @@ fn is_inherited(id: &PropertyId<'_>) -> bool {
 /// Copies the value of one property from `source` to `style`.
 /// Copies a longhand of `border-image` from `source`, whose border image may not be made yet.
 fn copy_border_image(
-    style: &mut ComputedStyle,
-    source: &ComputedStyle,
+    style: &mut ComputedValues,
+    source: &ComputedValues,
     copy: impl FnOnce(&mut crate::values::BorderImage, &crate::values::BorderImage),
 ) {
     let initial = crate::values::BorderImage::default();
@@ -3217,8 +3226,8 @@ fn copy_border_image(
 
 /// Copies a longhand of `mask` from `source`, whose mask layers may not be made yet.
 fn copy_mask(
-    style: &mut ComputedStyle,
-    source: &ComputedStyle,
+    style: &mut ComputedValues,
+    source: &ComputedValues,
     copy: impl FnOnce(&mut crate::values::MaskLayers, &crate::values::MaskLayers),
 ) {
     let initial = crate::values::MaskLayers::default();
@@ -3229,7 +3238,7 @@ fn copy_mask(
     );
 }
 
-fn copy_property(id: &PropertyId<'static>, source: &ComputedStyle, style: &mut ComputedStyle) {
+fn copy_property(id: &PropertyId<'static>, source: &ComputedValues, style: &mut ComputedValues) {
     macro_rules! copy {
         ($($field:ident).+) => { style.$($field).+ = source.$($field).+.clone() };
     }

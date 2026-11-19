@@ -149,10 +149,10 @@ mod tests {
     #[test]
     fn moves_absolute_boxes_into_the_stacking_context_around_them() {
         let plain = Arc::new(ComputedStyle::default());
-        let faded = Arc::new(ComputedStyle {
+        let faded = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
             opacity: 0.5,
-            ..ComputedStyle::default()
-        });
+            ..fagus_style::ComputedValues::default()
+        }));
         let absolute = Arc::new(ComputedStyle::default());
         let owner = boxed(&faded, Rect::new(px(10), px(20), px(100), px(0)), Vec::new());
         let wrapper = boxed(&plain, Rect::new(px(5), px(5), px(100), px(0)), vec![owner]);
@@ -181,15 +181,15 @@ mod tests {
     #[test]
     fn leaves_absolute_boxes_where_a_box_in_between_clips() {
         let plain = Arc::new(ComputedStyle::default());
-        let clipping = Arc::new(ComputedStyle {
+        let clipping = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
             overflow_x: Overflow::Hidden,
             overflow_y: Overflow::Hidden,
-            ..ComputedStyle::default()
-        });
-        let faded = Arc::new(ComputedStyle {
+            ..fagus_style::ComputedValues::default()
+        }));
+        let faded = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
             opacity: 0.5,
-            ..ComputedStyle::default()
-        });
+            ..fagus_style::ComputedValues::default()
+        }));
         let absolute = Arc::new(ComputedStyle::default());
         let owner = boxed(&faded, Rect::new(px(0), px(0), px(10), px(10)), Vec::new());
         let wrapper = boxed(&clipping, Rect::new(px(0), px(0), px(10), px(10)), vec![owner]);

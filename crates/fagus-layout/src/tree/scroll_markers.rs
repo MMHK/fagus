@@ -10,7 +10,7 @@ use std::sync::Arc;
 use fagus_css::matching::ScrollDirection;
 use fagus_dom::NodeId;
 use fagus_style::values::{Display, DisplayInside, Overflow, Position, Rgba, ScrollMarkerGroup};
-use fagus_style::{ComputedStyle, PseudoKey};
+use fagus_style::{ComputedStyle, ComputedValues, PseudoKey};
 
 use super::{BoxId, BoxKind, BoxTree, Builder, Collected, InlineItem, LayoutBox, process_white_space_noting};
 
@@ -57,7 +57,7 @@ impl Builder<'_> {
                 );
             let mut button = scroll_button_style(button, disabled);
             if item {
-                stack_item(Arc::make_mut(&mut button));
+                stack_item(Arc::make_mut(&mut button).values_mut());
             }
             self.pseudo_box(tree, element, key, &button, item, out);
         }
@@ -238,7 +238,7 @@ fn escaping(style: &ComputedStyle) -> Option<Position> {
 
 /// Makes a flex or grid item with a `z-index` and no position a stacking context, as the
 /// cascade does for elements (CSS Flexbox 1, §4.3; CSS Grid 2, §9.2).
-fn stack_item(style: &mut ComputedStyle) {
+fn stack_item(style: &mut ComputedValues) {
     if style.z_index.is_some() && !style.is_positioned() {
         style.isolation = fagus_style::values::Isolation::Isolate;
     }
@@ -270,21 +270,21 @@ mod tests {
 
     #[test]
     fn tells_scroll_containers_and_boxes_that_leave_them() {
-        let hidden = ComputedStyle {
+        let hidden = ComputedStyle::from(ComputedValues {
             overflow_y: Overflow::Hidden,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         assert!(is_scroll_container(&hidden));
-        let clipped = ComputedStyle {
+        let clipped = ComputedStyle::from(ComputedValues {
             overflow_x: Overflow::Clip,
             overflow_y: Overflow::Clip,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         assert!(!is_scroll_container(&clipped));
-        let fixed = ComputedStyle {
+        let fixed = ComputedStyle::from(ComputedValues {
             position: Position::Fixed,
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         assert_eq!(escaping(&fixed), Some(Position::Fixed));
         assert_eq!(escaping(&ComputedStyle::default()), None);
     }

@@ -1305,10 +1305,10 @@ mod tests {
         let mut outer = boxed(px(10.0));
         outer.children = vec![inner].into();
         assert_eq!(flow_extent(&outer), px(100.0));
-        let clipping = fagus_style::ComputedStyle {
+        let clipping = fagus_style::ComputedStyle::from(fagus_style::ComputedValues {
             overflow_y: fagus_style::values::Overflow::Hidden,
-            ..fagus_style::ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         outer.kind = FragmentKind::Box {
             style: std::sync::Arc::new(clipping),
             node: None,

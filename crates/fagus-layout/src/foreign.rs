@@ -7,8 +7,8 @@
 use std::sync::Arc;
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
 use fagus_style::values::TransformFunction;
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use crate::block::Layouter;
 use crate::fragment::{Children, Fragment, FragmentKind};
@@ -148,14 +148,14 @@ impl Layouter<'_> {
     /// in place, so that it is painted in order with the elements' boxes. `svg` is the SVG
     /// box's style, whose zoom and fit it keeps.
     fn layer(svg: &ComputedStyle, image: &Arc<crate::Image>, rect: crate::units::Rect) -> Fragment {
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             zoom: svg.zoom,
             object_fit: svg.object_fit,
             object_position: svg.object_position.clone(),
             visibility: svg.visibility,
             transform: Arc::from([TransformFunction::Matrix([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])]),
-            ..ComputedStyle::default()
-        };
+            ..ComputedValues::default()
+        });
         Fragment {
             rect,
             kind: FragmentKind::Box {
@@ -220,10 +220,10 @@ impl Layouter<'_> {
             fragment.rect.x = origin.0 + corner.0;
             fragment.rect.y = origin.1 + corner.1;
             if let FragmentKind::Box { style, .. } = &mut fragment.kind {
-                *style = Arc::new(ComputedStyle {
+                *style = Arc::new(ComputedStyle::from(ComputedValues {
                     transform: Arc::from([TransformFunction::Matrix(matrix)]),
-                    ..(**style).clone()
-                });
+                    ..ComputedValues::clone(style)
+                }));
             }
             fragments.push(fragment);
             if layered {

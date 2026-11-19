@@ -6,8 +6,8 @@ use std::sync::Arc;
 use fagus_dom::NodeId;
 use fagus_layout::units::{Au, Rect};
 use fagus_layout::{Fragment, FragmentKind, Page, VisibleSides};
-use fagus_style::ComputedStyle;
 use fagus_style::values::{Display, Rgba, TransformFunction, Visibility};
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::FontDb;
 
 use crate::{Item, paint};
@@ -51,11 +51,11 @@ fn items(page: Page) -> Vec<Item> {
 }
 
 fn green() -> ComputedStyle {
-    ComputedStyle {
+    ComputedStyle::from(ComputedValues {
         display: Display::BLOCK,
         background_color: Rgba::from_u8(0, 128, 0, 1.0),
-        ..ComputedStyle::default()
-    }
+        ..ComputedValues::default()
+    })
 }
 
 /// The transforms pushed, in order.
@@ -73,11 +73,13 @@ fn transforms(items: &[Item]) -> Vec<[f32; 6]> {
 fn composes_the_transforms_of_a_3d_space() {
     // A box turned a quarter about the x axis keeps the space for its child, turned a quarter
     // more: together half a turn, a box upside down rather than an edge.
-    let turned = |preserve_3d: bool, parent_preserve_3d: bool| ComputedStyle {
-        transform: Arc::from([TransformFunction::Rotate3d(1.0, 0.0, 0.0, 90.0)]),
-        preserve_3d,
-        parent_preserve_3d,
-        ..green()
+    let turned = |preserve_3d: bool, parent_preserve_3d: bool| {
+        ComputedStyle::from(ComputedValues {
+            transform: Arc::from([TransformFunction::Rotate3d(1.0, 0.0, 0.0, 90.0)]),
+            preserve_3d,
+            parent_preserve_3d,
+            ..ComputedValues::from(green())
+        })
     };
     let scene = |child_in_space: bool| {
         page(vec![element(
@@ -102,14 +104,16 @@ fn composes_the_transforms_of_a_3d_space() {
 
 #[test]
 fn sees_only_children_of_the_element_in_its_perspective() {
-    let viewer = ComputedStyle {
+    let viewer = ComputedStyle::from(ComputedValues {
         perspective: Some(100.0),
-        ..green()
-    };
-    let pushed_back = |parent_perspective: bool| ComputedStyle {
-        transform: Arc::from([TransformFunction::TranslateZ(-100.0)]),
-        parent_perspective,
-        ..green()
+        ..ComputedValues::from(green())
+    });
+    let pushed_back = |parent_perspective: bool| {
+        ComputedStyle::from(ComputedValues {
+            transform: Arc::from([TransformFunction::TranslateZ(-100.0)]),
+            parent_perspective,
+            ..ComputedValues::from(green())
+        })
     };
     let scale = |parent_perspective: bool| {
         let found = transforms(&items(page(vec![element(
@@ -127,20 +131,20 @@ fn sees_only_children_of_the_element_in_its_perspective() {
 
 #[test]
 fn draws_a_box_with_a_backdrop_filter_as_a_group() {
-    let filtered = ComputedStyle {
+    let filtered = ComputedStyle::from(ComputedValues {
         backdrop_filter: true,
-        ..green()
-    };
+        ..ComputedValues::from(green())
+    });
     let found = items(page(vec![element(filtered, 0.0, 50.0, Vec::new())]));
     assert!(found.iter().any(|item| matches!(item, Item::PushIsolated)));
 }
 
 #[test]
 fn draws_a_background_clipped_to_no_text_whole() {
-    let clipped = ComputedStyle {
+    let clipped = ComputedStyle::from(ComputedValues {
         background_clip_text: Arc::from([true]),
-        ..green()
-    };
+        ..ComputedValues::from(green())
+    });
     let found = items(page(vec![element(clipped, 0.0, 50.0, Vec::new())]));
     assert!(
         found
@@ -154,18 +158,18 @@ fn draws_a_background_clipped_to_no_text_whole() {
 fn leaves_the_canvas_of_a_hidden_root_empty() {
     let canvas = |visibility: Visibility| {
         let mut page = page(vec![element(
-            ComputedStyle {
+            ComputedStyle::from(ComputedValues {
                 visibility,
-                ..ComputedStyle::default()
-            },
+                ..ComputedValues::default()
+            }),
             0.0,
             50.0,
             Vec::new(),
         )]);
-        page.canvas = Some(Arc::new(ComputedStyle {
+        page.canvas = Some(Arc::new(ComputedStyle::from(ComputedValues {
             background_color: Rgba::from_u8(255, 165, 0, 1.0),
-            ..ComputedStyle::default()
-        }));
+            ..ComputedValues::default()
+        })));
         items(page)
             .iter()
             .any(|item| matches!(item, Item::Rect { color, .. } if color.r > 0.9 && color.b < 0.1))
@@ -186,12 +190,14 @@ fn zooms_the_pixels_of_a_clip_path() {
 fn paints_the_outline_of_a_box_over_those_inside_it() {
     // Blink paints a box's descendant outlines before its own: where they meet, the outer
     // outline is on top (WPT css-multicol multicol-span-all-list-item-001; Chrome 157).
-    let outlined = |red: u8| ComputedStyle {
-        display: Display::BLOCK,
-        outline_width: 4.0,
-        outline_style: fagus_style::values::OutlineStyle::Line(fagus_style::values::BorderStyle::Solid),
-        outline_color: Some(Rgba::from_u8(red, 0, 0, 1.0)),
-        ..ComputedStyle::default()
+    let outlined = |red: u8| {
+        ComputedStyle::from(ComputedValues {
+            display: Display::BLOCK,
+            outline_width: 4.0,
+            outline_style: fagus_style::values::OutlineStyle::Line(fagus_style::values::BorderStyle::Solid),
+            outline_color: Some(Rgba::from_u8(red, 0, 0, 1.0)),
+            ..ComputedValues::default()
+        })
     };
     let inner = element(outlined(100), 0.0, 50.0, Vec::new());
     let colors: Vec<u8> = items(page(vec![element(outlined(200), 0.0, 50.0, vec![inner])]))

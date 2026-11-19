@@ -9,8 +9,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{BorderStyle, BreakBetween, ColumnFill, Sides};
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use crate::block::{BOTTOM, BreakToken, LEFT, Layouter, Margin, Outcome, RIGHT, Space, TOP};
 use crate::column_positioned::has_placeholder;
@@ -1281,7 +1281,7 @@ impl Layouter<'_> {
         {
             return None;
         }
-        Some(Arc::new(ComputedStyle {
+        Some(Arc::new(ComputedStyle::from(ComputedValues {
             color: style.color,
             border_width: Sides {
                 left: style.column_rule_width,
@@ -1295,8 +1295,8 @@ impl Layouter<'_> {
                 left: style.column_rule_color,
                 ..Sides::default()
             },
-            ..ComputedStyle::default()
-        }))
+            ..ComputedValues::default()
+        })))
     }
 }
 

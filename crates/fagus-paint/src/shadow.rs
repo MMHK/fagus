@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn cuts_shadows_off_at_the_sides_where_a_box_breaks() {
         use fagus_style::values::BoxShadow;
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(fagus_style::ComputedValues {
             box_shadow: Arc::from([BoxShadow {
                 color: Some(fagus_style::values::Rgba::BLACK),
                 x: 4.0,
@@ -199,8 +199,8 @@ mod tests {
                 spread: 10.0,
                 inset: false,
             }]),
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         let rect = RectF {
             x: 100.0,
             y: 20.0,

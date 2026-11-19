@@ -143,13 +143,13 @@ mod tests {
     use super::*;
 
     fn style(overflow: Overflow, area: BoxArea, margin: f32) -> ComputedStyle {
-        ComputedStyle {
+        ComputedStyle::from(fagus_style::ComputedValues {
             overflow_x: overflow,
             overflow_y: overflow,
             overflow_clip_margin: (area, margin),
             padding: Sides::all(LengthPercentage::Px(5.0)),
-            ..ComputedStyle::default()
-        }
+            ..fagus_style::ComputedValues::default()
+        })
     }
 
     const BORDER_BOX: RectF = RectF {
@@ -276,10 +276,10 @@ mod tests {
             .is_none()
         );
         // One axis clips at the padding box, the other not at all.
-        let one_axis = ComputedStyle {
+        let one_axis = ComputedStyle::from(fagus_style::ComputedValues {
             overflow_y: Overflow::Visible,
-            ..style(Overflow::Clip, BoxArea::ContentBox, 0.0)
-        };
+            ..fagus_style::ComputedValues::from(style(Overflow::Clip, BoxArea::ContentBox, 0.0))
+        });
         let (rect, _) = replaced_clip(&one_axis, BORDER_BOX, border, content, None).expect("clip");
         assert_eq!((rect.x, rect.width), (12.0, 96.0));
         assert!(rect.y < -1000.0);

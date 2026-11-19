@@ -10,7 +10,7 @@
 use lightningcss::properties::PropertyId;
 use lightningcss::properties::custom::{CustomPropertyName, Token, TokenList, TokenOrValue};
 
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{
     BackgroundSize, CalcNode, DecorationThickness, LengthPercentage, LengthPercentageAuto, LineHeight,
     MaxSize, Size, TabSize, VerticalAlign,
@@ -59,7 +59,7 @@ pub(crate) fn specified(tokens: &TokenList<'static>) -> Option<f32> {
 /// Scales the inherited values of `style` that hold lengths by `ratio`, the element's zoom
 /// over its parent's: `font-size`, `line-height`, `letter-spacing`, `word-spacing`,
 /// `text-indent`, `tab-size`, `text-shadow`, `text-underline-offset` and `border-spacing`.
-pub(crate) fn rezoom_inherited(style: &mut ComputedStyle, ratio: f32) {
+pub(crate) fn rezoom_inherited(style: &mut ComputedValues, ratio: f32) {
     style.font_size *= ratio;
     if let LineHeight::Px(px) = &mut style.line_height {
         *px *= ratio;
@@ -81,7 +81,7 @@ pub(crate) fn rezoom_inherited(style: &mut ComputedStyle, ratio: f32) {
 /// `inherit` (or `unset`) by `ratio`, the element's zoom over its parent's. Chrome computes such
 /// a value again for the element's zoom, inherited or not: `width: inherit` under `zoom: 3` is
 /// three times as wide as the parent (Chrome 157, measured).
-pub(crate) fn rezoom_property(id: &PropertyId<'_>, style: &mut ComputedStyle, ratio: f32) {
+pub(crate) fn rezoom_property(id: &PropertyId<'_>, style: &mut ComputedValues, ratio: f32) {
     let lpa = |value: &mut LengthPercentageAuto| {
         if let LengthPercentageAuto::Length(length) = value {
             *length = scaled(length, ratio);
@@ -240,7 +240,7 @@ pub(crate) fn rezoom_property(id: &PropertyId<'_>, style: &mut ComputedStyle, ra
 
 /// The initial value of a property at an effective zoom, where it holds a length: the `medium`
 /// widths of borders, outlines and column rules, 3px zoomed.
-pub(crate) fn initial_widths(id: &PropertyId<'_>, style: &mut ComputedStyle) {
+pub(crate) fn initial_widths(id: &PropertyId<'_>, style: &mut ComputedValues) {
     let medium = || crate::compute::snap_border_width(3.0 * style.zoom);
     match id {
         PropertyId::BorderTopWidth => style.border_width.top = medium(),

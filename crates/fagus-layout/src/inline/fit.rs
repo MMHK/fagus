@@ -13,8 +13,8 @@
 
 use std::sync::Arc;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{TextFit, TextFitKind, TextFitTarget};
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use super::{InlineBox, InlineItem, Layouter, Piece, PieceKind};
 
@@ -268,13 +268,13 @@ pub(super) fn scale_line(
 /// percentages give scaled along.
 fn scaled_style(style: &ComputedStyle, scale: f32) -> ComputedStyle {
     let (letter, word) = fixed_lengths(style);
-    ComputedStyle {
+    ComputedStyle::from(ComputedValues {
         font_size: style.font_size * scale,
         text_fit_scale: style.text_fit_scale * scale,
         letter_spacing: letter + (style.letter_spacing - letter) * scale,
         word_spacing: word + (style.word_spacing - word) * scale,
-        ..style.clone()
-    }
+        ..ComputedValues::from(style.clone())
+    })
 }
 
 /// The parts of a style's letter and word spacing that are fixed lengths, not percentages of

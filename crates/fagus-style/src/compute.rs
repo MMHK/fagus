@@ -45,7 +45,7 @@ use lightningcss::values::percentage::NumberOrPercentage;
 use lightningcss::values::position::{HorizontalPositionKeyword, VerticalPositionKeyword};
 
 use crate::background;
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{
     Appearance, AutoRepeat, BoxShadow, DecorationThickness, EmphasisMark, EmphasisShape, FontSizeBasis,
     GridArea, GridAreas, GridLine, Hyphens, LineBreak, MAX_GRID_TRACKS, OutlineStyle, OverflowWrap, TabSize,
@@ -916,7 +916,7 @@ fn border_style(value: LineStyle) -> BorderStyle {
 /// `end` on the sides the parent's direction gives them; `start` of the element's own direction
 /// at the root, which has no parent (CSS Text 3, §6.1; WPT
 /// `text-align-match-parent-root-rtl`).
-fn match_parent(parent: &ComputedStyle, align: TextAlign, root: bool) -> TextAlign {
+fn match_parent(parent: &ComputedValues, align: TextAlign, root: bool) -> TextAlign {
     if root {
         TextAlign::Start
     } else {
@@ -1196,8 +1196,8 @@ fn spacing_percentage(property: &Property<'static>, context: &Context) -> Option
 
 pub(crate) fn apply(
     property: &Property<'static>,
-    style: &mut ComputedStyle,
-    parent: &ComputedStyle,
+    style: &mut ComputedValues,
+    parent: &ComputedValues,
     context: &Context,
 ) {
     let lp = |value: &CssLengthPercentage| context.length_percentage(value);
@@ -2474,12 +2474,12 @@ pub(crate) fn apply(
 }
 
 /// The border image of a style, made when a `border-image` property is first set.
-fn border_image(style: &mut ComputedStyle) -> &mut crate::values::BorderImage {
+fn border_image(style: &mut ComputedValues) -> &mut crate::values::BorderImage {
     Arc::make_mut(style.border_image.get_or_insert_with(Default::default))
 }
 
 /// The mask layers of a style, made when a mask property is first set.
-fn mask_layers(style: &mut ComputedStyle) -> &mut crate::values::MaskLayers {
+fn mask_layers(style: &mut ComputedValues) -> &mut crate::values::MaskLayers {
     Arc::make_mut(style.mask.get_or_insert_with(Default::default))
 }
 

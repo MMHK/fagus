@@ -507,11 +507,11 @@ mod tests {
     use fagus_style::values::Direction;
 
     fn style(direction: Direction, unicode_bidi: UnicodeBidi) -> ComputedStyle {
-        ComputedStyle {
+        ComputedStyle::from(fagus_style::ComputedValues {
             direction,
             unicode_bidi,
-            ..ComputedStyle::default()
-        }
+            ..fagus_style::ComputedValues::default()
+        })
     }
 
     #[test]

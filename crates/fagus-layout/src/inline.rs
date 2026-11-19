@@ -11,11 +11,11 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     FontStyle, Hyphens, LengthPercentage, LengthPercentageAuto, LineHeight, OpticalSizing, Overflow,
     OverflowWrap, TabSize, TextAlign, TextJustify, TextOverflow, TextWrapStyle, VerticalAlign, WordBreak,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::{FaceId, FontDb};
 
 use self::context::Around;
@@ -1925,10 +1925,10 @@ fn first_line_box(fonts: &FontDb, line: &mut Fragment, pseudo: &ComputedStyle, f
     let font = metrics(fonts, first);
     let top = baseline - Au::from_px(font.ascent);
     let height = Au::from_px(font.ascent + font.descent);
-    let style = Arc::new(ComputedStyle {
+    let style = Arc::new(ComputedStyle::from(ComputedValues {
         display: fagus_style::values::Display::INLINE,
-        ..pseudo.clone()
-    });
+        ..ComputedValues::from(pseudo.clone())
+    }));
     line.children.insert(
         0,
         Fragment {
@@ -5204,10 +5204,10 @@ impl LineBuilder<'_> {
     /// marks or room for them, as in Chrome. Lines place the pieces of this style on their
     /// baseline, outside the inline boxes they are cut in.
     fn ellipsis_style(&self) -> Arc<ComputedStyle> {
-        Arc::new(ComputedStyle {
+        Arc::new(ComputedStyle::from(ComputedValues {
             text_emphasis_style: None,
-            ..self.container.clone()
-        })
+            ..ComputedValues::from(self.container.clone())
+        }))
     }
 
     /// The text of the ellipsis: the string of `text-overflow` (not for a clamp), or a

@@ -275,11 +275,11 @@ mod tests {
 
     #[test]
     fn rotates_around_the_origin_and_translates_first() {
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(fagus_style::ComputedValues {
             rotate: Some((0.0, 0.0, 1.0, 90.0)),
             translate: Some((LengthPercentage::Px(10.0), LengthPercentage::ZERO, 0.0)),
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         // A 20 × 20 box at (100, 100): its center stays put by the rotation, then moves 10px right.
         let matrix = matrix(&style, (100.0, 100.0, 20.0, 20.0), None).expect("drawn");
         assert!(close(apply(matrix, (110.0, 110.0)), (120.0, 110.0)));
@@ -290,10 +290,10 @@ mod tests {
     #[test]
     fn flattens_transforms_in_depth() {
         let transformed = |function: TransformFunction| {
-            let style = ComputedStyle {
+            let style = ComputedStyle::from(fagus_style::ComputedValues {
                 transform: std::sync::Arc::from([function]),
-                ..ComputedStyle::default()
-            };
+                ..fagus_style::ComputedValues::default()
+            });
             matrix(&style, (0.0, 0.0, 100.0, 50.0), None)
         };
         // Turned 60° about the vertical axis, a box is half as wide, about its center.

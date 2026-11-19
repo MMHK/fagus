@@ -36,7 +36,7 @@ fn takes_sizing_keywords_in_flex_bases() {
     assert_eq!(flex.flex_basis, Size::FitContent(None));
     let flex = style("flex: max-content");
     assert_eq!(
-        (flex.flex_grow, flex.flex_shrink, flex.flex_basis),
+        (flex.flex_grow, flex.flex_shrink, flex.flex_basis.clone()),
         (1.0, 1.0, Size::MaxContent)
     );
 }

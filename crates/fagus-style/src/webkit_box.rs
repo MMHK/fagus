@@ -4,7 +4,7 @@
 //! (Blink's `ComputedStyle::ResolvedFlexGrow` and `FlexLayoutAlgorithm` with `is_webkit_box_`);
 //! here those properties become the flex values that the layout reads.
 
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{
     BoxOrient, ContentAlignment, Display, DisplayInside, FlexDirection, FlexWrap, ItemAlignment, Size,
 };
@@ -59,7 +59,7 @@ impl Default for LegacyBox {
 }
 
 /// Whether a style is that of a `-webkit-box` laid out as a flex container.
-fn is_flex_box(style: &ComputedStyle) -> bool {
+fn is_flex_box(style: &ComputedValues) -> bool {
     style.legacy_box.is_box
         && matches!(
             style.display,
@@ -73,7 +73,7 @@ fn is_flex_box(style: &ComputedStyle) -> bool {
 /// Gives a `-webkit-box` the flex direction, wrapping and alignment its `-webkit-box-*`
 /// properties ask for: it never wraps, and `flex-*`, `justify-content` and `align-items` do
 /// not apply to it.
-pub(crate) fn finish_container(style: &mut ComputedStyle) {
+pub(crate) fn finish_container(style: &mut ComputedValues) {
     if !is_flex_box(style) {
         return;
     }
@@ -105,7 +105,7 @@ pub(crate) fn finish_container(style: &mut ComputedStyle) {
 /// `FlexChildIterator`), has no automatic minimum size, takes the container's alignment, and an
 /// auto size along the main axis is its `fit-content` size (not its `max-content` size) where
 /// the box is horizontal or does not stretch its items.
-pub fn finish_item(style: &mut ComputedStyle, parent: &ComputedStyle) {
+pub fn finish_item(style: &mut ComputedValues, parent: &ComputedValues) {
     if !is_flex_box(parent) {
         return;
     }

@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
 use fagus_style::values::{Rgba, Sides};
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use crate::fragment::{Children, Fragment, FragmentKind, VisibleSides};
 use crate::units::{Au, Rect};
@@ -69,11 +69,11 @@ pub(crate) fn cut_legend_gap(fragment: &mut Fragment, legend: NodeId) {
         },
         children: Children::new(),
     };
-    let mut border = ComputedStyle {
+    let mut border = ComputedStyle::from(ComputedValues {
         color: style.color,
         border_width: Sides::all(0.0),
-        ..ComputedStyle::default()
-    };
+        ..ComputedValues::default()
+    });
     border.border_width.top = top;
     border.border_style.top = style.border_style.top;
     border.border_color.top = Some(style.border_color.top.unwrap_or(style.color));

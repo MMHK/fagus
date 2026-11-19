@@ -3,10 +3,10 @@
 use std::sync::Arc;
 
 use fagus_dom::NodeId;
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     BoxSizing, Display, Float, LengthPercentage, LengthPercentageAuto, Overflow, Position, Sides, Size,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 
 use super::{BoxId, BoxTree, Builder};
 use crate::foreign::ForeignBoxes;
@@ -29,7 +29,7 @@ impl Builder<'_> {
                 continue;
             }
             let [_, _, width, height] = object.rect;
-            let style = Arc::new(ComputedStyle {
+            let style = Arc::new(ComputedStyle::from(ComputedValues {
                 display: style.display.blockify(),
                 position: Position::Absolute,
                 inset: Sides {
@@ -51,8 +51,8 @@ impl Builder<'_> {
                 overflow_x: Overflow::Hidden,
                 overflow_y: Overflow::Hidden,
                 transform_origin: (LengthPercentage::ZERO, LengthPercentage::ZERO),
-                ..(**style).clone()
-            });
+                ..ComputedValues::clone(style)
+            }));
             self.enter(object.node, &style);
             boxes.push((self.block_level_box(tree, object.node, style), index));
         }

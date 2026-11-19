@@ -4,7 +4,7 @@
 
 use lightningcss::properties::custom::{Token, TokenList, TokenOrValue};
 
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 
 /// The factor of each step of `math-depth` without a `MATH` table (`MathML` Core's default
 /// `scriptPercentScaleDown`), and of two steps (`scriptScriptPercentScaleDown`).
@@ -49,7 +49,7 @@ pub(crate) fn compact(tokens: &TokenList<'static>) -> Option<bool> {
 /// The computed `math-depth` of a declaration: `auto-add` adds one to the inherited depth
 /// where the inherited `math-style` is compact, `add(n)` adds `n`, and an integer is taken
 /// as it is (CSS Fonts 4, §2.5.1).
-pub(crate) fn depth(tokens: &TokenList<'static>, parent: &ComputedStyle) -> Option<i32> {
+pub(crate) fn depth(tokens: &TokenList<'static>, parent: &ComputedValues) -> Option<i32> {
     let tokens = significant(tokens);
     match tokens.as_slice() {
         [TokenOrValue::Token(Token::Ident(ident))] if ident.eq_ignore_ascii_case("auto-add") => {

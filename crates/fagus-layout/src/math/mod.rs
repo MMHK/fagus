@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 use fagus_dom::{Document, ElementData, NodeId};
 use fagus_style::values::Display;
-use fagus_style::{ComputedStyle, StyledDocument};
+use fagus_style::{ComputedStyle, ComputedValues, StyledDocument};
 
 use crate::units::Au;
 pub(crate) use layout::LaidFormula;
@@ -408,10 +408,10 @@ impl Builder<'_> {
             return None;
         }
         let style = if self.outer > 0 && style.decorations.len() >= self.outer {
-            Arc::new(ComputedStyle {
+            Arc::new(ComputedStyle::from(ComputedValues {
                 decorations: style.decorations[self.outer..].into(),
-                ..(**style).clone()
-            })
+                ..ComputedValues::clone(style)
+            }))
         } else {
             Arc::clone(style)
         };
@@ -665,10 +665,10 @@ mod tests {
 
     #[test]
     fn reads_lengths_of_attributes() {
-        let style = ComputedStyle {
+        let style = ComputedStyle::from(ComputedValues {
             font_size: 20.0,
             ..ComputedStyle::initial_values().clone()
-        };
+        });
         assert_eq!(parse_length("2em", &style, false), Some(MathLength::Px(40.0)));
         assert_eq!(parse_length(" 3px ", &style, false), Some(MathLength::Px(3.0)));
         assert_eq!(parse_length("0", &style, false), Some(MathLength::Px(0.0)));

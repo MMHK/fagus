@@ -532,10 +532,10 @@ mod tests {
             0
         );
         // ...but under a backdrop filter, all.
-        let filtered = ComputedStyle {
+        let filtered = ComputedStyle::from(fagus_style::ComputedValues {
             backdrop_filter: true,
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         assert_eq!(push(&filtered, &mask, (border_box, None), &images, &mut items), 1);
         assert!(matches!(&items[0], Item::PushMask(mask) if mask.items.is_empty() && !mask.luminance));
     }

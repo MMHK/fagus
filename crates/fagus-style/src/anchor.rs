@@ -11,7 +11,7 @@ use lightningcss::properties::custom::{Function, Token, TokenList, TokenOrValue}
 use lightningcss::values::length::LengthValue;
 
 use crate::compute::Context;
-use crate::style::ComputedStyle;
+use crate::style::{ComputedStyle, ComputedValues};
 
 /// The tokens of a value with anchor functions.
 pub type Tokens = TokenList<'static>;
@@ -257,13 +257,13 @@ fn dashed(token: &TokenOrValue<'_>) -> Option<String> {
     }
 }
 
-fn anchoring(style: &mut ComputedStyle) -> &mut Anchoring {
+fn anchoring(style: &mut ComputedValues) -> &mut Anchoring {
     Arc::make_mut(style.anchoring.get_or_insert_with(Default::default))
 }
 
 /// Applies a declaration of the anchor properties that lightningcss does not know; `false` for
 /// other properties.
-pub(crate) fn apply_property(name: &str, tokens: &TokenList<'static>, style: &mut ComputedStyle) -> bool {
+pub(crate) fn apply_property(name: &str, tokens: &TokenList<'static>, style: &mut ComputedValues) -> bool {
     let tokens = significant(&tokens.0);
     let keyword = tokens.first().and_then(|token| ident(token));
     match name {
@@ -519,7 +519,7 @@ fn physical(id: &PropertyId<'static>, context: &Context) -> PropertyId<'static> 
 pub(crate) fn apply_unparsed(
     id: &PropertyId<'static>,
     tokens: &TokenList<'static>,
-    style: &mut ComputedStyle,
+    style: &mut ComputedValues,
     context: &Context,
 ) -> bool {
     let id = match id {

@@ -7,7 +7,7 @@ use lightningcss::properties::align::{
 };
 use lightningcss::properties::custom::UnparsedProperty;
 
-use crate::style::ComputedStyle;
+use crate::style::ComputedValues;
 use crate::values::{BlockJustify, ContentAlignment, JustifyPosition};
 
 /// `safe` as `Some(true)`, `unsafe` as `Some(false)`.
@@ -72,7 +72,7 @@ pub(crate) fn justify_items(value: &JustifyItems) -> BlockJustify {
 /// Applies `align-content` or `justify-content` of `flow-start` or `flow-end` (with `safe` or
 /// `unsafe` before it), which outside grid lanes are `flex-start` and `flex-end` in Chrome.
 /// Returns whether the declaration was one of them.
-pub(crate) fn apply_flow_content(unparsed: &UnparsedProperty<'_>, style: &mut ComputedStyle) -> bool {
+pub(crate) fn apply_flow_content(unparsed: &UnparsedProperty<'_>, style: &mut ComputedValues) -> bool {
     let Some(position) = fagus_css::flow_position(unparsed) else {
         return false;
     };

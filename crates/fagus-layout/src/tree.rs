@@ -12,7 +12,7 @@ use fagus_style::values::{
     DisplayOutside, LengthPercentage, ListStylePosition, ListStyleType, Position, Rgba, RubyDisplay, Sides,
     TextTransform,
 };
-use fagus_style::{ComputedStyle, PseudoKey, StyledDocument};
+use fagus_style::{ComputedStyle, ComputedValues, PseudoKey, StyledDocument};
 use fagus_text::FontDb;
 use rustc_hash::FxHashMap;
 
@@ -754,10 +754,10 @@ impl BoxTree {
             // containing block less them, which the pages give it (see
             // `crate::positioned::root_block_room`).
             if crate::positioned::root_fills_height(style) {
-                tree.box_mut(root_box).style = Arc::new(ComputedStyle {
+                tree.box_mut(root_box).style = Arc::new(ComputedStyle::from(ComputedValues {
                     height: fagus_style::values::Size::Stretch,
-                    ..(**style).clone()
-                });
+                    ..ComputedValues::clone(style)
+                }));
             }
             tree.strings = builder.strings.take();
             tree.string_log = builder.string_log.take();
@@ -1000,11 +1000,11 @@ impl BoxTree {
             return;
         }
         let principal = |style: &Arc<ComputedStyle>| {
-            Arc::new(ComputedStyle {
+            Arc::new(ComputedStyle::from(ComputedValues {
                 writing_mode: mode,
                 direction,
-                ..ComputedStyle::clone(style)
-            })
+                ..ComputedValues::clone(style)
+            }))
         };
         self.boxes[root.0 as usize].style = principal(&self.get(root).style);
         for child in children {
@@ -1036,7 +1036,7 @@ fn uncontained(style: &Arc<ComputedStyle>) -> Arc<ComputedStyle> {
     if !style.contain_layout && !style.contain_size && !style.contain_inline_size && !style.content_hidden {
         return Arc::clone(style);
     }
-    Arc::new(ComputedStyle {
+    Arc::new(ComputedStyle::from(ComputedValues {
         contain_layout: false,
         layout_containment: false,
         contain_size: false,
@@ -1044,8 +1044,8 @@ fn uncontained(style: &Arc<ComputedStyle>) -> Arc<ComputedStyle> {
         content_hidden: false,
         overflow_x: fagus_style::values::Overflow::Visible,
         overflow_y: fagus_style::values::Overflow::Visible,
-        ..(**style).clone()
-    })
+        ..ComputedValues::clone(style)
+    }))
 }
 
 /// Puts the text of an element with `display: contents` (`style`), collected into `out` from
@@ -1067,10 +1067,10 @@ fn wrap_contents_text(out: &mut Vec<Collected>, start: usize, style: &Arc<Comput
             }) if depth == 0 && Arc::ptr_eq(text, style) && !content.trim().is_empty() => {
                 let wrapper = wrapper
                     .get_or_insert_with(|| {
-                        Arc::new(ComputedStyle {
+                        Arc::new(ComputedStyle::from(ComputedValues {
                             display: Display::INLINE,
-                            ..style.inherit()
-                        })
+                            ..ComputedValues::from(style.inherit())
+                        }))
                     })
                     .clone();
                 out.insert(
@@ -1854,11 +1854,11 @@ impl Builder<'_> {
                 style.float
             };
             let id = tree.push(LayoutBox {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     display: style.display.blockify(),
                     float,
-                    ..(*style).clone()
-                }),
+                    ..ComputedValues::clone(&style)
+                })),
                 node: None,
                 generated: true,
                 kind: BoxKind::Inline { items: vec![letter] },
@@ -2098,14 +2098,14 @@ impl Builder<'_> {
                     inside: DisplayInside::Flow,
                     list_item,
                 } if data.is("fieldset") || data.is("button") => {
-                    let block_style = Arc::new(ComputedStyle {
+                    let block_style = Arc::new(ComputedStyle::from(ComputedValues {
                         display: Display::Normal {
                             outside: DisplayOutside::Block,
                             inside: DisplayInside::FlowRoot,
                             list_item,
                         },
-                        ..(**child_style).clone()
-                    });
+                        ..ComputedValues::clone(child_style)
+                    }));
                     let id = self.block_level(tree, child, block_style);
                     out.push(Collected::Inline(InlineItem::Atomic(id)));
                 }
@@ -2121,10 +2121,10 @@ impl Builder<'_> {
                     }));
                     // An inline list item has its marker inside, at its start, as in Chrome.
                     if matches!(child_style.display, Display::Normal { list_item: true, .. }) {
-                        let inside = ComputedStyle {
+                        let inside = ComputedStyle::from(ComputedValues {
                             list_style_position: ListStylePosition::Inside,
-                            ..(**child_style).clone()
-                        };
+                            ..ComputedValues::clone(child_style)
+                        });
                         self.marker(child, &inside, out);
                     }
                     let ruby = child_style.ruby_display == RubyDisplay::Container;
@@ -2136,20 +2136,20 @@ impl Builder<'_> {
                     ..
                 } => {
                     // Laid out as a block container of its own kind, placed like a glyph.
-                    let block_style = Arc::new(ComputedStyle {
+                    let block_style = Arc::new(ComputedStyle::from(ComputedValues {
                         display: child_style.display.blockify(),
-                        ..(**child_style).clone()
-                    });
+                        ..ComputedValues::clone(child_style)
+                    }));
                     let id = self.block_level(tree, child, block_style);
                     out.push(Collected::Inline(InlineItem::Atomic(id)));
                 }
                 // A button is no table part: with its native look it is laid out as an
                 // inline-block, as in Chrome, and as a block without.
                 Display::Internal(_) if data.is("button") => {
-                    let block_style = Arc::new(ComputedStyle {
+                    let block_style = Arc::new(ComputedStyle::from(ComputedValues {
                         display: Display::BLOCK,
-                        ..(**child_style).clone()
-                    });
+                        ..ComputedValues::clone(child_style)
+                    }));
                     let id = self.block_level(tree, child, block_style);
                     if tables::widget_inline(child_style) {
                         out.push(Collected::Inline(InlineItem::Atomic(id)));
@@ -2162,10 +2162,10 @@ impl Builder<'_> {
                 // A fieldset is no table part either: it is a block (HTML, §15.3.13), as in
                 // Chrome (WPT `table-display-on-fieldset`).
                 Display::Internal(_) if data.is("fieldset") => {
-                    let block_style = Arc::new(ComputedStyle {
+                    let block_style = Arc::new(ComputedStyle::from(ComputedValues {
                         display: Display::BLOCK,
-                        ..(**child_style).clone()
-                    });
+                        ..ComputedValues::clone(child_style)
+                    }));
                     let id = self.block_level(tree, child, block_style);
                     let carried = self.delegate_marker(out, element, child);
                     out.push(Collected::Block(id));
@@ -2253,15 +2253,15 @@ impl Builder<'_> {
                     })
                     .collect()
             };
-            let column_style = Arc::new(ComputedStyle {
+            let column_style = Arc::new(ComputedStyle::from(ComputedValues {
                 display: Display::Normal {
                     outside: DisplayOutside::Inline,
                     inside: DisplayInside::FlowRoot,
                     list_item: false,
                 },
                 ruby_display: RubyDisplay::Column,
-                ..style.inherit()
-            });
+                ..ComputedValues::from(style.inherit())
+            }));
             let id = tree.push(LayoutBox {
                 style: column_style,
                 node: None,
@@ -2855,22 +2855,22 @@ impl Builder<'_> {
                 && data.attribute("height").is_some()
             {
                 fitted = canvas.ratio.map(|ratio| {
-                    Arc::new(ComputedStyle {
+                    Arc::new(ComputedStyle::from(ComputedValues {
                         aspect_ratio: Some(ratio),
                         aspect_ratio_auto: true,
-                        ..(**style).clone()
-                    })
+                        ..ComputedValues::clone(style)
+                    }))
                 });
             }
             Some(Image::zoomed(&Arc::new(canvas), style.zoom))
         } else if let Some(image) = self.images.frame(element) {
             // A frame that shows a document (see `crate::frame`) fills its content box with it:
             // `object-fit` and `object-position` do not apply.
-            fitted = Some(Arc::new(ComputedStyle {
+            fitted = Some(Arc::new(ComputedStyle::from(ComputedValues {
                 object_fit: fagus_style::values::ObjectFit::Fill,
-                object_position: ComputedStyle::default().object_position,
-                ..(**style).clone()
-            }));
+                object_position: ComputedStyle::default().object_position.clone(),
+                ..ComputedValues::clone(style)
+            })));
             Some(Image::zoomed(image, style.zoom))
         } else if data.is_some_and(|data| data.is("iframe")) {
             Some(Image::zoomed(&Arc::new(frame(None)), style.zoom))
@@ -2892,10 +2892,10 @@ impl Builder<'_> {
                             .is_some_and(|child| child.is("source"))
                     }) =>
                 {
-                    fitted = Some(Arc::new(ComputedStyle {
+                    fitted = Some(Arc::new(ComputedStyle::from(ComputedValues {
                         object_fit: fagus_style::values::ObjectFit::Fill,
-                        ..(**style).clone()
-                    }));
+                        ..ComputedValues::clone(style)
+                    })));
                     Some(Image::zoomed(&Arc::new(frame(Some("black"))), style.zoom))
                 }
                 None => Some(Image::zoomed(&Arc::new(frame(None)), style.zoom)),
@@ -2904,11 +2904,11 @@ impl Builder<'_> {
             // An SVG document in an `<object>` or `<embed>` fills its content box (its root's
             // viewport): `object-fit` and `object-position` do not apply, as in Chrome.
             if image.format == crate::image::ImageFormat::Svg {
-                fitted = Some(Arc::new(ComputedStyle {
+                fitted = Some(Arc::new(ComputedStyle::from(ComputedValues {
                     object_fit: fagus_style::values::ObjectFit::Fill,
-                    object_position: ComputedStyle::default().object_position,
-                    ..(**style).clone()
-                }));
+                    object_position: ComputedStyle::default().object_position.clone(),
+                    ..ComputedValues::clone(style)
+                })));
             }
             Some(Image::zoomed(&Image::styled(image, style), style.zoom))
         } else {
@@ -2922,10 +2922,10 @@ impl Builder<'_> {
             .and_then(|_| crate::math::build(self.document, self.styled, element));
         let style = fitted.as_ref().unwrap_or(style);
         let id = tree.push(LayoutBox {
-            style: Arc::new(ComputedStyle {
+            style: Arc::new(ComputedStyle::from(ComputedValues {
                 display: style.display.blockify(),
-                ..(**style).clone()
-            }),
+                ..ComputedValues::clone(style)
+            })),
             node: Some(element),
             generated: false,
             kind: BoxKind::Replaced {
@@ -2943,11 +2943,11 @@ impl Builder<'_> {
         // inline `<svg>` (`overflow: hidden`).
         if svg && self.foreign_objects(tree, element, id) {
             let layout_box = tree.box_mut(id);
-            layout_box.style = Arc::new(ComputedStyle {
+            layout_box.style = Arc::new(ComputedStyle::from(ComputedValues {
                 overflow_x: fagus_style::values::Overflow::Hidden,
                 overflow_y: fagus_style::values::Overflow::Hidden,
-                ..(*layout_box.style).clone()
-            });
+                ..ComputedValues::clone(&layout_box.style)
+            }));
         }
         id
     }
@@ -3107,11 +3107,11 @@ impl Builder<'_> {
             out.push(Collected::Inline(InlineItem::OutOfFlow(id)));
         } else if item {
             // Items are blockified and do not float (CSS Flexbox 1, §4).
-            let item_style = Arc::new(ComputedStyle {
+            let item_style = Arc::new(ComputedStyle::from(ComputedValues {
                 display: style.display.blockify(),
                 float: fagus_style::values::Float::None,
-                ..(**style).clone()
-            });
+                ..ComputedValues::clone(style)
+            }));
             out.push(Collected::Block(generated(tree, item_style, content)));
         } else if let Display::Internal(display) = style.display {
             let part = self.pseudo_part(tree, style, display, content);
@@ -3130,10 +3130,10 @@ impl Builder<'_> {
             && inside != DisplayInside::Flow
         {
             // An inline-block (or another atomic inline): a block container placed like a glyph.
-            let block_style = Arc::new(ComputedStyle {
+            let block_style = Arc::new(ComputedStyle::from(ComputedValues {
                 display: style.display.blockify(),
-                ..(**style).clone()
-            });
+                ..ComputedValues::clone(style)
+            }));
             out.push(Collected::Inline(InlineItem::Atomic(generated(
                 tree,
                 block_style,
@@ -3449,12 +3449,12 @@ impl Builder<'_> {
                     {
                         Arc::clone(child_style)
                     } else {
-                        Arc::new(ComputedStyle {
+                        Arc::new(ComputedStyle::from(ComputedValues {
                             display: child_style.display.blockify(),
                             float: fagus_style::values::Float::None,
                             footnote: false,
-                            ..(**child_style).clone()
-                        })
+                            ..ComputedValues::clone(child_style)
+                        }))
                     };
                     children.push(self.block_level(tree, child, item_style));
                 }
@@ -3561,11 +3561,11 @@ fn relative_in_inlines(
         .filter(|inline| inline.position == Position::Relative)
         .fold(child, |child, inline| {
             tree.push(LayoutBox {
-                style: Arc::new(ComputedStyle {
+                style: Arc::new(ComputedStyle::from(ComputedValues {
                     position: Position::Relative,
                     inset: inline.inset.clone(),
-                    ..anonymous_style(parent)
-                }),
+                    ..ComputedValues::from(anonymous_style(parent))
+                })),
                 node: None,
                 generated: true,
                 kind: BoxKind::Block {
@@ -3633,10 +3633,10 @@ fn continued_inline(style: &Arc<ComputedStyle>) -> Arc<ComputedStyle> {
 
 /// The style of an anonymous box: inherited properties from the parent, everything else initial.
 pub(crate) fn anonymous_style(parent: &ComputedStyle) -> ComputedStyle {
-    ComputedStyle {
+    ComputedStyle::from(ComputedValues {
         display: Display::BLOCK,
-        ..parent.inherit()
-    }
+        ..ComputedValues::from(parent.inherit())
+    })
 }
 
 /// White space processing (CSS Text 3, §4.1) and `text-transform`, across inline items.

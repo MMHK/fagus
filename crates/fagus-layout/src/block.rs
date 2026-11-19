@@ -9,11 +9,11 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashMap;
 
-use fagus_style::ComputedStyle;
 use fagus_style::values::{
     BoxSizing, BreakBetween, ContentAlignment, FlexDirection, FlexWrap, ItemAlignment, LengthPercentage,
     LengthPercentageAuto, MaxSize, Size, WritingMode,
 };
+use fagus_style::{ComputedStyle, ComputedValues};
 use fagus_text::FontDb;
 
 use crate::float::{FloatToken, FlowLimit};
@@ -1799,10 +1799,10 @@ impl<'a> Layouter<'a> {
                     ))
             && matches!(layout_box.style.height, Size::Length(_))
         {
-            basis_style = Arc::new(ComputedStyle {
+            basis_style = Arc::new(ComputedStyle::from(ComputedValues {
                 height: Size::Auto,
-                ..(*layout_box.style).clone()
-            });
+                ..ComputedValues::clone(&layout_box.style)
+            }));
             &basis_style
         } else {
             &layout_box.style

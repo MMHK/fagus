@@ -262,10 +262,10 @@ mod tests {
 
     #[test]
     fn breaks_after_every_space_of_break_spaces() {
-        let style = Arc::new(ComputedStyle {
+        let style = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
             white_space: fagus_style::values::WhiteSpace::BREAK_SPACES,
-            ..ComputedStyle::default()
-        });
+            ..fagus_style::ComputedValues::default()
+        }));
         let items = [text(" ab  c\u{3000}\u{3000}d ", &style)];
         let paragraph = Paragraph::new(&BoxTree::default(), &items, &[None]);
         let (inside, at_end) = paragraph.breaks(0, &style, false);
@@ -298,10 +298,10 @@ mod tests {
         assert_eq!(inside.iter().map(|b| b.offset).collect::<Vec<_>>(), [4, 5]);
         assert!(!at_end);
         // With `keep-all`, letters stay together at the end too.
-        let keep = Arc::new(ComputedStyle {
+        let keep = Arc::new(ComputedStyle::from(fagus_style::ComputedValues {
             word_break: WordBreak::KeepAll,
-            ..ComputedStyle::default()
-        });
+            ..fagus_style::ComputedValues::default()
+        }));
         let items = [text("日本", &keep), text("語", &style)];
         let paragraph = Paragraph::new(&BoxTree::default(), &items, &[None, None]);
         assert_eq!(

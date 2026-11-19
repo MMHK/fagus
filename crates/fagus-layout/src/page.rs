@@ -2934,11 +2934,11 @@ mod tests {
             "style",
         );
         let rules = RuleSet::new(&[&ua, &author], &MediaEnvironment::default());
-        let root = ComputedStyle {
+        let root = ComputedStyle::from(fagus_style::ComputedValues {
             zoom: 1.5,
             font_size: 24.0,
-            ..ComputedStyle::default()
-        };
+            ..fagus_style::ComputedValues::default()
+        });
         // The page context inherits the root's zoom, as in Chrome: its margins (and its margin
         // boxes) are zoomed, its size is not.
         let page = page_box(&rules, &root, 0, None, &[]);
