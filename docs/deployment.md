@@ -190,7 +190,10 @@ of them ([bench/README.md](https://github.com/nforst/fagus/blob/main/bench/READM
 glibc's allocator on Linux keeps freed memory in its arenas too, but there the worker hands it
 back after each document (`malloc_trim`): after 100-page invoices it keeps about 20 MB instead
 of 60 to 125 MB. `FAGUS_MALLOC_TRIM=0` in the worker's environment turns that off; musl, as in
-Alpine, gives freed memory back by itself. In a queue worker or under Octane, where one worker
+Alpine, gives freed memory back by itself. On macOS, `MallocSpaceEfficient=1` or
+`MallocLargeCache=0` in the environment of the PHP process (which the worker inherits) keep a
+worker at 5 to 12 MB at rest after 21 large invoices instead of about 120 MB, but render them
+up to a fifth slower; the engine sets neither. In a queue worker or under Octane, where one worker
 lives for hours, the engine can replace it with a new one, which starts small:
 
 ```php
