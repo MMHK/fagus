@@ -142,6 +142,7 @@ FAIL css/CSS2/normal-flow/max-height-110.xht
 FAIL css/CSS2/normal-flow/max-height-applies-to-008.xht
 FAIL css/CSS2/normal-flow/max-width-105.xht
 FAIL css/CSS2/normal-flow/max-width-106.xht
+FAIL css/CSS2/normal-flow/max-width-107.xht  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/CSS2/normal-flow/max-width-applies-to-005.xht
 FAIL css/CSS2/normal-flow/max-width-applies-to-006.xht
 FAIL css/CSS2/normal-flow/max-width-applies-to-008.xht
@@ -155,6 +156,7 @@ FAIL css/CSS2/normal-flow/min-height-081.xht
 FAIL css/CSS2/normal-flow/min-height-082.xht
 FAIL css/CSS2/normal-flow/min-height-104.xht
 FAIL css/CSS2/normal-flow/min-height-105.xht
+FAIL css/CSS2/normal-flow/min-height-106.xht  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/CSS2/normal-flow/min-height-applies-to-008.xht
 FAIL css/CSS2/normal-flow/min-width-applies-to-008.xht
 FAIL css/CSS2/normal-flow/replaced-intrinsic-001.xht
@@ -545,6 +547,8 @@ FAIL css/css-backgrounds/css-border-radius-001.html
 FAIL css/css-backgrounds/css3-border-image-repeat-repeat.html
 FAIL css/css-backgrounds/css3-border-image-repeat-stretch.html
 FAIL css/css-backgrounds/first-letter-space-not-selected.html
+FAIL css/css-backgrounds/inset-box-shadow-scroll.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-backgrounds/inset-box-shadow-stacking-context-scroll.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-borders/border-image-color-scheme.html
 FAIL css/css-borders/border-shape-absolute-coords-shape.tentative.html
 FAIL css/css-borders/border-shape/border-shape-clips-background.html
@@ -900,6 +904,8 @@ FAIL css/css-conditional/at-supports-namespace-002.html
 FAIL css/css-conditional/container-queries/inline-size-bfc-floats.html
 FAIL css/css-conditional/container-queries/multiple-conditions-001.html
 FAIL css/css-conditional/container-queries/query-style-color.html
+FAIL css/css-conditional/container-queries/scrollbar-container-units-block.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-conditional/container-queries/scrollbar-container-units-inline.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-conditional/container-queries/style-query-attr-tainted.html
 FAIL css/css-conditional/css-supports-004.xht
 FAIL css/css-contain/contain-content-011.html
@@ -915,13 +921,21 @@ FAIL css/css-contain/contain-layout-baseline-004.html
 FAIL css/css-contain/contain-layout-baseline-005.html
 FAIL css/css-contain/contain-layout-baseline-006.html
 FAIL css/css-contain/contain-layout-button-001.tentative.html
+FAIL css/css-contain/contain-layout-overflow-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-layout-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-layout-select-001.tentative.html
 FAIL css/css-contain/contain-paint-023.html
+FAIL css/css-contain/contain-paint-clip-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-paint-clip-004.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-paint-clip-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-size-006.html
 FAIL css/css-contain/contain-size-051.html
 FAIL css/css-contain/contain-size-052.html
+FAIL css/css-contain/contain-size-block-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-size-block-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-size-fieldset-002.html
-FAIL css/css-contain/contain-size-flexbox-002.html
+FAIL css/css-contain/contain-size-inline-block-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-size-inline-block-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-size-multicol-003.html
 FAIL css/css-contain/contain-strict-011.html
 FAIL css/css-contain/contain-style-counters-001.html
@@ -1140,6 +1154,7 @@ FAIL css/css-flexbox/baseline-synthesis-003.html
 FAIL css/css-flexbox/baseline-synthesis-004.html
 FAIL css/css-flexbox/baseline-synthesis-vert-lr-line-under.html
 FAIL css/css-flexbox/content-height-with-scrollbars.html
+FAIL css/css-flexbox/cross-axis-scrollbar.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-flexbox/flex-aspect-ratio-img-column-012.html
 FAIL css/css-flexbox/flex-aspect-ratio-img-row-007.html
 FAIL css/css-flexbox/flex-aspect-ratio-img-row-014.html
@@ -1178,6 +1193,7 @@ FAIL css/css-flexbox/flexbox-collapsed-item-baseline-001.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-001.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-002.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-003.html
+FAIL css/css-flexbox/flexbox-definite-sizes-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-flexbox/flexbox-flex-wrap-flexing-003.html
 FAIL css/css-flexbox/flexbox-justify-content-horiz-002.xhtml
 FAIL css/css-flexbox/flexbox-mbp-horiz-001-reverse.xhtml
@@ -1208,6 +1224,7 @@ FAIL css/css-flexbox/justify-content-004.htm
 FAIL css/css-flexbox/justify-content-sideways-001.html
 FAIL css/css-flexbox/order/order-abs-children-painting-order.html
 FAIL css/css-flexbox/ortho-table-item-001.html
+FAIL css/css-flexbox/overflow-area-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-flexbox/stretch-obeys-min-max-002.html
 FAIL css/css-flexbox/stretching-orthogonal-flows.html
 FAIL css/css-flexbox/svg-root-as-flex-item-005.html
@@ -1426,6 +1443,7 @@ FAIL css/css-grid/grid-items/grid-inline-order-property-auto-placement-005.html
 FAIL css/css-grid/grid-items/grid-intrinsic-maximums.html
 FAIL css/css-grid/grid-items/grid-item-inline-contribution-003.html
 FAIL css/css-grid/grid-items/grid-item-inline-contribution-005.html
+FAIL css/css-grid/grid-items/grid-item-min-size-auto-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-grid/grid-items/grid-item-minmax-img-002.html
 FAIL css/css-grid/grid-items/grid-item-percentage-sizes-001.html
 FAIL css/css-grid/grid-items/grid-item-percentage-sizes-002.html
@@ -1825,6 +1843,10 @@ FAIL css/css-grid/grid-lanes/order/row-order-property-auto-placement-005.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflow-modes-001.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflow-reverse-003.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-005.html
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-007.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-008.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-009.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-010.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-grid/grid-lanes/row-empty-grid-lanes-container-content-editable-001.html
 FAIL css/css-grid/grid-lanes/row-min-max-content-container.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-lanes-subgridded-to-grid-lanes/column/grid-lanes-subgrid-001a.html
@@ -2222,8 +2244,13 @@ FAIL css/css-grid/grid-lanes/track-sizing/row-track-sizing-004.html
 FAIL css/css-grid/grid-lanes/track-sizing/row-track-sizing-005.html
 FAIL css/css-grid/grid-model/display-grid.html
 FAIL css/css-grid/grid-model/display-inline-grid.html
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-grid/grid-model/grid-display-grid-001.html
 FAIL css/css-grid/grid-model/grid-inline-vertical-align-001.html
+FAIL css/css-grid/grid-model/grid-overflow-padding-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-model/grid-overflow-padding-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-grid/grid-model/grid-vertical-align-001.html
 FAIL css/css-grid/grid-with-orthogonal-child-within-flexbox.html
 FAIL css/css-grid/layout-algorithm/grid-percent-rows-filled-shrinkwrap-001.html
@@ -2818,6 +2845,7 @@ FAIL css/css-nesting/conditional-rules.html
 FAIL css/css-nesting/contextually-invalid-selectors-001.html
 FAIL css/css-nesting/implicit-nesting.html
 FAIL css/css-nesting/nest-containing-forgiving.html
+FAIL css/css-overflow/clip-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-overflow/clip-005.html
 FAIL css/css-overflow/display-flex-svg-overflow-default.html
 FAIL css/css-overflow/line-clamp/block-ellipsis-001.html
@@ -3093,12 +3121,16 @@ FAIL css/css-overflow/line-clamp/webkit-line-clamp-051.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-052.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-053.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-with-max-height.html
+FAIL css/css-overflow/overflow-clip-margin-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-overflow/overflow-clip-margin-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-overflow/overflow-clip-margin-018.html
 FAIL css/css-overflow/overflow-clip-margin-019.html
 FAIL css/css-overflow/overflow-clip-margin-020.html
 FAIL css/css-overflow/overflow-clip-margin-visual-box-and-value-with-border-radius.html
 FAIL css/css-overflow/overflow-does-not-apply-to-inline-box.html
+FAIL css/css-overflow/overflow-img-scroll-replaced.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-overflow/overflow-overlay.html
+FAIL css/css-overflow/overflow-scroll-intrinsic-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-overflow/rounded-overflow-clip-visible.html
 FAIL css/css-overflow/scroll-markers/column-scroll-marker-001.html
 FAIL css/css-overflow/scroll-markers/column-scroll-marker-004.html
@@ -3119,6 +3151,7 @@ FAIL css/css-overflow/scroll-markers/scroll-marker-group-016.html
 FAIL css/css-overflow/scroll-markers/scroll-marker-selection-in-2d.html
 FAIL css/css-overflow/scroll-markers/scroll-target-group-001.html
 FAIL css/css-overflow/scroll-markers/scroll-target-group-004.html
+FAIL css/css-overflow/scrollbar-empty-002.html  # prints a scroll bar where the reference has none
 FAIL css/css-overflow/text-overflow-006.html
 FAIL css/css-overflow/text-overflow-007.html
 FAIL css/css-overflow/text-overflow-011.html
@@ -3237,6 +3270,7 @@ FAIL css/css-position/static-position/vrl-ltr-ltr.html
 FAIL css/css-position/static-position/vrl-ltr-rtl.tentative.html
 FAIL css/css-position/static-position/vrl-rtl-ltr.tentative.html
 FAIL css/css-position/static-position/vrl-rtl-rtl.html
+FAIL css/css-position/sticky/position-sticky-in-fixed-container.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-position/sticky/position-sticky-table-pixel-rounding.html
 FAIL css/css-properties-values-api/registered-property-computation-color-005.html
 FAIL css/css-pseudo/file-selector-button-001.html
@@ -3393,6 +3427,7 @@ FAIL css/css-shapes/spec-examples/shape-outside-005.html
 FAIL css/css-shapes/spec-examples/shape-outside-006.html
 FAIL css/css-shapes/spec-examples/shape-outside-007.html
 FAIL css/css-shapes/spec-examples/shape-outside-008.html
+FAIL css/css-sizing/aspect-ratio/block-aspect-ratio-011.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-sizing/aspect-ratio/block-aspect-ratio-017.html
 FAIL css/css-sizing/aspect-ratio/flex-aspect-ratio-025.html
 FAIL css/css-sizing/aspect-ratio/flex-aspect-ratio-026.html
@@ -3456,7 +3491,10 @@ FAIL css/css-tables/col-definite-min-size-001.html
 FAIL css/css-tables/col-definite-size-001.html
 FAIL css/css-tables/collapsed-border-background-inset.html
 FAIL css/css-tables/collapsed-border-positioned-tr-td.html
+FAIL css/css-tables/height-distribution/percentage-sizing-of-table-cell-children-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-tables/height-distribution/percentage-sizing-of-table-cell-replaced-children-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-tables/row-group-order.html
+FAIL css/css-tables/table-cell-overflow-auto.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-tables/tentative/paint/background-image-row-collapsed.html
 FAIL css/css-tables/tentative/paint/collapsed-border-large-cell.html
 FAIL css/css-tables/tentative/paint/overflow-hidden-table.html
@@ -4047,6 +4085,7 @@ FAIL css/css-text/white-space/trailing-other-space-separators-004.html
 FAIL css/css-text/white-space/trailing-space-align-start.tentative.html
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-002.html
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-004.html
+FAIL css/css-text/white-space/trailing-space-and-text-alignment-rtl-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-rtl-004.html
 FAIL css/css-text/white-space/white-space-collapse-discard-001.xht
 FAIL css/css-text/white-space/white-space-collapse-preserve-breaks-001.xht
@@ -4078,6 +4117,8 @@ FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-010.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-011.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-014.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-021.html
+FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-022.html  # prints a scroll bar where the reference has none
+FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-023.html  # prints a scroll bar where the reference has none
 FAIL css/css-text/white-space/white-space-trim-atomic-inline.html
 FAIL css/css-text/white-space/white-space-trim-block-in-inline.html
 FAIL css/css-text/white-space/white-space-trim-content.html
@@ -4261,6 +4302,8 @@ FAIL css/css-transforms/transform-origin-009.html
 FAIL css/css-transforms/transform-origin-010.html
 FAIL css/css-transforms/transform-origin-011.html
 FAIL css/css-transforms/transform-origin-012.html
+FAIL css/css-transforms/transform-overflow-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-transforms/transform-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-transforms/transform-singular-001.html
 FAIL css/css-transforms/transform-table-007.html
 FAIL css/css-transforms/transform-transformable-inline-block.html
