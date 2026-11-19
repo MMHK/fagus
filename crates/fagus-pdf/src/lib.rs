@@ -916,6 +916,19 @@ fn attempt(
             "{} could not be embedded: {message}",
             name(&font)
         ))),
+        // PDF/A-1 is written as PDF 1.4, older than any page template krilla can embed: krilla
+        // stops at the version before it validates, so this is the refusal of the standard.
+        krilla::error::KrillaError::Pdf(..) if options.conformance.is_some() => {
+            Failure::Pdf(PdfError::Conformance {
+                standard: standards(options),
+                problems: problems::describe(
+                    &krilla::configure::ValidationError::EmbeddedPDF(None),
+                    &name,
+                    &options.attachments,
+                    options.conformance,
+                ),
+            })
+        }
         error => Failure::Pdf(PdfError::Write(error.to_string())),
     })?;
     let pdf = match &options.xmp {

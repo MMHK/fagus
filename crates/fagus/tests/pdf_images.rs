@@ -238,6 +238,9 @@ fn refuses_pdf_templates_in_pdf_a_and_pdf_ua() {
     for document in [
         Document::html("<style>@page { background: url(t.pdf) }</style><p>Text")
             .conformance(Conformance::PdfA3b),
+        // PDF/A-1 is written as PDF 1.4, where krilla stops at the PDF version of the template.
+        Document::html("<style>@page { background: url(t.pdf) }</style><p>Text")
+            .conformance(Conformance::PdfA1b),
         Document::html(
             "<html lang=en><title>Letter</title><style>@page { background: url(t.pdf) }</style><p>Text",
         )
