@@ -141,6 +141,10 @@ final class Engine
                         if (isset($header['encryption']) && ($reply['encrypted'] ?? false) !== true) {
                             throw EngineException::withoutEncryption();
                         }
+                        // Nor one without the signature as signed.
+                        if (isset($header['signature']) && ($reply['signed'] ?? false) !== true) {
+                            throw EngineException::withoutSignature();
+                        }
                         $this->rendered($reply);
 
                         return Pdf::fromReply($reply, $data[0] ?? '');

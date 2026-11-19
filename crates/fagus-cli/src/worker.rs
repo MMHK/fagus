@@ -367,12 +367,18 @@ where
                     .header
                     .get("encryption")
                     .is_some_and(|encryption| !encryption.is_null());
+                // Likewise that it is signed.
+                let signed = frame
+                    .header
+                    .get("signature")
+                    .is_some_and(|signature| !signature.is_null());
                 let reply = render(&engine, &channel, frame);
                 let mut channel = lock(&channel)?;
                 match reply {
                     Ok(output) => {
                         let mut header = json!({
                             "encrypted": encrypted,
+                            "signed": signed,
                             "id": id,
                             "pages": output.pages,
                             "diagnostics": diagnostics(&output.diagnostics),
@@ -862,6 +868,7 @@ mod tests {
         assert_eq!(frames[1].header["encrypted"], true);
         assert!(has(&frames[2].blobs[0], "/P -4/"), "everything");
         assert_eq!(frames[3].header["encrypted"], false);
+        assert_eq!(frames[3].header["signed"], false);
         assert!(!has(&frames[3].blobs[0], "/Encrypt"));
         assert_eq!(frames[4].header["message"], "unknown permission `everything`");
         assert_eq!(
@@ -958,6 +965,7 @@ mod tests {
         assert_eq!(kinds, "HPSEE");
         let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
         assert!(has(&frames[1].blobs[0], "/Reason(Rechnung)"));
+        assert_eq!(frames[1].header["signed"], true);
         assert!(has(&frames[1].blobs[0], "/M(D:20261119093000Z)"));
         assert_eq!(frames[2].header["id"], 2);
         assert_eq!(frames[2].header["algorithm"], "RSA-SHA256");

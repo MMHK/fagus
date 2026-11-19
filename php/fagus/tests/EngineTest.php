@@ -9,6 +9,7 @@ use Fagus\Engine;
 use Fagus\Exception\EngineException;
 use Fagus\Exception\InvalidArgumentException;
 use Fagus\Internal\Release;
+use Fagus\Signature;
 use Fagus\Tests\Fixtures\FakeWorker;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -129,6 +130,25 @@ final class EngineTest extends TestCase
         // A worker that does not tell (Windows) keeps running.
         $engine = new Engine($this->fake(), maxMemory: 20);
         $this->assertSame([1, 2, 3], array_column($this->render($engine, 3), 1));
+    }
+
+    #[Test]
+    public function it_refuses_the_pdf_of_a_binary_that_ignored_the_signature_or_the_passwords(): void
+    {
+        // The stand-in, like a binary older than these options, answers without `signed` and `encrypted`.
+        $engine = new Engine($this->fake());
+        $signature = Signature::fromPkcs12(__DIR__.'/../../../tests/signing/rsa.p12', 'fagus-test-only');
+        foreach ([
+            [Document::html('<p>x</p>')->sign($signature), 'The fagus binary cannot sign PDFs and wrote the PDF without a signature. Install the binary of the same release.'],
+            [Document::html('<p>x</p>')->encrypt('user'), 'The fagus binary cannot encrypt PDFs and wrote the PDF without a password. Install the binary of the same release.'],
+        ] as [$document, $message]) {
+            try {
+                $document->render($engine);
+                $this->fail('The PDF was handed out.');
+            } catch (EngineException $exception) {
+                $this->assertStringStartsWith($message, $exception->getMessage());
+            }
+        }
     }
 
     #[Test]

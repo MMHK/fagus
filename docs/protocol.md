@@ -30,7 +30,7 @@ ends the worker with exit code 1 and the reason on its error output.
 | `R` render | caller → worker | the document, see below | HTML, stylesheets, resources, attachments, invoice XML |
 | `?` ask | worker → caller | `id`, `url` | – |
 | `r` resource | caller → worker | `found` | the resource, if found |
-| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted`, `layout`, `rss`, `maxRss` | the PDF |
+| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted`, `signed`, `layout`, `rss`, `maxRss` | the PDF |
 | `E` error | worker → caller | `id` (if known), `message`, `diagnostics`, `rss`, `maxRss` | – |
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
@@ -139,6 +139,7 @@ The header of `P`:
   ],
   "timings": { "parse": 0.12, "style": 0.31, "layout": 0.44, "paint": 0.02, "pdf": 0.71 },
   "encrypted": false,
+  "signed": false,
   "rss": 41943040,
   "maxRss": 102760448,
   "blobs": [48213]
@@ -146,7 +147,8 @@ The header of `P`:
 ```
 
 `encrypted` is `true` when the PDF is encrypted (the request had `encryption`), `false`
-otherwise; a caller that asked for encryption and does not get `true` must not use the PDF. Times
+otherwise; a caller that asked for encryption and does not get `true` must not use the PDF.
+`signed` is the same for `signature`. Times
 are in milliseconds. `severity` is `info`, `warning` or `error`; `line` and `column` are 0
 when unknown. With `layout: true` in the request, the header has a `layout` too.
 
@@ -233,6 +235,10 @@ the worker then answers the request with `E`. The worker checks signatures again
 certificate and timestamps against the digest, and answers `E` for those that do not match.
 It may ask more than once for one document, should a timestamp need more room than expected.
 
+A request with both `signature` and `encryption` is answered with `E`: an encrypted PDF cannot be
+signed yet. `signature`, `S`, `s`, `T` and `t` were added in 0.3.0: an older worker ignores
+`signature` and writes the PDF unsigned, which the caller notices by the missing `signed` in `P`.
+
 ### Fonts
 
 `F` adds a font to the worker for all later documents; the worker answers with `K` and the number
@@ -275,5 +281,7 @@ than that ignores them:
 | `layout` | `R`, `P` | 0.3.0 |
 | `encryption` | `R` | 0.3.0 |
 | `encrypted` | `P` | 0.3.0 |
+| `signature`; the messages `S`, `s`, `T`, `t` | `R` | 0.3.0 |
+| `signed` | `P` | 0.3.0 |
 | `rss`, `maxRss` | `P`, `E` | 0.3.0 |
 | `sandbox` | `H` | 0.3.0 |
