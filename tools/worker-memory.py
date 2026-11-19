@@ -10,15 +10,22 @@ the document (Linux) and `maxRss`, the peak (Linux and macOS). The size after th
 that follows the large ones is what a worker keeps; a new worker after the 1-page invoice is the
 baseline. It measures and does not fail. FAGUS names the binary (default target/release/fagus);
 on GitHub Actions the table goes into the job summary.
+
+Each worker runs twice: as it is, which on Linux with glibc calls `malloc_trim(0)` after each
+document, and with `FAGUS_MALLOC_TRIM=0`, which turns that off. The time is that of a 100-page
+invoice from the request to the answer, the median of the 20; it includes the trim after the
+document before.
 """
 
 import json
 import os
 import shutil
+import statistics
 import struct
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -40,9 +47,17 @@ def read_frame(stream) -> tuple[str, dict]:
     return chr(body[0]), json.loads(body[5 : 5 + head_length])
 
 
+# The ways the worker runs: a name and what its environment adds.
+VARIANTS = [
+    ("as it is", {}),
+    ("`FAGUS_MALLOC_TRIM=0`", {"FAGUS_MALLOC_TRIM": "0"}),
+]
+
+
 class Worker:
-    def __init__(self) -> None:
-        self.process = subprocess.Popen([FAGUS, "worker"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    def __init__(self, env: dict) -> None:
+        self.process = subprocess.Popen([FAGUS, "worker"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        env=dict(os.environ, **env))
         kind, _ = read_frame(self.process.stdout)
         assert kind == "H", kind
         self.id = 0
@@ -78,21 +93,34 @@ def main() -> int:
         documents[lines] = out / f"invoice-{lines}.html"
         documents[lines].write_text(html, encoding="utf-8")
 
-    rows = []
-    fresh = Worker()
-    rows.append(("New worker, 1-page invoice", fresh.render(documents[3])))
-    fresh.close()
-    worker = Worker()
-    rows.append(("100-page invoice", worker.render(documents[1700])))
-    rows.append(("then the 1-page invoice", worker.render(documents[3])))
-    for _ in range(20):
-        last = worker.render(documents[1700])
-    rows.append(("then 20 × the 100-page invoice", last))
-    rows.append(("then the 1-page invoice", worker.render(documents[3])))
-    worker.close()
+    names = ["New worker, 1-page invoice", "100-page invoice", "then the 1-page invoice",
+             "then 20 × the 100-page invoice", "then the 1-page invoice"]
+    columns, times = [], []
+    for _, env in VARIANTS:
+        rows = []
+        fresh = Worker(env)
+        rows.append(fresh.render(documents[3]))
+        fresh.close()
+        worker = Worker(env)
+        rows.append(worker.render(documents[1700]))
+        rows.append(worker.render(documents[3]))
+        took = []
+        for _ in range(20):
+            start = time.perf_counter()
+            last = worker.render(documents[1700])
+            took.append(time.perf_counter() - start)
+        rows.append(last)
+        rows.append(worker.render(documents[3]))
+        worker.close()
+        columns.append(rows)
+        times.append(statistics.median(took) * 1000)
 
-    table = ["| Worker | `rss` (MB) | `maxRss` (MB) |", "|---|--:|--:|"]
-    table += [f"| {name} | {size(header, 'rss')} | {size(header, 'maxRss')} |" for name, header in rows]
+    table = ["| Worker, `rss` (`maxRss`) in MB | " + " | ".join(name for name, _ in VARIANTS) + " |",
+             "|---|" + "--:|" * len(VARIANTS)]
+    for index, name in enumerate(names):
+        cells = [f"{size(rows[index], 'rss')} ({size(rows[index], 'maxRss')})" for rows in columns]
+        table.append(f"| {name} | " + " | ".join(cells) + " |")
+    table.append("| Time of a 100-page invoice (ms) | " + " | ".join(f"{ms:.0f}" for ms in times) + " |")
     print("\n".join(table), flush=True)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:

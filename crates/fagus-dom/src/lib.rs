@@ -3,6 +3,8 @@
 //! Nodes live in one vector and refer to each other by [`NodeId`]. HTML is parsed with html5ever,
 //! which implements the HTML5 parsing algorithm, so the tree matches what browsers build.
 
+#![forbid(unsafe_code)]
+
 mod sink;
 mod svg;
 

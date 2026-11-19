@@ -9,6 +9,8 @@
 //! std::fs::write("rechnung.pdf", output.pdf).unwrap();
 //! ```
 
+#![forbid(unsafe_code)]
+
 mod font_face;
 mod forms;
 mod frames;

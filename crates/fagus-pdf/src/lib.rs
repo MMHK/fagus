@@ -3,6 +3,8 @@
 //! Display lists are in CSS pixels with the origin at the top left, like krilla's surfaces. Every
 //! page is scaled from pixels (1/96 inch) to PDF points (1/72 inch).
 
+#![forbid(unsafe_code)]
+
 mod clip_text;
 mod compact;
 mod decode;

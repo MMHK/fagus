@@ -49,7 +49,7 @@ against its SHA-256) and which PHP keeps running as a worker process between doc
   specifies them.
 - **Standards:** PDF/A-3 with ZUGFeRD/Factur-X attachments and accessible PDF (PDF/UA) built in.
 - **Safe:** no network access, no files outside the directory you allow, no scripts; the engine has
-  no `unsafe` code of its own.
+  no `unsafe` code of its own (the command line has one call of glibc's `malloc_trim`).
 
 Dompdf and mPDF stop at CSS 2 with some extensions, without flex or grid; Browsershot, Snappy and
 Gotenberg need a browser or a service. Fagus sits in between: a PHP package with the CSS of a

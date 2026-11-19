@@ -4,6 +4,8 @@
 //! in painting order and in CSS pixels. The PDF writer (and later raster previews) only consume
 //! display lists, so they know nothing about CSS.
 
+#![forbid(unsafe_code)]
+
 mod background;
 mod border_image;
 mod border_shape;

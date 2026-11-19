@@ -6,6 +6,8 @@
 //! fonts (`@font-face`) go into a clone of the engine's database, which shares its faces and its
 //! shaping cache.
 
+#![forbid(unsafe_code)]
+
 mod cascade;
 mod emoji;
 mod hvgl;

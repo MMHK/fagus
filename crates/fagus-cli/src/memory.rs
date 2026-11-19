@@ -37,6 +37,37 @@ pub(crate) fn resident() -> Resident {
     }
 }
 
+/// Whether the worker hands the memory the allocator keeps free back to the system after each
+/// document: on Linux with glibc, unless `FAGUS_MALLOC_TRIM=0` turns it off. After 100-page
+/// invoices a worker then keeps about 20 MB instead of 60 to 125 MB, at no measurable cost
+/// (`tools/worker-memory.py`, bench/README.md).
+pub(crate) fn trims() -> bool {
+    cfg!(all(target_os = "linux", target_env = "gnu"))
+        && std::env::var_os("FAGUS_MALLOC_TRIM").is_none_or(|value| value != "0")
+}
+
+/// Hands the free memory of glibc's allocator back to the system: `malloc_trim(0)` returns the
+/// free pages of every arena, not only those at the top of the heap, which `free()` alone gives
+/// back. glibc keeps the rest for later allocations, and after a large document a worker would
+/// keep it until it ends.
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
+#[allow(
+    unsafe_code,
+    reason = "the only way to call malloc_trim; no safe wrapper exists"
+)]
+pub(crate) fn trim() {
+    // SAFETY: `malloc_trim` takes no pointers and touches only the allocator's own state, under
+    // the allocator's locks (glibc documents it as MT-Safe); it is linked with glibc, which this
+    // target always has. Its result only says whether memory was released.
+    unsafe {
+        libc::malloc_trim(0);
+    }
+}
+
+/// Nothing to hand back elsewhere (see the function above).
+#[cfg(not(all(target_os = "linux", target_env = "gnu")))]
+pub(crate) fn trim() {}
+
 /// The sizes in the text of `/proc/self/status`: `VmRSS` and `VmHWM`, in kibibytes.
 #[cfg_attr(not(any(target_os = "linux", test)), allow(dead_code))]
 fn parse_status(status: &str) -> Resident {
@@ -70,6 +101,14 @@ mod tests {
             }
         );
         assert_eq!(parse_status("Name:\tfagus\n"), Resident::default());
+    }
+
+    #[test]
+    fn hands_free_memory_back_without_touching_what_is_in_use() {
+        let kept = vec![7_u8; 1 << 20];
+        drop(vec![1_u8; 32 << 20]);
+        trim();
+        assert!(kept.iter().all(|&byte| byte == 7));
     }
 
     #[test]

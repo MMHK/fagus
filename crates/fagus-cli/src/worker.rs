@@ -356,6 +356,7 @@ where
         }),
         &[],
     )?;
+    let trims = crate::memory::trims();
     loop {
         let Some(frame) = lock(&channel)?.read()? else {
             return Ok(());
@@ -409,6 +410,11 @@ where
                             &[],
                         )?;
                     }
+                }
+                // Once the answer is out, so that the caller does not wait for it.
+                drop(channel);
+                if trims {
+                    crate::memory::trim();
                 }
             }
             FONT => {

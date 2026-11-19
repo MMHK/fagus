@@ -6,6 +6,8 @@
 //! is implemented here ([`matching`]) because the matcher of `parcel_selectors` does not support
 //! `:has()` and `&`.
 
+#![forbid(unsafe_code)]
+
 pub mod background_clip;
 mod computed;
 mod diagnostics;

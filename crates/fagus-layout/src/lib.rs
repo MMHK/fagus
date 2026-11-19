@@ -4,6 +4,8 @@
 //! of every layout algorithm (ADR 2): a box that does not fit on a page returns a break token and
 //! continues on the next page.
 
+#![forbid(unsafe_code)]
+
 mod anchor;
 mod annotation;
 mod bidi;

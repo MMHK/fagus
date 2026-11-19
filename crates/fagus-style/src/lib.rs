@@ -4,6 +4,8 @@
 //! declarations by origin, importance, layer, specificity and source order, expands shorthands,
 //! substitutes `var()`, and computes values ([`ComputedStyle`]).
 
+#![forbid(unsafe_code)]
+
 pub mod anchor;
 mod background;
 mod block_align;

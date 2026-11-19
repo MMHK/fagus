@@ -31,8 +31,9 @@ What Fagus promises for untrusted documents:
   only if they lie inside the root after resolving `..`, percent-encoding and symbolic links.
   URLs with a scheme or a host, absolute paths, drives and network shares are refused. Images
   inside SVG documents must be `data:` URLs.
-- **No code execution.** Fagus runs no scripts, and its own code has no `unsafe` (the crates it
-  depends on do).
+- **No code execution.** Fagus runs no scripts, and its own code has no `unsafe` but one call of
+  glibc's `malloc_trim` in the command line, which takes no arguments from the document (the crates
+  it depends on do have `unsafe`).
 - **Bounded work.** The limits below keep a document from taking unbounded memory or time.
   Where a limit is reached, the part is left out (often with a diagnostic) and the rest renders.
 

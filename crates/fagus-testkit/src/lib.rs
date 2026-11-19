@@ -2,6 +2,8 @@
 //! sides ([`wpt`]), and the corpus against Chrome ([`corpus`]). `tools/wpt/run.sh` and
 //! `tools/chrome-corpus.sh` run them through the binary `fagus-conformance`.
 
+#![forbid(unsafe_code)]
+
 pub mod corpus;
 pub mod process;
 pub mod raster;
