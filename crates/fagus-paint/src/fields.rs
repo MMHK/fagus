@@ -27,7 +27,8 @@ pub struct Widget {
     pub page: usize,
     /// The area of the control's border box on the page, in CSS pixels: x, y, width and height,
     /// shrunk with the content where the content is shrunk. In a transformed box, the smallest
-    /// rectangle around the border box as it is transformed.
+    /// rectangle around the border box as it is transformed. Where the page area or a box around
+    /// with `overflow` other than `visible` cuts the control, only the part that shows.
     pub rect: [f32; 4],
     /// How the border box is turned, skewed and scaled onto the page: `[a, b, c, d]` of a
     /// matrix as in [`Item::PushTransform`], `[1, 0, 0, 1]` where it is not.
@@ -36,6 +37,10 @@ pub struct Widget {
     pub size: (f32, f32),
     /// What the field shows, with the top left corner of the border box at the origin.
     pub items: Vec<Item>,
+    /// The part of the border box that shows where clipping cuts the control (see
+    /// [`Widget::rect`]): x, y, width and height from its top left corner, in the size it is
+    /// laid out in. `None` where all of it shows.
+    pub clip: Option<[f32; 4]>,
     /// The innermost layer (`-fagus-layer`) the control is on.
     pub layer: Option<Arc<Layer>>,
 }
@@ -84,6 +89,67 @@ fn placed(placement: Placement, ctm: [f32; 6], (x, y): (f32, f32), size: (f32, f
     )
 }
 
+/// Where the widget of a control lies on the page: its rectangle, how its box is transformed
+/// (see [`Widget::transform`]), the size it is laid out in and the part that shows (see
+/// [`Widget::clip`]).
+struct Place {
+    rect: [f32; 4],
+    transform: [f32; 4],
+    size: (f32, f32),
+    clip: Option<[f32; 4]>,
+}
+
+/// What of a cut control shows (see [`part_shown`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Part {
+    /// This part: x, y, width and height from the top left corner of its box.
+    Shown([f32; 4]),
+    /// Nothing.
+    Hidden,
+    /// A part that is no rectangle in the box: the box is turned other than by quarter turns,
+    /// or skewed.
+    Skewed,
+}
+
+/// The part of a box of `size` that shows where the rectangle `shown` (left, top, right, bottom
+/// on the page) of it does, its top left corner lying at `origin` on the page with the box
+/// turned by `transform`.
+fn part_shown(transform: [f32; 4], origin: (f32, f32), shown: [f32; 4], size: (f32, f32)) -> Part {
+    let [xx, yx, xy, yy] = transform;
+    let upright = yx.abs() < 1e-4 && xy.abs() < 1e-4;
+    let turned = xx.abs() < 1e-4 && yy.abs() < 1e-4;
+    let determinant = xx * yy - yx * xy;
+    if !(upright || turned) || determinant.abs() < 1e-6 {
+        return Part::Skewed;
+    }
+    let back = |(left, top): (f32, f32)| {
+        let (along, down) = (left - origin.0, top - origin.1);
+        (
+            (yy * along - xy * down) / determinant,
+            (xx * down - yx * along) / determinant,
+        )
+    };
+    let corners = [
+        (shown[0], shown[1]),
+        (shown[2], shown[1]),
+        (shown[0], shown[3]),
+        (shown[2], shown[3]),
+    ]
+    .map(back);
+    let fold = |pick: fn(&(f32, f32)) -> f32, start: f32, choose: fn(f32, f32) -> f32| {
+        corners.iter().map(pick).fold(start, choose)
+    };
+    let left = fold(|corner| corner.0, f32::INFINITY, f32::min).max(0.0);
+    let top = fold(|corner| corner.1, f32::INFINITY, f32::min).max(0.0);
+    let right = fold(|corner| corner.0, f32::NEG_INFINITY, f32::max).min(size.0);
+    let bottom = fold(|corner| corner.1, f32::NEG_INFINITY, f32::max).min(size.1);
+    if left < right && top < bottom {
+        Part::Shown([left, top, right - left, bottom - top])
+    } else {
+        Part::Hidden
+    }
+}
+
 impl Painter<'_> {
     /// What of `fragment` its field shows, if it is the box of a control that becomes a field
     /// and the field can lie where the box is: not in a 3D space or a text mask, and not a copy
@@ -109,6 +175,46 @@ impl Painter<'_> {
             .then_some(lift)
     }
 
+    /// Where the widget of the control `fragment` (at `x`, `y`) lies on the page (see
+    /// [`Place`]); `None` where the clips around it hide all of it. The clips are those of the
+    /// page and of the boxes around the control, not its own, which the painter may have opened
+    /// just before what it holds.
+    fn place(&self, fragment: &Fragment, x: f32, y: f32) -> Option<Place> {
+        let size = (fragment.rect.width.to_px(), fragment.rect.height.to_px());
+        let identity = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+        let ctm = self.ctm.unwrap_or(identity);
+        let (rect, transform) = placed(self.placement, ctm, (x, y), size);
+        let own = crate::clip_rect(fragment, x, y).map(|clip| clip.item());
+        let clip = crate::cull::open_clip(&self.items, self.page_bounds, own.as_ref())?;
+        let bounds = [rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]];
+        let shown = crate::cull::overlap(bounds, clip)?;
+        let whole = Place {
+            rect,
+            transform,
+            size,
+            clip: None,
+        };
+        if crate::cull::holds(clip, bounds) {
+            return Some(whole);
+        }
+        // The part of the box that shows: the visible rectangle taken back into the box. A box
+        // turned other than by quarter turns or skewed shows a part that is no rectangle in it:
+        // its field stays whole.
+        let origin = self
+            .placement
+            .on_page(ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]);
+        let part = part_shown(transform, origin, shown, size);
+        match part {
+            Part::Shown(part) => Some(Place {
+                rect: [shown[0], shown[1], shown[2] - shown[0], shown[3] - shown[1]],
+                clip: Some(part),
+                ..whole
+            }),
+            Part::Hidden => None,
+            Part::Skewed => Some(whole),
+        }
+    }
+
     /// Paints the content of `fragment` (at `x`, `y`) with `paint`; where the box is a control
     /// that becomes a field, what the field shows goes into its widget instead of onto the page.
     pub(crate) fn lifted(&mut self, fragment: &Fragment, x: f32, y: f32, paint: impl FnOnce(&mut Self)) {
@@ -116,6 +222,23 @@ impl Painter<'_> {
             paint(self);
             return;
         };
+        let key = std::ptr::from_ref(fragment);
+        // Where the field lies and what of the control shows, found where the control is
+        // painted first. A control that clipping hides entirely stays as it is printed.
+        let known = self.lifted.iter().any(|(known, _)| *known == key);
+        let place = if known || self.hidden_controls.contains(&key) {
+            None
+        } else {
+            let place = self.place(fragment, x, y);
+            if place.is_none() {
+                self.hidden_controls.push(key);
+            }
+            place
+        };
+        if !known && place.is_none() {
+            paint(self);
+            return;
+        }
         let outer_items = std::mem::take(&mut self.items);
         let outer_tagged = std::mem::replace(&mut self.tagged, false);
         let outer_tag = self.tag.take();
@@ -136,13 +259,18 @@ impl Painter<'_> {
         let FragmentKind::Box { node: Some(node), .. } = &fragment.kind else {
             return;
         };
-        let key = std::ptr::from_ref(fragment);
         let index = if let Some(index) = self.lifted.iter().position(|(known, _)| *known == key) {
             index
         } else {
-            let size = (fragment.rect.width.to_px(), fragment.rect.height.to_px());
-            let identity = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
-            let (rect, transform) = placed(self.placement, self.ctm.unwrap_or(identity), (x, y), size);
+            let Some(Place {
+                rect,
+                transform,
+                size,
+                clip,
+            }) = place
+            else {
+                return;
+            };
             self.lifted.push((
                 key,
                 Widget {
@@ -152,6 +280,7 @@ impl Painter<'_> {
                     transform,
                     size,
                     items: Vec::new(),
+                    clip,
                     layer: self.layers.last().cloned(),
                 },
             ));
@@ -292,16 +421,52 @@ mod tests {
     }
 
     #[test]
+    fn finds_the_part_of_a_cut_control_that_shows() {
+        // Upright at (10, 20), 100 × 20, cut at 50 and 110 on the page.
+        let upright = [1.0, 0.0, 0.0, 1.0];
+        assert_eq!(
+            part_shown(upright, (10.0, 20.0), [50.0, 20.0, 110.0, 40.0], (100.0, 20.0)),
+            Part::Shown([40.0, 0.0, 60.0, 20.0])
+        );
+        // Turned by a quarter, its top left corner at (50, 10): it lies from 30 to 50 across and
+        // 10 to 110 down; the upper half shows.
+        assert_eq!(
+            part_shown(
+                [0.0, 1.0, -1.0, 0.0],
+                (50.0, 10.0),
+                [30.0, 10.0, 50.0, 60.0],
+                (100.0, 20.0)
+            ),
+            Part::Shown([0.0, 0.0, 50.0, 20.0])
+        );
+        // Turned by 30°, the part is no rectangle.
+        let (sin, cos) = (0.5, 0.866);
+        assert_eq!(
+            part_shown(
+                [cos, sin, -sin, cos],
+                (50.0, 10.0),
+                [30.0, 10.0, 50.0, 60.0],
+                (100.0, 20.0)
+            ),
+            Part::Skewed
+        );
+    }
+
+    #[test]
     #[allow(clippy::many_single_char_names, reason = "the entries of the matrix")]
     fn places_transformed_fields_around_their_boxes() {
         let close = |a: f32, b: f32| (a - b).abs() < 0.01;
-        let (_, upright) = painted("<!DOCTYPE html><input name=a value=x>", Lift::Text);
+        // (Away from the top of the page area, which would cut the turned box off.)
+        let (_, upright) = painted(
+            "<!DOCTYPE html><input name=a value=x style='margin-top: 100px'>",
+            Lift::Text,
+        );
         let (width, height) = upright[0].size;
         assert_eq!(upright[0].transform, [1.0, 0.0, 0.0, 1.0]);
 
         // Turned by a quarter around its center: as wide as it was high.
         let (pages, widgets) = painted(
-            "<!DOCTYPE html><input name=a value=x style='transform: rotate(90deg)'>",
+            "<!DOCTYPE html><input name=a value=x style='transform: rotate(90deg); margin-top: 100px'>",
             Lift::Text,
         );
         assert_eq!(texts(&pages[0].items), Vec::<&str>::new());

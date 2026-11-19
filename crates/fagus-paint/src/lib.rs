@@ -465,6 +465,8 @@ fn paint_pages(
                 fields,
                 lifted: Vec::new(),
                 page_index,
+                page_bounds: cull::page_bounds(page.width.to_px(), page.height.to_px(), page.bleed),
+                hidden_controls: Vec::new(),
                 placement: fields::Placement::default(),
                 layers: Vec::new(),
             };
@@ -1330,6 +1332,12 @@ struct Painter<'a> {
     lifted: Vec<(*const Fragment, Widget)>,
     /// The index of the page painted.
     page_index: usize,
+    /// The page box with its bleed, in page coordinates (left, top, right, bottom): what shows of
+    /// the page at all.
+    page_bounds: [f32; 4],
+    /// The controls not made fields because clipping hides them entirely, by the address of
+    /// their fragments.
+    hidden_controls: Vec<*const Fragment>,
     /// How the content painted is placed on the page.
     placement: fields::Placement,
     /// The layers (`-fagus-layer`) around what is painted, innermost last.

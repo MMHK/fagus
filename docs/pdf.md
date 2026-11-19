@@ -208,6 +208,20 @@ turned too. PDF knows no other angles and no skew: a field turned by 30° or ske
 value as it was printed until a reader changes it, and from then on upright in the rectangle
 around the box. A control in a 3D space (`transform-style: preserve-3d`) stays as it looks.
 
+### Fields that are cut off
+
+Chrome cuts a control off where it reaches out of the page area or out of a box around it with
+`overflow` other than `visible`, but a PDF viewer draws a field over the page wherever its
+rectangle lies, and annotations know no clipping. So a field lies only where its control shows:
+
+- A control that is cut off entirely is no field; it stays as it is printed (that is, it does not
+  show).
+- A control that is partly cut off gets a field over the part that shows, and its appearance
+  shows that part where it was printed (its `BBox` is cut to it). A reader who clicks the field
+  types into that part; pdf.js and Chrome's viewer put their text box there too.
+- A control in a box turned by other than a quarter turn, or skewed, keeps its whole rectangle:
+  the part that shows is no rectangle in it.
+
 Fields go with PDF/A-1b to PDF/A-4 and with PDF/UA-1: in a tagged PDF each field is a form field
 of the logical structure (`Form`) with its widget, and the description is its alternative text.
 

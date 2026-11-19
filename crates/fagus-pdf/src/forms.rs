@@ -125,6 +125,11 @@ pub struct FieldWidget {
     /// The size of the area [`FieldWidget::appearance`] is drawn in, in CSS pixels; larger than the
     /// area on the page where the content is shrunk.
     pub size: (f32, f32),
+    /// The part of that area that shows, where the page area or a box with `overflow` other than
+    /// `visible` cuts the control: x, y, width and height from its top left corner, in CSS
+    /// pixels of [`FieldWidget::size`]. `rect` is then the area of that part on the page, and the
+    /// appearance shows only that part, where it was printed. `None` where all of it shows.
+    pub clip: Option<[f32; 4]>,
     /// The element of the control, for a tagged PDF.
     pub node: Option<NodeId>,
     /// What the widget shows: of a checkbox or radio button, how it looks when on.
@@ -149,6 +154,23 @@ pub(crate) struct Appearance {
     /// How the appearance is turned or skewed onto the sheet (`Matrix`, without translation, in
     /// PDF's coordinates): by the control's transform and its page's turn. `None` for upright.
     pub(crate) matrix: Option<[f32; 4]>,
+    /// The part of the appearance that shows (`BBox`, in PDF's coordinates of the appearance):
+    /// all of it where `None`.
+    pub(crate) bbox: Option<[f32; 4]>,
+}
+
+/// The `BBox` of the appearance of a widget whose control clipping cuts (see
+/// [`FieldWidget::clip`]): the part that shows, in the appearance's coordinates, which go up
+/// from its bottom left corner, in points.
+pub(crate) fn bbox(widget: &FieldWidget) -> Option<[f32; 4]> {
+    let [x, y, width, height] = widget.clip?;
+    let scale = crate::SCALE;
+    Some([
+        x * scale,
+        (widget.size.1 - y - height) * scale,
+        (x + width) * scale,
+        (widget.size.1 - y) * scale,
+    ])
 }
 
 /// The `Matrix` of a widget's appearance, from the transform of its control (in CSS pixels, see
@@ -365,10 +387,14 @@ pub(crate) fn write(
         let resources = crate::parse::entry(&dictionary, "/Resources")?.trim().to_owned();
         let media = crate::parse::entry(&dictionary, "/MediaBox")?.trim().to_owned();
         let mut stream = update.dictionary(contents)?;
+        let shown = appearance.bbox.map(|bbox| {
+            let [left, bottom, right, top] = bbox.map(update::number);
+            format!("[{left} {bottom} {right} {top}]")
+        });
         for (key, value) in [
             ("/Type", "/XObject"),
             ("/Subtype", "/Form"),
-            ("/BBox", media.as_str()),
+            ("/BBox", shown.as_deref().unwrap_or(media.as_str())),
             ("/Resources", resources.as_str()),
         ] {
             stream = update::with_entry(&stream, key, value);

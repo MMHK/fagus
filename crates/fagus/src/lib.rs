@@ -1317,6 +1317,7 @@ impl Inner {
                     rect: [pixels(x), pixels(y), pixels(width), pixels(height)],
                     transform: [1.0, 0.0, 0.0, 1.0],
                     size: (pixels(width), pixels(height)),
+                    clip: None,
                     node: None,
                     appearance: Vec::new(),
                     off: Vec::new(),

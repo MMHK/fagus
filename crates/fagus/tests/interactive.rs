@@ -294,3 +294,82 @@ fn puts_fields_on_layers() {
     let rest = String::from_utf8_lossy(&decoded[widget..(widget + 200).min(decoded.len())]).into_owned();
     assert!(rest.contains("/OC "), "{rest}");
 }
+
+/// A widget as qpdf reads it: the name of its field, its `Rect` and the `BBox` of its appearance.
+type QpdfWidget = (String, [f64; 4], [f64; 4]);
+
+/// The widgets of a PDF as qpdf reads them; `None` where qpdf is not installed.
+fn widgets(name: &str, pdf: &[u8]) -> Option<Vec<QpdfWidget>> {
+    use std::process::Command;
+    if Command::new("qpdf").arg("--version").output().is_err() {
+        eprintln!("qpdf is not installed; the widgets are not checked with it");
+        return None;
+    }
+    let path = std::env::temp_dir().join(format!("fagus-interactive-{name}-{}.pdf", std::process::id()));
+    std::fs::write(&path, pdf).expect("written");
+    let output = Command::new("qpdf")
+        .args(["--json", "--json-key=qpdf"])
+        .arg(&path)
+        .output()
+        .expect("qpdf runs");
+    std::fs::remove_file(&path).expect("removed");
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).expect("JSON");
+    let objects = json["qpdf"][1].as_object().expect("objects");
+    let numbers = |value: &serde_json::Value| -> [f64; 4] {
+        let numbers: Vec<f64> = value
+            .as_array()
+            .expect("an array")
+            .iter()
+            .map(|number| number.as_f64().expect("a number"))
+            .collect();
+        numbers.try_into().expect("four numbers")
+    };
+    let mut found = Vec::new();
+    for object in objects.values() {
+        let value = &object["value"];
+        if value["/Subtype"] != "/Widget" {
+            continue;
+        }
+        let name = value["/T"].as_str().unwrap_or_default();
+        let name = name.strip_prefix("u:").unwrap_or(name).to_owned();
+        let appearance = value["/AP"]["/N"].as_str().expect("an appearance");
+        let key = format!("obj:{appearance}");
+        let bbox = numbers(&objects[&key]["stream"]["dict"]["/BBox"]);
+        found.push((name, numbers(&value["/Rect"]), bbox));
+    }
+    found.sort_by(|a, b| a.0.cmp(&b.0));
+    Some(found)
+}
+
+#[test]
+fn cuts_fields_where_their_controls_are_cut() {
+    // A field half inside a box with `overflow: hidden`, one the box hides entirely, and one
+    // reaching out of the page area into the margin, which Chrome cuts off there too.
+    let html = "<!DOCTYPE html><style>@page { size: 400px 300px; margin: 50px } body { margin: 0 }\
+        input { width: 100px; height: 20px; border: 1px solid; padding: 0; font: 10px Inter }</style>\
+        <div style='width: 60px; height: 30px; overflow: hidden'><input name=half value=Half></div>\
+        <div style='width: 60px; height: 30px; overflow: hidden'><input name=hidden value=Gone style='margin-top: 40px'></div>\
+        <input name=out value=Out style='position: relative; left: -30px'>";
+    let output = render(Document::html(html).forms(true));
+    let pdf = &output.pdf;
+    assert_eq!(count(pdf, "/Subtype/Widget"), 2);
+    // The hidden control is printed as it is, where nothing of it shows.
+    assert!(!contains(pdf, "/T (hidden)"));
+    let Some(widgets) = widgets("cut", pdf) else {
+        return;
+    };
+    let close = |a: f64, b: f64| (a - b).abs() < 0.01;
+    // From points of a page 225 high: the box at 50px is 37.5pt in, 60px wide (45pt), and the
+    // field is cut to it; the appearance shows the left part of the control, 45 of its 76.5pt.
+    let (name, rect, bbox) = &widgets[0];
+    assert_eq!(name, "half");
+    assert!(close(rect[0], 37.5) && close(rect[2], 82.5), "{rect:?}");
+    assert!(close(rect[3] - rect[1], 16.5), "{rect:?}");
+    assert!(close(bbox[0], 0.0) && close(bbox[2], 45.0), "{bbox:?}");
+    assert!(close(bbox[3] - bbox[1], 16.5), "{bbox:?}");
+    // The field moved into the margin starts at the page area, its appearance 22.5pt in.
+    let (name, rect, bbox) = &widgets[1];
+    assert_eq!(name, "out");
+    assert!(close(rect[0], 37.5) && close(rect[2], 37.5 + 54.0), "{rect:?}");
+    assert!(close(bbox[0], 22.5) && close(bbox[2], 76.5), "{bbox:?}");
+}

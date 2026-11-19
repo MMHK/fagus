@@ -99,6 +99,60 @@ fn is_colorless(item: &Item) -> bool {
     }
 }
 
+/// The clip in effect after `items`, in page coordinates, starting from `page`: the box around
+/// the clips still open at their end (`None` where they leave nothing). Where `skip` is the last
+/// group still open, the clip around it instead: the own clip of a box pushed just before what
+/// it holds, which does not cut the box itself.
+pub(crate) fn open_clip(items: &[Item], page: Bounds, skip: Option<&Item>) -> Option<Bounds> {
+    let mut stack: Vec<(Matrix, Option<Bounds>, usize)> = Vec::new();
+    let mut matrix = IDENTITY;
+    let mut clip = Some(page);
+    for (index, item) in items.iter().enumerate() {
+        match item {
+            Item::PushTransform(transform) => {
+                stack.push((matrix, clip, index));
+                matrix = multiply(matrix, *transform);
+            }
+            Item::PushClip(rect, _) => {
+                stack.push((matrix, clip, index));
+                let rect = transformed(matrix, rect_bounds(rect));
+                clip = clip.and_then(|clip| intersection(clip, rect));
+            }
+            Item::PushClipShape(shape) => {
+                stack.push((matrix, clip, index));
+                if let Some(shape) = shape_bounds(shape) {
+                    clip = clip.and_then(|clip| intersection(clip, transformed(matrix, shape)));
+                }
+            }
+            Item::PushOpacity(_)
+            | Item::PushBlend(_)
+            | Item::PushIsolated
+            | Item::PushMask(_)
+            | Item::PushLayer(_) => stack.push((matrix, clip, index)),
+            Item::Pop => {
+                if let Some((outer_matrix, outer_clip, _)) = stack.pop() {
+                    (matrix, clip) = (outer_matrix, outer_clip);
+                }
+            }
+            _ => {}
+        }
+    }
+    match (stack.last(), skip) {
+        (Some(&(_, outer, index)), Some(skip)) if items[index] == *skip => outer,
+        _ => clip,
+    }
+}
+
+/// Where two boxes (left, top, right, bottom) overlap, `None` if they do not.
+pub(crate) fn overlap(a: Bounds, b: Bounds) -> Option<Bounds> {
+    intersection(a, b)
+}
+
+/// Whether the box `outer` holds all of `inner`.
+pub(crate) fn holds(outer: Bounds, inner: Bounds) -> bool {
+    contains(outer, inner)
+}
+
 /// Whether a group of this opacity shows nothing at all: Skia keeps the alpha of a layer as a
 /// byte, and Chrome draws nothing of a layer whose alpha rounds to 0 (opacity below 0.5 / 255),
 /// neither its text nor its links.
