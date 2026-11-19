@@ -3,8 +3,12 @@
 //! glyphs a pixel apart.
 //!
 //! Documents that use print features Chrome does not have (running elements, named strings,
-//! cross references, leaders, footnotes; see [`chrome_lacks`]) are not compared: Chrome prints
-//! them differently by design.
+//! cross references, leaders, footnotes, blank pages for left and right page breaks), Fagus' own
+//! layers or TIFF images (see
+//! [`chrome_lacks`]) are not compared: Chrome prints them differently by design. Documents known
+//! to differ are listed in an expectations file (`tools/chrome-expectations.txt`, the format of
+//! [`Expectations`]); a document that differs without being listed fails the gate (see
+//! [`judge`]).
 //!
 //! Fagus renders as `fagus render --font-dir tests/fonts --root tests --system-fonts` would:
 //! Chrome uses the fonts installed on the machine, so Fagus may use them too. A document matches
@@ -19,6 +23,7 @@ use std::time::Duration;
 
 use crate::process;
 use crate::raster::{Rasterizer, tolerant_share};
+use crate::wpt::{Expectation, Expectations, Expected};
 
 /// How the comparison is made.
 #[derive(Clone, Debug)]
@@ -43,6 +48,8 @@ pub struct Options {
     pub page_share: f64,
     /// Only documents whose path contains this.
     pub filter: Option<String>,
+    /// Documents not to compare (`SKIP` in the expectations).
+    pub skip: Vec<String>,
 }
 
 /// The comparison of one document.
@@ -56,7 +63,7 @@ pub struct Comparison {
     pub shares: Vec<f64>,
     /// Why the document could not be compared.
     pub error: Option<String>,
-    /// The print feature Chrome lacks that the document uses; it is then not compared.
+    /// Why the document is not compared, if it is not.
     pub skipped: Option<&'static str>,
 }
 
@@ -102,23 +109,46 @@ pub fn documents(corpus: &Path) -> std::io::Result<Vec<String>> {
     Ok(documents)
 }
 
-/// The print feature of CSS Generated Content for Paged Media that `html` uses and Chrome does
-/// not support, if any.
+/// Why Chrome cannot print `html` as intended, if it cannot: a print feature of CSS Generated
+/// Content for Paged Media that Chrome lacks, an extension of Fagus, or images Chrome does not
+/// show.
 pub fn chrome_lacks(html: &str) -> Option<&'static str> {
     let lower = html.to_ascii_lowercase();
+    // Chrome breaks the page before `break-before: right` but adds no blank page to make the
+    // next one a right page.
+    let sided = [
+        "break-before",
+        "break-after",
+        "page-break-before",
+        "page-break-after",
+    ]
+    .iter()
+    .any(|property| {
+        ["left", "right", "recto", "verso"].iter().any(|side| {
+            lower.contains(&format!("{property}: {side}")) || lower.contains(&format!("{property}:{side}"))
+        })
+    });
+    if sided {
+        return Some("uses left and right page breaks, whose blank pages Chrome leaves out");
+    }
     [
-        ("running(", "running elements"),
-        ("element(", "running elements"),
-        ("string-set", "named strings"),
-        ("target-counter", "cross references"),
-        ("target-text", "cross references"),
-        ("leader(", "leaders"),
-        ("float: footnote", "footnotes"),
-        ("::footnote", "footnotes"),
+        ("running(", "uses running elements, which Chrome lacks"),
+        ("element(", "uses running elements, which Chrome lacks"),
+        ("string-set", "uses named strings, which Chrome lacks"),
+        ("target-counter", "uses cross references, which Chrome lacks"),
+        ("target-text", "uses cross references, which Chrome lacks"),
+        ("leader(", "uses leaders, which Chrome lacks"),
+        ("float: footnote", "uses footnotes, which Chrome lacks"),
+        ("::footnote", "uses footnotes, which Chrome lacks"),
+        ("-fagus-layer", "uses layers, an extension of Fagus"),
+        (".tif\"", "uses TIFF images, which Chrome does not show"),
+        (".tiff\"", "uses TIFF images, which Chrome does not show"),
+        (".tif)", "uses TIFF images, which Chrome does not show"),
+        (".tiff)", "uses TIFF images, which Chrome does not show"),
     ]
     .into_iter()
     .find(|(needle, _)| lower.contains(needle))
-    .map(|(_, feature)| feature)
+    .map(|(_, reason)| reason)
 }
 
 /// The URL of a file for Chrome.
@@ -169,9 +199,13 @@ pub fn compare(options: &Options) -> anyhow::Result<Vec<Comparison>> {
         |document| {
             let name = document.trim_end_matches(".html").replace('/', "_");
             let source = corpus.join(document);
-            let skipped = std::fs::read_to_string(&source)
-                .ok()
-                .and_then(|html| chrome_lacks(&html));
+            let skipped = if options.skip.contains(document) {
+                Some("skipped in the expectations")
+            } else {
+                std::fs::read_to_string(&source)
+                    .ok()
+                    .and_then(|html| chrome_lacks(&html))
+            };
             if skipped.is_some() {
                 return Comparison {
                     document: document.clone(),
@@ -219,10 +253,31 @@ pub fn compare(options: &Options) -> anyhow::Result<Vec<Comparison>> {
     Ok(comparisons)
 }
 
+/// The language of a document as its `<html lang>` gives it.
+pub fn root_lang(html: &str) -> Option<String> {
+    let lower = html.to_ascii_lowercase();
+    let start = lower.find("<html")?;
+    let tag = &html[start..start + lower[start..].find('>')?];
+    let at = tag.to_ascii_lowercase().find(" lang=")? + " lang=".len();
+    let value = &tag[at..];
+    let value = match value.chars().next()? {
+        quote @ ('"' | '\'') => value[1..].split(quote).next()?,
+        _ => value.split([' ', '/']).next()?,
+    };
+    let value = value.trim();
+    (!value.is_empty()).then(|| value.to_owned())
+}
+
 fn print_with_chrome(options: &Options, source: &Path, pdf: &Path, profile: &Path) -> Result<(), String> {
     if options.reuse_chrome && pdf.exists() {
         return Ok(());
     }
+    // Chrome writes the texts of form controls (button labels, date formats) in the language of
+    // its user interface, Fagus in the language of the control, so Chrome gets the document's.
+    let lang = std::fs::read_to_string(source)
+        .ok()
+        .and_then(|html| root_lang(&html))
+        .map(|lang| format!("--lang={lang}"));
     let _ = std::fs::remove_file(pdf);
     let status = process::run(
         Command::new(&options.chrome)
@@ -237,6 +292,7 @@ fn print_with_chrome(options: &Options, source: &Path, pdf: &Path, profile: &Pat
             .arg(format!("--user-data-dir={}", profile.display()))
             .arg(format!("--print-to-pdf={}", pdf.display()))
             .args(&options.chrome_args)
+            .args(lang)
             .arg(file_url(source)),
         Duration::from_secs(180),
     )
@@ -280,17 +336,75 @@ fn compare_pdfs(
     Ok((chrome_pages.len(), fagus_pages.len(), shares))
 }
 
+/// How the comparisons stand against the expectations: documents that differ although they are
+/// not listed (they fail the gate), and listed ones that match now (the list is out of date).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Verdict {
+    pub new_differences: Vec<String>,
+    pub now_matching: Vec<String>,
+}
+
+/// Judges the comparisons against `expectations`, where `FAIL` lists a document that is known to
+/// differ from Chrome.
+pub fn judge(comparisons: &[Comparison], page_share: f64, expectations: &Expectations) -> Verdict {
+    let mut verdict = Verdict::default();
+    for comparison in comparisons
+        .iter()
+        .filter(|comparison| comparison.skipped.is_none())
+    {
+        let listed = expectations
+            .get(&comparison.document)
+            .is_some_and(|expectation| expectation.expected == Expected::Fail);
+        match (comparison.matches(page_share), listed) {
+            (false, false) => verdict.new_differences.push(comparison.document.clone()),
+            (true, true) => verdict.now_matching.push(comparison.document.clone()),
+            _ => {}
+        }
+    }
+    verdict
+}
+
+/// The expectations after a run: differing documents listed, matching ones not, skipped ones
+/// kept; documents no longer in the corpus are dropped.
+pub fn updated(expectations: &Expectations, comparisons: &[Comparison], page_share: f64) -> Expectations {
+    let mut updated = expectations.clone();
+    updated.tests.retain(|document, _| {
+        comparisons
+            .iter()
+            .any(|comparison| &comparison.document == document)
+    });
+    for comparison in comparisons
+        .iter()
+        .filter(|comparison| comparison.skipped.is_none())
+    {
+        if comparison.matches(page_share) {
+            updated.tests.remove(&comparison.document);
+        } else {
+            updated
+                .tests
+                .entry(comparison.document.clone())
+                .or_insert(Expectation {
+                    expected: Expected::Fail,
+                    comment: None,
+                });
+        }
+    }
+    updated
+}
+
 /// The results as lines of text, and a summary in Markdown.
-pub fn report(comparisons: &[Comparison], page_share: f64, chrome_version: &str) -> (String, String) {
+pub fn report(
+    comparisons: &[Comparison],
+    page_share: f64,
+    chrome_version: &str,
+    expectations: &Expectations,
+) -> (String, String) {
+    let verdict = judge(comparisons, page_share, expectations);
     let mut lines = String::new();
     let mut matched = 0;
     for comparison in comparisons {
-        if let Some(feature) = comparison.skipped {
-            let _ = writeln!(
-                lines,
-                "SKIP   {}  uses {feature}, which Chrome lacks",
-                comparison.document
-            );
+        if let Some(reason) = comparison.skipped {
+            let _ = writeln!(lines, "SKIP   {}  {reason}", comparison.document);
             continue;
         }
         let status = if comparison.matches(page_share) {
@@ -304,10 +418,10 @@ pub fn report(comparisons: &[Comparison], page_share: f64, chrome_version: &str)
         let _ = write!(lines, "{status:6} {}", comparison.document);
         match &comparison.error {
             Some(error) => {
-                let _ = writeln!(lines, "  {error}");
+                let _ = write!(lines, "  {error}");
             }
             None => {
-                let _ = writeln!(
+                let _ = write!(
                     lines,
                     "  pages {} / {}, worst page {:.3} %",
                     comparison.chrome_pages,
@@ -316,11 +430,17 @@ pub fn report(comparisons: &[Comparison], page_share: f64, chrome_version: &str)
                 );
             }
         }
+        if verdict.new_differences.contains(&comparison.document) {
+            lines.push_str("  NEW DIFFERENCE");
+        } else if verdict.now_matching.contains(&comparison.document) {
+            lines.push_str("  MATCHES NOW");
+        }
+        lines.push('\n');
     }
     let total = compared(comparisons);
     let skipped = comparisons.len() - total;
     let mut summary = format!(
-        "### Corpus against Chrome\n\n{matched} of {total} documents match {} ({:.1} %): same page count, at most {:.2} % of the pixels of a page differ. {skipped} documents use print features Chrome lacks and are not compared.\n\n",
+        "### Corpus against Chrome\n\n{matched} of {total} documents match {} ({:.1} %): same page count, at most {:.2} % of the pixels of a page differ. {skipped} documents are not compared (print features Chrome lacks, Fagus' own extensions, or skipped in the expectations).\n\n",
         if chrome_version.is_empty() {
             "Chrome".to_owned()
         } else {
@@ -329,16 +449,40 @@ pub fn report(comparisons: &[Comparison], page_share: f64, chrome_version: &str)
         share(matched, total) * 100.0,
         page_share * 100.0
     );
+    for (title, documents) in [
+        (
+            "New differences, not listed in the expectations (they fail the gate)",
+            &verdict.new_differences,
+        ),
+        (
+            "Listed as differing, but matching now (remove them from the expectations)",
+            &verdict.now_matching,
+        ),
+    ] {
+        if !documents.is_empty() {
+            let _ = writeln!(summary, "{title}:\n");
+            for document in documents {
+                let _ = writeln!(summary, "- `{document}`");
+            }
+            summary.push('\n');
+        }
+    }
     let differing: Vec<&Comparison> = comparisons
         .iter()
         .filter(|comparison| comparison.skipped.is_none() && !comparison.matches(page_share))
         .collect();
     if !differing.is_empty() {
-        summary.push_str("| Document | Pages (Chrome / Fagus) | Worst page |\n|---|---|--:|\n");
+        summary.push_str(
+            "| Document | Pages (Chrome / Fagus) | Worst page | Known because |\n|---|---|--:|---|\n",
+        );
         for comparison in differing {
+            let known = match expectations.get(&comparison.document) {
+                Some(expectation) => expectation.comment.clone().unwrap_or_else(|| "listed".to_owned()),
+                None => "**new**".to_owned(),
+            };
             let _ = writeln!(
                 summary,
-                "| `{}` | {} | {} |",
+                "| `{}` | {} | {} | {known} |",
                 comparison.document,
                 comparison
                     .error
@@ -386,19 +530,45 @@ mod tests {
     use super::*;
 
     #[test]
-    fn knows_the_print_features_chrome_lacks() {
+    fn knows_what_chrome_cannot_print_as_intended() {
         assert_eq!(
             chrome_lacks("h1 { string-set: title content() }"),
-            Some("named strings")
+            Some("uses named strings, which Chrome lacks")
         );
         assert_eq!(
             chrome_lacks("@top-center { content: element(header) }"),
-            Some("running elements")
+            Some("uses running elements, which Chrome lacks")
         );
+        assert_eq!(
+            chrome_lacks(".copy { -fagus-layer: \"Copy\" print }"),
+            Some("uses layers, an extension of Fagus")
+        );
+        assert_eq!(
+            chrome_lacks(r#"<img src="../images/scan-g4.tif" alt="">"#),
+            Some("uses TIFF images, which Chrome does not show")
+        );
+        assert_eq!(
+            chrome_lacks("h1 { break-before: recto }"),
+            Some("uses left and right page breaks, whose blank pages Chrome leaves out")
+        );
+        assert_eq!(chrome_lacks("h1 { break-before: page }"), None);
         assert_eq!(
             chrome_lacks("@page { @top-center { content: counter(page) } }"),
             None
         );
+        assert_eq!(chrome_lacks("<p>A motif.</p>"), None);
+    }
+
+    #[test]
+    fn reads_the_language_of_a_document() {
+        assert_eq!(
+            root_lang(r#"<!doctype html><html lang="de"><p>"#).as_deref(),
+            Some("de")
+        );
+        assert_eq!(root_lang("<HTML dir=rtl LANG='fa'>").as_deref(), Some("fa"));
+        assert_eq!(root_lang("<html lang=en-GB>").as_deref(), Some("en-GB"));
+        assert_eq!(root_lang("<html><p lang=de>"), None);
+        assert_eq!(root_lang(r#"<html lang="">"#), None);
     }
 
     #[test]
@@ -406,37 +576,61 @@ mod tests {
         assert_eq!(file_url(Path::new("/a b/c#d.html")), "file:///a%20b/c%23d.html");
     }
 
-    #[test]
-    fn a_document_matches_with_the_same_pages_within_the_share() {
-        let comparison = Comparison {
-            document: "a.html".to_owned(),
+    fn comparison(document: &str, fagus_pages: usize, share: f64) -> Comparison {
+        Comparison {
+            document: document.to_owned(),
             chrome_pages: 2,
-            fagus_pages: 2,
-            shares: vec![0.0, 0.001],
+            fagus_pages,
+            shares: vec![0.0, share],
             error: None,
             skipped: None,
-        };
-        assert!(comparison.matches(0.002));
-        assert!(!comparison.matches(0.0005));
-        let fewer = Comparison {
-            fagus_pages: 1,
-            shares: vec![0.0],
-            ..comparison.clone()
-        };
-        assert!(!fewer.matches(0.002));
+        }
+    }
+
+    #[test]
+    fn a_document_matches_with_the_same_pages_within_the_share() {
+        assert!(comparison("a.html", 2, 0.001).matches(0.002));
+        assert!(!comparison("a.html", 2, 0.001).matches(0.0005));
+        assert!(!comparison("a.html", 1, 0.0).matches(0.002));
         let skipped = Comparison {
-            document: "b.html".to_owned(),
-            skipped: Some("footnotes"),
-            ..comparison.clone()
+            skipped: Some("uses footnotes, which Chrome lacks"),
+            ..comparison("a.html", 2, 0.0)
         };
         assert!(!skipped.matches(0.002));
-        let (lines, summary) = report(&[comparison, fewer, skipped], 0.002, "Chrome 1");
-        assert!(lines.starts_with("MATCH  a.html  pages 2 / 2"));
-        assert!(lines.contains("SKIP   b.html  uses footnotes"));
-        assert!(summary.contains("1 of 2 documents match Chrome 1 (50.0 %)"));
-        assert!(summary.contains("1 documents use print features"));
-        assert!(!summary.contains("`b.html`"));
-        assert!(summary.contains("| `a.html` | 2 / 1 |"));
+    }
+
+    #[test]
+    fn fails_on_documents_that_differ_without_being_listed() {
+        let expectations = Expectations::parse(
+            "FAIL known.html  # fonts\nFAIL fixed.html\nSKIP skipped.html\nFAIL gone.html\n",
+        )
+        .unwrap();
+        let comparisons = [
+            comparison("same.html", 2, 0.0),
+            comparison("known.html", 2, 0.1),
+            comparison("fixed.html", 2, 0.0),
+            comparison("new.html", 1, 0.0),
+            Comparison {
+                skipped: Some("skipped in the expectations"),
+                ..comparison("skipped.html", 2, 0.0)
+            },
+        ];
+        let verdict = judge(&comparisons, 0.002, &expectations);
+        assert_eq!(verdict.new_differences, ["new.html"]);
+        assert_eq!(verdict.now_matching, ["fixed.html"]);
+        let (lines, summary) = report(&comparisons, 0.002, "Chrome 1", &expectations);
+        assert!(lines.starts_with("MATCH  same.html  pages 2 / 2"));
+        assert!(lines.contains("DIFFER new.html  pages 2 / 1, worst page 0.000 %  NEW DIFFERENCE"));
+        assert!(lines.contains("MATCH  fixed.html  pages 2 / 2, worst page 0.000 %  MATCHES NOW"));
+        assert!(lines.contains("SKIP   skipped.html  skipped in the expectations"));
+        assert!(summary.contains("2 of 4 documents match Chrome 1 (50.0 %)"));
+        assert!(summary.contains("| `known.html` | 2 / 2 | 10.000 % | fonts |"));
+        assert!(summary.contains("| `new.html` | 2 / 1 | 0.000 % | **new** |"));
+        let updated = updated(&expectations, &comparisons, 0.002);
+        assert_eq!(
+            updated.write(),
+            "FAIL known.html  # fonts\nFAIL new.html\nSKIP skipped.html\n"
+        );
     }
 
     #[test]

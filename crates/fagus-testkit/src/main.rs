@@ -78,9 +78,12 @@ enum Command {
         /// Uses Chrome's PDFs of an earlier run where they exist.
         #[arg(long)]
         reuse_chrome: bool,
-        /// Fails if fewer documents than this share match.
-        #[arg(long, default_value_t = 0.95)]
-        min_match: f64,
+        /// The documents known to differ from Chrome (FAIL) or not to compare (SKIP).
+        #[arg(long, default_value = "tools/chrome-expectations.txt")]
+        expectations: PathBuf,
+        /// Writes the expectations of this run into the expectations file.
+        #[arg(long)]
+        update: bool,
         /// The share of pixels of a page that may differ.
         #[arg(long, default_value_t = 0.005)]
         page_share: f64,
@@ -123,11 +126,14 @@ fn main() -> ExitCode {
             jobs,
             no_system_fonts,
             reuse_chrome,
-            min_match,
+            expectations,
+            update,
             page_share,
             filter,
         } => run_corpus(
-            &corpus::Options {
+            &expectations,
+            update,
+            corpus::Options {
                 tests,
                 chrome,
                 chrome_args,
@@ -139,8 +145,8 @@ fn main() -> ExitCode {
                 threshold: 48,
                 page_share,
                 filter,
+                skip: Vec::new(),
             },
-            min_match,
         ),
     };
     match result {
@@ -175,12 +181,7 @@ fn run_wpt(options: &WptOptions) -> Result<bool> {
         .filter(|line| !line.is_empty() && !line.starts_with('#'))
         .map(str::to_owned)
         .collect();
-    let expectations = match std::fs::read_to_string(&options.expectations) {
-        Ok(text) => Expectations::parse(&text)
-            .map_err(|error| anyhow::anyhow!("{}: {error}", options.expectations.display()))?,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Expectations::default(),
-        Err(error) => return Err(error).context(format!("reading {}", options.expectations.display())),
-    };
+    let expectations = read_expectations(&options.expectations)?;
     if options.docs.is_some() && options.filter.is_some() {
         bail!("--docs needs a run of all tests, without --filter");
     }
@@ -398,8 +399,16 @@ fn updated(
     updated
 }
 
-/// Compares the corpus with Chrome; `Ok(false)` if too few documents match.
-fn run_corpus(options: &corpus::Options, min_match: f64) -> Result<bool> {
+/// Compares the corpus with Chrome; `Ok(false)` if a document differs that the expectations do
+/// not list as differing.
+fn run_corpus(path: &Path, update: bool, mut options: corpus::Options) -> Result<bool> {
+    let expectations = read_expectations(path)?;
+    options.skip = expectations
+        .tests
+        .iter()
+        .filter(|(_, expectation)| expectation.expected == Expected::Skip)
+        .map(|(document, _)| document.clone())
+        .collect();
     let version = corpus::chrome_version(&options.chrome);
     eprintln!(
         "{}",
@@ -409,29 +418,63 @@ fn run_corpus(options: &corpus::Options, min_match: f64) -> Result<bool> {
             &version
         }
     );
-    let comparisons = corpus::compare(options)?;
-    let (lines, summary) = corpus::report(&comparisons, options.page_share, &version);
+    let comparisons = corpus::compare(&options)?;
+    let (lines, summary) = corpus::report(&comparisons, options.page_share, &version, &expectations);
     std::fs::write(options.out.join("results.txt"), &lines)?;
     std::fs::write(options.out.join("summary.md"), &summary)?;
     let _ = std::fs::remove_dir_all(options.out.join("tmp"));
     print!("{lines}\n{summary}");
-    if let Some(path) = std::env::var_os("GITHUB_STEP_SUMMARY") {
+    if let Some(summary_path) = std::env::var_os("GITHUB_STEP_SUMMARY") {
         use std::io::Write as _;
-        let mut file = std::fs::OpenOptions::new().append(true).create(true).open(path)?;
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(summary_path)?;
         writeln!(file, "{summary}")?;
     }
-    let matched = comparisons
-        .iter()
-        .filter(|comparison| comparison.matches(options.page_share))
-        .count();
-    let share = corpus::share(matched, corpus::compared(&comparisons));
-    if share < min_match {
-        eprintln!(
-            "{:.1} % of the documents match Chrome, fewer than the required {:.1} %",
-            share * 100.0,
-            min_match * 100.0
+    let verdict = corpus::judge(&comparisons, options.page_share, &expectations);
+    // On GitHub Actions, these lines become annotations of the run.
+    for document in &verdict.now_matching {
+        println!(
+            "::warning::{document} matches Chrome now; remove it from {}",
+            path.display()
         );
-        return Ok(false);
     }
-    Ok(true)
+    for document in &verdict.new_differences {
+        println!(
+            "::error::{document} differs from Chrome and is not listed in {}",
+            path.display()
+        );
+    }
+    let mut updated = corpus::updated(&expectations, &comparisons, options.page_share);
+    if options.filter.is_some() {
+        updated = expectations.clone();
+    }
+    if updated.header.is_empty() {
+        updated.header = vec![
+            "# The documents of tests/corpus that are known to differ from Chrome (FAIL), with the reason,"
+                .to_owned(),
+            "# or that are not compared (SKIP). tools/chrome-corpus.sh fails on any other document that"
+                .to_owned(),
+            "# differs; --update rewrites the list.".to_owned(),
+        ];
+    }
+    std::fs::write(options.out.join("expectations.txt"), updated.write())?;
+    if update && options.filter.is_none() {
+        std::fs::write(path, updated.write())?;
+        eprintln!("updated {}", path.display());
+        return Ok(true);
+    }
+    Ok(verdict.new_differences.is_empty())
+}
+
+/// The expectations file at `path`, empty if there is none.
+fn read_expectations(path: &Path) -> Result<Expectations> {
+    match std::fs::read_to_string(path) {
+        Ok(text) => {
+            Expectations::parse(&text).map_err(|error| anyhow::anyhow!("{}: {error}", path.display()))
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Expectations::default()),
+        Err(error) => Err(error).context(format!("reading {}", path.display())),
+    }
 }
