@@ -54,8 +54,19 @@ impl<R: Read, W: Write> Channel<R, W> {
         if !(5..=MAX_FRAME).contains(&length) {
             return Err(invalid(&format!("a frame of {length} bytes")));
         }
-        let mut body = vec![0; length];
-        self.input.read_exact(&mut body)?;
+        // Read as the data comes, not into a buffer of the length the frame claims: a frame cut
+        // short would otherwise take up to 1 GiB first.
+        let mut body = Vec::new();
+        (&mut self.input).take(length as u64).read_to_end(&mut body)?;
+        if body.len() < length {
+            return Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                format!(
+                    "protocol error: a frame of {length} bytes ends after {}",
+                    body.len()
+                ),
+            ));
+        }
         let kind = body[0];
         let header_length = u32::from_le_bytes([body[1], body[2], body[3], body[4]]) as usize;
         let header_end = 5usize
@@ -496,6 +507,16 @@ mod tests {
                 .as_str()
                 .is_some_and(|message| !message.is_empty())
         );
+    }
+
+    #[test]
+    fn ends_at_a_frame_cut_short() {
+        // A frame that claims a gigabyte and ends after a few bytes.
+        let mut input = ((1u32 << 30) - 1).to_le_bytes().to_vec();
+        input.extend_from_slice(b"R\x02\x00\x00\x00{}");
+        let mut channel = Channel::new(io::Cursor::new(input), io::sink());
+        let error = channel.read().expect_err("cut short");
+        assert_eq!(error.kind(), io::ErrorKind::UnexpectedEof);
     }
 
     #[test]

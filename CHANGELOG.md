@@ -26,6 +26,7 @@ All notable changes to this project are documented in this file. The format is b
 - A font whose em square is not between 16 and 16,384 units, as OpenType requires, is rejected as Chrome rejects it: an `@font-face` rule falls back to the next source or font, and `add_font_data` (the worker's `F`) fails. One of 0 units made rendering stop with an internal error.
 - Raster images in SVG images (`<image>` with a PNG, GIF or WebP) and the images that filters change are decoded only up to 200 megapixels, the limit of other images; larger ones are left out. A PNG of a few hundred bytes whose header claimed billions of pixels was decoded into a buffer of hundreds of gigabytes, which aborts the process where the system refuses that much memory.
 - An SVG image with a no-break space (or other white space beyond XML's) between the attributes of a tag no longer makes rendering stop with an internal error.
+- `fagus worker` reads a frame as its data arrives instead of reserving the length the frame claims first: a frame that claimed up to 1 GiB and ended early took that much memory.
 
 ## [0.2.0] - 2026-11-17
 
