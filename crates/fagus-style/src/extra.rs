@@ -1690,7 +1690,7 @@ fn corner_shape(token: &TokenOrValue<'static>) -> Option<f32> {
         }
         _ => return None,
     };
-    Some(parameter.exp2().clamp(0.001, 1000.0))
+    Some(libm::exp2f(parameter).clamp(0.001, 1000.0))
 }
 
 fn number(token: &TokenOrValue<'static>) -> Option<f32> {

@@ -99,9 +99,14 @@ fn in_box3d(
             TransformFunction::Rotate3d(axis_x, axis_y, axis_z, angle) => {
                 rotate(*axis_x, *axis_y, *axis_z, *angle)
             }
-            TransformFunction::Skew(ax, ay) => {
-                flat([1.0, ay.to_radians().tan(), ax.to_radians().tan(), 1.0, 0.0, 0.0])
-            }
+            TransformFunction::Skew(ax, ay) => flat([
+                1.0,
+                libm::tanf(ay.to_radians()),
+                libm::tanf(ax.to_radians()),
+                1.0,
+                0.0,
+                0.0,
+            ]),
             TransformFunction::Matrix(values) => flat(*values),
             TransformFunction::Matrix3d(values) => *values,
             TransformFunction::Perspective(distance) => project(*distance),
@@ -162,7 +167,7 @@ fn rotate(x: f32, y: f32, z: f32, degrees: f32) -> Matrix3d {
         return IDENTITY;
     }
     let (x, y, z) = (x / length, y / length, z / length);
-    let (sin, cos) = (degrees.to_radians() / 2.0).sin_cos();
+    let (sin, cos) = libm::sincosf(degrees.to_radians() / 2.0);
     let (sc, sq) = (sin * cos, sin * sin);
     [
         1.0 - 2.0 * (y * y + z * z) * sq,

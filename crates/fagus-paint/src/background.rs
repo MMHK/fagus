@@ -1206,9 +1206,9 @@ fn with_hints_replaced(
                         at + right * ((y - 2.0) / 13.0)
                     }
                 });
-                let exponent = 0.5_f32.ln() / (left / total).ln();
+                let exponent = libm::logf(0.5_f32) / libm::logf(left / total);
                 for offset in offsets {
-                    let weight = ((offset - start) / total).powf(exponent);
+                    let weight = libm::powf((offset - start) / total, exponent);
                     if weight.is_finite() {
                         result.push((offset, mix(from, to, weight, interpolation)));
                     }
@@ -1310,12 +1310,12 @@ pub(crate) fn gradient_paint(
         GradientKind::Linear(direction) => {
             let (dx, dy) = match *direction {
                 LinearDirection::Angle(degrees) => {
-                    let (sin, cos) = degrees.to_radians().sin_cos();
+                    let (sin, cos) = libm::sincosf(degrees.to_radians());
                     (sin, -cos)
                 }
                 // Towards a corner: perpendicular to the diagonal between the two other corners.
                 LinearDirection::Corner { right, bottom } => {
-                    let norm = width.hypot(height).max(f32::EPSILON);
+                    let norm = libm::hypotf(width, height).max(f32::EPSILON);
                     let sx = if right { 1.0 } else { -1.0 };
                     let sy = if bottom { 1.0 } else { -1.0 };
                     (sx * height / norm, sy * width / norm)
@@ -1362,7 +1362,7 @@ pub(crate) fn gradient_paint(
             // The farthest point of the tile, in units of the x radius.
             let reach = [(0.0, 0.0), (width, 0.0), (0.0, height), (width, height)]
                 .into_iter()
-                .map(|(x, y): (f32, f32)| ((x - center.0) / rx).hypot((y - center.1) / ry) * rx)
+                .map(|(x, y): (f32, f32)| libm::hypotf((x - center.0) / rx, (y - center.1) / ry) * rx)
                 .fold(0.0, f32::max);
             if gradient.repeating {
                 match repeat_stops(&stops, reach, 2048) {
@@ -1428,7 +1428,7 @@ fn radii(shape: &RadialShape, center: (f32, f32), width: f32, height: f32) -> (f
     let closest = (horizontal[0].min(horizontal[1]), vertical[0].min(vertical[1]));
     let farthest = (horizontal[0].max(horizontal[1]), vertical[0].max(vertical[1]));
     let corners = [(0.0, 0.0), (width, 0.0), (0.0, height), (width, height)]
-        .map(|(x, y): (f32, f32)| (x - cx).hypot(y - cy));
+        .map(|(x, y): (f32, f32)| libm::hypotf(x - cx, y - cy));
     let closest_corner = corners.iter().copied().fold(f32::INFINITY, f32::min);
     let farthest_corner = corners.iter().copied().fold(0.0, f32::max);
     match shape {

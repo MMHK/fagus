@@ -357,7 +357,7 @@ impl Evaluator<'_> {
                     return None;
                 };
                 (base.is_number() && exponent.is_number())
-                    .then(|| Quantity::number(base.value.powf(exponent.value)))
+                    .then(|| Quantity::number(libm::pow(base.value, exponent.value)))
             }
             "sqrt" | "exp" => {
                 let value = self.single(tokens)?;
@@ -365,16 +365,16 @@ impl Evaluator<'_> {
                     Quantity::number(if name == "sqrt" {
                         value.value.sqrt()
                     } else {
-                        value.value.exp()
+                        libm::exp(value.value)
                     })
                 })
             }
             "log" => {
                 let values = self.arguments(tokens)?;
                 match values.as_slice() {
-                    [value] if value.is_number() => Some(Quantity::number(value.value.ln())),
+                    [value] if value.is_number() => Some(Quantity::number(libm::log(value.value))),
                     [value, base] if value.is_number() && base.is_number() => {
-                        Some(Quantity::number(value.value.ln() / base.value.ln()))
+                        Some(Quantity::number(libm::log(value.value) / libm::log(base.value)))
                     }
                     _ => None,
                 }
@@ -404,9 +404,9 @@ impl Evaluator<'_> {
                     return None;
                 };
                 Some(Quantity::number(match name.as_str() {
-                    "sin" => radians.sin(),
-                    "cos" => radians.cos(),
-                    _ => radians.tan(),
+                    "sin" => libm::sin(radians),
+                    "cos" => libm::cos(radians),
+                    _ => libm::tan(radians),
                 }))
             }
             "asin" | "acos" | "atan" => {
@@ -414,9 +414,9 @@ impl Evaluator<'_> {
                 value.is_number().then(|| {
                     Quantity::of(
                         match name.as_str() {
-                            "asin" => value.value.asin(),
-                            "acos" => value.value.acos(),
-                            _ => value.value.atan(),
+                            "asin" => libm::asin(value.value),
+                            "acos" => libm::acos(value.value),
+                            _ => libm::atan(value.value),
                         }
                         .to_degrees(),
                         ANGLE,
@@ -428,7 +428,8 @@ impl Evaluator<'_> {
                 let [y, x] = values.as_slice() else {
                     return None;
                 };
-                (y.powers == x.powers).then(|| Quantity::of(y.value.atan2(x.value).to_degrees(), ANGLE))
+                (y.powers == x.powers)
+                    .then(|| Quantity::of(libm::atan2(y.value, x.value).to_degrees(), ANGLE))
             }
             "progress" => {
                 let values = self.arguments(tokens)?;

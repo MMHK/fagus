@@ -38,7 +38,7 @@ fn scale(a: Point, factor: f32) -> Point {
 }
 
 fn length(a: Point) -> f32 {
-    a.0.hypot(a.1)
+    libm::hypotf(a.0, a.1)
 }
 
 fn normalize(a: Point) -> Point {
@@ -194,9 +194,9 @@ impl Corner {
         } else {
             end_radius - length(self.v3())
         };
-        let parameter = origin.curvature.log2();
-        let exponent = parameter.abs().exp2();
-        let convex_half_corner = 0.5_f32.powf(1.0 / exponent);
+        let parameter = libm::log2f(origin.curvature);
+        let exponent = libm::exp2f(parameter.abs());
+        let convex_half_corner = libm::powf(0.5_f32, 1.0 / exponent);
         let half_corner = if parameter < 0.0 {
             1.0 - convex_half_corner
         } else {
@@ -314,13 +314,13 @@ fn half_corner_curve(curvature: f32) -> [Point; 3] {
         2.914_946_863_794_981_4,
         0.910_650_710_291_708_6,
     ];
-    let s = f64::from(curvature.log2());
-    let slope = P[0] + (P[6] - P[0]) * 0.5 * (1.0 + (P[5] * (s - P[1])).tanh());
-    let base = 1.0 / (1.0 + (-slope * (0.0 - P[1])).exp());
-    let logistic = 1.0 / (1.0 + (-slope * (s - P[1])).exp());
+    let s = f64::from(libm::log2f(curvature));
+    let slope = P[0] + (P[6] - P[0]) * 0.5 * (1.0 + libm::tanh(P[5] * (s - P[1])));
+    let base = 1.0 / (1.0 + libm::exp(-slope * (0.0 - P[1])));
+    let logistic = 1.0 / (1.0 + libm::exp(-slope * (s - P[1])));
     let a = (logistic - base) / (1.0 - base);
-    let b = P[2] * (-P[3] * s.powf(P[4])).exp();
-    let half_corner = 0.5_f64.powf(1.0 / f64::from(curvature));
+    let b = P[2] * libm::exp(-P[3] * libm::pow(s, P[4]));
+    let half_corner = libm::pow(0.5_f64, 1.0 / f64::from(curvature));
     #[expect(clippy::cast_possible_truncation, reason = "geometry in single precision")]
     let point = |x: f64, y: f64| (x as f32, y as f32);
     [
@@ -718,7 +718,7 @@ fn corner_path(
     } else {
         end_radius - length(target.v3())
     };
-    let parameter = origin.curvature.log2();
+    let parameter = libm::log2f(origin.curvature);
     let inset_difference = (end_inset - start_inset).clamp(-start_radius, end_radius);
     if parameter <= 0.0
         && ((inset_difference - -start_radius).abs() < f32::EPSILON
@@ -1191,7 +1191,7 @@ fn bounds(corner: &Corner) -> [f32; 4] {
 /// The hull of a corner's curve: its start, where the tangent at its middle meets the lines
 /// from its start and end to its center, and its end (Blink's `ComputeHullQuad`).
 fn hull(corner: &Corner) -> [Point; 4] {
-    let half = 0.5_f32.powf(1.0 / corner.curvature);
+    let half = libm::powf(0.5_f32, 1.0 / corner.curvature);
     let middle = corner.map((half, half));
     let direction = sub(middle, corner.outer);
     let along = add(middle, (-direction.1, direction.0));
@@ -1370,7 +1370,7 @@ mod tests {
             panic!("a curve: {path:?}");
         };
         // 0.5^(1/4) of the way from the corner's center to its outer point.
-        let half = 0.5_f32.powf(0.25) * 20.0;
+        let half = libm::powf(0.5_f32, 0.25) * 20.0;
         assert!(
             (x - (80.0 + half)).abs() < 1e-3 && (y - (20.0 - half)).abs() < 1e-3,
             "{x} {y}"

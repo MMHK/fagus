@@ -480,11 +480,11 @@ fn blur(item: &mut Item, sigma: f32) {
         }
         Item::BoxShadow(shadow) if !shadow.inset => {
             *shadow = Arc::new(BoxShadowPaint {
-                blur: shadow.blur.hypot(radius),
+                blur: libm::hypotf(shadow.blur, radius),
                 ..(**shadow).clone()
             });
         }
-        Item::TextShadow { blur, .. } => *blur = blur.hypot(radius),
+        Item::TextShadow { blur, .. } => *blur = libm::hypotf(*blur, radius),
         Item::Text {
             x,
             y,

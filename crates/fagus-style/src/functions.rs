@@ -354,7 +354,7 @@ pub fn contrast_color(arguments: &TokenList<'static>) -> Option<TokenOrValue<'st
         if channel <= 0.040_45 {
             channel / 12.92
         } else {
-            ((channel + 0.055) / 1.055).powf(2.4)
+            libm::powf((channel + 0.055) / 1.055, 2.4)
         }
     };
     let luminance = 0.2126 * linear(rgba.r) + 0.7152 * linear(rgba.g) + 0.0722 * linear(rgba.b);

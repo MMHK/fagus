@@ -448,11 +448,11 @@ fn significant_gamma(info: &png::Info<'_>) -> Option<f32> {
 fn gamma_table(gamma: f32) -> [u8; 256] {
     let mut table = [0; 256];
     for (value, out) in table.iter_mut().enumerate() {
-        let linear = (value as f32 / 255.0).powf(1.0 / gamma);
+        let linear = libm::powf(value as f32 / 255.0, 1.0 / gamma);
         let encoded = if linear <= 0.003_130_8 {
             12.92 * linear
         } else {
-            1.055 * linear.powf(1.0 / 2.4) - 0.055
+            1.055 * libm::powf(linear, 1.0 / 2.4) - 0.055
         };
         *out = (encoded * 255.0).round().clamp(0.0, 255.0) as u8;
     }

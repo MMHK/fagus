@@ -537,7 +537,7 @@ fn to_linear(channel: f32) -> f32 {
     let linear = if magnitude <= 0.040_45 {
         magnitude / 12.92
     } else {
-        ((magnitude + 0.055) / 1.055).powf(2.4)
+        libm::powf((magnitude + 0.055) / 1.055, 2.4)
     };
     linear.copysign(channel)
 }
@@ -547,7 +547,7 @@ fn from_linear(channel: f32) -> f32 {
     let encoded = if magnitude <= 0.003_130_8 {
         magnitude * 12.92
     } else {
-        1.055 * magnitude.powf(1.0 / 2.4) - 0.055
+        1.055 * libm::powf(magnitude, 1.0 / 2.4) - 0.055
     };
     encoded.copysign(channel)
 }

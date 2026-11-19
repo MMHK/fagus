@@ -334,7 +334,7 @@ impl Rasterizer<'_> {
                 dotted,
                 color,
             } => {
-                let length = (to.0 - from.0).hypot(to.1 - from.1);
+                let length = libm::hypotf(to.0 - from.0, to.1 - from.1);
                 let style = if *dotted {
                     BorderStyle::Dotted
                 } else {
@@ -572,7 +572,7 @@ impl Rasterizer<'_> {
             if (horizontal && start.0 > end.0) || (!horizontal && start.1 > end.1) {
                 (start, end) = (end, start);
             }
-            let length = (end.0 - start.0).hypot(end.1 - start.1);
+            let length = libm::hypotf(end.0 - start.0, end.1 - start.1);
             if length <= 0.0 {
                 return;
             }

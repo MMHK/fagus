@@ -931,7 +931,7 @@ fn segments_length(segments: &[fagus_layout::PathSegment]) -> f32 {
             pieces(at, (t0, p0), (middle, point), (depth + 1, tolerance))
                 + pieces(at, (middle, point), (t1, p1), (depth + 1, tolerance))
         } else {
-            (p1.0 - p0.0).hypot(p1.1 - p0.1)
+            libm::hypotf(p1.0 - p0.0, p1.1 - p0.1)
         }
     }
     let (mut start, mut current) = ((0.0, 0.0), (0.0, 0.0));
@@ -943,7 +943,7 @@ fn segments_length(segments: &[fagus_layout::PathSegment]) -> f32 {
                 current = start;
             }
             PathSegment::Line(x, y) => {
-                length += (x - current.0).hypot(y - current.1);
+                length += libm::hypotf(x - current.0, y - current.1);
                 current = (x, y);
             }
             PathSegment::Cubic([first_x, first_y, second_x, second_y, end_x, end_y]) => {
@@ -979,7 +979,7 @@ fn segments_length(segments: &[fagus_layout::PathSegment]) -> f32 {
                 current = (end_x, end_y);
             }
             PathSegment::Close => {
-                length += (start.0 - current.0).hypot(start.1 - current.1);
+                length += libm::hypotf(start.0 - current.0, start.1 - current.1);
                 current = start;
             }
         }
@@ -1265,7 +1265,7 @@ fn draw_svg(surface: &mut Surface<'_>, tree: &Arc<usvg::Tree>, size: Size, cache
     // a sliver, are drawn as at most a thousand pixels across rather than krilla-svg's five
     // thousand: their pixels are far larger than those of a page either way, and filters take
     // time with each (`feTurbulence` a minute for five thousand).
-    let scale = f32::hypot(ctm.sx(), ctm.ky()).max(f32::hypot(ctm.kx(), ctm.sy()));
+    let scale = libm::hypotf(ctm.sx(), ctm.ky()).max(libm::hypotf(ctm.kx(), ctm.sy()));
     let side = size.width().max(size.height());
     if side > HUGE_SVG && scale > 0.0 {
         settings.filter_scale = settings.filter_scale.min(1000.0 / (side * scale));
@@ -2279,7 +2279,7 @@ fn draw(
             dotted,
             color,
         } => {
-            let length = (to.0 - from.0).hypot(to.1 - from.1);
+            let length = libm::hypotf(to.0 - from.0, to.1 - from.1);
             let style = if *dotted {
                 BorderStyle::Dotted
             } else {
@@ -2713,7 +2713,7 @@ fn draw_gradient(surface: &mut Surface<'_>, rect: RectF, gradient: &GradientPain
         } => {
             // CSS measures from the top, sweep gradients from the x axis; both turn clockwise
             // on a page whose y axis points down.
-            let (sin, cos) = (start_angle - 90.0).to_radians().sin_cos();
+            let (sin, cos) = libm::sincosf((start_angle - 90.0).to_radians());
             SweepGradient {
                 cx: 0.0,
                 cy: 0.0,
@@ -2760,7 +2760,7 @@ fn draw_border_side(
             if (horizontal && start.0 > end.0) || (!horizontal && start.1 > end.1) {
                 (start, end) = (end, start);
             }
-            let length = (end.0 - start.0).hypot(end.1 - start.1);
+            let length = libm::hypotf(end.0 - start.0, end.1 - start.1);
             let pattern = dash_pattern(style, width, length, false);
             if length <= 0.0 {
                 return;
@@ -3087,7 +3087,7 @@ fn measured_quarter((rx, ry): (f32, f32)) -> f32 {
             pieces(at, (t0, p0), (middle, point), depth + 1)
                 + pieces(at, (middle, point), (t1, p1), depth + 1)
         } else {
-            (p1.0 - p0.0).hypot(p1.1 - p0.1)
+            libm::hypotf(p1.0 - p0.0, p1.1 - p0.1)
         }
     }
     if rx <= 0.0 || ry <= 0.0 {

@@ -280,7 +280,7 @@ fn arc_to_cubics(from: (f32, f32), to: (f32, f32), arc: Arc, segments: &mut Vec<
         segments.push(PathSegment::Line(to.0, to.1));
         return;
     }
-    let (sin, cos) = arc.rotation.to_radians().sin_cos();
+    let (sin, cos) = libm::sincosf(arc.rotation.to_radians());
     let (hx, hy) = ((from.0 - to.0) / 2.0, (from.1 - to.1) / 2.0);
     let x1 = cos * hx + sin * hy;
     let y1 = -sin * hx + cos * hy;
@@ -308,8 +308,8 @@ fn arc_to_cubics(from: (f32, f32), to: (f32, f32), arc: Arc, segments: &mut Vec<
     );
     let angle = |ux: f32, uy: f32, vx: f32, vy: f32| {
         let sign = if ux * vy - uy * vx < 0.0 { -1.0 } else { 1.0 };
-        let dot = (ux * vx + uy * vy) / (ux.hypot(uy) * vx.hypot(vy));
-        sign * dot.clamp(-1.0, 1.0).acos()
+        let dot = (ux * vx + uy * vy) / (libm::hypotf(ux, uy) * libm::hypotf(vx, vy));
+        sign * libm::acosf(dot.clamp(-1.0, 1.0))
     };
     let start = angle(1.0, 0.0, (x1 - cx1) / rx, (y1 - cy1) / ry);
     let mut sweep = angle(
@@ -327,14 +327,14 @@ fn arc_to_cubics(from: (f32, f32), to: (f32, f32), arc: Arc, segments: &mut Vec<
     // At most a quarter turn per curve.
     let count = (sweep.abs() / std::f32::consts::FRAC_PI_2).ceil().max(1.0);
     let step = sweep / count;
-    let handle = 4.0 / 3.0 * (step / 4.0).tan();
+    let handle = 4.0 / 3.0 * libm::tanf(step / 4.0);
     let point = |theta: f32| {
-        let (s, c) = theta.sin_cos();
+        let (s, c) = libm::sincosf(theta);
         let (px, py) = (rx * c, ry * s);
         (cos * px - sin * py + center.0, sin * px + cos * py + center.1)
     };
     let tangent = |theta: f32| {
-        let (s, c) = theta.sin_cos();
+        let (s, c) = libm::sincosf(theta);
         let (tx, ty) = (-rx * s, ry * c);
         (cos * tx - sin * ty, sin * tx + cos * ty)
     };

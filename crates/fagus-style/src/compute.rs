@@ -119,7 +119,7 @@ pub(crate) fn decimal(value: f32) -> f64 {
     if value == 0.0 || !value.is_finite() {
         return wide;
     }
-    let exponent = wide.abs().log10().floor() as i32;
+    let exponent = libm::log10(wide.abs()).floor() as i32;
     for digits in 1..=9 {
         // Powers of ten up to 1e22 are exact doubles, so the rounding below is exact too.
         let shift = digits - 1 - exponent;

@@ -143,7 +143,7 @@ fn to_linear(channel: f32) -> f32 {
     let linear = if magnitude <= 0.04045 {
         magnitude / 12.92
     } else {
-        ((magnitude + 0.055) / 1.055).powf(2.4)
+        libm::powf((magnitude + 0.055) / 1.055, 2.4)
     };
     linear.copysign(channel)
 }
@@ -153,7 +153,7 @@ fn from_linear(channel: f32) -> f32 {
     let encoded = if magnitude <= 0.003_130_8 {
         magnitude * 12.92
     } else {
-        1.055 * magnitude.powf(1.0 / 2.4) - 0.055
+        1.055 * libm::powf(magnitude, 1.0 / 2.4) - 0.055
     };
     encoded.copysign(channel)
 }
@@ -188,9 +188,9 @@ const D50_WHITE: [f32; 3] = [0.964_295_7, 1.0, 0.825_104_6];
 
 fn oklab(linear: [f32; 3]) -> [f32; 3] {
     let [r, g, b] = linear;
-    let l = (0.412_221_46 * r + 0.536_332_55 * g + 0.051_445_995 * b).cbrt();
-    let m = (0.211_903_5 * r + 0.680_699_5 * g + 0.107_396_96 * b).cbrt();
-    let s = (0.088_302_46 * r + 0.281_718_85 * g + 0.629_978_7 * b).cbrt();
+    let l = libm::cbrtf(0.412_221_46 * r + 0.536_332_55 * g + 0.051_445_995 * b);
+    let m = libm::cbrtf(0.211_903_5 * r + 0.680_699_5 * g + 0.107_396_96 * b);
+    let s = libm::cbrtf(0.088_302_46 * r + 0.281_718_85 * g + 0.629_978_7 * b);
     [
         0.210_454_26 * l + 0.793_617_8 * m - 0.004_072_047 * s,
         1.977_998_5 * l - 2.428_592_2 * m + 0.450_593_7 * s,
@@ -218,7 +218,7 @@ fn lab(linear: [f32; 3]) -> [f32; 3] {
     let f = |index: usize| {
         let value = xyz[index] / D50_WHITE[index];
         if value > EPSILON {
-            value.cbrt()
+            libm::cbrtf(value)
         } else {
             (KAPPA * value + 16.0) / 116.0
         }
@@ -254,11 +254,15 @@ fn from_lab(lab: [f32; 3]) -> [f32; 3] {
 }
 
 fn polar([l, a, b]: [f32; 3]) -> [f32; 3] {
-    [l, a.hypot(b), b.atan2(a).to_degrees().rem_euclid(360.0)]
+    [
+        l,
+        libm::hypotf(a, b),
+        libm::atan2f(b, a).to_degrees().rem_euclid(360.0),
+    ]
 }
 
 fn rectangular([l, c, h]: [f32; 3]) -> [f32; 3] {
-    let (sin, cos) = h.to_radians().sin_cos();
+    let (sin, cos) = libm::sincosf(h.to_radians());
     [l, c * cos, c * sin]
 }
 

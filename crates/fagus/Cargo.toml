@@ -15,6 +15,7 @@ documentation = "https://fagus.niklasforst.de/docs/rust"
 workspace = true
 
 [dependencies]
+libm.workspace = true
 fagus-dom.workspace = true
 fagus-css.workspace = true
 fagus-style.workspace = true

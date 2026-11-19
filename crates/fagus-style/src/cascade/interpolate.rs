@@ -199,10 +199,17 @@ fn matrix_of(functions: &[TransformFunction]) -> Option<[f32; 6]> {
             }
             TransformFunction::Scale(x, y) => [*x, 0.0, 0.0, *y, 0.0, 0.0],
             TransformFunction::Rotate(degrees) => {
-                let (sin, cos) = degrees.to_radians().sin_cos();
+                let (sin, cos) = libm::sincosf(degrees.to_radians());
                 [cos, sin, -sin, cos, 0.0, 0.0]
             }
-            TransformFunction::Skew(x, y) => [1.0, y.to_radians().tan(), x.to_radians().tan(), 1.0, 0.0, 0.0],
+            TransformFunction::Skew(x, y) => [
+                1.0,
+                libm::tanf(y.to_radians()),
+                libm::tanf(x.to_radians()),
+                1.0,
+                0.0,
+                0.0,
+            ],
             TransformFunction::Matrix(m) => *m,
             _ => return None,
         };
@@ -222,7 +229,7 @@ struct Decomposed {
 
 fn decompose(matrix: [f32; 6]) -> Option<Decomposed> {
     let [a, b, c, d, tx, ty] = matrix;
-    let sx = a.hypot(b);
+    let sx = libm::hypotf(a, b);
     if sx == 0.0 {
         return None;
     }
@@ -235,14 +242,14 @@ fn decompose(matrix: [f32; 6]) -> Option<Decomposed> {
     let along = (a * c + b * d) / sx;
     Some(Decomposed {
         translate: (tx, ty),
-        angle: b.atan2(a).to_degrees(),
+        angle: libm::atan2f(b, a).to_degrees(),
         shear: along / sy,
         scale: (sx, sy),
     })
 }
 
 fn compose(m: &Decomposed) -> [f32; 6] {
-    let (sin, cos) = m.angle.to_radians().sin_cos();
+    let (sin, cos) = libm::sincosf(m.angle.to_radians());
     let (sx, sy) = m.scale;
     // rotate · [[sx, shear · sy], [0, sy]]
     let (u0, u1) = (sx, 0.0);
@@ -370,7 +377,7 @@ mod tests {
         else {
             panic!("a matrix");
         };
-        let (sin, cos) = 45_f32.to_radians().sin_cos();
+        let (sin, cos) = libm::sincosf(45_f32.to_radians());
         let expected = [2.0 * cos, 2.0 * sin, -2.0 * sin, 2.0 * cos, 0.0, 0.0];
         assert!(m.iter().zip(expected).all(|(a, b)| (a - b).abs() < 1e-4), "{m:?}");
         // Individual transforms: `none` is the identity.

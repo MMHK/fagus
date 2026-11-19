@@ -17,6 +17,7 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+libm.workspace = true
 harfrust.workspace = true
 skrifa.workspace = true
 unicode-linebreak.workspace = true

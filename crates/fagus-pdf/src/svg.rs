@@ -347,8 +347,8 @@ pub(crate) fn morphology_reach(tree: &Tree, scale: f32) -> (f32, f32) {
     fn walk(group: &usvg::Group, scale: f32, reach: &mut (f32, f32)) {
         if !group.filters().is_empty() {
             let transform = group.abs_transform();
-            let factor =
-                scale * f32::hypot(transform.sx, transform.ky).max(f32::hypot(transform.kx, transform.sy));
+            let factor = scale
+                * libm::hypotf(transform.sx, transform.ky).max(libm::hypotf(transform.kx, transform.sy));
             for filter in group.filters() {
                 for primitive in filter.primitives() {
                     if let usvg::filter::Kind::Morphology(morphology) = primitive.kind() {

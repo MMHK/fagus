@@ -15,6 +15,7 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+libm.workspace = true
 fagus-dom.workspace = true
 fagus-layout.workspace = true
 fagus-style.workspace = true

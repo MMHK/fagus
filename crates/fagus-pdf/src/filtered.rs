@@ -634,7 +634,7 @@ fn to_srgb_table() -> String {
         let srgb = if linear <= 0.003_130_8 {
             linear * 12.92
         } else {
-            1.055 * linear.powf(1.0 / 2.4) - 0.055
+            1.055 * libm::powf(linear, 1.0 / 2.4) - 0.055
         };
         if step > 0 {
             table.push(' ');

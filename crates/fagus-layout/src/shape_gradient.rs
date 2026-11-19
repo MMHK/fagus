@@ -38,11 +38,11 @@ pub(crate) fn alpha(gradient: &Gradient, width: f32, height: f32, current: f32) 
         GradientKind::Linear(direction) => {
             let (dx, dy) = match *direction {
                 LinearDirection::Angle(degrees) => {
-                    let (sin, cos) = degrees.to_radians().sin_cos();
+                    let (sin, cos) = libm::sincosf(degrees.to_radians());
                     (sin, -cos)
                 }
                 LinearDirection::Corner { right, bottom } => {
-                    let norm = width.hypot(height).max(f32::EPSILON);
+                    let norm = libm::hypotf(width, height).max(f32::EPSILON);
                     let sx = if right { 1.0 } else { -1.0 };
                     let sy = if bottom { 1.0 } else { -1.0 };
                     (sx * height / norm, sy * width / norm)
@@ -67,7 +67,7 @@ pub(crate) fn alpha(gradient: &Gradient, width: f32, height: f32, current: f32) 
             }
             (
                 rx,
-                Box::new(move |x, y| ((x - center.0) / rx).hypot((y - center.1) / ry) * rx),
+                Box::new(move |x, y| libm::hypotf((x - center.0) / rx, (y - center.1) / ry) * rx),
             )
         }
         GradientKind::Conic { from, position } => {
@@ -76,7 +76,7 @@ pub(crate) fn alpha(gradient: &Gradient, width: f32, height: f32, current: f32) 
             (
                 360.0,
                 Box::new(move |x, y| {
-                    let angle = (x - center.0).atan2(center.1 - y).to_degrees();
+                    let angle = libm::atan2f(x - center.0, center.1 - y).to_degrees();
                     (angle - from).rem_euclid(360.0)
                 }),
             )
@@ -134,7 +134,7 @@ fn alpha_at(stops: &[Stop], at: f32) -> f32 {
                         } else if middle >= 1.0 {
                             0.0
                         } else {
-                            weight.powf(0.5f32.ln() / middle.ln())
+                            libm::powf(weight, libm::logf(0.5f32) / libm::logf(middle))
                         };
                     }
                     return from + (alpha - from) * weight;
@@ -242,7 +242,7 @@ fn radii(shape: &RadialShape, center: (f32, f32), width: f32, height: f32) -> (f
     let closest = (horizontal[0].min(horizontal[1]), vertical[0].min(vertical[1]));
     let farthest = (horizontal[0].max(horizontal[1]), vertical[0].max(vertical[1]));
     let corners = [(0.0, 0.0), (width, 0.0), (0.0, height), (width, height)]
-        .map(|(x, y): (f32, f32)| (x - cx).hypot(y - cy));
+        .map(|(x, y): (f32, f32)| libm::hypotf(x - cx, y - cy));
     let closest_corner = corners.iter().copied().fold(f32::INFINITY, f32::min);
     let farthest_corner = corners.iter().copied().fold(0.0, f32::max);
     match shape {

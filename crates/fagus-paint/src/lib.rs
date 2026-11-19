@@ -3713,7 +3713,9 @@ fn clip_item(style: &ComputedStyle, clip: &fagus_style::values::ClipPath, border
             let (right, bottom) = (width - left, height - top);
             // Percentages of a circle's radius refer to the box's normalized diagonal.
             let radius = |radius: &ShapeRadius, horizontal: bool| match radius {
-                ShapeRadius::Length(length) if *circle => length.resolve(width.hypot(height) / 2f32.sqrt()),
+                ShapeRadius::Length(length) if *circle => {
+                    length.resolve(libm::hypotf(width, height) / 2f32.sqrt())
+                }
                 ShapeRadius::Length(length) => length.resolve(if horizontal { width } else { height }),
                 ShapeRadius::ClosestSide if *circle => {
                     left.abs().min(right.abs()).min(top.abs()).min(bottom.abs())
@@ -4291,7 +4293,7 @@ fn relative_luminance(color: Rgba) -> f32 {
         if value <= 0.040_45 {
             value / 12.92
         } else {
-            ((value + 0.055) / 1.055).powf(2.4)
+            libm::powf((value + 0.055) / 1.055, 2.4)
         }
     };
     0.2126 * linear(color.r) + 0.7152 * linear(color.g) + 0.0722 * linear(color.b)

@@ -362,7 +362,7 @@ pub(crate) fn svg_filter(
                     let light = if value <= 0.040_45 {
                         value / 12.92
                     } else {
-                        ((value + 0.055) / 1.055).powf(2.4)
+                        libm::powf((value + 0.055) / 1.055, 2.4)
                     };
                     (light * 255.0).round() as u8
                 };

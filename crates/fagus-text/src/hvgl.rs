@@ -92,7 +92,7 @@ impl Transform {
     /// Turns by `angle` radians around the origin.
     fn rotate(&mut self, angle: f64, before: bool) {
         if angle != 0.0 {
-            let (sin, cos) = angle.sin_cos();
+            let (sin, cos) = libm::sincos(angle);
             self.multiply(
                 &Self {
                     xx: cos,
@@ -110,7 +110,7 @@ impl Transform {
     /// Turns by `angle` radians around a point.
     fn rotate_around(&mut self, angle: f64, (x, y): (f64, f64)) {
         if angle != 0.0 {
-            let (sin, cos) = angle.sin_cos();
+            let (sin, cos) = libm::sincos(angle);
             self.multiply(
                 &Self {
                     xx: cos,
@@ -614,7 +614,7 @@ fn apply_to_transforms(part: &[u8], composite: &Composite, transforms: &mut [Tra
                     // angle that moves the origin by it.
                     let (mut x, mut y) = moved;
                     if x != 0.0 || y != 0.0 {
-                        let (sin, cos) = angle.sin_cos();
+                        let (sin, cos) = libm::sincos(angle);
                         if 1.0 - cos != 0.0 {
                             let ratio = sin / (1.0 - cos);
                             (x, y) = (f64::midpoint(x, -y * ratio), f64::midpoint(y, x * ratio));

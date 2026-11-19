@@ -304,6 +304,7 @@ dependencies = [
  "fagus-pdf",
  "fagus-style",
  "fagus-text",
+ "libm",
  "rustc-hash",
  "thiserror",
 ]
@@ -355,6 +356,7 @@ dependencies = [
  "fagus-style",
  "fagus-text",
  "imagesize",
+ "libm",
  "rustc-hash",
  "smallvec",
  "unicode-bidi",
@@ -369,6 +371,7 @@ dependencies = [
  "fagus-layout",
  "fagus-style",
  "fagus-text",
+ "libm",
  "rustc-hash",
 ]
 
@@ -405,6 +408,7 @@ version = "0.2.0"
 dependencies = [
  "fagus-css",
  "fagus-dom",
+ "libm",
  "lightningcss",
  "rustc-hash",
  "smallvec",
@@ -418,6 +422,7 @@ dependencies = [
  "fontdb",
  "harfrust",
  "icu_segmenter",
+ "libm",
  "rustc-hash",
  "skrifa 0.49.0",
  "smallvec",

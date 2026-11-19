@@ -257,7 +257,7 @@ fn filter(markup: &str, id: &str) -> Option<Vec<Filter>> {
                     } => Value::Shadow {
                         x: dx,
                         y: dy,
-                        blur: blur.hypot(x),
+                        blur: libm::hypotf(blur, x),
                         color,
                     },
                     flood @ Value::Flood(_) => flood,
@@ -452,7 +452,7 @@ fn from_linear(c: f32) -> f32 {
     if c <= 0.003_130_8 {
         c * 12.92
     } else {
-        1.055 * c.powf(1.0 / 2.4) - 0.055
+        1.055 * libm::powf(c, 1.0 / 2.4) - 0.055
     }
 }
 
@@ -487,7 +487,7 @@ fn color_matrix(kind: &ColorMatrixKind) -> [f32; 20] {
             ])
         }
         ColorMatrixKind::HueRotate(degrees) => {
-            let (sin, cos) = degrees.to_radians().sin_cos();
+            let (sin, cos) = libm::sincosf(degrees.to_radians());
             rgb([
                 0.213 + cos * 0.787 - sin * 0.213,
                 0.715 - cos * 0.715 - sin * 0.715,

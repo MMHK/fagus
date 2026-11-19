@@ -324,7 +324,7 @@ fn offset_polygon(segments: &[PathSegment], by: f32) -> Vec<PathSegment> {
             .map(|index| {
                 let (a, b) = (points[index], points[(index + 1) % count]);
                 let (dx, dy) = (b.0 - a.0, b.1 - a.1);
-                let length = dx.hypot(dy).max(f32::EPSILON);
+                let length = libm::hypotf(dx, dy).max(f32::EPSILON);
                 let normal = (dy / length * outward, -dx / length * outward);
                 ((a.0 + normal.0, a.1 + normal.1), (dx, dy))
             })
@@ -668,11 +668,11 @@ fn flatten(
 ) {
     // How far the directions of two vectors turn (radians); none where one is a point.
     let turn = |a: (f32, f32), b: (f32, f32)| {
-        let lengths = a.0.hypot(a.1) * b.0.hypot(b.1);
+        let lengths = libm::hypotf(a.0, a.1) * libm::hypotf(b.0, b.1);
         if lengths <= f32::EPSILON {
             0.0
         } else {
-            ((a.0 * b.0 + a.1 * b.1) / lengths).clamp(-1.0, 1.0).acos()
+            libm::acosf(((a.0 * b.0 + a.1 * b.1) / lengths).clamp(-1.0, 1.0))
         }
     };
     let difference = |a: (f32, f32), b: (f32, f32)| (b.0 - a.0, b.1 - a.1);

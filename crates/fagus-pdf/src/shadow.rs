@@ -504,7 +504,7 @@ pub(crate) fn coverage(x: f32, y: f32, rect: RectF, radii: Option<&Radii>, scale
         ];
         for (cx, cy, (rx, ry), within) in corners {
             if within && rx > 0.0 && ry > 0.0 {
-                let normalized = ((x - cx) / rx).hypot((y - cy) / ry);
+                let normalized = libm::hypotf((x - cx) / rx, (y - cy) / ry);
                 distance = (normalized - 1.0) * rx.min(ry);
             }
         }
@@ -538,7 +538,7 @@ pub(crate) fn gaussian(values: &mut [f32], width: usize, height: usize, sigma: f
     }
     let radius = (sigma * 3.0).ceil() as isize;
     let kernel: Vec<f32> = (-radius..=radius)
-        .map(|offset| (-(offset * offset) as f32 / (2.0 * sigma * sigma)).exp())
+        .map(|offset| libm::expf(-(offset * offset) as f32 / (2.0 * sigma * sigma)))
         .collect();
     let total: f32 = kernel.iter().sum();
     let kernel: Vec<f32> = kernel.iter().map(|weight| weight / total).collect();
@@ -783,7 +783,7 @@ mod tests {
         for row in 0..size {
             for column in 0..size {
                 let (dx, dy) = (column as f32 - 100.0, row as f32 - 100.0);
-                exact[row * size + column] = (-(dx * dx + dy * dy) / (2.0 * sigma * sigma)).exp()
+                exact[row * size + column] = libm::expf(-(dx * dx + dy * dy) / (2.0 * sigma * sigma))
                     / (2.0 * std::f32::consts::PI * sigma * sigma);
             }
         }

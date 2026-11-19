@@ -5,6 +5,7 @@ Fagus is in early development. Design decisions are recorded in [docs/adr](docs/
 - Run `cargo fmt`, `cargo clippy --workspace --all-targets` and `cargo test --workspace` before sending changes.
 - For changes to the PHP code, run `composer install` and `vendor/bin/phpunit` in the repository root (after `cargo build --release`, whose binary the tests use).
 - No `unsafe` code. Every crate forbids it.
+- Trigonometry, powers, logarithms and the like come from the `libm` crate (`libm::sinf`, `libm::powf` …), not from the methods of `f32` and `f64`: those call the system's math library, whose results differ between platforms in the last bit, and the PDF must have the same bytes everywhere. `clippy.toml` refuses the methods.
 - Behaviour follows the CSS specifications; appearance is compared with Chrome. Print features that Chrome lacks follow the specifications and WeasyPrint.
 - Every bug fix comes with a test.
 - Changes that users notice get an entry under `[Unreleased]` in `CHANGELOG.md`. What counts as public API, and what a minor release may change, is in [docs/stability.md](docs/stability.md) ([ADR 5](docs/adr/0005-public-api-and-deprecations.md)). From 1.0 on, breaking changes wait for a major release: deprecate first in a minor release (`@deprecated` and `E_USER_DEPRECATED` in PHP, `#[deprecated]` in Rust, a warning on the command line), with the replacement and an entry under *Deprecated*.

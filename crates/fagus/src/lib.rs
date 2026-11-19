@@ -2663,7 +2663,7 @@ mod tests {
             "{page}<div style='margin-left: 444px; width: 56px; height: 56px; transform: rotate(-4deg)'></div>"
         );
         let extent = fagus_paint::content_extent(&shrunk_pages(&turned, 1.0)[0]);
-        let half = 28.0 * ((4.0_f32).to_radians().cos() + (4.0_f32).to_radians().sin());
+        let half = 28.0 * (libm::cosf((4.0_f32).to_radians()) + libm::sinf((4.0_f32).to_radians()));
         assert!((extent - (472.0 + half)).abs() < 0.01, "{extent}");
         // Content that clips its overflow reaches no further than itself.
         let clipped = format!(
