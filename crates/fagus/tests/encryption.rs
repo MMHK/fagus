@@ -247,22 +247,49 @@ fn prepares_passwords_beyond_ascii_with_saslprep() {
 }
 
 #[test]
-fn refuses_to_sign_an_encrypted_pdf_for_now() {
+fn signs_encrypted_pdfs() {
     let p12 = std::fs::read(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../tests/signing/rsa.p12"
     ))
     .expect("fixture");
     let signature = Signature::pkcs12(&p12, "fagus-test-only").expect("PKCS#12 file");
-    let error = engine()
-        .render(
-            &Document::html(HTML)
-                .encrypt(Encryption::new().user_password("benutzer"))
-                .sign(signature),
-        )
-        .expect_err("refused");
-    assert_eq!(
-        error.to_string(),
-        "the PDF could not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it"
-    );
+    let document = Document::html(HTML).created(Date::from_unix(1_800_000_000));
+    for (encryption, password) in [
+        (Encryption::new().user_password("benutzer"), "benutzer"),
+        (
+            Encryption::new()
+                .owner_password("eigentümer")
+                .permissions([Permission::Print]),
+            "",
+        ),
+    ] {
+        let unsigned_options = encryption.clone().seed([5; 32]);
+        let unsigned = engine()
+            .render(&document.clone().encrypt(unsigned_options.clone()))
+            .expect("rendered")
+            .pdf;
+        let pdf = engine()
+            .render(
+                &document
+                    .clone()
+                    .encrypt(unsigned_options)
+                    .sign(signature.clone().reason("Gehaltsabrechnung")),
+            )
+            .expect("rendered")
+            .pdf;
+        // The encrypted file, then the signature's update.
+        assert!(pdf.starts_with(&unsigned));
+        assert!(!contains(&pdf, "Gehaltsabrechnung"), "the reason is encrypted");
+        let Some(qpdf) = qpdf() else {
+            continue;
+        };
+        let directory = std::env::temp_dir();
+        let file = directory.join(format!("fagus-encrypted-signed-{}.pdf", std::process::id()));
+        std::fs::write(&file, &pdf).expect("written");
+        let (status, output) = run(&qpdf, &file, password, "--check");
+        assert_eq!(status, 0, "{output}");
+        assert!(output.contains("No syntax or stream encoding errors"), "{output}");
+        std::fs::remove_file(&file).expect("removed");
+    }
 }

@@ -38,6 +38,8 @@ ends the worker with exit code 1 and the reason on its error output.
 | `s` signed | caller → worker | `error` (if refused) | the signature |
 | `T` timestamp | worker → caller | `id` | the digest to timestamp |
 | `t` timestamped | caller → worker | `error` (if refused) | the timestamp |
+| `V` revocation | worker → caller | `id`, `ocspUrls`, `crlUrls` | the certificate, its issuer's certificate, the OCSP request |
+| `v` revocation data | caller → worker | `error` (if refused) | OCSP responses, CRLs and certificates, any number |
 
 The worker sends `H` when it starts; its `protocol` is 1 and its `version` that of the binary
 ([Versions](#versions)). `sandbox` says how much of the [sandbox](cli.md#sandbox) is in force:
@@ -50,8 +52,8 @@ without `id`.
 The caller sends `R` and reads frames until it gets `P` or `E`. Meanwhile the worker may ask for
 resources it needs with `?`, if the request allows it (`ask`); the caller answers each one with
 `r`, with the data or `found: false`. A request with a `signature` of the caller's own signer may
-also bring `S` and `T` (see [Signatures](#signatures)), each answered with `s` or `t`. Nothing
-else may come in between.
+also bring `S` and `T`, and one with `revocation` brings `V` (see [Signatures](#signatures)),
+each answered with `s`, `t` or `v`. Nothing else may come in between.
 
 The header of `R`; fields other than `id` and `html` may be left out:
 
@@ -231,7 +233,11 @@ PKCS#12 file or with a key the caller holds:
   "location": "Berlin",
   "contactInfo": "rechnung@example.com",
   "time": "2026-11-02T12:00:00Z",
-  "timestamp": false
+  "timestamp": false,
+  "certify": "fill-forms",
+  "element": "signature",
+  "revocation": false,
+  "archiveTimestamp": false
 }
 ```
 
@@ -243,6 +249,16 @@ PKCS#12 file or with a key the caller holds:
 - `time`: the time of signing, in the form of `created`; the creation date if left out.
 - `timestamp`: whether the worker asks the caller for a timestamp with `T` (`false` if left
   out).
+- `certify`: makes the signature a certification signature (DocMDP) that allows `no-changes`,
+  `fill-forms` or `annotate`; left out, an approval signature.
+- `element`: the `id` of the element in whose box the signature shows, with the element's
+  content as its appearance. `area` instead: `{ "page": 1, "x": 340, "y": 700, "width": 200,
+  "height": 60 }`, the number of the page (from 1) and an area in points from its top left
+  corner. Without either, the signature is invisible.
+- `revocation`: whether the worker asks the caller for the revocation status of the
+  certificates with `V`, for PAdES B-LT (`false` if left out).
+- `archiveTimestamp`: whether a document timestamp follows the validation data (B-LTA), asked
+  for with `T`; needs `timestamp` and `revocation`.
 
 `S` carries the request's `id`, the `algorithm` (`RSA-SHA256` or `ECDSA-P256-SHA256`, from the
 certificate) and the SHA-256 digest (32 bytes) to sign as its data. The caller answers `s` with
@@ -253,10 +269,21 @@ response) as its data. A caller that cannot answer sends `s` or `t` with an `err
 the worker then answers the request with `E`. The worker checks signatures against the
 certificate and timestamps against the digest, and answers `E` for those that do not match.
 It may ask more than once for one document, should a timestamp need more room than expected.
+An archive timestamp is asked for with `T` as well, after the validation data, with the SHA-256
+digest of the file.
 
-A request with both `signature` and `encryption` is answered with `E`: an encrypted PDF cannot be
-signed yet. `signature`, `S`, `s`, `T` and `t` were added in 0.3.0: an older worker ignores
-`signature` and writes the PDF unsigned, which the caller notices by the missing `signed` in `P`.
+`V` comes once for each certificate of the signature and of its timestamp but the roots. It
+carries the `id`, the URLs of the OCSP responders (`ocspUrls`) and of the CRLs (`crlUrls`) that
+the certificate names, and three data blocks: the certificate, the certificate of its issuer
+(both DER) and the OCSP request for it (DER, to POST to a responder with the content type
+`application/ocsp-request`). The caller answers `v` with what the responder or the CRL
+distribution point answered as its data blocks: OCSP responses and CRLs (DER), any number, and
+certificates the check needs; no data blocks where the status cannot be had. An `error` makes
+the worker answer the request with `E`, as does data that is neither.
+
+A request with both `signature` and `encryption` signs the encrypted PDF. `signature`, `S`, `s`,
+`T` and `t` were added in 0.3.0: an older worker ignores `signature` and writes the PDF unsigned,
+which the caller notices by the missing `signed` in `P`.
 
 ### Fonts
 
@@ -302,6 +329,7 @@ than that ignores them:
 | `encryption` | `R` | 0.3.0 |
 | `encrypted` | `P` | 0.3.0 |
 | `signature`; the messages `S`, `s`, `T`, `t` | `R` | 0.3.0 |
+| `signature.certify`, `element`, `area`, `revocation`, `archiveTimestamp`; the messages `V`, `v` | `R` | 0.3.0 |
 | `signed` | `P` | 0.3.0 |
 | `rss`, `maxRss` | `P`, `E` | 0.3.0 |
 | `sandbox` | `H` | 0.3.0 |

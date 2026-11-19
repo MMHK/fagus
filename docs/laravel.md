@@ -95,8 +95,9 @@ return Fagus::view('payslips.show', ['payslip' => $payslip])
 Add `accessible()` for a payslip that screen readers read too: PDF/UA allows encryption, and
 assistive technology may always extract the text, whatever the permissions.
 
-`sign()` takes a `Fagus\Signature` ([php.md](php.md#signature)). A signed invoice, with the
-timestamp of a public time-stamping authority through Laravel's HTTP client:
+`sign()` takes a `Fagus\Signature` ([php.md](php.md#signature)); a key from a secrets store
+comes as bytes with `Signature::fromPkcs12Data()`. A signed invoice, with the timestamp of a
+public time-stamping authority through Laravel's HTTP client:
 
 ```php
 use Fagus\Signature;
@@ -114,6 +115,10 @@ return Fagus::view('invoices.show', ['invoice' => $invoice])
     ->sign($signature)
     ->download("rechnung-{$invoice->number}.pdf");
 ```
+
+`certify()`, `visibleOn()`, `revocation()` and `archiveTimestamp()` make a certified, visible or
+long-term signature ([pdf.md](pdf.md#sign-the-pdf)); the revocation callback can fetch OCSP
+responses and CRLs with `Http` as well.
 
 ### `name(string $filename): PendingPdf`
 

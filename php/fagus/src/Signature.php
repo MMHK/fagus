@@ -32,8 +32,20 @@ final class Signature
 
     private ?DateTimeInterface $time = null;
 
+    private ?Certification $certification = null;
+
+    private ?string $element = null;
+
+    /** @var array{page: int, x: float, y: float, width: float, height: float}|null */
+    private ?array $area = null;
+
     /** @var (Closure(string): string)|null */
     private ?Closure $timestamper = null;
+
+    /** @var (Closure(RevocationRequest): list<string>)|null */
+    private ?Closure $revocation = null;
+
+    private bool $archiveTimestamp = false;
 
     /**
      * @param  list<string>  $certificates
@@ -58,6 +70,22 @@ final class Signature
         $data = is_file($path) ? @file_get_contents($path) : false;
         if ($data === false) {
             throw new InvalidArgumentException("The PKCS#12 file `{$path}` cannot be read.");
+        }
+
+        return new self($data, $password);
+    }
+
+    /**
+     * Signs with the key and certificates of a PKCS#12 file given as its bytes, such as one read
+     * from a secrets manager or a database, RSA or ECDSA on P-256. The file's other certificates
+     * go into the signature too.
+     *
+     * @throws InvalidArgumentException for empty data
+     */
+    public static function fromPkcs12Data(#[\SensitiveParameter] string $data, #[\SensitiveParameter] string $password): self
+    {
+        if ($data === '') {
+            throw new InvalidArgumentException('The PKCS#12 data is empty.');
         }
 
         return new self($data, $password);
@@ -142,6 +170,52 @@ final class Signature
     }
 
     /**
+     * Makes the signature a certification signature (DocMDP): the author's signature, which says
+     * what later changes the document allows. It must be the PDF's first signature.
+     */
+    public function certify(Certification $certification): self
+    {
+        $copy = clone $this;
+        $copy->certification = $certification;
+
+        return $copy;
+    }
+
+    /**
+     * Makes the signature visible in the box of the element with this `id`: what the element's
+     * content paints becomes the appearance of the signature field, while its background and
+     * border stay on the page. Rendering fails if the document has no such element or it is not
+     * rendered.
+     */
+    public function visibleOn(string $id): self
+    {
+        $copy = clone $this;
+        $copy->element = $id;
+        $copy->area = null;
+
+        return $copy;
+    }
+
+    /**
+     * Makes the signature visible in an area of a page, which shows what the page has there: the
+     * number of the page (from 1), and the area in points from the top left corner of the page,
+     * as {@see Layout} gives the boxes of elements.
+     *
+     * @throws InvalidArgumentException for a page below 1 or an empty area
+     */
+    public function visibleAt(int $page, float $x, float $y, float $width, float $height): self
+    {
+        if ($page < 1 || $width <= 0 || $height <= 0) {
+            throw new InvalidArgumentException('A signature needs a page from 1 and an area that is not empty.');
+        }
+        $copy = clone $this;
+        $copy->area = ['page' => $page, 'x' => $x, 'y' => $y, 'width' => $width, 'height' => $height];
+        $copy->element = null;
+
+        return $copy;
+    }
+
+    /**
      * Timestamps the signature (PAdES B-T). The callback gets the SHA-256 digest (32 bytes) of the
      * signature and returns the answer of a time-stamping authority (RFC 3161): the timestamp
      * token or the whole response. {@see self::timestampRequest()} makes the request to send.
@@ -152,6 +226,38 @@ final class Signature
     {
         $copy = clone $this;
         $copy->timestamper = $timestamper(...);
+
+        return $copy;
+    }
+
+    /**
+     * Adds the validation data of the signature to the PDF (PAdES B-LT, with
+     * {@see self::timestamp()}): the certificates and their revocation status, so that the
+     * signature can be validated without the network, also once the certificates have expired.
+     * The callback gets a {@see RevocationRequest} for each certificate of the signature and of
+     * its timestamp but the roots, and returns what the OCSP responder or the CRL distribution
+     * point answered: OCSP responses and certificate revocation lists (DER), any number of each,
+     * or none where the status cannot be had.
+     *
+     * @param  callable(RevocationRequest): list<string>  $revocation
+     */
+    public function revocation(callable $revocation): self
+    {
+        $copy = clone $this;
+        $copy->revocation = $revocation(...);
+
+        return $copy;
+    }
+
+    /**
+     * Adds a document timestamp after the validation data (PAdES B-LTA), from the callback of
+     * {@see self::timestamp()}. Needs {@see self::timestamp()} and {@see self::revocation()};
+     * rendering fails without them.
+     */
+    public function archiveTimestamp(): self
+    {
+        $copy = clone $this;
+        $copy->archiveTimestamp = true;
 
         return $copy;
     }
@@ -189,6 +295,11 @@ final class Signature
             'contactInfo' => $this->contactInfo,
             'time' => $this->time,
             'timestamped' => $this->timestamper !== null,
+            'certification' => $this->certification,
+            'element' => $this->element,
+            'area' => $this->area,
+            'revocation' => $this->revocation !== null,
+            'archiveTimestamp' => $this->archiveTimestamp,
         ];
     }
 
@@ -217,6 +328,21 @@ final class Signature
         }
         if ($this->timestamper !== null) {
             $header['timestamp'] = true;
+        }
+        if ($this->certification !== null) {
+            $header['certify'] = $this->certification->value;
+        }
+        if ($this->element !== null) {
+            $header['element'] = $this->element;
+        }
+        if ($this->area !== null) {
+            $header['area'] = $this->area;
+        }
+        if ($this->revocation !== null) {
+            $header['revocation'] = true;
+        }
+        if ($this->archiveTimestamp) {
+            $header['archiveTimestamp'] = true;
         }
 
         return $header;
@@ -248,5 +374,30 @@ final class Signature
         }
 
         return ($this->timestamper)($digest);
+    }
+
+    /**
+     * The revocation data of a certificate the engine asks for.
+     *
+     * @param  array<string, mixed>  $question  the header of the engine's question
+     * @param  list<string>  $data  the certificate, its issuer's and the OCSP request
+     * @return list<string>
+     *
+     * @internal
+     */
+    public function revocationData(array $question, array $data): array
+    {
+        if ($this->revocation === null) {
+            throw new InvalidArgumentException('This signature has no revocation callback.');
+        }
+        $urls = static fn (mixed $list): array => array_values(array_map('strval', is_array($list) ? $list : []));
+
+        return array_values(($this->revocation)(new RevocationRequest(
+            $data[0] ?? '',
+            $data[1] ?? '',
+            $urls($question['ocspUrls'] ?? []),
+            $urls($question['crlUrls'] ?? []),
+            $data[2] ?? '',
+        )));
     }
 }

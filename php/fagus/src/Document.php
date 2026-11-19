@@ -298,8 +298,8 @@ final class Document
     }
 
     /**
-     * Signs the PDF digitally (PAdES) with an invisible signature. An encrypted PDF (see
-     * {@see self::encrypt()}) cannot be signed yet: rendering it fails with a {@see RenderException}.
+     * Signs the PDF digitally (PAdES). An encrypted PDF (see {@see self::encrypt()}) is signed
+     * with its file key: the signature's update is encrypted as the rest of the file is.
      */
     public function sign(Signature $signature): self
     {

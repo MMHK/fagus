@@ -410,6 +410,78 @@ fn button_description(data: &ElementData, caption: Option<&str>) -> Option<Strin
         .or_else(|| attribute("name"))
 }
 
+/// The first element of `document` with the `id`, as `getElementById` finds it.
+pub(crate) fn element_by_id(document: &Document, id: &str) -> Option<NodeId> {
+    let root = document.document_element()?;
+    std::iter::once(root)
+        .chain(document.descendants(root))
+        .find(|&node| {
+            document
+                .element(node)
+                .is_some_and(|data| data.id.as_deref() == Some(id))
+        })
+}
+
+/// The empty signature field of a visible signature, with its widgets: named `Signature1`, or
+/// with the first number that no field of `fields` has.
+pub(crate) fn signature_field(
+    description: Option<String>,
+    widgets: Vec<FieldWidget>,
+    fields: &[Field],
+) -> Field {
+    let taken = |name: &str| {
+        fields
+            .iter()
+            .any(|field| field.name == name || field.name.starts_with(&format!("{name}.")))
+    };
+    // One of the first numbers beyond the count of the fields is free.
+    let name = (1..=fields.len() + 1)
+        .map(|number| format!("Signature{number}"))
+        .find(|name| !taken(name))
+        .unwrap_or_default();
+    Field {
+        name,
+        kind: FieldKind::Signature,
+        read_only: false,
+        required: false,
+        description: description.or_else(|| Some("Signature".to_owned())),
+        font_size: 0.0,
+        color: fagus_style::values::Rgba::BLACK,
+        alignment: 0,
+        widgets,
+    }
+}
+
+/// What the element of a signature field says it is, for a reader who does not see it: its
+/// `aria-label` or `title`, else its text.
+pub(crate) fn signature_description(document: &Document, node: NodeId) -> Option<String> {
+    let data = document.element(node)?;
+    data.attribute("aria-label")
+        .or_else(|| data.attribute("title"))
+        .map(normalize)
+        .filter(|text| !text.is_empty())
+        .or_else(|| Some(normalize(&document.text_content(node))).filter(|text| !text.is_empty()))
+}
+
+/// The widgets of a signature field from the widgets painted for its element.
+pub(crate) fn signature_widgets(painted: Vec<Widget>) -> Vec<FieldWidget> {
+    painted
+        .into_iter()
+        .map(|widget| FieldWidget {
+            page: widget.page,
+            rect: widget.rect,
+            transform: widget.transform,
+            size: widget.size,
+            node: Some(widget.node),
+            appearance: widget.items,
+            off: Vec::new(),
+            on: String::new(),
+            checked: false,
+            layer: widget.layer,
+        })
+        .collect()
+}
+
 /// The field of an `<input>` that takes text, with the value Chrome shows.
 fn text_field(data: &ElementData) -> FieldKind {
     let kind = data

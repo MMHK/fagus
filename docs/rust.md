@@ -137,7 +137,15 @@ The types they take:
   date); `timestamp(timestamper)` timestamps it (PAdES B-T) through the trait `Timestamper`
   (closures `Fn(&[u8]) -> Result<Vec<u8>, String>`), which gets the SHA-256 digest of the
   signature and returns the RFC 3161 answer of an authority. `fagus::timestamp_request(&digest)`
-  makes the request to send. A signature that fails makes rendering fail with
+  makes the request to send. `certify(Certification::FillForms)` makes it a certification
+  signature (`NoChanges`, `FillForms`, `Annotate`). `visible_on(id)` shows it in the box of an
+  element, `visible_at(page, x, y, width, height)` in an area of a page (from 1, in points from
+  its top left corner); `placement()` returns the `Placement`. `revocation(source)` adds the
+  validation data (PAdES B-LT) through the trait `Revocation` (closures
+  `Fn(&RevocationRequest) -> Result<Vec<Vec<u8>>, String>`), which gets the certificate, its
+  issuer, `ocsp_urls`, `crl_urls` and the `ocsp_request`, and returns OCSP responses and CRLs
+  (DER); `archive_timestamp()` adds a document timestamp after it (B-LTA). An encrypted document
+  is signed with its file key. A signature that fails makes rendering fail with
   `PdfError::Sign`.
 
 A document's metadata comes from its HTML (`<title>`, `<html lang>`, `<meta>`), see

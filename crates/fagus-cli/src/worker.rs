@@ -26,6 +26,8 @@ const SIGN: u8 = b'S';
 const SIGNED: u8 = b's';
 const TIMESTAMP: u8 = b'T';
 const TIMESTAMPED: u8 = b't';
+const REVOCATION: u8 = b'V';
+const REVOKED: u8 = b'v';
 
 /// A message: its type, its JSON header and its data blocks.
 #[derive(Debug)]
@@ -203,6 +205,32 @@ struct SignatureRequest {
     /// Whether the caller timestamps the signature (`T`).
     #[serde(default)]
     timestamp: bool,
+    /// What a certification signature allows: `no-changes`, `fill-forms` or `annotate`.
+    #[serde(default)]
+    certify: Option<String>,
+    /// The `id` of the element in whose box the signature shows.
+    #[serde(default)]
+    element: Option<String>,
+    /// The area of a page in which the signature shows.
+    #[serde(default)]
+    area: Option<Area>,
+    /// Whether the caller gets the revocation status of the certificates (`V`), for B-LT.
+    #[serde(default)]
+    revocation: bool,
+    /// Whether an archive timestamp follows the validation data (B-LTA), asked for with `T`.
+    #[serde(default)]
+    archive_timestamp: bool,
+}
+
+/// An area of a page: the number of the page (from 1) and the area in points from its top left
+/// corner.
+#[derive(Deserialize)]
+struct Area {
+    page: usize,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
 }
 
 /// The default of fields that are on unless the caller turns them off.
@@ -311,14 +339,28 @@ fn ask_caller<R: Read, W: Write>(
     header: Value,
     digest: &[u8],
 ) -> Result<Vec<u8>, String> {
-    let (question, answer) = if kind == SIGN {
-        (SIGN, SIGNED)
-    } else {
-        (TIMESTAMP, TIMESTAMPED)
+    ask_caller_for(channel, kind, header, &[digest])?
+        .into_iter()
+        .next()
+        .ok_or_else(|| "the caller's answer has no data".to_owned())
+}
+
+/// Asks the caller a question of `kind` (`S`, `T` or `V`) with `data`, and returns the data
+/// blocks of the answer.
+fn ask_caller_for<R: Read, W: Write>(
+    channel: &Mutex<Channel<R, W>>,
+    kind: u8,
+    header: Value,
+    data: &[&[u8]],
+) -> Result<Vec<Vec<u8>>, String> {
+    let answer = match kind {
+        SIGN => SIGNED,
+        TIMESTAMP => TIMESTAMPED,
+        _ => REVOKED,
     };
     let mut channel = channel.lock().map_err(|_| "poisoned lock".to_owned())?;
     channel
-        .write(question, header, &[digest])
+        .write(kind, header, data)
         .map_err(|error| error.to_string())?;
     let frame = channel
         .read()
@@ -334,11 +376,7 @@ fn ask_caller<R: Read, W: Write>(
     if let Some(error) = frame.header.get("error").and_then(Value::as_str) {
         return Err(error.to_owned());
     }
-    frame
-        .blobs
-        .into_iter()
-        .next()
-        .ok_or_else(|| "the caller's answer has no data".to_owned())
+    Ok(frame.blobs)
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> io::Result<std::sync::MutexGuard<'_, T>> {
@@ -663,6 +701,34 @@ where
     }
     if let Some(time) = request.time {
         signature = signature.time(date(&time).ok_or_else(|| format!("invalid date `{time}`"))?);
+    }
+    if let Some(name) = request.certify {
+        signature = signature.certify(
+            fagus::Certification::from_name(&name)
+                .ok_or_else(|| format!("unknown certification `{name}`"))?,
+        );
+    }
+    if request.revocation {
+        let channel = Arc::clone(channel);
+        signature = signature.revocation(move |question: &fagus::RevocationRequest| {
+            ask_caller_for(
+                &channel,
+                REVOCATION,
+                json!({ "id": id, "ocspUrls": question.ocsp_urls, "crlUrls": question.crl_urls }),
+                &[&question.certificate, &question.issuer, &question.ocsp_request],
+            )
+        });
+    }
+    if request.archive_timestamp {
+        signature = signature.archive_timestamp();
+    }
+    match (request.element, request.area) {
+        (Some(_), Some(_)) => return Err("a signature has either `element` or `area`".to_owned()),
+        (Some(id), None) => signature = signature.visible_on(id),
+        (None, Some(area)) => {
+            signature = signature.visible_at(area.page, area.x, area.y, area.width, area.height);
+        }
+        (None, None) => {}
     }
     Ok(signature)
 }
@@ -1024,7 +1090,12 @@ mod tests {
                 "id": 1,
                 "html": 0,
                 "created": "2026-11-19T09:30:00Z",
-                "signature": { "pkcs12": 1, "password": "fagus-test-only", "reason": "Rechnung" },
+                "signature": {
+                    "pkcs12": 1,
+                    "password": "fagus-test-only",
+                    "reason": "Rechnung",
+                    "certify": "fill-forms",
+                },
             }),
             &[b"<p>Rechnung</p>", &fixture("ecdsa.p12")],
         );
@@ -1033,7 +1104,11 @@ mod tests {
             &json!({
                 "id": 2,
                 "html": 0,
-                "signature": { "certificates": [1, 2], "location": "Berlin" },
+                "signature": {
+                    "certificates": [1, 2],
+                    "location": "Berlin",
+                    "area": { "page": 1, "x": 50, "y": 60, "width": 200, "height": 40 },
+                },
             }),
             &[b"<p>Rechnung</p>", &fixture("rsa.pem"), &fixture("ca.pem")],
         ));
@@ -1044,16 +1119,30 @@ mod tests {
             &json!({ "id": 3, "html": 0, "signature": { "pkcs12": 1, "password": "falsch" } }),
             &[b"<p>Rechnung</p>", &fixture("ecdsa.p12")],
         ));
+        input.extend(frame(
+            RENDER,
+            &json!({
+                "id": 4,
+                "html": 0,
+                "signature": { "pkcs12": 1, "password": "fagus-test-only", "element": "signature" },
+            }),
+            &[b"<p id=signature>Unterschrieben</p>", &fixture("ecdsa.p12")],
+        ));
         let output = Shared::default();
         serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
         let output = output.0.lock().expect("lock").clone();
         let frames = frames(&output);
         let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
-        assert_eq!(kinds, "HPSEE");
+        assert_eq!(kinds, "HPSEEP");
         let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
         assert!(has(&frames[1].blobs[0], "/Reason(Rechnung)"));
         assert_eq!(frames[1].header["signed"], true);
         assert!(has(&frames[1].blobs[0], "/M(D:20261119093000Z)"));
+        assert!(has(
+            &frames[1].blobs[0],
+            "/TransformParams<</Type/TransformParams/P 2/V/1.2>>"
+        ));
+        assert!(has(&frames[1].blobs[0], "/Perms<</DocMDP "));
         assert_eq!(frames[2].header["id"], 2);
         assert_eq!(frames[2].header["algorithm"], "RSA-SHA256");
         assert_eq!(frames[2].blobs[0].len(), 32);
@@ -1068,6 +1157,52 @@ mod tests {
                 .is_some_and(|message| message.contains("the PKCS#12 file cannot be read")),
             "{}",
             frames[4].header["message"]
+        );
+        // A visible signature: in the field made for it, not in one of no size.
+        assert_eq!(frames[5].header["signed"], true);
+        assert!(!has(&frames[5].blobs[0], "/Rect[0 0 0 0]"));
+    }
+
+    #[test]
+    fn asks_the_caller_for_revocation_data() {
+        let p12 = std::fs::read(format!(
+            "{}/../../tests/signing/ecdsa.p12",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .expect("fixture");
+        let request = |id: u32| {
+            frame(
+                RENDER,
+                &json!({
+                    "id": id,
+                    "html": 0,
+                    "signature": { "pkcs12": 1, "password": "fagus-test-only", "revocation": true },
+                }),
+                &[b"<p>Rechnung</p>", &p12],
+            )
+        };
+        let mut input = request(1);
+        // Nothing known of the signer's certificate: the certificates alone.
+        input.extend(frame(REVOKED, &json!({}), &[]));
+        input.extend(request(2));
+        input.extend(frame(REVOKED, &json!({ "error": "offline" }), &[]));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        let kinds: String = frames.iter().map(|frame| char::from(frame.kind)).collect();
+        assert_eq!(kinds, "HVPVE");
+        assert_eq!(frames[1].header["id"], 1);
+        assert_eq!(frames[1].header["ocspUrls"], json!([]));
+        assert_eq!(frames[1].header["crlUrls"], json!([]));
+        // The certificate, its issuer's and the OCSP request.
+        assert_eq!(frames[1].blobs.len(), 3);
+        assert_eq!(frames[1].blobs[2][0], 0x30);
+        let has = |pdf: &[u8], text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
+        assert!(has(&frames[2].blobs[0], "/DSS "));
+        assert_eq!(
+            frames[4].header["message"],
+            "the PDF could not be signed: getting the revocation status failed: offline"
         );
     }
 

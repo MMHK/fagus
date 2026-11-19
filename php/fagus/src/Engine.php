@@ -149,6 +149,10 @@ final class Engine
                         $signature = $document->signature() ?? throw EngineException::unexpected($kind);
                         $channel->write('t', [], [$signature->timestampDigest($data[0] ?? '')]);
                         break;
+                    case 'V':
+                        $signature = $document->signature() ?? throw EngineException::unexpected($kind);
+                        $channel->write('v', [], $signature->revocationData($reply, $data));
+                        break;
                     case 'P':
                         // A binary older than encryption ignores the passwords: never hand
                         // out such a PDF as protected.

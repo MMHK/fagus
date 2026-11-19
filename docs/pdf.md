@@ -857,9 +857,8 @@ What to know about encrypted PDFs:
   one where there is none; PDF/UA does not ask for more. veraPDF reads encrypted files only
   without a user password: check the others decrypted (`qpdf --password=… --decrypt`), after
   `qpdf --show-encryption` has shown `extract for accessibility: allowed`.
-- An encrypted PDF cannot be signed yet: `encrypt()` with `sign()` fails with ``the PDF could
-  not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it`` (see
-  [Sign the PDF](#sign-the-pdf)).
+- An encrypted PDF can be signed: `encrypt()` with `sign()` encrypts the signature's update with
+  the file key too (see [Sign an encrypted PDF](#sign-an-encrypted-pdf)).
 - The file key, its salts and the initialization vectors are random, from the operating system:
   an encrypted PDF is not byte-reproducible (see
   [Make the output reproducible](#make-the-output-reproducible)), even with `created()`. The Rust
@@ -876,8 +875,10 @@ and the permissions, and `qpdf --password=… --decrypt file.pdf plain.pdf` writ
 
 `sign()` signs the PDF digitally, so that readers can see who issued it and that nobody has
 changed it since. The signature follows PAdES (ETSI EN 319 142-1), the European standard for
-signed PDF, as a baseline signature of level B-B, or B-T with a timestamp. It is invisible: PDF
-viewers show it in their signature panel, not on a page.
+signed PDF, as a baseline signature of level B-B, B-T with a timestamp, B-LT with the validation
+data to check it without the network, or B-LTA with an archive timestamp after that. It is
+invisible unless you place it (see [Visible signatures](#visible-signatures)): PDF viewers show
+it in their signature panel.
 
 ```php
 use Fagus\Fagus;
@@ -898,6 +899,9 @@ check it without looking them up. A reader trusts the signature when it trusts t
 the Adobe Approved Trust List (AATL) or the EU Trusted Lists for viewers such as Acrobat, or your
 own certificate authority inside a company.
 
+`Signature::fromPkcs12Data($data, $password)` takes the file's bytes instead of a path, for keys
+that come from a secrets manager or a database rather than from a file.
+
 | Method | Meaning |
 |---|---|
 | `name(string $name)` | The name of the signer as the signature shows it; readers show the name in the certificate otherwise |
@@ -906,6 +910,10 @@ own certificate authority inside a company.
 | `contactInfo(string $contactInfo)` | How to reach the signer |
 | `time(DateTimeInterface $time)` | The time of signing; the creation date of the document (see [`created()`](#make-the-output-reproducible)) by default |
 | `timestamp(callable $timestamper)` | Timestamps the signature (B-T), see below |
+| `certify(Certification $certification)` | Makes it a certification signature, see [Certify the PDF](#certify-the-pdf) |
+| `visibleOn(string $id)`, `visibleAt(int $page, float $x, float $y, float $width, float $height)` | Shows the signature on a page, see [Visible signatures](#visible-signatures) |
+| `revocation(callable $revocation)` | Adds the validation data (B-LT), see [Long-term signatures](#long-term-signatures-pades-b-lt-and-b-lta) |
+| `archiveTimestamp()` | Adds an archive timestamp after the validation data (B-LTA) |
 
 What the signature contains:
 
@@ -913,7 +921,8 @@ What the signature contains:
   itself. The signed attributes name the signer's certificate (`signing-certificate-v2`) and, as
   PAdES requires, no signing time: the time of signing is the signature dictionary's `/M`, which
   readers show as the claimed time.
-- An invisible signature field (a widget of no size) on the first page, in the document's form.
+- An invisible signature field (a widget of no size) on the first page, in the document's form,
+  or the visible field it is placed in.
 
 Fagus adds the signature to the finished PDF as an incremental update: the file as it would be
 without the signature, then the signature field, the signature and a cross-reference section of
@@ -927,16 +936,138 @@ Change nothing after signing: any program that writes the file again (to compres
 or add pages) breaks the signature. A signed PDF can be signed again by a program that adds its
 signature as another incremental update, such as Acrobat.
 
-Signing an encrypted PDF is not supported yet: `sign()` together with `encrypt()` (or
-`--sign-p12` with a password on the command line) fails with ``the PDF could not be signed: an
-encrypted PDF cannot be signed yet; sign it or encrypt it``, before anything is rendered.
+
+### Sign an encrypted PDF
+
+`sign()` together with `encrypt()` (or `--sign-p12` with a password on the command line) signs
+the encrypted PDF: the signature's incremental update is encrypted with the file key, as the rest
+of the file is, except the signature value itself, which ISO 32000-2 leaves unencrypted so that
+readers can check it. The signature covers the encrypted bytes; a reader that opens the file with
+the user password (or none, if there is only an owner password) validates it as usual.
+Acrobat, pyHanko and qpdf (`qpdf --password=… --check`) read such files.
+
+### Certify the PDF
+
+A certification signature (DocMDP) is the author's signature: besides who signed, it says what
+later changes the document allows. Viewers such as Acrobat show it as *certified* and report the
+certification as broken when a change goes beyond what it allows.
+
+```php
+use Fagus\Certification;
+use Fagus\Signature;
+
+$signature = Signature::fromPkcs12($path, $password)->certify(Certification::FillForms);
+```
+
+| `Certification` | Allows |
+|---|---|
+| `Certification::NoChanges` (`no-changes`) | No changes |
+| `Certification::FillForms` (`fill-forms`) | Filling in the form's fields and signing them |
+| `Certification::Annotate` (`annotate`) | Filling in, signing, and adding or changing comments |
+
+Validation data and document timestamps (B-LT, B-LTA) may follow every certification; only in
+PDF/A-1, which requires an appearance for every field, does the archive timestamp's (empty)
+appearance count as a change that `NoChanges` forbids, for validators such as pyHanko. A
+certification signature must be the first signature of the PDF, which it is when Fagus signs the
+PDF it renders. On the command line, `--sign-certify fill-forms`.
+
+### Visible signatures
+
+A visible signature shows on a page: a signature field with a box that viewers draw, and that
+they let the reader click to see who signed. `visibleOn()` places it in the box of an element
+of the document, found by its `id`; what the element's content paints (its text, images and the
+boxes inside it) becomes the field's appearance, while the element's own background and border
+stay on the page:
+
+```php
+$html = <<<'HTML'
+    <div id="signature" style="width: 7cm; border: 1px solid #999; padding: 4px">
+        <strong>Digitally signed</strong><br>Rechnungsstelle, Berlin<br>2026-11-19
+    </div>
+    HTML;
+
+Fagus::html($html)
+    ->sign(Signature::fromPkcs12($path, $password)->visibleOn('signature'))
+    ->save('invoice.pdf');
+```
+
+`visibleAt(page: 1, x: 340, y: 700, width: 200, height: 60)` places the field in an area of a
+page instead, in points from the top left corner of the page (as
+[`reportLayout()`](php.md#find-where-elements-landed) reports the boxes of elements),
+where it shows what the page has there. The field is called `Signature1` (or with the first
+number that no field of the form has); readers that do not see it get the element's
+`aria-label`, `title` or text as its description, which a PDF/UA document needs. A visible
+signature works with tagged PDF, PDF/UA, every PDF/A level and encryption.
+
+Rendering fails with ``the document has no element with the id `signature` for the signature``
+if there is no such element, and with ``the element for the signature has no box to show it in``
+if it is not rendered (`display: none`) or transformed. An element broken across pages gets a
+widget on each page, all of one field. Positioned descendants with a `z-index` of their own are
+painted with their stacking context, on the page. On the command line, `--sign-element signature`.
+
+### Long-term signatures (PAdES B-LT and B-LTA)
+
+A signature can be checked as long as its certificates can: once they expire, or their authority
+stops answering, a reader cannot find out whether they were valid when the document was signed.
+Level B-LT puts what the check needs into the PDF: the certificates and their revocation status,
+OCSP responses or certificate revocation lists (CRLs), in the document security store (DSS), an
+incremental update after the signature. Level B-LTA adds a document timestamp after that, which
+proves when the validation data was there and can be renewed before its algorithms grow weak.
+
+Fagus does not go to the network: `revocation()` takes a callback that gets a
+`Fagus\RevocationRequest` for each certificate of the signature and of its timestamp but the
+roots, and returns what the certificate's OCSP responder or CRL distribution point answered:
+
+```php
+use Fagus\RevocationRequest;
+use Fagus\Signature;
+use Illuminate\Support\Facades\Http;
+
+$signature = Signature::fromPkcs12($path, $password)
+    ->timestamp(fn (string $digest): string => Http::withBody(Signature::timestampRequest($digest), 'application/timestamp-query')
+        ->post('https://freetsa.org/tsr')->throw()->body())
+    ->revocation(function (RevocationRequest $request): array {
+        foreach ($request->ocspUrls as $url) {
+            $response = Http::withBody($request->ocspRequest, 'application/ocsp-request')->post($url);
+            if ($response->successful()) {
+                return [$response->body()];
+            }
+        }
+        foreach ($request->crlUrls as $url) {
+            return [Http::get($url)->throw()->body()];
+        }
+
+        return [];
+    })
+    ->archiveTimestamp();
+```
+
+| `RevocationRequest` | |
+|---|---|
+| `certificate` | The certificate (DER) |
+| `issuer` | The certificate of its issuer (DER) |
+| `ocspUrls` | The OCSP responders the certificate names (authority information access) |
+| `crlUrls` | The CRLs the certificate names (CRL distribution points) |
+| `ocspRequest` | The OCSP request for the certificate (DER), to POST with the content type `application/ocsp-request` |
+
+The callback returns a list of OCSP responses and CRLs (DER), any number of each, and may add
+certificates the check needs, such as that of an OCSP responder that its response does not
+hold; an empty list for a certificate whose status cannot be had. Fagus fails with ``the
+revocation data is neither an OCSP response nor a CRL`` for anything else, and with ``the OCSP
+responder did not answer the request`` for an OCSP response that says so; it does not check the
+answers further. B-LT needs a timestamp too (`timestamp()`): without one, the validation data is
+added all the same, which Acrobat calls *LTV enabled*, but the signature is not of a PAdES level.
+`archiveTimestamp()` uses the callback of `timestamp()` once more, for a timestamp of the whole
+file, and needs `timestamp()` and `revocation()`. Its authority's certificates get no validation
+data of their own; they are usually those of the signature's timestamp, whose data is there.
 
 ### Reproducible signatures
 
 The same document, key and time give the same file: RSA signatures (PKCS#1 v1.5) are the same
 for the same data, ECDSA signatures are made deterministic as RFC 6979 describes, and the time
 of signing is the document's creation date or the time you give. Fix `created()` and the signed
-file is byte for byte the same on every run. Timestamps are not: they carry the authority's time.
+file is byte for byte the same on every run. Timestamps, revocation data and encrypted files are
+not: they carry the authority's time, the responder's, and random initialization vectors.
 
 ### Keys in a hardware security module or key management service
 
@@ -1018,9 +1149,11 @@ room for it, so the callbacks may be called twice for one document.
 
 `fagus render --sign-p12 signing.p12` signs with a PKCS#12 file; the password comes from the
 environment variable `FAGUS_SIGN_PASSWORD` or a file (`--sign-password-file`), not from the
-command line, where other users of the machine could read it (see [cli.md](cli.md)). The command
-line does not timestamp. In Rust, `Document::sign` takes a `fagus::Signature`, with the traits
-`Signer` and `Timestamper` for keys and authorities outside (see [rust.md](rust.md)).
+command line, where other users of the machine could read it (see [cli.md](cli.md)).
+`--sign-certify` and `--sign-element` certify and place the signature. The command line does not
+timestamp and adds no validation data. In Rust, `Document::sign` takes a `fagus::Signature`,
+with the traits `Signer`, `Timestamper` and `Revocation` for keys, authorities and responders
+outside (see [rust.md](rust.md)).
 
 ### Check a signature
 
@@ -1030,7 +1163,11 @@ PAdES signatures:
 
 ```sh
 pyhanko sign validate --pretty-print --trust root.pem invoice.pdf
+pyhanko sign validate --pretty-print --trust root.pem --password=… encrypted.pdf
 ```
+
+For B-LT and B-LTA, pyHanko's `validate_pdf_ltv_signature()` checks the signature with the
+validation data in the file alone.
 
 ## Make the output reproducible
 

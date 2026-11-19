@@ -213,18 +213,207 @@ fn encrypts_layers() {
 }
 
 #[test]
-fn does_not_sign_an_encrypted_form() {
-    let error = engine()
+fn signs_an_encrypted_form() {
+    let pdf = engine()
         .render(
             &Document::html(FORM)
+                .created(CREATED)
                 .forms(true)
                 .encrypt(Encryption::new().user_password("benutzer"))
-                .sign(signature()),
+                .sign(signature().reason("Bestellung")),
         )
-        .expect_err("refused");
+        .expect("rendered")
+        .pdf;
+    let has = |text: &str| pdf.windows(text.len()).any(|window| window == text.as_bytes());
     assert!(
-        error
-            .to_string()
-            .contains("an encrypted PDF cannot be signed yet")
+        !has("Ada Lovelace") && !has("Bestellung"),
+        "the values are encrypted"
     );
+    let file = file("forms-encrypted-signed", &pdf);
+    if installed("qpdf") {
+        let (status, output) = qpdf(&["--check", "--password=benutzer"], &file);
+        assert_eq!(status, 0, "{output}");
+        let fields = fields(&file, "benutzer");
+        assert!(
+            fields.contains(&("customer".to_owned(), "/Tx".to_owned(), "Ada Lovelace".to_owned())),
+            "{fields:?}"
+        );
+        assert!(
+            fields
+                .iter()
+                .any(|(name, kind, _)| name == "Signature1" && kind == "/Sig"),
+            "{fields:?}"
+        );
+    }
+    if installed("openssl") && installed("python3") {
+        let verified = Command::new("python3")
+            .arg(fixture("verify.py"))
+            .arg(&file)
+            .output()
+            .expect("verify.py runs");
+        assert!(
+            verified.status.success(),
+            "{}",
+            String::from_utf8_lossy(&verified.stdout)
+        );
+    }
+    std::fs::remove_file(file).expect("removed");
+}
+
+/// The rectangles of the widgets of the form's fields as qpdf reads them, by field name.
+fn widgets(file: &Path, password: &str) -> Vec<(String, Vec<f64>)> {
+    let password = format!("--password={password}");
+    let (status, json) = qpdf(&["--json", "--json-key=acroform", &password], file);
+    assert_eq!(status, 0, "{json}");
+    let json: serde_json::Value = serde_json::from_str(&json).expect("JSON");
+    let mut found = Vec::new();
+    for field in json["acroform"]["fields"].as_array().expect("fields") {
+        let name = field["fullname"].as_str().unwrap_or_default();
+        let name = name.strip_prefix("u:").unwrap_or(name).to_owned();
+        let object = field["annotation"]["object"].as_str().expect("annotation");
+        let number = object.split_whitespace().next().expect("number");
+        let (status, dictionary) = qpdf(&[&password, &format!("--show-object={number}")], file);
+        assert_eq!(status, 0, "{dictionary}");
+        let rect = dictionary
+            .split("/Rect [")
+            .nth(1)
+            .and_then(|rest| rest.split(']').next())
+            .expect("rectangle")
+            .split_whitespace()
+            .map(|number| number.parse().expect("number"))
+            .collect();
+        found.push((name, rect));
+    }
+    found
+}
+
+const SIGNED_LETTER: &str = "<!DOCTYPE html><html lang=de><title>Vertrag</title>\
+    <style>body { margin: 0 } #signature { margin: 40px; width: 240px; height: 60px; border: 1px solid }</style>\
+    <p>Vertrag</p><div id=signature>Unterschrieben: Max Mustermann</div>\
+    <div id=hidden style='display: none'>x</div>";
+
+#[test]
+fn signs_visibly_in_the_box_of_an_element() {
+    for (encryption, password) in [
+        (None, ""),
+        (Some(Encryption::new().user_password("benutzer")), "benutzer"),
+    ] {
+        let mut document = Document::html(SIGNED_LETTER)
+            .created(CREATED)
+            .sign(signature().visible_on("signature").reason("Vertrag"));
+        if let Some(encryption) = encryption {
+            document = document.encrypt(encryption);
+        }
+        let output = engine().render(&document.report_layout(true)).expect("rendered");
+        let layout = output.layout.expect("layout");
+        let placed = layout.element("signature").expect("element").boxes[0];
+        let pdf = output.pdf;
+        let file = file("visible-element", &pdf);
+        if installed("qpdf") {
+            let (status, output) = qpdf(&["--check", &format!("--password={password}")], &file);
+            assert_eq!(status, 0, "{output}");
+            let fields = fields(&file, password);
+            assert_eq!(fields.len(), 1, "{fields:?}");
+            assert_eq!(
+                (fields[0].0.as_str(), fields[0].1.as_str()),
+                ("Signature1", "/Sig")
+            );
+            assert_ne!(fields[0].2, "null", "signed");
+            let widgets = widgets(&file, password);
+            assert_eq!(widgets.len(), 1, "{widgets:?}");
+            // The border box of the element, in points from the bottom left corner.
+            let rect = &widgets[0].1;
+            let close = |a: f64, b: f32| (a - f64::from(b)).abs() < 0.1;
+            assert!(close(rect[2] - rect[0], 242.0 * 0.75), "{rect:?}");
+            assert!(close(rect[3] - rect[1], 62.0 * 0.75), "{rect:?}");
+            assert!(close(rect[0], placed.x), "{rect:?} {placed:?}");
+            assert!(close(rect[3], 841.92 - placed.y), "{rect:?} {placed:?}");
+        }
+        if installed("openssl") && installed("python3") {
+            let verified = Command::new("python3")
+                .arg(fixture("verify.py"))
+                .arg(&file)
+                .output()
+                .expect("verify.py runs");
+            assert!(
+                verified.status.success(),
+                "{}",
+                String::from_utf8_lossy(&verified.stdout)
+            );
+        }
+        std::fs::remove_file(file).expect("removed");
+    }
+}
+
+#[test]
+fn signs_visibly_beside_a_form() {
+    let pdf = engine()
+        .render(
+            &Document::html(format!("{FORM}<div id=signature>Signed</div>"))
+                .created(CREATED)
+                .forms(true)
+                .accessible()
+                .sign(signature().visible_on("signature")),
+        )
+        .expect("rendered")
+        .pdf;
+    if !installed("qpdf") {
+        return;
+    }
+    let file = file("visible-form", &pdf);
+    let (status, output) = qpdf(&["--check"], &file);
+    assert_eq!(status, 0, "{output}");
+    let fields = fields(&file, "");
+    let names: Vec<&str> = fields.iter().map(|(name, ..)| name.as_str()).collect();
+    assert!(
+        names.contains(&"customer") && names.contains(&"Signature1"),
+        "{fields:?}"
+    );
+    assert_eq!(fields.len(), 4, "the form's fields and the signature's");
+    std::fs::remove_file(file).expect("removed");
+}
+
+#[test]
+fn signs_visibly_in_an_area() {
+    let pdf = engine()
+        .render(
+            &Document::html(SIGNED_LETTER)
+                .created(CREATED)
+                .sign(signature().visible_at(1, 100.0, 200.0, 150.0, 50.0)),
+        )
+        .expect("rendered")
+        .pdf;
+    if !installed("qpdf") {
+        return;
+    }
+    let file = file("visible-area", &pdf);
+    let (status, output) = qpdf(&["--check"], &file);
+    assert_eq!(status, 0, "{output}");
+    let widgets = widgets(&file, "");
+    assert_eq!(widgets.len(), 1, "{widgets:?}");
+    // In points from the bottom of the page, which is 841.92 points tall (A4).
+    let rect = &widgets[0].1;
+    let close = |a: f64, b: f64| (a - b).abs() < 0.01;
+    assert!(close(rect[0], 100.0) && close(rect[2], 250.0), "{rect:?}");
+    assert!(
+        close(rect[3], 841.92 - 200.0) && close(rect[1], 841.92 - 250.0),
+        "{rect:?}"
+    );
+    std::fs::remove_file(file).expect("removed");
+}
+
+#[test]
+fn says_why_a_signature_cannot_be_visible() {
+    let render = |signature: Signature| {
+        engine()
+            .render(&Document::html(SIGNED_LETTER).sign(signature))
+            .expect_err("refused")
+            .to_string()
+    };
+    assert_eq!(
+        render(signature().visible_on("unterschrift")),
+        "the PDF could not be signed: the document has no element with the id `unterschrift` for the signature"
+    );
+    assert!(render(signature().visible_on("hidden")).contains("has no box to show it in"));
+    assert!(render(signature().visible_at(2, 0.0, 0.0, 10.0, 10.0)).contains("(page 2 of 1)"));
 }

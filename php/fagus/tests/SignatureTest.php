@@ -7,10 +7,12 @@ namespace Fagus\Tests;
 use DateTimeImmutable;
 use DateTimeZone;
 use Fagus\Binary;
+use Fagus\Certification;
 use Fagus\Document;
 use Fagus\Engine;
 use Fagus\Exception\InvalidArgumentException;
 use Fagus\Exception\RenderException;
+use Fagus\RevocationRequest;
 use Fagus\Signature;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -95,6 +97,65 @@ final class SignatureTest extends TestCase
 
         $ecdsa = self::document()->sign(Signature::fromPkcs12(self::FIXTURES.'/ecdsa.p12', self::PASSWORD))->pdfA('3b')->render(self::$engine)->bytes();
         $this->assertVerifies($ecdsa);
+    }
+
+    #[Test]
+    public function it_certifies(): void
+    {
+        $pdf = self::document()
+            ->sign(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD)->certify(Certification::FillForms))
+            ->render(self::$engine)
+            ->bytes();
+        $this->assertVerifies($pdf);
+        $this->assertStringContainsString('/TransformMethod/DocMDP/TransformParams<</Type/TransformParams/P 2/V/1.2>>', $pdf);
+        $this->assertMatchesRegularExpression('/\/Perms<<\/DocMDP \d+ 0 R>>/', $pdf);
+    }
+
+    #[Test]
+    public function it_signs_visibly(): void
+    {
+        $document = Document::html('<title>Vertrag</title><p>Vertrag</p><div id="signature" style="width: 200px">Unterschrieben</div>')
+            ->created(new DateTimeImmutable('2026-11-19T09:30:00Z'));
+        $signature = Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD);
+
+        $onElement = $document->sign($signature->visibleOn('signature'))->render(self::$engine)->bytes();
+        $this->assertVerifies($onElement);
+        $this->assertStringContainsString('/FT/Sig', $onElement);
+        $this->assertStringNotContainsString('/Rect[0 0 0 0]', $onElement);
+
+        $inArea = $document->sign($signature->visibleAt(1, 100, 200, 150, 50))->render(self::$engine)->bytes();
+        $this->assertVerifies($inArea);
+        $this->assertStringNotContainsString('/Rect[0 0 0 0]', $inArea);
+
+        try {
+            $document->sign($signature->visibleOn('fehlt'))->render(self::$engine);
+            $this->fail('A missing element was taken.');
+        } catch (RenderException $exception) {
+            $this->assertStringContainsString('no element with the id `fehlt`', $exception->getMessage());
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        $signature->visibleAt(0, 0, 0, 10, 10);
+    }
+
+    #[Test]
+    public function it_signs_with_pkcs12_data(): void
+    {
+        $data = (string) file_get_contents(self::FIXTURES.'/rsa.p12');
+        $fromData = self::document()->sign(Signature::fromPkcs12Data($data, self::PASSWORD))->render(self::$engine)->bytes();
+        $fromFile = self::document()->sign(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD))->render(self::$engine)->bytes();
+        $this->assertSame($fromFile, $fromData);
+        $this->assertVerifies($fromData);
+
+        try {
+            self::document()->sign(Signature::fromPkcs12Data($data, 'falsch'))->render(self::$engine);
+            $this->fail('A wrong password was taken.');
+        } catch (RenderException $exception) {
+            $this->assertStringContainsString('the PKCS#12 file cannot be read', $exception->getMessage());
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        Signature::fromPkcs12Data('', self::PASSWORD);
     }
 
     #[Test]
@@ -214,14 +275,73 @@ final class SignatureTest extends TestCase
     }
 
     #[Test]
-    public function it_does_not_sign_encrypted_pdfs_yet(): void
+    public function it_signs_encrypted_pdfs(): void
     {
-        $this->expectException(RenderException::class);
-        $this->expectExceptionMessage('the PDF could not be signed: an encrypted PDF cannot be signed yet; sign it or encrypt it');
-        self::document()
+        $pdf = self::document()
             ->encrypt('benutzer')
-            ->sign(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD))
-            ->render(self::$engine);
+            ->sign(Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD)->reason('Gehaltsabrechnung'))
+            ->render(self::$engine)
+            ->bytes();
+        $this->assertStringContainsString('/Encrypt', $pdf);
+        $this->assertStringNotContainsString('Gehaltsabrechnung', $pdf);
+        $this->assertVerifies($pdf);
+    }
+
+    #[Test]
+    public function it_adds_validation_data_and_archive_timestamps(): void
+    {
+        $openssl = trim((string) shell_exec('command -v openssl'));
+        if ($openssl === '') {
+            $this->markTestSkipped('OpenSSL is the time-stamping authority and OCSP responder of the test.');
+        }
+        $directory = str_replace('\\', '/', sys_get_temp_dir()).'/fagus-ltv-'.bin2hex(random_bytes(6));
+        $fixtures = str_replace('\\', '/', (string) realpath(self::FIXTURES));
+        mkdir($directory);
+        file_put_contents("{$directory}/serial", "01\n");
+        file_put_contents("{$directory}/tsa.cnf", implode("\n", [
+            '[tsa]', 'default_tsa = test', '[test]', "serial = {$directory}/serial",
+            "signer_cert = {$fixtures}/tsa.pem", "signer_key = {$fixtures}/tsa.key",
+            'signer_digest = sha256', 'default_policy = 1.2.3.4', 'digests = sha256', 'ess_cert_id_alg = sha256', '',
+        ]));
+        $run = static function (string $command): void {
+            exec($command.' 2>&1', $output, $status);
+            if ($status !== 0) {
+                throw new RuntimeException(implode("\n", $output));
+            }
+        };
+        /** @var list<RevocationRequest> $requests */
+        $requests = [];
+        $signature = Signature::fromPkcs12(self::FIXTURES.'/rsa.p12', self::PASSWORD)
+            ->timestamp(function (string $digest) use ($directory, $openssl, $run): string {
+                file_put_contents("{$directory}/request.tsq", Signature::timestampRequest($digest));
+                $run(escapeshellarg($openssl)." ts -reply -config {$directory}/tsa.cnf -queryfile {$directory}/request.tsq -out {$directory}/response.tsr");
+
+                return (string) file_get_contents("{$directory}/response.tsr");
+            })
+            ->revocation(function (RevocationRequest $request) use ($directory, $fixtures, $openssl, $run, &$requests): array {
+                $requests[] = $request;
+                $serial = strtoupper((string) openssl_x509_parse("-----BEGIN CERTIFICATE-----\n".chunk_split(base64_encode($request->certificate))."-----END CERTIFICATE-----\n")['serialNumberHex']);
+                file_put_contents("{$directory}/index.txt", "V\t991231235959Z\t\t{$serial}\tunknown\t/CN=test\n");
+                file_put_contents("{$directory}/request.der", $request->ocspRequest);
+                $run(escapeshellarg($openssl)." ocsp -index {$directory}/index.txt -CA {$fixtures}/ca.pem -rsigner {$fixtures}/ca.pem -rkey {$fixtures}/ca.key -reqin {$directory}/request.der -respout {$directory}/response.der -ndays 36500");
+
+                return [(string) file_get_contents("{$directory}/response.der")];
+            })
+            ->archiveTimestamp();
+        try {
+            $pdf = self::document()->sign($signature)->render(self::$engine)->bytes();
+        } finally {
+            array_map(unlink(...), (array) glob("{$directory}/*"));
+            rmdir($directory);
+        }
+
+        // The signer's and the time-stamping authority's certificates, each issued by the test CA.
+        $this->assertCount(2, $requests);
+        $this->assertSame([], $requests[0]->ocspUrls);
+        $this->assertStringStartsWith("\x30", $requests[0]->ocspRequest);
+        $this->assertMatchesRegularExpression('/\/DSS \d+ 0 R/', $pdf);
+        $this->assertStringContainsString('/Type/DocTimeStamp/Filter/Adobe.PPKLite/SubFilter/ETSI.RFC3161', $pdf);
+        $this->assertSame(2, preg_match_all('/\/ByteRange\[/', $pdf));
     }
 
     #[Test]

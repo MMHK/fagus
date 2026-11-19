@@ -43,7 +43,10 @@ use fagus_text::{Face, FontDb};
 use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
 
 pub use fagus_css::{Diagnostic, Severity};
-pub use fagus_pdf::sign::{Algorithm, Signature, Signer, Timestamper, timestamp_request};
+pub use fagus_pdf::sign::{
+    Algorithm, Certification, Placement, Revocation, RevocationRequest, Signature, Signer, Timestamper,
+    timestamp_request,
+};
 pub use fagus_pdf::{Attachment, Conformance, Date, Encryption, PdfError, Permission, Relationship};
 pub use fagus_text::FontError;
 pub use layout_info::{Layout, LayoutBox, LayoutElement, LayoutPage, LayoutRow, RowSection};
@@ -279,9 +282,10 @@ impl Document {
         self
     }
 
-    /// Signs the PDF digitally (`PAdES`), with an invisible signature. The time of signing is the
-    /// creation date (see [`Document::created`]) unless the signature gives its own. An encrypted
-    /// PDF (see [`Document::encrypt`]) cannot be signed yet: rendering it fails.
+    /// Signs the PDF digitally (`PAdES`). The time of signing is the creation date (see
+    /// [`Document::created`]) unless the signature gives its own. An encrypted PDF (see
+    /// [`Document::encrypt`]) is signed with its file key: the signature's incremental update is
+    /// encrypted as the rest of the file is.
     #[must_use]
     pub fn sign(mut self, signature: Signature) -> Self {
         self.signature = Some(signature);
@@ -898,13 +902,6 @@ impl Inner {
         if let Some(error) = input.encryption_problem() {
             return Err(Error::Pdf(error).into());
         }
-        // The signature's incremental update would have to be encrypted with the file's key.
-        if input.signature.is_some() && input.encryption.is_some() {
-            return Err(Error::Pdf(PdfError::Sign(
-                "an encrypted PDF cannot be signed yet; sign it or encrypt it".to_owned(),
-            ))
-            .into());
-        }
         if let Some(problems) = input.factur_x_problem() {
             return Err(Error::Pdf(PdfError::Conformance {
                 standard: "Factur-X".to_owned(),
@@ -1169,10 +1166,27 @@ impl Inner {
         let layout = input
             .report_layout
             .then(|| layout_info::collect(&document, &pages));
-        let controls = if input.forms {
+        let mut controls = if input.forms {
             forms::controls(&document, &styled, conformance.is_none())
         } else {
             forms::Controls::default()
+        };
+        // A signature visible in the box of an element shows what the element's content paints.
+        let placement = input.signature.as_ref().and_then(Signature::placement);
+        let signature_node = match placement {
+            Some(Placement::Element(id)) => {
+                let Some(node) = forms::element_by_id(&document, id) else {
+                    return Err(Failure {
+                        error: Error::Pdf(PdfError::Sign(format!(
+                            "the document has no element with the id `{id}` for the signature"
+                        ))),
+                        diagnostics,
+                    });
+                };
+                controls.lifts.insert(node, fagus_paint::Lift::Whole);
+                Some(node)
+            }
+            _ => None,
         };
         let layer_warnings = layer_warnings(&styled, conformance, input.accessible);
         // The fields of a form are made of the widgets that painting finds, and of the document
@@ -1239,9 +1253,29 @@ impl Inner {
                 diagnostics.push(pdf_warning(code, message));
             }
         }
-        let fields = match kept {
+        let mut signature_problem = None;
+        let mut fields = match kept {
             Some((document, styled)) => {
-                let fields = forms::fields(&document, &styled, &controls, widgets, &pages);
+                let (signature_widgets, widgets): (Vec<_>, Vec<_>) = widgets
+                    .into_iter()
+                    .partition(|widget| Some(widget.node) == signature_node);
+                let mut fields = forms::fields(&document, &styled, &controls, widgets, &pages);
+                if signature_node.is_some() {
+                    if signature_widgets.is_empty() {
+                        signature_problem = Some(
+                            "the element for the signature has no box to show it in (it is not \
+                             rendered, or it is transformed)"
+                                .to_owned(),
+                        );
+                    } else {
+                        let field = forms::signature_field(
+                            signature_node.and_then(|node| forms::signature_description(&document, node)),
+                            forms::signature_widgets(signature_widgets),
+                            &fields,
+                        );
+                        fields.push(field);
+                    }
+                }
                 if tagged {
                     let controls: FxHashSet<fagus_dom::NodeId> = fields
                         .iter()
@@ -1263,6 +1297,43 @@ impl Inner {
         let page_count = pages.len();
         drop(pages);
         drop(pages_held);
+        if let Some(&Placement::Area {
+            page,
+            x,
+            y,
+            width,
+            height,
+        }) = placement
+        {
+            if page == 0 || page > page_count || !(width > 0.0 && height > 0.0) {
+                signature_problem = Some(format!(
+                    "the area of the signature is not on a page of the document (page {page} of {page_count})"
+                ));
+            } else {
+                // From points to pixels.
+                let pixels = |points: f32| points * 96.0 / 72.0;
+                let widget = fagus_pdf::FieldWidget {
+                    page: page - 1,
+                    rect: [pixels(x), pixels(y), pixels(width), pixels(height)],
+                    transform: [1.0, 0.0, 0.0, 1.0],
+                    size: (pixels(width), pixels(height)),
+                    node: None,
+                    appearance: Vec::new(),
+                    off: Vec::new(),
+                    on: String::new(),
+                    checked: false,
+                    layer: None,
+                };
+                let field = forms::signature_field(None, vec![widget], &fields);
+                fields.push(field);
+            }
+        }
+        if let Some(problem) = signature_problem {
+            return Err(Failure {
+                error: Error::Pdf(PdfError::Sign(problem)),
+                diagnostics,
+            });
+        }
         if !inaccessible.is_empty() {
             return Err(Failure {
                 error: Error::Pdf(PdfError::Conformance {
@@ -1315,7 +1386,11 @@ impl Inner {
         let mut pdf = written.pdf;
         if let Some(signature) = &input.signature {
             let time = metadata.created.unwrap_or_else(Date::now);
-            pdf = match fagus_pdf::sign::sign(&pdf, signature, time) {
+            let signed = match &input.encryption {
+                Some(encryption) => fagus_pdf::sign::sign_encrypted(&pdf, signature, time, encryption),
+                None => fagus_pdf::sign::sign(&pdf, signature, time),
+            };
+            pdf = match signed {
                 Ok(signed) => signed,
                 Err(error) => {
                     return Err(Failure {

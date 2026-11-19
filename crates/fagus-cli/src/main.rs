@@ -383,6 +383,13 @@ struct Sign {
     /// How to reach the signer.
     #[arg(long, requires = "sign_p12")]
     sign_contact: Option<String>,
+    /// Certify the PDF: the signature says what later changes it allows.
+    #[arg(long, value_name = "CHANGES", requires = "sign_p12", value_parser = ["no-changes", "fill-forms", "annotate"])]
+    sign_certify: Option<String>,
+    /// Make the signature visible in the box of the element with this id: the element's
+    /// content becomes the appearance of the signature field.
+    #[arg(long, value_name = "ID", requires = "sign_p12")]
+    sign_element: Option<String>,
 }
 
 impl Sign {
@@ -414,6 +421,16 @@ impl Sign {
         }
         if let Some(contact) = self.sign_contact {
             signature = signature.contact_info(contact);
+        }
+        if let Some(certification) = self
+            .sign_certify
+            .as_deref()
+            .and_then(fagus::Certification::from_name)
+        {
+            signature = signature.certify(certification);
+        }
+        if let Some(id) = self.sign_element {
+            signature = signature.visible_on(id);
         }
         Ok(Some(signature))
     }
@@ -903,6 +920,8 @@ mod tests {
             "signing.p12",
             "--sign-reason",
             "Rechnung",
+            "--sign-certify",
+            "fill-forms",
         ])
         .expect("parsed");
         let Command::Render { sign, .. } = cli.command else {
@@ -910,6 +929,21 @@ mod tests {
         };
         assert_eq!(sign.sign_p12.as_deref(), Some(Path::new("signing.p12")));
         assert_eq!(sign.sign_reason.as_deref(), Some("Rechnung"));
+        assert_eq!(sign.sign_certify.as_deref(), Some("fill-forms"));
+        assert!(
+            Cli::try_parse_from([
+                "fagus",
+                "render",
+                "a.html",
+                "-o",
+                "a.pdf",
+                "--sign-p12",
+                "a.p12",
+                "--sign-certify",
+                "everything"
+            ])
+            .is_err()
+        );
         // What the signature says needs a signature.
         assert!(
             Cli::try_parse_from(["fagus", "render", "a.html", "-o", "a.pdf", "--sign-reason", "x"]).is_err()

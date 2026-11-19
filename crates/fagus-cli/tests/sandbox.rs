@@ -216,7 +216,7 @@ fn limits_only_on_linux() {
 }
 
 #[test]
-fn refuses_to_sign_an_encrypted_pdf() {
+fn signs_an_encrypted_pdf() {
     let directory = scratch("sign-encrypted");
     let page = directory.join("page.html");
     std::fs::write(&page, "<p>Rechnung</p>").expect("written");
@@ -231,12 +231,13 @@ fn refuses_to_sign_an_encrypted_pdf() {
         .env("FAGUS_SIGN_PASSWORD", "fagus-test-only")
         .output()
         .expect("ran");
-    assert!(!result.status.success());
     assert!(
-        String::from_utf8_lossy(&result.stderr).contains("an encrypted PDF cannot be signed yet"),
+        result.status.success(),
         "{}",
         String::from_utf8_lossy(&result.stderr)
     );
-    assert!(!output.exists(), "no file is left");
+    let pdf = std::fs::read(&output).expect("written");
+    let has = |text: &[u8]| pdf.windows(text.len()).any(|window| window == text);
+    assert!(has(b"/Encrypt") && has(b"/ETSI.CAdES.detached"));
     std::fs::remove_dir_all(directory).expect("removed");
 }

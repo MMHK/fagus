@@ -75,6 +75,8 @@ pub enum FieldKind {
         action: ButtonAction,
         caption: Option<String>,
     },
+    /// A signature field, empty until the PDF is signed in it.
+    Signature,
 }
 
 /// What a push button does.
@@ -226,6 +228,7 @@ fn flags(field: &Field) -> u32 {
             }
         }
         FieldKind::Button { .. } => flags |= 1 << 16,
+        FieldKind::Signature => {}
     }
     flags
 }
@@ -326,6 +329,7 @@ fn field_entries(field: &Field, partial: &str, scale: f32) -> String {
             text_entries(&mut entries);
         }
         FieldKind::Button { .. } => entries.push_str("/FT/Btn"),
+        FieldKind::Signature => entries.push_str("/FT/Sig"),
     }
     entries
 }

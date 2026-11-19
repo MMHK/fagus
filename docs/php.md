@@ -309,8 +309,8 @@ Fagus::html($html)->created(new DateTimeImmutable('2026-11-02 12:00', new DateTi
 
 ### `sign(Signature $signature): Document`
 
-Signs the PDF digitally (PAdES) with an invisible signature, see [`Signature`](#signature) below
-and [pdf.md](pdf.md#sign-the-pdf).
+Signs the PDF digitally (PAdES), also an encrypted one, see [`Signature`](#signature) below and
+[pdf.md](pdf.md#sign-the-pdf).
 
 ```php
 use Fagus\Signature;
@@ -649,6 +649,7 @@ says. Like the document, it is immutable: every method returns a changed copy. A
 | Method | Description |
 |---|---|
 | `Signature::fromPkcs12(string $path, string $password)` | Signs with the key (RSA, or ECDSA on P-256) and the certificates of a PKCS#12 file (`.p12`, `.pfx`). Throws an `InvalidArgumentException` if the file cannot be read; a wrong password makes `render()` throw a `RenderException` |
+| `Signature::fromPkcs12Data(string $data, string $password)` | The same with the bytes of a PKCS#12 file, such as one from a secrets manager. Throws an `InvalidArgumentException` for empty data |
 | `Signature::withSigner(array $certificates, callable $signer)` | Signs with a key outside, such as one in an HSM or a key management service: `$certificates` are the signer's certificate and those of its chain (PEM or DER), `$signer` is `fn (string $digest, string $algorithm): string` |
 | `name(string $name)` | The name of the signer, as the signature shows it |
 | `reason(string $reason)` | Why the document is signed |
@@ -657,12 +658,18 @@ says. Like the document, it is immutable: every method returns a changed copy. A
 | `time(DateTimeInterface $time)` | The time of signing; the document's creation date by default |
 | `timestamp(callable $timestamper)` | Timestamps the signature (PAdES B-T): `fn (string $digest): string` returns the answer of a time-stamping authority |
 | `Signature::timestampRequest(string $digest): string` | The RFC 3161 request to send to the authority for a digest |
+| `certify(Certification $certification)` | Makes it a certification signature (DocMDP) that allows `Certification::NoChanges`, `FillForms` or `Annotate` ([pdf.md](pdf.md#certify-the-pdf)) |
+| `visibleOn(string $id)` | Shows the signature in the box of the element with this `id`, with the element's content as its appearance ([pdf.md](pdf.md#visible-signatures)) |
+| `visibleAt(int $page, float $x, float $y, float $width, float $height)` | Shows the signature in an area of a page (from 1), in points from its top left corner. Throws an `InvalidArgumentException` for a page below 1 or an empty area |
+| `revocation(callable $revocation)` | Adds the validation data (PAdES B-LT): `fn (RevocationRequest $request): array` returns OCSP responses and CRLs (DER) for a certificate ([pdf.md](pdf.md#long-term-signatures-pades-b-lt-and-b-lta)) |
+| `archiveTimestamp()` | Adds an archive timestamp after the validation data (PAdES B-LTA), from the `timestamp()` callback |
 
 The signer callback gets the SHA-256 digest (32 bytes) to sign and the algorithm,
 `Signature::RSA_SHA256` (`'RSA-SHA256'`) or `Signature::ECDSA_P256_SHA256`
 (`'ECDSA-P256-SHA256'`), and returns the signature of the digest as it is: PKCS#1 v1.5 for RSA,
-DER or the 64 bytes of r and s for ECDSA. Fagus checks it against the certificate. An exception
-of a callback ends the render with that exception, and the worker is restarted for the next
+DER or the 64 bytes of r and s for ECDSA. Fagus checks it against the certificate.
+`Fagus\RevocationRequest` has the readonly properties `certificate`, `issuer` (DER),
+`ocspUrls`, `crlUrls` and `ocspRequest` (DER). An exception of a callback ends the render with that exception, and the worker is restarted for the next
 document. [pdf.md](pdf.md#sign-the-pdf) has examples for a key management service and for a
 public time-stamping authority with Laravel's `Http` and Guzzle.
 
@@ -675,6 +682,12 @@ $signature = Signature::fromPkcs12(storage_path('signing.p12'), config('services
 
 Fagus::html($html)->pdfA('3b')->sign($signature)->save('invoice.pdf');
 ```
+
+## `Certification`
+
+`Fagus\Certification` is a string-backed enum of what a certified PDF allows (see
+[`certify()`](#signature)): `NoChanges = 'no-changes'`, `FillForms = 'fill-forms'`,
+`Annotate = 'annotate'`.
 
 ## `Conformance`
 

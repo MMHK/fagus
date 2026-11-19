@@ -12,7 +12,7 @@
 //! seed, for tests that compare bytes.
 
 use aes::cipher::block_padding::{NoPadding, Pkcs7};
-use aes::cipher::{BlockCipherEncrypt, BlockModeEncrypt, KeyInit, KeyIvInit};
+use aes::cipher::{BlockCipherEncrypt, BlockModeDecrypt, BlockModeEncrypt, KeyInit, KeyIvInit};
 use aes::{Aes128, Aes256};
 use sha2::{Digest, Sha256, Sha384, Sha512};
 
@@ -296,6 +296,45 @@ impl Encryptor {
         })
     }
 
+    /// An encryptor for more objects of a PDF already encrypted: an incremental update. The
+    /// file key comes from the PDF's encryption dictionary and a password of `encryption`.
+    pub(crate) fn unlocked(dictionary: &str, encryption: &Encryption) -> Result<Self, String> {
+        let passwords = [
+            encryption.user_password.as_deref(),
+            encryption.owner_password.as_deref(),
+            Some(""),
+        ];
+        let key = passwords
+            .into_iter()
+            .flatten()
+            .find_map(|password| unlock(dictionary, password))
+            .map(|(key, _)| key)
+            .ok_or_else(|| "the PDF is encrypted, and not with AES-256 and the passwords given".to_owned())?;
+        // Other initialization vectors than those of the PDF's own objects.
+        let random = match encryption.seed {
+            Some(seed) => Random::Seeded {
+                seed: Sha256::new()
+                    .chain_update(seed)
+                    .chain_update(b"update")
+                    .finalize()
+                    .into(),
+                counter: 0,
+            },
+            None => Random::System,
+        };
+        Ok(Self {
+            key,
+            random,
+            dictionary: dictionary.to_owned(),
+            error: None,
+        })
+    }
+
+    /// The file key.
+    pub(crate) fn key(&self) -> &[u8; 32] {
+        &self.key
+    }
+
     /// The encryption dictionary, which itself is not encrypted.
     pub(crate) fn dictionary(&self) -> &str {
         &self.dictionary
@@ -483,7 +522,7 @@ fn wrap(intermediate: &[u8; 32], key: &[u8; 32]) -> Vec<u8> {
 }
 
 /// The bytes of a literal string, between its parentheses (ISO 32000-2, §7.3.4.2).
-fn literal(string: &[u8]) -> Vec<u8> {
+pub(crate) fn literal(string: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(string.len());
     let mut position = 0;
     while let Some(&byte) = string.get(position) {
@@ -538,7 +577,7 @@ fn literal(string: &[u8]) -> Vec<u8> {
 }
 
 /// The bytes of a hexadecimal string, between its angle brackets; a missing last digit is 0.
-fn unhex(string: &[u8]) -> Vec<u8> {
+pub(crate) fn unhex(string: &[u8]) -> Vec<u8> {
     let digits: Vec<u8> = string
         .iter()
         .filter_map(|&byte| (byte as char).to_digit(16))
@@ -566,9 +605,58 @@ fn hex_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b'>');
 }
 
+/// The file key of a PDF encrypted with AES-256 (`/V 5`, `/R 6`) from its encryption dictionary
+/// and a password, user or owner (Algorithm 2.A of ISO 32000-2), with whether it is the owner's;
+/// `None` for a wrong password or another kind of encryption.
+pub(crate) fn unlock(dictionary: &str, password: &str) -> Option<([u8; 32], bool)> {
+    let entry = |key: &str| parse::entry(dictionary, key).map(str::trim);
+    if entry("/V")? != "5" || entry("/R")? != "6" || entry("/Filter")? != "/Standard" {
+        return None;
+    }
+    let value = |key: &str| -> Option<Vec<u8>> {
+        let text = entry(key)?;
+        Some(if text.starts_with('(') {
+            literal(text.get(1..text.len() - 1)?.as_bytes())
+        } else {
+            unhex(text.trim_matches(['<', '>']).as_bytes())
+        })
+    };
+    let (o, u, oe, ue) = (value("/O")?, value("/U")?, value("/OE")?, value("/UE")?);
+    if o.len() < 48 || u.len() < 48 || oe.len() != 32 || ue.len() != 32 {
+        return None;
+    }
+    // Prepared as for encrypting; a password that SASLprep refuses is none of the PDF's.
+    let password = &prepared(password, "given").ok()?[..];
+    let salt = |bytes: &[u8]| -> [u8; 8] { bytes.try_into().expect("8 bytes") };
+    let (intermediate, encrypted, owner) = if hash(password, &salt(&o[32..40]), &u[..48]) == o[..32] {
+        (hash(password, &salt(&o[40..48]), &u[..48]), oe, true)
+    } else if hash(password, &salt(&u[32..40]), &[]) == u[..32] {
+        (hash(password, &salt(&u[40..48]), &[]), ue, false)
+    } else {
+        return None;
+    };
+    let key: [u8; 32] = cbc::Decryptor::<Aes256>::new(&intermediate.into(), &[0; 16].into())
+        .decrypt_padded_vec::<NoPadding>(&encrypted)
+        .ok()?
+        .try_into()
+        .ok()?;
+    Some((key, owner))
+}
+
+/// Data encrypted with a file key (an initialization vector, then AES-256 in CBC mode with
+/// PKCS #7 padding), decrypted; `None` if it is not.
+pub(crate) fn decrypt(key: &[u8; 32], data: &[u8]) -> Option<Vec<u8>> {
+    if data.len() < 32 || !data.len().is_multiple_of(16) {
+        return None;
+    }
+    cbc::Decryptor::<Aes256>::new(key.into(), data[..16].try_into().ok()?)
+        .decrypt_padded_vec::<Pkcs7>(&data[16..])
+        .ok()
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
-    use aes::cipher::{BlockCipherDecrypt, BlockModeDecrypt};
+    use aes::cipher::BlockCipherDecrypt;
 
     use super::*;
 
@@ -576,48 +664,25 @@ pub(crate) mod tests {
     /// owner (Algorithm 2.A), with whether it is the owner's; `None` for a wrong password.
     /// Checks `Perms` against `P` too.
     pub(crate) fn file_key(dictionary: &str, password: &str) -> Option<([u8; 32], bool)> {
-        let value = |key: &str| {
-            unhex(
-                parse::entry(dictionary, key)
-                    .expect(key)
-                    .trim()
-                    .trim_matches(['<', '>'])
-                    .as_bytes(),
-            )
-        };
-        let (o, u, oe, ue, perms) = (
-            value("/O"),
-            value("/U"),
-            value("/OE"),
-            value("/UE"),
-            value("/Perms"),
-        );
-        let password = &prepared(password, "user").expect("a usable password")[..];
-        let salt = |bytes: &[u8]| -> [u8; 8] { bytes.try_into().expect("8 bytes") };
-        let (intermediate, encrypted, owner) = if hash(password, &salt(&o[32..40]), &u[..48]) == o[..32] {
-            (hash(password, &salt(&o[40..48]), &u[..48]), oe, true)
-        } else if hash(password, &salt(&u[32..40]), &[]) == u[..32] {
-            (hash(password, &salt(&u[40..48]), &[]), ue, false)
-        } else {
-            return None;
-        };
-        let key: [u8; 32] = cbc::Decryptor::<Aes256>::new(&intermediate.into(), &[0; 16].into())
-            .decrypt_padded_vec::<NoPadding>(&encrypted)
-            .expect("32 bytes")
-            .try_into()
-            .expect("a key");
-        let mut block: [u8; 16] = perms.try_into().expect("16 bytes");
-        let mut array = block.into();
-        Aes256::new(&key.into()).decrypt_block(&mut array);
-        block = array.into();
+        let unlocked = unlock(dictionary, password)?;
         let p: i32 = parse::entry(dictionary, "/P")
             .expect("P")
             .trim()
             .parse()
             .expect("a number");
+        let perms = unhex(
+            parse::entry(dictionary, "/Perms")
+                .expect("Perms")
+                .trim()
+                .trim_matches(['<', '>'])
+                .as_bytes(),
+        );
+        let mut array = <[u8; 16]>::try_from(perms).expect("16 bytes").into();
+        Aes256::new(&unlocked.0.into()).decrypt_block(&mut array);
+        let block: [u8; 16] = array.into();
         assert_eq!(block[..4], p.to_le_bytes(), "Perms holds P");
         assert_eq!(&block[8..12], b"Tadb");
-        Some((key, owner))
+        Some(unlocked)
     }
 
     /// The bytes of a literal or hexadecimal string, with its delimiters.
@@ -631,9 +696,7 @@ pub(crate) mod tests {
 
     /// Data encrypted with the file key, decrypted.
     pub(crate) fn decrypt(key: &[u8; 32], data: &[u8]) -> Vec<u8> {
-        cbc::Decryptor::<Aes256>::new(key.into(), data[..16].try_into().expect("an IV"))
-            .decrypt_padded_vec::<Pkcs7>(&data[16..])
-            .expect("padded")
+        super::decrypt(key, data).expect("padded")
     }
 
     /// The encryption dictionary that qpdf 12.4.2 wrote for

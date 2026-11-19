@@ -91,6 +91,8 @@ aes = "=0.9.4"
 cbc = { version = "=0.2.1", features = ["alloc"] }
 # The hashes of encryption keys and of signed data.
 sha2 = "=0.11.1"
+# The identifiers of certificates in OCSP requests, which every responder understands with SHA-1.
+sha1 = "=0.11.0"
 # The salts, keys and initialization vectors of encryption; ahash already depends on it.
 getrandom = "0.3.4"
 # SASLprep (RFC 4013) of passwords: the tables of stringprep (RFC 3454) and NFKC.

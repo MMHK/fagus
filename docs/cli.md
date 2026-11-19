@@ -66,6 +66,8 @@ file as HTML.
 | `--sign-reason <TEXT>` | none | Why the document is signed |
 | `--sign-location <TEXT>` | none | Where the document is signed |
 | `--sign-contact <TEXT>` | none | How to reach the signer |
+| `--sign-certify <CHANGES>` | none | Certify the PDF: the signature allows `no-changes`, `fill-forms` or `annotate` later |
+| `--sign-element <ID>` | none | Show the signature in the box of the element with this id, with the element's content as its appearance |
 | `--strict` | off | Fail on any diagnostic (not only warnings), without writing the PDF |
 | `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
 | `--timings` | off | Print the page count and the time of each phase |
@@ -96,9 +98,10 @@ Some details of the command line:
 - `--sign-p12` takes the password from the environment variable `FAGUS_SIGN_PASSWORD`, or from
   the first line of `--sign-password-file`, never from the command line, where other users of
   the machine could see it. The signature's time is the creation date (`--created`, or now).
-  `--sign-name`, `--sign-reason`, `--sign-location`, `--sign-contact` and
-  `--sign-password-file` need `--sign-p12`. The command line does not timestamp signatures
-  ([pdf.md](pdf.md#sign-the-pdf)).
+  `--sign-name`, `--sign-reason`, `--sign-location`, `--sign-contact`, `--sign-certify`,
+  `--sign-element` and `--sign-password-file` need `--sign-p12`. With `--user-password` or
+  `--owner-password`, the encrypted PDF is signed. The command line does not timestamp
+  signatures and adds no validation data ([pdf.md](pdf.md#sign-the-pdf)).
 - `--layout-json` writes the same JSON as the worker's `layout` ([protocol.md](protocol.md#layout)):
 
   ```sh
