@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Runs the reftests of web-platform-tests with Fagus: checks out the tests (tools/wpt/fetch.sh),
 # builds the harness and runs it. Tests and references are both rendered by Fagus, drawn by
-# Poppler's pdftoppm at 96 dpi and compared with the fuzziness each test allows. It needs git
-# and pdftoppm (poppler-utils).
+# Poppler's pdftoppm at 96 dpi and compared with the fuzziness each test allows. Tests without
+# a reference run against ours in tools/wpt/references where there is one (the test's path with
+# -ref). It needs git and pdftoppm (poppler-utils).
 #
 #   tools/wpt/run.sh                          # every directory of tools/wpt/dirs.txt
 #   tools/wpt/run.sh --filter css/css-cascade # only tests whose path contains this

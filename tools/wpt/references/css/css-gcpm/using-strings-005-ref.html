@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Reference: last value of a named string on each page</title>
+<style>
+@page :first { @top-center { content: "Section One"; } }
+@page :nth(2) { @top-center { content: "Section Three"; } }
+@page :nth(3) { @top-center { content: "Section Six"; } }
+#s2, #s4 { break-before: page; }
+</style>
+</head>
+<body>
+<p>Note: test has three pages. Test passes if:</p>
+<ol>
+<li>
+Running head on page one is “Section One”
+</li>
+<li>
+Running head on page two is “Section Three”
+</li>
+<li>
+Running head on page three is “Section Six”
+</li>
+</ol>
+<h2 id="s1">Section One</h2>
+<h2 id="s2">Section Two</h2>
+<h2 id="s3">Section Three</h2>
+<h2 id="s4">Section Four</h2>
+<h2 id="s5">Section Five</h2>
+<h2 id="s6">Section Six</h2>
+</body>
+</html>

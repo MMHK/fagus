@@ -32,6 +32,9 @@ enum Command {
         /// The tests expected to fail or skipped.
         #[arg(long, default_value = "tools/wpt/expectations.txt")]
         expectations: PathBuf,
+        /// References of our own for tests without one, at the test's path with `-ref`.
+        #[arg(long, default_value = "tools/wpt/references")]
+        references: PathBuf,
         /// Where the results go.
         #[arg(long, default_value = "target/wpt/results")]
         out: PathBuf,
@@ -99,6 +102,7 @@ fn main() -> ExitCode {
             checkout,
             dirs,
             expectations,
+            references,
             out,
             filter,
             jobs,
@@ -107,7 +111,7 @@ fn main() -> ExitCode {
             docs,
             images,
         } => run_wpt(&WptOptions {
-            checkout,
+            sources: wpt::Sources { checkout, references },
             dirs,
             expectations,
             out,
@@ -160,7 +164,7 @@ fn main() -> ExitCode {
 }
 
 struct WptOptions {
-    checkout: PathBuf,
+    sources: wpt::Sources,
     dirs: PathBuf,
     expectations: PathBuf,
     out: PathBuf,
@@ -185,9 +189,16 @@ fn run_wpt(options: &WptOptions) -> Result<bool> {
     if options.docs.is_some() && options.filter.is_some() {
         bail!("--docs needs a run of all tests, without --filter");
     }
-    let commit = commit(&options.checkout)?;
+    let commit = commit(&options.sources.checkout)?;
     std::fs::create_dir_all(&options.out)?;
-    let collection = wpt::collect(&options.checkout, &directories, options.jobs);
+    let collection = wpt::collect(&options.sources, &directories, options.jobs);
+    if !collection.unused_references.is_empty() {
+        bail!(
+            "these references of {} belong to no test without a reference (remove them): {}",
+            options.sources.references.display(),
+            collection.unused_references.join(", ")
+        );
+    }
     let tests: Vec<&wpt::Test> = collection
         .tests
         .iter()
@@ -208,7 +219,7 @@ fn run_wpt(options: &WptOptions) -> Result<bool> {
                     .is_none_or(|expectation| expectation.expected != Expected::Skip)
         })
         .collect();
-    let mut renderer = wpt::Renderer::new(&options.checkout, &options.out.join("tmp"), options.timeout)?;
+    let mut renderer = wpt::Renderer::new(&options.sources, &options.out.join("tmp"), options.timeout)?;
     let _ = std::fs::remove_dir_all(options.out.join("images"));
     if options.images {
         renderer.images = Some(options.out.join("images"));

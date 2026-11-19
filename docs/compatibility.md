@@ -25,6 +25,15 @@ run. A few tests are skipped on purpose, with the reason in
 [`tools/wpt/expectations.txt`](../tools/wpt/expectations.txt). The pass rate is the share of the
 tests run that pass.
 
+Tests without a reference are manual tests: a person reads what the test says to expect and
+judges the page. Where that expectation is exact, this repository has a reference of its own in
+[`tools/wpt/references`](../tools/wpt/references), at the path of the test with `-ref` added, and
+the test runs against it like a reftest. Those of `css/css-gcpm` (named strings in running heads)
+are paged tests and print on a letter page with margins of half an inch, compared page by page;
+their references put the expected text in the margin boxes directly. The tests of `leader()` in
+`css/css-gcpm` have none, as the specification leaves it to the browser how the leader's pattern
+lines up, and `leader-002.html` also needs `display: run-in`.
+
 <!-- The table up to the end marker is written by tools/wpt/run.sh --docs. -->
 
 web-platform-tests at commit [`ffa9ce07f3`](https://github.com/web-platform-tests/wpt/tree/ffa9ce07f3641e22cc8156d8006e2584cf036cf5):

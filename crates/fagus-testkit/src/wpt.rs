@@ -13,6 +13,11 @@
 //!
 //! Tests that need JavaScript (a `<script>` in the test or a reference), the WPT server (`.sub.`
 //! files) or are SVG documents are not run; each is counted as not run, with the reason.
+//!
+//! A test without a reference of its own (a manual test, which a person judges by its text) runs
+//! against a reference of this repository where one exists: `tools/wpt/references/<path of the
+//! test without extension>-ref.<extension>`. Such a test is printed as a paged test if its flags
+//! say `paged`, on a page large enough for what the test expects on one page ([`PAGED_PAGE`]).
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt::Write as _;
@@ -30,6 +35,10 @@ use crate::raster::{Difference, Image, Rasterizer, tolerant_difference};
 const SCREEN_PAGE: &str = "@page{size:800px 600px;margin:0}";
 /// The style sheet before the document's own for a print reftest (WPT's default page).
 const PRINT_PAGE: &str = "@page{size:5in 3in;margin:0.5in}";
+/// The style sheet before the document's own for a test that runs against a reference of this
+/// repository and is flagged `paged`: a letter page with WPT's margins of half an inch, so that
+/// the running heads of the margin boxes have room and what the test expects on one page fits.
+const PAGED_PAGE: &str = "@page{size:8.5in 11in;margin:0.5in}";
 /// One pixel per CSS pixel.
 const DPI: u32 = 96;
 /// The pages of a print reftest compared at most.
@@ -42,6 +51,62 @@ const MAX_PAGES: usize = 20;
 const EDGE_TOLERANCE: u8 = 2;
 /// How deep chains of references (a reference with references of its own) are followed.
 const MAX_CHAIN: usize = 8;
+
+/// How a test is printed: on a page of WPT's viewport (only the first page counts), on WPT's
+/// page for print reftests or, for a paged test with a reference of this repository, on a letter
+/// page; the last two are compared page by page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Page {
+    Screen,
+    Print,
+    Paged,
+}
+
+impl Page {
+    fn style(self) -> &'static str {
+        match self {
+            Self::Screen => SCREEN_PAGE,
+            Self::Print => PRINT_PAGE,
+            Self::Paged => PAGED_PAGE,
+        }
+    }
+
+    /// Whether all pages are compared, not only the first.
+    pub fn paged(self) -> bool {
+        self != Self::Screen
+    }
+}
+
+/// The prefix of the paths of the references of this repository, which are not in the checkout.
+pub const OWN: &str = "fagus:";
+
+/// Where the files of the tests are: the checkout of web-platform-tests, and the directory with
+/// the references of this repository for tests that have none.
+#[derive(Clone, Debug)]
+pub struct Sources {
+    pub checkout: PathBuf,
+    pub references: PathBuf,
+}
+
+impl Sources {
+    /// The file of a path in the checkout, or of one of our references ([`OWN`]).
+    pub fn file(&self, path: &str) -> PathBuf {
+        match path.strip_prefix(OWN) {
+            Some(own) => self.references.join(own),
+            None => self.checkout.join(path),
+        }
+    }
+
+    /// The path of our reference for the test `path`, if there is one.
+    fn own_reference(&self, path: &str) -> Option<String> {
+        let (stem, extension) = path.rsplit_once('.')?;
+        let reference = format!("{stem}-ref.{extension}");
+        self.references
+            .join(&reference)
+            .is_file()
+            .then(|| format!("{OWN}{reference}"))
+    }
+}
 
 /// Whether a reference must look the same as the test or different.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -76,6 +141,8 @@ pub struct Meta {
     pub testharness: bool,
     /// Whether the file is missing or unreadable.
     pub missing: bool,
+    /// Its flags (`<meta name=flags>`), such as `paged` for a test of paged media.
+    pub flags: Vec<String>,
 }
 
 /// Why a test is not run.
@@ -113,7 +180,7 @@ pub struct Test {
     pub path: String,
     /// The directory of the list it belongs to.
     pub group: String,
-    pub print: bool,
+    pub page: Page,
     pub not_run: Option<NotRun>,
     /// The files the test may render: itself and its references, with theirs.
     pub files: Vec<String>,
@@ -302,11 +369,11 @@ pub fn parse_pages(from: &str, content: &str) -> Option<(Option<String>, Vec<Pag
 }
 
 /// Reads what a file says about itself.
-pub fn read_meta(checkout: &Path, path: &str) -> Meta {
+pub fn read_meta(sources: &Sources, path: &str) -> Meta {
     if path == ABOUT_BLANK {
         return Meta::default();
     }
-    let Ok(bytes) = std::fs::read(checkout.join(path)) else {
+    let Ok(bytes) = std::fs::read(sources.file(path)) else {
         return Meta {
             missing: true,
             ..Meta::default()
@@ -357,6 +424,7 @@ pub fn parse_meta(path: &str, text: &str) -> Meta {
             match element.attribute("name") {
                 Some("fuzzy") => meta.fuzzy.extend(parse_fuzzy(path, content)),
                 Some("reftest-pages") => meta.pages.extend(parse_pages(path, content)),
+                Some("flags") => meta.flags.extend(content.split_whitespace().map(str::to_owned)),
                 _ => {}
             }
         }
@@ -377,6 +445,9 @@ pub fn parse_meta(path: &str, text: &str) -> Meta {
 pub struct Collection {
     pub tests: Vec<Test>,
     pub metas: HashMap<String, Arc<Meta>>,
+    /// Our references in the directories that no test uses: their test is gone or has a
+    /// reference of its own now.
+    pub unused_references: Vec<String>,
 }
 
 /// Lists the files below `directory` (a path in the checkout), sorted.
@@ -402,8 +473,10 @@ fn files_below(checkout: &Path, directory: &str, files: &mut Vec<String>) {
     }
 }
 
-/// Finds the reftests in `directories` of the checkout.
-pub fn collect(checkout: &Path, directories: &[String], jobs: usize) -> Collection {
+/// Finds the reftests in `directories` of the checkout, and the tests without a reference that
+/// we have one for.
+pub fn collect(sources: &Sources, directories: &[String], jobs: usize) -> Collection {
+    let checkout = sources.checkout.as_path();
     let mut candidates = Vec::new();
     for directory in directories {
         let mut files = Vec::new();
@@ -418,7 +491,7 @@ pub fn collect(checkout: &Path, directories: &[String], jobs: usize) -> Collecti
     let metas = process::map(
         &candidates,
         jobs,
-        |(path, _)| Arc::new(read_meta(checkout, path)),
+        |(path, _)| Arc::new(read_meta(sources, path)),
         |_| {},
     );
     let mut known: HashMap<String, Arc<Meta>> = candidates
@@ -428,18 +501,31 @@ pub fn collect(checkout: &Path, directories: &[String], jobs: usize) -> Collecti
         .collect();
     let mut tests = Vec::new();
     let mut without_reference = Vec::new();
+    let mut own = HashSet::new();
     for (path, group) in &candidates {
-        let meta = Arc::clone(&known[path]);
+        let mut meta = Arc::clone(&known[path]);
         if meta.testharness {
             continue;
         }
+        let mut page = if is_print(path) { Page::Print } else { Page::Screen };
         if manual_by_name(path) || meta.references.is_empty() {
-            if !meta.script && (manual_by_name(path) || !reference_by_name(path)) {
-                without_reference.push((path, group));
+            let manual = !meta.script && (manual_by_name(path) || !reference_by_name(path));
+            let Some(reference) = sources.own_reference(path).filter(|_| manual) else {
+                if manual {
+                    without_reference.push((path, group));
+                }
+                continue;
+            };
+            let mut with_reference = (*meta).clone();
+            with_reference.references = vec![(reference.clone(), Relation::Match)];
+            meta = Arc::new(with_reference);
+            known.insert(path.clone(), Arc::clone(&meta));
+            own.insert(reference);
+            if page == Page::Screen && meta.flags.iter().any(|flag| flag == "paged") {
+                page = Page::Paged;
             }
-            continue;
         }
-        let files = reachable(checkout, path, &mut known);
+        let files = reachable(sources, path, &mut known);
         let not_run = if path.to_ascii_lowercase().ends_with(".svg") {
             Some(NotRun::Svg)
         } else if files.iter().any(|file| file.contains(".sub.")) {
@@ -452,7 +538,7 @@ pub fn collect(checkout: &Path, directories: &[String], jobs: usize) -> Collecti
         tests.push(Test {
             path: path.clone(),
             group: group.clone(),
-            print: is_print(path),
+            page,
             not_run,
             files,
         });
@@ -468,19 +554,34 @@ pub fn collect(checkout: &Path, directories: &[String], jobs: usize) -> Collecti
         .map(|(path, group)| Test {
             path: path.clone(),
             group: group.clone(),
-            print: is_print(path),
+            page: if is_print(path) { Page::Print } else { Page::Screen },
             not_run: Some(NotRun::NoReference),
             files: vec![path.clone()],
         })
         .collect();
     tests.append(&mut manual);
     tests.sort_by(|a, b| a.path.cmp(&b.path));
-    Collection { tests, metas: known }
+    let mut unused_references = Vec::new();
+    for directory in directories {
+        let mut files = Vec::new();
+        files_below(&sources.references, directory, &mut files);
+        unused_references.extend(
+            files
+                .into_iter()
+                .map(|file| format!("{OWN}{file}"))
+                .filter(|reference| !own.contains(reference)),
+        );
+    }
+    Collection {
+        tests,
+        metas: known,
+        unused_references,
+    }
 }
 
 /// The file `path` and the references reachable from it, reading the metadata of those not read
 /// yet.
-fn reachable(checkout: &Path, path: &str, known: &mut HashMap<String, Arc<Meta>>) -> Vec<String> {
+fn reachable(sources: &Sources, path: &str, known: &mut HashMap<String, Arc<Meta>>) -> Vec<String> {
     let mut files = vec![path.to_owned()];
     let mut index = 0;
     while index < files.len() && files.len() < 64 {
@@ -488,7 +589,7 @@ fn reachable(checkout: &Path, path: &str, known: &mut HashMap<String, Arc<Meta>>
         let meta = Arc::clone(
             known
                 .entry(file.clone())
-                .or_insert_with(|| Arc::new(read_meta(checkout, &file))),
+                .or_insert_with(|| Arc::new(read_meta(sources, &file))),
         );
         for (reference, _) in &meta.references {
             if !files.contains(reference) {
@@ -500,7 +601,7 @@ fn reachable(checkout: &Path, path: &str, known: &mut HashMap<String, Arc<Meta>>
     for file in &files {
         known
             .entry(file.clone())
-            .or_insert_with(|| Arc::new(read_meta(checkout, file)));
+            .or_insert_with(|| Arc::new(read_meta(sources, file)));
     }
     files
 }
@@ -556,11 +657,11 @@ pub struct Rendered {
 }
 
 type Rendering = Arc<Result<Rendered, Failure>>;
-type Key = (String, bool);
+type Key = (String, Page);
 
 /// Renders the files of the tests, keeping each until the last test that may use it is done.
 pub struct Renderer {
-    checkout: PathBuf,
+    sources: Sources,
     engine: Arc<fagus::Engine>,
     rasterizer: Rasterizer,
     timeout: Duration,
@@ -571,8 +672,8 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(checkout: &Path, scratch: &Path, timeout: Duration) -> anyhow::Result<Self> {
-        let checkout = checkout.canonicalize()?;
+    pub fn new(sources: &Sources, scratch: &Path, timeout: Duration) -> anyhow::Result<Self> {
+        let checkout = sources.checkout.canonicalize()?;
         let mut engine = fagus::Engine::new();
         // WPT expects Ahem to be installed. Text in other families is set in the font built
         // into Fagus, the same on every machine.
@@ -581,7 +682,10 @@ impl Renderer {
         let inter = || Some("Inter".to_owned());
         engine.set_generic_families(inter(), inter(), inter());
         Ok(Self {
-            checkout,
+            sources: Sources {
+                checkout,
+                references: std::path::absolute(&sources.references)?,
+            },
             engine: Arc::new(engine),
             rasterizer: Rasterizer::new(scratch)?,
             timeout,
@@ -600,7 +704,7 @@ impl Renderer {
         let mut uses = self.uses.lock().unwrap_or_else(PoisonError::into_inner);
         for test in tests {
             for file in &test.files {
-                *uses.entry((file.clone(), test.print)).or_default() += 1;
+                *uses.entry((file.clone(), test.page)).or_default() += 1;
             }
         }
     }
@@ -610,7 +714,7 @@ impl Renderer {
         let mut uses = self.uses.lock().unwrap_or_else(PoisonError::into_inner);
         let mut cache = self.cache.lock().unwrap_or_else(PoisonError::into_inner);
         for file in &test.files {
-            let key = (file.clone(), test.print);
+            let key = (file.clone(), test.page);
             if let Some(count) = uses.get_mut(&key) {
                 *count -= 1;
                 if *count == 0 {
@@ -622,33 +726,31 @@ impl Renderer {
     }
 
     /// The pages of `path`, rendered once for all the tests that use it.
-    pub fn get(&self, path: &str, print: bool) -> Rendering {
+    pub fn get(&self, path: &str, page: Page) -> Rendering {
         let cell = {
             let mut cache = self.cache.lock().unwrap_or_else(PoisonError::into_inner);
-            Arc::clone(cache.entry((path.to_owned(), print)).or_default())
+            Arc::clone(cache.entry((path.to_owned(), page)).or_default())
         };
-        Arc::clone(cell.get_or_init(|| Arc::new(self.render(path, print))))
+        Arc::clone(cell.get_or_init(|| Arc::new(self.render(path, page))))
     }
 
-    fn render(&self, path: &str, print: bool) -> Result<Rendered, Failure> {
-        let file = self.checkout.join(path);
+    fn render(&self, path: &str, page: Page) -> Result<Rendered, Failure> {
+        let checkout = &self.sources.checkout;
+        let file = self.sources.file(path);
         let bytes = if path == ABOUT_BLANK {
             Vec::new()
         } else {
             std::fs::read(&file).map_err(|error| Failure::Error(format!("{path}: {error}")))?
         };
-        let source = with_page_style(
-            &String::from_utf8_lossy(&bytes),
-            if print { PRINT_PAGE } else { SCREEN_PAGE },
-        );
+        let source = with_page_style(&String::from_utf8_lossy(&bytes), page.style());
         let document = if markup(path) == Some(true) {
             fagus::Document::xhtml(source)
         } else {
             fagus::Document::html(source)
         };
         let document = document
-            .base_directory(file.parent().unwrap_or(&self.checkout))
-            .root(&self.checkout)
+            .base_directory(file.parent().unwrap_or(checkout))
+            .root(checkout)
             .tagged(false)
             .created(fagus::Date::from_unix(0));
         // On a thread of its own, so that a document that takes too long can be left behind.
@@ -668,7 +770,7 @@ impl Renderer {
                 return Err(Failure::Error(format!("{path}: the rendering thread stopped")));
             }
         };
-        let last = if print { MAX_PAGES } else { 1 };
+        let last = if page.paged() { MAX_PAGES } else { 1 };
         let pages = self
             .rasterizer
             .rasterize(&output.pdf, DPI, last)
@@ -781,8 +883,8 @@ pub fn run(renderer: &Renderer, collection: &Collection, test: &Test) -> (Status
         .collect();
     let mut last = String::new();
     while let Some((left, right, relation, depth)) = stack.pop() {
-        let left_rendering = renderer.get(&left, test.print);
-        let right_rendering = renderer.get(&right, test.print);
+        let left_rendering = renderer.get(&left, test.page);
+        let right_rendering = renderer.get(&right, test.page);
         let (a, b) = match (&*left_rendering, &*right_rendering) {
             (Ok(a), Ok(b)) => (a, b),
             (Err(Failure::Timeout), _) | (_, Err(Failure::Timeout)) => {
@@ -800,7 +902,7 @@ pub fn run(renderer: &Renderer, collection: &Collection, test: &Test) -> (Status
         let (same, found) = equal(&left_pages, &right_pages, fuzzy);
         // Beyond the pages compared, the counts of all pages must agree too.
         let counts_differ =
-            test.print && a.count != b.count && left_ranges.is_none() && right_ranges.is_none();
+            test.page.paged() && a.count != b.count && left_ranges.is_none() && right_ranges.is_none();
         let same = same && !counts_differ;
         let passed = same == (relation == Relation::Match);
         if passed {
@@ -1274,6 +1376,83 @@ mod tests {
     }
 
     #[test]
+    fn runs_tests_without_a_reference_against_our_own() {
+        let root = std::env::temp_dir().join(format!("fagus-wpt-own-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let write = |path: &str, text: &str| {
+            let path = root.join(path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, text).unwrap();
+        };
+        let paged = "<meta name=flags content='paged dom'><p>Test passes if</p>";
+        write("checkout/css/x/paged.html", paged);
+        write("checkout/css/x/screen.html", "<p>Test passes if</p>");
+        write("checkout/css/x/manual.html", "<p>Test passes if</p>");
+        write(
+            "checkout/css/x/linked.html",
+            "<link rel=match href=linked-ref.html>",
+        );
+        write("checkout/css/x/linked-ref.html", "<p>");
+        write("references/css/x/paged-ref.html", "<p>Reference</p>");
+        write("references/css/x/screen-ref.html", "<p>Reference</p>");
+        write("references/css/x/linked-ref.html", "<p>Reference</p>");
+        write("references/css/y/other-ref.html", "<p>Reference</p>");
+        let sources = Sources {
+            checkout: root.join("checkout"),
+            references: root.join("references"),
+        };
+        let collection = collect(&sources, &["css/x".to_owned()], 1);
+        let _ = std::fs::remove_dir_all(&root);
+        let found: Vec<(&str, Page, Option<NotRun>, Vec<&str>)> = collection
+            .tests
+            .iter()
+            .map(|test| {
+                (
+                    test.path.as_str(),
+                    test.page,
+                    test.not_run,
+                    test.files.iter().map(String::as_str).collect(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (
+                    "css/x/linked.html",
+                    Page::Screen,
+                    None,
+                    vec!["css/x/linked.html", "css/x/linked-ref.html"]
+                ),
+                (
+                    "css/x/manual.html",
+                    Page::Screen,
+                    Some(NotRun::NoReference),
+                    vec!["css/x/manual.html"]
+                ),
+                (
+                    "css/x/paged.html",
+                    Page::Paged,
+                    None,
+                    vec!["css/x/paged.html", "fagus:css/x/paged-ref.html"]
+                ),
+                (
+                    "css/x/screen.html",
+                    Page::Screen,
+                    None,
+                    vec!["css/x/screen.html", "fagus:css/x/screen-ref.html"]
+                ),
+            ]
+        );
+        // Ours for a test with a reference of its own is unused; other directories do not count.
+        assert_eq!(collection.unused_references, ["fagus:css/x/linked-ref.html"]);
+        assert_eq!(
+            sources.file("fagus:css/x/paged-ref.html"),
+            root.join("references/css/x/paged-ref.html")
+        );
+    }
+
+    #[test]
     fn puts_the_page_style_before_the_documents_own() {
         let css = "@page{}";
         assert_eq!(
@@ -1353,7 +1532,7 @@ mod tests {
         let test = |path: &str| Test {
             path: path.to_owned(),
             group: "css/a".to_owned(),
-            print: false,
+            page: Page::Screen,
             not_run: None,
             files: vec![path.to_owned()],
         };
