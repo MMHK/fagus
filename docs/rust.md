@@ -81,6 +81,7 @@ document can be rendered with variations.
 | `created(Date)` | The creation date (default: now), for reproducible output |
 | `report_layout(bool)` | Whether `Output::layout` reports where the elements with an `id` ended up (default `false`) |
 | `encrypt(Encryption)` | Protects the PDF with passwords (AES-256) |
+| `sign(Signature)` | Signs the PDF digitally (PAdES), see below |
 
 What these options do to the PDF is described in [pdf.md](pdf.md), how resources are found in
 [resources.md](resources.md).
@@ -105,6 +106,19 @@ The types they take:
   seed decrypts the file).
 - `Date { year, month, day, hour, minute, second }` in UTC. `Date::now()` and
   `Date::from_unix(seconds)` make one; convert a local time to UTC before.
+
+- `Signature`: a digital signature ([pdf.md](pdf.md#sign-the-pdf)).
+  `Signature::pkcs12(&data, password)` reads the key and certificates of a PKCS#12 file;
+  `Signature::with_signer(certificates, signer)` signs with a key outside, where `certificates`
+  are DER or PEM (the signer's first) and `signer` implements the trait `Signer`, which closures
+  `Fn(&[u8], Algorithm) -> Result<Vec<u8>, String>` do: it gets the SHA-256 digest to sign and
+  `Algorithm::RsaSha256` or `Algorithm::EcdsaP256Sha256`. `name`, `reason`, `location`,
+  `contact_info` and `time(Date)` set what the signature says (the time defaults to the creation
+  date); `timestamp(timestamper)` timestamps it (PAdES B-T) through the trait `Timestamper`
+  (closures `Fn(&[u8]) -> Result<Vec<u8>, String>`), which gets the SHA-256 digest of the
+  signature and returns the RFC 3161 answer of an authority. `fagus::timestamp_request(&digest)`
+  makes the request to send. A signature that fails makes rendering fail with
+  `PdfError::Sign`.
 
 A document's metadata comes from its HTML (`<title>`, `<html lang>`, `<meta>`), see
 [pdf.md](pdf.md); there is no method to set it.
@@ -209,7 +223,8 @@ shows how to render twice to adjust a document to its layout.
 
 The types inside are exported too: `Error::Pdf` holds a `fagus::PdfError`, either
 `PdfError::Conformance { standard, problems }` (the standard, like `PDF/UA-1`, and the problems in
-words, separated by semicolons) or `PdfError::Write(String)`; `Error::Font` holds a
+words, separated by semicolons), `PdfError::Write(String)` or `PdfError::Sign(String)` (the
+signature could not be made: a wrong password, a signer that failed); `Error::Font` holds a
 `fagus::FontError`, `FontError::InvalidFont` or `FontError::Io(std::io::Error)`. Their `Display`
 gives the whole message:
 

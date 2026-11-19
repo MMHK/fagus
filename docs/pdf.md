@@ -1,7 +1,8 @@
 # The PDF
 
 This page describes the PDF file Fagus writes and the options that change it: metadata, links and
-bookmarks, tagged and accessible PDF, PDF/A, attachments, electronic invoices and passwords. How the pages
+bookmarks, tagged and accessible PDF, PDF/A, attachments, electronic invoices, passwords and
+digital signatures. How the pages
 look is up to the HTML and CSS (see [css.md](css.md) and [paged-media.md](paged-media.md)); the
 methods of the document builder are described in [php.md](php.md).
 
@@ -16,12 +17,14 @@ Every PDF Fagus writes is a PDF 1.7 file (PDF 1.4 for PDF/A-1b, PDF 2.0 for PDF/
 ```php
 use Fagus\Conformance;
 use Fagus\Fagus;
+use Fagus\Signature;
 
 $pdf = Fagus::html($html)
     ->pdfA(Conformance::PdfA3b)                  // PDF/A
     ->accessible()                               // PDF/UA-1
     ->attach('timesheet.csv', $csv, 'text/csv', description: 'Timesheet')  // attachments
     ->facturX($invoiceXml)                       // ZUGFeRD / Factur-X
+    ->sign(Signature::fromPkcs12('signing.p12', $password))  // digital signature
     ->created(new DateTimeImmutable('2026-11-01 09:00'))  // reproducible output
     ->render();
 ```
@@ -664,8 +667,8 @@ check the result:
   A valid invoice reports `<summary status="valid"/>`.
 
 The repository's script `tools/validate.sh` renders every document of the test corpus as
-PDF/A-1b, 2b, 2u, 3b, 3a, 4, 4e and 4f, as PDF/UA-1 and as Factur-X invoices, and checks them
-with both tools (documents that Fagus refuses for a level, such as those with transparency for
+PDF/A-1b, 2b, 2u, 3b, 3a, 4, 4e and 4f, as PDF/UA-1 and as Factur-X invoices (the invoices also
+signed with test keys), and checks them with both tools (documents that Fagus refuses for a level, such as those with transparency for
 PDF/A-1b, are left out of it):
 
 ```sh
@@ -748,6 +751,162 @@ in the list of processes (see [cli.md](cli.md#protect-the-pdf-with-a-password)).
 
 To check an encrypted file, `qpdf --password=… --show-encryption file.pdf` shows the encryption
 and the permissions, and `qpdf --password=… --decrypt file.pdf plain.pdf` writes it unencrypted.
+
+## Sign the PDF
+
+`sign()` signs the PDF digitally, so that readers can see who issued it and that nobody has
+changed it since. The signature follows PAdES (ETSI EN 319 142-1), the European standard for
+signed PDF, as a baseline signature of level B-B, or B-T with a timestamp. It is invisible: PDF
+viewers show it in their signature panel, not on a page.
+
+```php
+use Fagus\Fagus;
+use Fagus\Signature;
+
+Fagus::html($html)
+    ->pdfA('3b')
+    ->sign(Signature::fromPkcs12('/run/secrets/signing.p12', $password)
+        ->reason('Rechnung')
+        ->location('Berlin'))
+    ->save('invoice.pdf');
+```
+
+The key comes from a PKCS#12 file (`.p12` or `.pfx`, as certificate authorities issue them and
+OpenSSL, Java and Windows export them), RSA or ECDSA on the curve P-256. The file's other
+certificates, those of the chain up to the root, go into the signature too, so that readers can
+check it without looking them up. A reader trusts the signature when it trusts the root: one of
+the Adobe Approved Trust List (AATL) or the EU Trusted Lists for viewers such as Acrobat, or your
+own certificate authority inside a company.
+
+| Method | Meaning |
+|---|---|
+| `name(string $name)` | The name of the signer as the signature shows it; readers show the name in the certificate otherwise |
+| `reason(string $reason)` | Why the document is signed |
+| `location(string $location)` | Where it is signed |
+| `contactInfo(string $contactInfo)` | How to reach the signer |
+| `time(DateTimeInterface $time)` | The time of signing; the creation date of the document (see [`created()`](#make-the-output-reproducible)) by default |
+| `timestamp(callable $timestamper)` | Timestamps the signature (B-T), see below |
+
+What the signature contains:
+
+- CMS signed data (`ETSI.CAdES.detached`) with SHA-256, over the whole file except the signature
+  itself. The signed attributes name the signer's certificate (`signing-certificate-v2`) and, as
+  PAdES requires, no signing time: the time of signing is the signature dictionary's `/M`, which
+  readers show as the claimed time.
+- An invisible signature field (a widget of no size) on the first page, in the document's form.
+
+Fagus adds the signature to the finished PDF as an incremental update: the file as it would be
+without the signature, then the signature field, the signature and a cross-reference section of
+their own. The signature covers every byte before and after its value. Signing works with every
+PDF/A level (PDF/A-1, -2, -3 and -4 allow signatures), with tagged PDF and with Factur-X
+invoices: signed files pass veraPDF (every PDF/A level and PDF/UA-1) and Mustang as unsigned
+ones do. The field has an empty appearance, which PDF/A-1 requires, and stays out of the logical
+structure of a tagged PDF, as a field of no size that shows nothing.
+
+Change nothing after signing: any program that writes the file again (to compress it, merge it
+or add pages) breaks the signature. A signed PDF can be signed again by a program that adds its
+signature as another incremental update, such as Acrobat.
+
+### Reproducible signatures
+
+The same document, key and time give the same file: RSA signatures (PKCS#1 v1.5) are the same
+for the same data, ECDSA signatures are made deterministic as RFC 6979 describes, and the time
+of signing is the document's creation date or the time you give. Fix `created()` and the signed
+file is byte for byte the same on every run. Timestamps are not: they carry the authority's time.
+
+### Keys in a hardware security module or key management service
+
+Keys that must not leave a hardware security module (HSM) or a key management service (AWS KMS,
+Azure Key Vault, Google Cloud KMS) sign through a callback. Fagus computes the SHA-256 digest of
+what is signed (the signed attributes of the signature), the callback signs it and returns the
+signature; you give the certificates:
+
+```php
+use Fagus\Signature;
+
+$signature = Signature::withSigner(
+    certificates: [file_get_contents('signer.pem'), file_get_contents('intermediate.pem')],
+    signer: fn (string $digest, string $algorithm): string => $kms->signDigest($keyId, $digest),
+);
+```
+
+`$certificates` are the signer's certificate first, then those of its chain, each PEM or DER. The
+callback gets the 32 bytes of the digest and the algorithm, which follows from the certificate:
+`Signature::RSA_SHA256` (`'RSA-SHA256'`) or `Signature::ECDSA_P256_SHA256`
+(`'ECDSA-P256-SHA256'`). It returns the signature of the digest as it is, without hashing it
+again: for RSA the PKCS#1 v1.5 signature, for ECDSA the DER-encoded signature or the 64 bytes of
+r and s. Key management services call this signing a digest (AWS KMS: `MessageType` `DIGEST`).
+Fagus checks the signature against the certificate and fails with ``the signer's RSA-SHA256
+signature does not match the certificate`` if it does not fit, for example because the digest was
+hashed once more.
+
+With an RSA key in a PEM file, PHP's OpenSSL extension signs a digest like this (the prefix is
+the `DigestInfo` of SHA-256, which PKCS#1 v1.5 signs):
+
+```php
+$key = openssl_pkey_get_private(file_get_contents('signer.key'));
+$signer = function (string $digest) use ($key): string {
+    openssl_private_encrypt(hex2bin('3031300d060960864801650304020105000420').$digest, $signature, $key);
+
+    return $signature;
+};
+```
+
+### Timestamps (PAdES B-T)
+
+A timestamp from a time-stamping authority (TSA) proves that the signature existed at that time,
+which keeps it valid after the signer's certificate has expired. Fagus does not go to the
+network, so a callback asks the authority: it gets the SHA-256 digest of the signature and
+returns the authority's answer (RFC 3161), the timestamp token or the whole response.
+`Signature::timestampRequest()` makes the request to send:
+
+```php
+use Fagus\Signature;
+use Illuminate\Support\Facades\Http;
+
+$signature = Signature::fromPkcs12($path, $password)->timestamp(
+    fn (string $digest): string => Http::withBody(Signature::timestampRequest($digest), 'application/timestamp-query')
+        ->post('https://freetsa.org/tsr')
+        ->throw()
+        ->body(),
+);
+```
+
+With Guzzle:
+
+```php
+$client = new GuzzleHttp\Client();
+$signature = Signature::fromPkcs12($path, $password)->timestamp(
+    fn (string $digest): string => (string) $client->post('https://freetsa.org/tsr', [
+        'headers' => ['Content-Type' => 'application/timestamp-query'],
+        'body' => Signature::timestampRequest($digest),
+    ])->getBody(),
+);
+```
+
+FreeTSA is a free public authority, good for trying it out; qualified timestamps (eIDAS) come
+from qualified trust service providers, often with a login. Fagus checks that the token is a
+timestamp of the signature and fails with ``the timestamp is not one of this signature`` if it is
+not. It reserves 12 KiB for the token; should an authority's be larger, it signs once more with
+room for it, so the callbacks may be called twice for one document.
+
+### On the command line and in Rust
+
+`fagus render --sign-p12 signing.p12` signs with a PKCS#12 file; the password comes from the
+environment variable `FAGUS_SIGN_PASSWORD` or a file (`--sign-password-file`), not from the
+command line, where other users of the machine could read it (see [cli.md](cli.md)). The command
+line does not timestamp. In Rust, `Document::sign` takes a `fagus::Signature`, with the traits
+`Signer` and `Timestamper` for keys and authorities outside (see [rust.md](rust.md)).
+
+### Check a signature
+
+Acrobat Reader shows the signature in its signature panel; it trusts it if it trusts the root
+certificate. On the command line, [pyHanko](https://github.com/MatthiasValvekens/pyHanko) checks
+PAdES signatures:
+
+```sh
+pyhanko sign validate --pretty-print --trust root.pem invoice.pdf
+```
 
 ## Make the output reproducible
 
