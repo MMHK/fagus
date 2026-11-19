@@ -10,6 +10,7 @@ use Fagus\Document;
 use Fagus\Engine;
 use Fagus\InvoiceProfile;
 use Fagus\Pdf;
+use Fagus\Permission;
 use Fagus\Relationship;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Response;
@@ -89,6 +90,17 @@ final class PendingPdf implements Responsable
         ?string $description = null,
     ): self {
         return $this->with($this->document->facturX($xml, $profile, $version, $description));
+    }
+
+    /**
+     * @param  list<Permission|string>|null  $permissions
+     */
+    public function encrypt(
+        #[\SensitiveParameter] ?string $userPassword = null,
+        #[\SensitiveParameter] ?string $ownerPassword = null,
+        ?array $permissions = null,
+    ): self {
+        return $this->with($this->document->encrypt($userPassword, $ownerPassword, $permissions));
     }
 
     public function created(DateTimeInterface $date): self

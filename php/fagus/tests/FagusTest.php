@@ -20,6 +20,7 @@ use Fagus\Layout\Box;
 use Fagus\Layout\Element;
 use Fagus\Layout\Page;
 use Fagus\Layout\Section;
+use Fagus\Permission;
 use Fagus\Relationship;
 use Fagus\Severity;
 use PHPUnit\Framework\Attributes\Test;
@@ -513,6 +514,64 @@ final class FagusTest extends TestCase
         $this->expectException(RenderException::class);
         $this->expectExceptionMessageMatches('~^1 diagnostic in strict mode:\n~');
         Fagus::html('<style>p { colr: red }</style><p>x</p>')->strict()->render();
+    }
+
+    #[Test]
+    public function it_encrypts_pdfs_with_passwords(): void
+    {
+        $html = '<title>Gehalt</title><p>Gehaltsabrechnung</p>';
+        $pdf = Fagus::html($html)->encrypt('user', 'owner', [Permission::Print, 'COPY'])->render();
+        $bytes = $pdf->bytes();
+        $this->assertSame(1, $pdf->pages());
+        $this->assertMatchesRegularExpression('~/Filter/Standard/V 5/R 6/.*/P -1324/~', $bytes, 'print and copy');
+        $this->assertStringNotContainsString('Gehalt', $bytes, 'the metadata is encrypted too');
+        $this->assertNotSame($bytes, Fagus::html($html)->encrypt('user', 'owner', [Permission::Print, 'COPY'])->render()->bytes(), 'random salts');
+
+        [$header] = Fagus::html($html)->encrypt(ownerPassword: 'owner')->request(1);
+        $this->assertSame(['ownerPassword' => 'owner'], $header['encryption']);
+        [$header] = Fagus::html($html)->encrypt('user', permissions: [])->request(1);
+        $this->assertSame(['userPassword' => 'user', 'permissions' => []], $header['encryption']);
+
+        $qpdf = trim((string) shell_exec('command -v qpdf 2>/dev/null'));
+        if ($qpdf !== '') {
+            $file = tempnam(sys_get_temp_dir(), 'fagus');
+            $pdf->save($file);
+            $run = static function (string $password, string $action = '--show-encryption') use ($qpdf, $file): array {
+                exec(escapeshellarg($qpdf).' --password='.escapeshellarg($password).' '.$action.' '.escapeshellarg($file).' 2>&1', $output, $status);
+
+                return [$status, implode("\n", $output)];
+            };
+            [$status, $output] = $run('user');
+            $this->assertSame(0, $status, $output);
+            $this->assertStringContainsString('print high resolution: allowed', $output);
+            $this->assertStringContainsString('extract for any purpose: allowed', $output);
+            $this->assertStringContainsString('modify other: not allowed', $output);
+            $this->assertSame(0, $run('user', '--check')[0]);
+            $this->assertStringContainsString('Supplied password is owner password', $run('owner')[1]);
+            $this->assertSame(2, $run('wrong', '--check')[0], 'a wrong password fails');
+            unlink($file);
+        }
+
+        // Only an owner password: opens without one, restricted.
+        $bytes = Fagus::html($html)->encrypt(ownerPassword: 'owner', permissions: [])->render()->bytes();
+        $this->assertMatchesRegularExpression('~/P -3392/~', $bytes);
+
+        try {
+            Fagus::html($html)->encrypt('', null);
+            $this->fail('No exception without a password.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame('Encryption needs a user password or an owner password.', $exception->getMessage());
+        }
+        try {
+            Fagus::html($html)->encrypt('user', permissions: ['everything']);
+            $this->fail('No exception for an unknown permission.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertStringStartsWith("Unknown permission 'everything'. The permissions are 'print', 'print-low-quality'", $exception->getMessage());
+        }
+
+        $this->expectException(RenderException::class);
+        $this->expectExceptionMessage('the document does not meet PDF/A-3b: the PDF cannot be encrypted (PDF/A forbids encryption)');
+        Fagus::html($html)->pdfA()->encrypt('user')->render();
     }
 
     #[Test]

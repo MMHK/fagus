@@ -51,6 +51,8 @@ final class Document
     private bool $strict = false;
 
     private bool $reportLayout = false;
+    /** @var array{userPassword: ?string, ownerPassword: ?string, permissions: ?list<Permission>}|null */
+    private ?array $encryption = null;
 
     private function __construct(
         private readonly string $html,
@@ -223,6 +225,45 @@ final class Document
     }
 
     /**
+     * Protects the PDF with passwords, encrypted with AES-256 as PDF 2.0 defines it. The user
+     * password is needed to open the PDF; without one, it opens without a password but with
+     * only the permissions given. The owner password lifts those restrictions; without one, a
+     * random password nobody knows is used. The permissions are what the reader may do without
+     * the owner password: everything if null, nothing beyond reading if empty. A permission
+     * given as a string is a value of {@see Permission} ('print', 'print-low-quality', 'modify',
+     * 'copy', 'annotate', 'fill-forms', 'assemble'). The bytes of an encrypted PDF differ from
+     * run to run. PDF/A, Factur-X and PDF/UA cannot be encrypted: rendering them fails with a
+     * {@see RenderException}.
+     *
+     * @param  list<Permission|string>|null  $permissions
+     *
+     * @throws InvalidArgumentException without a password, or for a string that is no permission
+     */
+    public function encrypt(
+        #[\SensitiveParameter] ?string $userPassword = null,
+        #[\SensitiveParameter] ?string $ownerPassword = null,
+        ?array $permissions = null,
+    ): self {
+        if (($userPassword ?? '') === '' && ($ownerPassword ?? '') === '') {
+            throw InvalidArgumentException::noPassword();
+        }
+        if ($permissions !== null) {
+            $permissions = array_values(array_map(
+                static fn (mixed $permission): Permission => match (true) {
+                    $permission instanceof Permission => $permission,
+                    is_string($permission) => Permission::tryFrom(strtolower($permission)) ?? throw InvalidArgumentException::unknownPermission($permission),
+                    default => throw InvalidArgumentException::unknownPermission($permission),
+                },
+                $permissions,
+            ));
+        }
+        $copy = clone $this;
+        $copy->encryption = compact('userPassword', 'ownerPassword', 'permissions');
+
+        return $copy;
+    }
+
+    /**
      * The creation date written into the PDF (now by default). A fixed date makes the output
      * reproducible.
      */
@@ -337,6 +378,16 @@ final class Document
         }
         if ($this->reportLayout) {
             $header['layout'] = true;
+        }
+        if ($this->encryption !== null) {
+            $header['encryption'] = array_filter([
+                'userPassword' => $this->encryption['userPassword'],
+                'ownerPassword' => $this->encryption['ownerPassword'],
+                'permissions' => $this->encryption['permissions'] === null ? null : array_map(
+                    static fn (Permission $permission): string => $permission->value,
+                    $this->encryption['permissions'],
+                ),
+            ], static fn (mixed $value): bool => $value !== null);
         }
         if ($this->created !== null) {
             $header['created'] = DateTimeImmutable::createFromInterface($this->created)

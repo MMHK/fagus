@@ -11,6 +11,7 @@ use Fagus\Internal\Release;
 use Fagus\Laravel\Facades\Fagus;
 use Fagus\Laravel\PdfFactory;
 use Fagus\Laravel\PendingPdf;
+use Fagus\Permission;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
@@ -159,6 +160,16 @@ final class FagusTest extends TestCase
         $bytes = Fagus::html('<p>Rechnung</p>')->facturX($xml, version: '1.0', description: 'Factur-X/ZUGFeRD Invoice')->render()->bytes();
         $this->assertStringContainsString('<fx:Version>1.0</fx:Version>', $bytes);
         $this->assertStringContainsString('/Desc(Factur-X/ZUGFeRD Invoice)', self::decoded($bytes));
+    }
+
+    #[Test]
+    public function it_encrypts_pdfs(): void
+    {
+        $pdf = Fagus::html('<p>Gehalt</p>')->encrypt(userPassword: 'user', permissions: [Permission::Print])->name('gehalt.pdf');
+        $bytes = $pdf->render()->bytes();
+        $this->assertMatchesRegularExpression('~/Filter/Standard/V 5/R 6/.*/P -1340/~', $bytes);
+        $this->assertStringNotContainsString('Gehalt', $bytes, 'the metadata is encrypted too');
+        $this->assertSame(['userPassword' => 'user', 'permissions' => ['print']], $pdf->document()->request(1)[0]['encryption']);
     }
 
     #[Test]

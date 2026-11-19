@@ -95,6 +95,12 @@ final class Engine
                         $channel->write('r', ['found' => $resource !== null], $resource === null ? [] : [$resource]);
                         break;
                     case 'P':
+                        // A binary older than encryption ignores the passwords: never hand
+                        // out such a PDF as protected.
+                        if (isset($header['encryption']) && ($reply['encrypted'] ?? false) !== true) {
+                            throw EngineException::withoutEncryption();
+                        }
+
                         return Pdf::fromReply($reply, $data[0] ?? '');
                     case 'E':
                         throw new RenderException(
