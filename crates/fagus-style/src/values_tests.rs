@@ -203,3 +203,35 @@ fn interpolates_shadows_and_sizes_of_animations() {
     };
     assert!((mixed.resolve(200.0) - 75.0).abs() < 0.01);
 }
+
+#[test]
+fn puts_elements_on_layers() {
+    use crate::values::{Layer, LayerShown};
+    let (document, styled) = styles(
+        "<p id=a></p><p id=b></p><p id=c></p><p id=d></p><div id=e class=on><p id=f></p></div>",
+        "#a { -fagus-layer: 'Notes' } #b { -fagus-layer: \"Notes\" SCREEN } #c { -fagus-layer: 'Copy' print }
+         #d { -fagus-layer: Notes } .on { -fagus-layer: 'A' }
+         #f { -fagus-layer: none }",
+    );
+    let layer = |id: &str| by_id(&document, &styled, id).layer.as_deref().cloned();
+    let notes = |shown| {
+        Some(Layer {
+            name: "Notes".into(),
+            shown,
+        })
+    };
+    assert_eq!(layer("a"), notes(LayerShown::Always));
+    assert_eq!(layer("b"), notes(LayerShown::Screen));
+    assert_eq!(
+        layer("c"),
+        Some(Layer {
+            name: "Copy".into(),
+            shown: LayerShown::Print,
+        })
+    );
+    // A name is a string.
+    assert_eq!(layer("d"), None);
+    // Not inherited: what the element paints is on its layer, children too.
+    assert_eq!(layer("f"), None);
+    assert!(by_id(&document, &styled, "e").is_stacking_context());
+}

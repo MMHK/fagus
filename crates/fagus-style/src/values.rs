@@ -1427,6 +1427,27 @@ pub enum Repeat {
     AtBreak,
 }
 
+/// `-fagus-layer`, a Fagus extension: the layer of the PDF (an optional content group) that
+/// everything an element paints belongs to, which a viewer can show and hide.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Layer {
+    /// The name the viewer lists the layer under; elements with the same name share it.
+    pub name: Arc<str>,
+    pub shown: LayerShown,
+}
+
+/// Where the content of a [`Layer`] shows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+pub enum LayerShown {
+    /// On screen and in print, until the reader hides the layer.
+    #[default]
+    Always,
+    /// On screen only: a printout leaves the layer out.
+    Screen,
+    /// In print only: the viewer hides the layer on screen.
+    Print,
+}
+
 /// `column-span`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum ColumnSpan {

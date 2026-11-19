@@ -750,6 +750,22 @@ fn supports_condition(condition: &SupportsCondition<'_>) -> bool {
     }
 }
 
+/// Whether a value of `-fagus-layer` is valid: `none`, or a string with `screen` or `print`
+/// after it or not.
+fn layer_value(value: &str) -> bool {
+    if value == "none" {
+        return true;
+    }
+    let Some(quote) = value.chars().next().filter(|quote| matches!(quote, '"' | '\'')) else {
+        return false;
+    };
+    let Some(end) = value[1..].find(quote) else {
+        return false;
+    };
+    let (name, rest) = (&value[1..=end], value[end + 2..].trim());
+    !name.trim().is_empty() && matches!(rest, "" | "screen" | "print")
+}
+
 /// Whether Fagus supports a declaration of one of its own extensions (`-fagus-`), so that a
 /// stylesheet can tell Fagus from browsers; `None` for other properties.
 fn extension_supported(name: &str, value: &str) -> Option<bool> {
@@ -758,6 +774,7 @@ fn extension_supported(name: &str, value: &str) -> Option<bool> {
     match name.as_str() {
         "-fagus-repeat" => Some(matches!(value.as_str(), "auto" | "at-break")),
         "-fagus-page-height" => Some(matches!(value.as_str(), "auto" | "fit-content")),
+        "-fagus-layer" => Some(layer_value(&value)),
         _ if name.starts_with("-fagus-") => Some(false),
         // Properties lightningcss does not know and Fagus parses itself: the keywords of
         // `text-wrap` (as in `@supports (text-wrap: pretty)`), any value of the others.
@@ -987,6 +1004,10 @@ tr:has(input:checked) td { color: green }";
         let css = "#x { color: red }
 @supports (-fagus-page-height: fit-content) { #x { color: green } }
 @supports (-fagus-page-height: 100mm) { #x { color: blue } }";
+        assert_eq!(winner(css, "<p id=x>", "x"), 2);
+        let css = "#x { color: red }
+@supports (-fagus-layer: \"Notes\" screen) and (-fagus-layer: none) { #x { color: green } }
+@supports (-fagus-layer: \"Notes\" paper) or (-fagus-layer: Notes) or (-fagus-layer: \"\") { #x { color: blue } }";
         assert_eq!(winner(css, "<p id=x>", "x"), 2);
 
         // Properties that Fagus parses itself, with the values it knows.

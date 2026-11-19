@@ -3517,6 +3517,7 @@ fn copy_property(id: &PropertyId<'static>, source: &ComputedStyle, style: &mut C
             "column-wrap" => copy!(column_wrap),
             "flex-line-count" => copy!(flex_line_count),
             "-fagus-repeat" => copy!(repeat),
+            "-fagus-layer" => copy!(layer),
             "text-underline-offset" => copy!(text_underline_offset),
             "outline-offset" => copy!(outline_offset),
             "empty-cells" => copy!(empty_cells),

@@ -21,7 +21,7 @@ use crate::values::{
 };
 use crate::values::{
     BlockJustify, EmptyCells, FontKerning, FontSizeAdjust, FontSizeBasis, FontSynthesis, FontVariant,
-    GridLine, Hyphens, ImageOrientation, ImageRendering, Isolation, OpticalSizing, OutlineStyle,
+    GridLine, Hyphens, ImageOrientation, ImageRendering, Isolation, Layer, OpticalSizing, OutlineStyle,
     OverflowWrap, Repeat, SelfFlags, TabSize, TextFit, TextJustify, TextOverflow, TextSpacingTrim,
     TextWrapStyle, WordBreak,
 };
@@ -489,6 +489,9 @@ pub struct ComputedStyle {
     pub column_wrap: Option<bool>,
     /// `-fagus-repeat`: where a row of a table's header or footer shows.
     pub repeat: Repeat,
+    /// `-fagus-layer`: the layer of the PDF what the element paints belongs to; `None` for
+    /// `none`.
+    pub layer: Option<Arc<Layer>>,
     pub object_fit: ObjectFit,
     pub image_orientation: ImageOrientation,
     pub image_rendering: ImageRendering,
@@ -795,6 +798,7 @@ impl ComputedStyle {
             column_height: None,
             column_wrap: None,
             repeat: Repeat::Auto,
+            layer: None,
             object_fit: ObjectFit::Fill,
             image_orientation: ImageOrientation::FromImage,
             image_rendering: ImageRendering::Auto,
@@ -1109,5 +1113,6 @@ impl ComputedStyle {
             || self.mask.as_ref().is_some_and(|mask| !mask.is_none())
             || self.perspective.is_some()
             || self.contains_out_of_flow()
+            || self.layer.is_some()
     }
 }

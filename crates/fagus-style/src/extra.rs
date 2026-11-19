@@ -10,8 +10,8 @@ use crate::values::{
 use crate::values::{
     BookmarkLevel, BorderCollapse, BorderStyle, BoxArea, BreakBetween, BreakInside, CalcNode, CaptionSide,
     Clear, ColumnFill, ColumnSpan, Content, ContentItem, ContentTarget, EmptyCells, Float, FootnoteDisplay,
-    FootnotePolicy, LengthPercentage, ListStyleType, MAX_COLUMNS, ObjectFit, OpticalSizing, Repeat,
-    StringWhich, TableLayout, UnderlinePosition,
+    FootnotePolicy, Layer, LayerShown, LengthPercentage, ListStyleType, MAX_COLUMNS, ObjectFit,
+    OpticalSizing, Repeat, StringWhich, TableLayout, UnderlinePosition,
 };
 use crate::values::{
     EAST_ASIAN_FEATURES, FontKerning, FontMetric, FontSizeAdjust, FontSynthesis, FontVariant,
@@ -692,6 +692,11 @@ pub(crate) fn apply(name: &str, tokens: &TokenList<'static>, style: &mut Compute
                 _ => style.repeat,
             }
         }
+        "-fagus-layer" => {
+            if let Some(layer) = layer(&tokens) {
+                style.layer = layer.map(std::sync::Arc::new);
+            }
+        }
         "object-fit" => {
             style.object_fit = match keyword {
                 "fill" => ObjectFit::Fill,
@@ -1159,6 +1164,35 @@ pub(crate) fn significant<'t>(tokens: &'t TokenList<'static>) -> Vec<&'t TokenOr
             )
         })
         .collect()
+}
+
+/// The value of `-fagus-layer`: `none`, or a name and where the layer shows; `None` where the
+/// value is invalid.
+#[allow(clippy::option_option, reason = "invalid, `none` or a layer")]
+fn layer(tokens: &[&TokenOrValue<'static>]) -> Option<Option<Layer>> {
+    match tokens {
+        [only] if ident(only).is_some_and(|keyword| keyword.eq_ignore_ascii_case("none")) => Some(None),
+        [name, rest @ ..] if rest.len() <= 1 => {
+            let name = string(name)?.trim();
+            if name.is_empty() {
+                return None;
+            }
+            let shown = match rest
+                .first()
+                .map(|token| ident(token).map(str::to_ascii_lowercase))
+            {
+                None => LayerShown::Always,
+                Some(Some(keyword)) if keyword == "screen" => LayerShown::Screen,
+                Some(Some(keyword)) if keyword == "print" => LayerShown::Print,
+                Some(_) => return None,
+            };
+            Some(Some(Layer {
+                name: std::sync::Arc::from(name),
+                shown,
+            }))
+        }
+        _ => None,
+    }
 }
 
 fn ident<'t>(token: &'t TokenOrValue<'static>) -> Option<&'t str> {
