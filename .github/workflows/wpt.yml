@@ -1,0 +1,56 @@
+name: Web platform tests
+
+# The reftests of web-platform-tests (tools/wpt/run.sh), every night and on demand, and on pull
+# requests that change the harness or its expectations. Fails if a test fails that
+# tools/wpt/expectations.txt expects to pass; the job summary has the pass rates by directory and
+# the tests that pass now although they are expected to fail.
+on:
+  schedule:
+    - cron: '47 1 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/wpt/**
+      - crates/fagus-testkit/**
+      - .github/workflows/wpt.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wpt-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  wpt:
+    name: web platform tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+      # The sparse checkout of web-platform-tests, fetched again when the commit or the
+      # directories change.
+      - uses: actions/cache@v4
+        with:
+          path: target/wpt/checkout
+          key: wpt-checkout-${{ hashFiles('tools/wpt/fetch.sh', 'tools/wpt/dirs.txt') }}
+      - run: tools/wpt/run.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wpt-results
+          path: |
+            target/wpt/results/summary.md
+            target/wpt/results/summary.json
+            target/wpt/results/expectations.txt
+            target/wpt/results/results
+          retention-days: 14
