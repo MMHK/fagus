@@ -50,6 +50,8 @@ final class Document
 
     private bool $strict = false;
 
+    private bool $reportLayout = false;
+
     private function __construct(
         private readonly string $html,
         private readonly bool $xhtml = false,
@@ -244,6 +246,18 @@ final class Document
         return $copy;
     }
 
+    /**
+     * Reports where the elements with an `id` ended up, in {@see Pdf::layout()}: their pages
+     * and boxes, and the rows of their tables. Off by default, as it takes a little time.
+     */
+    public function reportLayout(bool $reportLayout = true): self
+    {
+        $copy = clone $this;
+        $copy->reportLayout = $reportLayout;
+
+        return $copy;
+    }
+
     public function render(?Engine $engine = null): Pdf
     {
         $pdf = ($engine ?? Fagus::engine())->render($this);
@@ -320,6 +334,9 @@ final class Document
             if ($this->invoiceDescription !== null) {
                 $header['facturX']['description'] = $this->invoiceDescription;
             }
+        }
+        if ($this->reportLayout) {
+            $header['layout'] = true;
         }
         if ($this->created !== null) {
             $header['created'] = DateTimeImmutable::createFromInterface($this->created)

@@ -15,6 +15,9 @@ every change.
   Media 3 specifies; the declaration is ignored with a `css.invalid-value` diagnostic. Before, the
   box showed the first running element only. Put the pieces into one running element (the page
   number with `counter(page)` in `::after`), or use the neighbouring margin boxes. *(Unreleased)*
+- **`Output::layout` in Rust.** `fagus::Output` has a new field, `layout` (`None` unless the
+  document asked with `report_layout(true)`). Code that builds an `Output` itself, in tests for
+  example, adds `layout: None`. *(Unreleased)*
 - **Strict mode and new diagnostics.** A `size` in `@page` that Chrome does not take (`80mm auto`,
   `A6`, three lengths) now gets a `css.invalid-value` warning. The page keeps its size as before,
   but `strict()` and `--strict` fail on such a document. Write both lengths (`size: 80mm 200mm`,

@@ -279,6 +279,12 @@ Fagus::html($html)->strict()->render();
 resources: warning[resource.not-loaded]: image `logo.png` could not be loaded
 ```
 
+### `reportLayout(bool $reportLayout = true): Document`
+
+Reports where the elements with an `id` ended up, which [`Pdf::layout()`](#find-where-elements-landed)
+returns: their pages and boxes, and the rows of their tables. Off by default, as finding them takes
+a little time; a document rendered without it renders as fast as before.
+
 ### `render(?Engine $engine = null): Pdf`
 
 Renders the document with `$engine`, or with `Fagus::engine()`. Throws a `RenderException` when
@@ -325,6 +331,7 @@ come from the document:
 | `pages(): int` | The number of pages. |
 | `diagnostics(): list<Diagnostic>` | CSS that was ignored, resources that could not be loaded, and other notes, in the order they were found. Empty for a clean document. |
 | `timings(): array<string, float>` | Milliseconds per phase, with the keys `parse`, `style`, `layout`, `paint` and `pdf`. |
+| `layout(): Layout` | Where the elements with an `id` ended up (see [Find where elements landed](#find-where-elements-landed)). Throws a `FagusException` if the document was rendered without `reportLayout()`. |
 | `save(string $path): void` | Writes the PDF to `$path`. Throws a `FagusException` ("The PDF could not be written to `…`.") if it cannot. |
 
 ```php
@@ -338,8 +345,79 @@ foreach ($pdf->diagnostics() as $diagnostic) {
 }
 ```
 
-The constructor is public, `new Pdf(string $bytes, int $pages, array $diagnostics = [], array $timings = [])`,
+The constructor is public, `new Pdf(string $bytes, int $pages, array $diagnostics = [], array $timings = [], ?Layout $layout = null)`,
 so tests can make a `Pdf` without rendering.
+
+### Find where elements landed
+
+With `reportLayout()`, the PDF tells where each element with an `id` ended up: on which pages, in
+which boxes, and for a table which rows went on which page. It answers what a script in a browser
+would measure, after the pages are laid out:
+
+```php
+use Fagus\Layout\Section;
+
+$pdf = Fagus::html($html)->reportLayout()->render();
+$layout = $pdf->layout();
+
+$total = $layout->element('total');            // Layout\Element, or null
+$total->lastPage();                             // 3
+$total->boxes[0]->y;                            // 412.5, points from the top of the page
+$total->boxes[0]->bottom();                     // 427.5
+
+foreach ($layout->element('items')->rows as $row) {
+    if ($row->section === Section::Body) {
+        echo "row {$row->index} on page ", implode(' and ', $row->pages()), "\n";
+    }
+}
+```
+
+All lengths are in PDF points (1/72 inch), measured from the top left corner of the page box (the
+trim box of a page with bleed), before `page-orientation` turns the page and before `transform`.
+
+| Class | What it holds |
+|---|---|
+| `Fagus\Layout` | `pages` (`list<Layout\Page>`), `elements` (`list<Layout\Element>`, in document order); `element(string $id): ?Element` (the first with the `id`), `page(int $number): ?Page`. |
+| `Fagus\Layout\Page` | `number` (from 1), `width`, `height`. |
+| `Fagus\Layout\Element` | `id`, `tag` (`td`, `div`), `boxes` (`list<Box>`, in page order), `rows` (`list<Row>`, for tables); `pages(): list<int>`, `firstPage(): ?int`, `lastPage(): ?int`, `rowsOnPage(int $page): list<Row>`. |
+| `Fagus\Layout\Box` | `page` (from 1), `x`, `y`, `width`, `height` of the border box; `bottom()`, `right()`. |
+| `Fagus\Layout\Row` | `section` (`Layout\Section::Header`, `Body` or `Footer`), `index` (its place among the rows of that section, from 0), `id`, `boxes`; `pages(): list<int>`. |
+
+- An element has a box for each page it is on, and an inline element one for each line. A header
+  or footer that repeats, a fixed box and a running element in the page margins have one on each
+  page they show on. An element that is not rendered (`display: none`) has none.
+- Every element with an `id` is reported, also those inside tables; give an element an `id` to
+  find it. Tables list all their rows (`<tr>`), with or without an `id`: a row's box is the area of
+  its cells on that page, two boxes for a row that breaks across pages.
+- Numbers are rounded to a hundredth of a point.
+
+#### Render twice to adjust the layout
+
+What other tools do with a script after layout, you do with two renders: render, read where things
+landed, change the document and render again. Here the notes box fills what is left of the last
+page, so that the signature line sits at its bottom:
+
+```php
+$document = Fagus::html($html)->reportLayout();
+$layout = $document->render()->layout();
+
+$notes = $layout->element('notes');
+$page = $layout->page($notes->lastPage());
+$box = $notes->boxes[count($notes->boxes) - 1];
+// The page margins are 20mm (56.69pt); the signature line below the notes is 40pt tall.
+$left = $page->height - 56.69 - 40 - $box->bottom();
+
+$pdf = $document
+    ->stylesheet(sprintf('#notes { min-height: %.2fpt }', $box->height + max(0, $left)))
+    ->render();
+```
+
+The same works for a table whose last page holds only the totals (move a row there with
+`break-before: page`), a cover whose title must fit on one line, or an index of where each section
+starts. Rendering is deterministic, so the second render lays out everything that did not change
+exactly as the first. To make a page as tall as its content, there is no need for this:
+`-fagus-page-height: fit-content` does it in one render (see
+[Extensions](extensions.md#pages-that-grow-with-their-content)).
 
 ## `Engine`
 

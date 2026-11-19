@@ -16,6 +16,10 @@ use Fagus\Exception\InvalidArgumentException;
 use Fagus\Exception\RenderException;
 use Fagus\Fagus;
 use Fagus\InvoiceProfile;
+use Fagus\Layout\Box;
+use Fagus\Layout\Element;
+use Fagus\Layout\Page;
+use Fagus\Layout\Section;
 use Fagus\Relationship;
 use Fagus\Severity;
 use PHPUnit\Framework\Attributes\Test;
@@ -229,6 +233,68 @@ final class FagusTest extends TestCase
         } finally {
             @unlink($path);
         }
+    }
+
+    #[Test]
+    public function it_reports_where_elements_ended_up_when_asked(): void
+    {
+        $rows = '';
+        for ($row = 0; $row < 20; $row++) {
+            $rows .= "<tr><td>Row {$row}</td></tr>";
+        }
+        $document = Fagus::html(
+            '<!DOCTYPE html><style>@page { size: 400px 300px; margin: 20px } body { margin: 0; font: 14px/20px Inter }
+             h1 { margin: 0; height: 50px; font-size: 14px } table { border-spacing: 0 } td, th { padding: 0 }</style>
+             <h1 id="title">Invoice</h1><table id="items"><thead><tr><th>Item</th></tr></thead><tbody>'.$rows.'</tbody></table>
+             <p id="total" style="margin: 0">Total</p><span id="hidden" style="display: none"></span>',
+        );
+
+        try {
+            $document->render()->layout();
+            $this->fail('A layout without reportLayout().');
+        } catch (FagusException $exception) {
+            $this->assertSame('The layout was not reported; render the document with reportLayout() to read it, with a fagus binary of this release.', $exception->getMessage());
+        }
+
+        $layout = $document->reportLayout()->render()->layout();
+
+        $this->assertCount(2, $layout->pages);
+        $this->assertEquals(new Page(2, 300.0, 225.0), $layout->page(2));
+        $this->assertSame(['title', 'items', 'total', 'hidden'], array_map(fn (Element $element) => $element->id, $layout->elements));
+        $title = $layout->element('title');
+        $this->assertEquals([new Box(1, 15.0, 15.0, $title?->boxes[0]->width ?? 0.0, 37.5)], $title?->boxes);
+        // The page area is 195pt tall: the title, the header and nine rows fit on the first page.
+        $items = $layout->element('items');
+        $this->assertSame('table', $items?->tag);
+        $this->assertSame([1, 2], $items->pages());
+        $this->assertSame(Section::Header, $items->rows[0]->section);
+        $this->assertSame([1, 2], $items->rows[0]->pages());
+        $this->assertSame([[1], [2]], [$items->rows[9]->pages(), $items->rows[10]->pages()]);
+        $this->assertSame(9, $items->rows[10]->index);
+        $this->assertCount(10, $items->rowsOnPage(1));
+        $total = $layout->element('total');
+        $this->assertSame(2, $total?->lastPage());
+        $this->assertSame(195.0, $total->boxes[0]->y);
+        $this->assertSame(210.0, $total->boxes[0]->bottom());
+        $this->assertSame([], $layout->element('hidden')?->boxes);
+        $this->assertNull($layout->element('hidden')->firstPage());
+        $this->assertNull($layout->element('missing'));
+    }
+
+    #[Test]
+    public function it_grows_a_page_with_its_content(): void
+    {
+        $pdf = Fagus::html(
+            '<!DOCTYPE html><style>@page { size: 80mm 40mm; margin: 4mm; -fagus-page-height: fit-content }
+             body { margin: 0 } div { height: 400px }</style><div id="receipt"></div>',
+        )->reportLayout()->render();
+
+        $this->assertSame(1, $pdf->pages());
+        $this->assertSame([], $pdf->diagnostics());
+        $page = $pdf->layout()->page(1);
+        $this->assertSame(226.77, $page?->width);
+        // 400px and 8mm of margins are 322.68pt, rounded up to whole points.
+        $this->assertSame(323.0, $page->height);
     }
 
     #[Test]

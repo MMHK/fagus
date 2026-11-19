@@ -67,7 +67,7 @@ These forward to `Fagus\Document` and take the same arguments; [php.md](php.md#d
 describes each one:
 
 `baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `resolver()`, `pdfA()`, `tagged()`,
-`accessible()`, `attach()`, `facturX()`, `created()`, `strict()`.
+`accessible()`, `attach()`, `facturX()`, `created()`, `strict()`, `reportLayout()`.
 
 ```php
 use Fagus\Conformance;
@@ -135,6 +135,22 @@ Renders the PDF and returns the `Fagus\Pdf` with its bytes, page count, diagnost
 $pdf = Fagus::view('reports.monthly', $data)->render();
 
 Mail::to($customer)->send(new MonthlyReport($pdf->bytes()));
+```
+
+With `reportLayout()`, the PDF also tells where the elements with an `id` ended up: their pages
+and boxes, and which rows of a table went on which page
+([php.md](php.md#find-where-elements-landed)). Render twice to adjust a view to its own layout:
+
+```php
+$pdf = Fagus::view('invoices.show', ['invoice' => $invoice])->reportLayout()->render();
+$totals = $pdf->layout()->element('totals');
+
+// The totals start a page of their own: the view puts the last two lines on it as well.
+if ($totals !== null && $totals->firstPage() > 1 && $totals->boxes[0]->y < 100) {
+    $pdf = Fagus::view('invoices.show', ['invoice' => $invoice, 'keepLastLines' => 2])->render();
+}
+
+Storage::put("invoices/{$invoice->number}.pdf", $pdf->bytes());
 ```
 
 ### `document(): Document`

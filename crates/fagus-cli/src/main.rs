@@ -1,6 +1,7 @@
 //! The `fagus` command line tool.
 
 mod date;
+mod layout_json;
 mod worker;
 
 use std::path::PathBuf;
@@ -79,6 +80,10 @@ enum Command {
         /// the PDF.
         #[arg(long)]
         strict: bool,
+        /// Write where the elements with an `id` ended up (their pages and boxes, and the rows of
+        /// their tables) to this file as JSON.
+        #[arg(long)]
+        layout_json: Option<PathBuf>,
         /// Print the time of each phase.
         #[arg(long)]
         timings: bool,
@@ -185,6 +190,7 @@ fn main() -> Result<()> {
             factur_x_version,
             factur_x_description,
             strict,
+            layout_json,
             timings,
             repeat,
             created,
@@ -267,6 +273,9 @@ fn main() -> Result<()> {
                     document = document.factur_x_description(description);
                 }
             }
+            if layout_json.is_some() {
+                document = document.report_layout(true);
+            }
             let mut durations = Vec::with_capacity(repeat);
             let mut result = None;
             for _ in 0..repeat.max(1) {
@@ -292,6 +301,11 @@ fn main() -> Result<()> {
             }
             std::fs::write(&output, &rendered.pdf)
                 .with_context(|| format!("writing {}", output.display()))?;
+            if let (Some(path), Some(layout)) = (&layout_json, &rendered.layout) {
+                let mut json = serde_json::to_string_pretty(&layout_json::layout_json(layout))?;
+                json.push('\n');
+                std::fs::write(path, json).with_context(|| format!("writing {}", path.display()))?;
+            }
             if timings {
                 durations.sort();
                 let t = rendered.timings;
@@ -385,6 +399,63 @@ mod tests {
         };
         assert_eq!(factur_x_version.as_deref(), Some("3.0"));
         assert_eq!(factur_x_description.as_deref(), Some("XRechnung Invoice"));
+    }
+
+    #[test]
+    fn writes_the_layout_as_json() {
+        let cli = Cli::try_parse_from([
+            "fagus",
+            "render",
+            "a.html",
+            "-o",
+            "a.pdf",
+            "--layout-json",
+            "a.json",
+        ])
+        .expect("parsed");
+        let Command::Render { layout_json, .. } = cli.command else {
+            panic!("not render");
+        };
+        assert_eq!(layout_json, Some(PathBuf::from("a.json")));
+        let mut engine = fagus::Engine::new();
+        engine
+            .add_font_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/fonts"))
+            .expect("fonts");
+        let output = engine
+            .render(
+                &fagus::Document::html(
+                    "<!DOCTYPE html><style>@page { size: 400px 300px; margin: 20px } body { margin: 0 }
+                     td, th { padding: 0 } table { border-spacing: 0 }</style>
+                     <table id=t><thead><tr><th style='height: 20px'>A</th></tr></thead>
+                     <tbody><tr id=r><td style='height: 30px'>1</td></tr></tbody></table>",
+                )
+                .report_layout(true),
+            )
+            .expect("rendered");
+        let json = layout_json::layout_json(&output.layout.expect("layout"));
+        let box_of = |page: u32, y: f64, height: f64| serde_json::json!({ "page": page, "x": 15.0, "y": y, "width": json["elements"][0]["boxes"][0]["width"], "height": height });
+        assert_eq!(
+            json["pages"],
+            serde_json::json!([{ "width": 300.0, "height": 225.0 }])
+        );
+        assert_eq!(json["elements"][0]["id"], "t");
+        assert_eq!(json["elements"][0]["tag"], "table");
+        assert_eq!(
+            json["elements"][0]["boxes"],
+            serde_json::json!([box_of(1, 15.0, 37.5)])
+        );
+        assert_eq!(
+            json["elements"][0]["rows"],
+            serde_json::json!([
+                { "section": "header", "index": 0, "boxes": [box_of(1, 15.0, 15.0)] },
+                { "section": "body", "index": 0, "id": "r", "boxes": [box_of(1, 30.0, 22.5)] },
+            ])
+        );
+        assert_eq!(
+            json["elements"][1]["boxes"],
+            serde_json::json!([box_of(1, 30.0, 22.5)])
+        );
+        assert!(json["elements"][1].get("rows").is_none());
     }
 
     #[test]

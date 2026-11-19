@@ -55,6 +55,7 @@ file as HTML.
 | `--factur-x-description <TEXT>` | `Factur-X/ZUGFeRD invoice` | The description of the attached invoice XML |
 | `--created <DATE>` | now | The creation date, e.g. `2026-11-13T12:00:00Z` or `2026-11-13T14:00:00+02:00`, for reproducible files |
 | `--strict` | off | Fail on any diagnostic (not only warnings), without writing the PDF |
+| `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
 | `--timings` | off | Print the page count and the time of each phase |
 | `--repeat <N>` | `1` | Render N times and report the median time (for benchmarks) |
 | `-h`, `--help` | | Print help |
@@ -75,6 +76,14 @@ Some details of the command line:
   seconds makes the date invalid.
 - `--untagged` has no effect with `--accessible` or with `--pdfa 2a` and `3a`, which need tags.
 - With `--repeat`, the PDF of the last run is written.
+- `--layout-json` writes the same JSON as the worker's `layout` ([protocol.md](protocol.md#layout)):
+
+  ```sh
+  fagus render invoice.html -o invoice.pdf --layout-json layout.json
+  jq '.elements[] | select(.id == "total") | .boxes' layout.json
+  ```
+
+  It is written after the PDF, and not where `--strict` fails.
 
 ## Read and write
 

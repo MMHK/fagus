@@ -12,6 +12,7 @@
 mod font_face;
 mod frames;
 mod interactive;
+mod layout_info;
 mod missing_glyphs;
 mod palette_values;
 mod resources;
@@ -40,6 +41,7 @@ use rustc_hash::{FxHashMap, FxHasher};
 pub use fagus_css::{Diagnostic, Severity};
 pub use fagus_pdf::{Attachment, Conformance, Date, PdfError, Relationship};
 pub use fagus_text::FontError;
+pub use layout_info::{Layout, LayoutBox, LayoutElement, LayoutPage, LayoutRow, RowSection};
 pub use resources::ResourceLoader;
 
 /// An error while rendering.
@@ -65,6 +67,10 @@ const FACTUR_X_DESCRIPTION: &str = "Factur-X/ZUGFeRD invoice";
 
 /// A document to render.
 #[derive(Clone)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "one flag for each option of the builder"
+)]
 pub struct Document {
     html: String,
     /// Whether the markup is XHTML, parsed as XML.
@@ -90,6 +96,8 @@ pub struct Document {
     /// Where the invoice XML lies in `attachments`.
     factur_x_attachment: Option<usize>,
     created: Option<Date>,
+    /// Whether to report where the elements ended up (see [`Document::report_layout`]).
+    report_layout: bool,
     /// How deep the document lies in SVG images with HTML in them (see [`svg_document`]): 0
     /// for the document itself.
     svg_depth: u8,
@@ -203,6 +211,7 @@ impl Document {
             factur_x_description: None,
             factur_x_attachment: None,
             created: None,
+            report_layout: false,
             svg_depth: 0,
             nesting: frames::Nesting::default(),
         }
@@ -222,6 +231,15 @@ impl Document {
     #[must_use]
     pub fn created(mut self, date: Date) -> Self {
         self.created = Some(date);
+        self
+    }
+
+    /// Whether to report where the elements with an `id` ended up: their pages and boxes, and
+    /// the rows of their tables, in [`Output::layout`]. Off by default, as finding them takes a
+    /// little time and memory.
+    #[must_use]
+    pub fn report_layout(mut self, report: bool) -> Self {
+        self.report_layout = report;
         self
     }
 
@@ -430,6 +448,9 @@ pub struct Output {
     pub pages: usize,
     pub diagnostics: Vec<Diagnostic>,
     pub timings: Timings,
+    /// Where the elements with an `id` ended up, if the document asked for it with
+    /// [`Document::report_layout`].
+    pub layout: Option<Layout>,
 }
 
 /// The rendering engine. It keeps fonts, the parsed user agent stylesheet and the faces of
@@ -1019,6 +1040,9 @@ impl Inner {
             }
         }
         let (links, bookmarks) = interactive::collect(&document, &styled, &pages);
+        let layout = input
+            .report_layout
+            .then(|| layout_info::collect(&document, &pages));
         // The fragments are painted and their links found: what is left goes into the PDF, which
         // a document of many pages need not hold beside them.
         let page_count = pages.len();
@@ -1086,6 +1110,7 @@ impl Inner {
             pages: page_count,
             diagnostics,
             timings,
+            layout,
         })
     }
 
@@ -4056,6 +4081,80 @@ mod tests {
         assert!(found[0].2.contains("give both lengths"), "{found:?}");
         assert_eq!((found[1].0, found[1].1), ("css.invalid-value", 3), "{found:?}");
         assert!(found[1].2.contains("write `105mm 148mm`"), "{found:?}");
+    }
+
+    #[test]
+    fn reports_where_elements_and_table_rows_ended_up_only_when_asked() {
+        // Pages of 300pt by 225pt with margins of 15pt: a title 50px (37.5pt) tall, a table of
+        // rows 20px (15pt) tall with a header that repeats, and a total after it.
+        let rows = (0..20).fold(String::new(), |mut rows, row| {
+            let id = if row == 7 { " id=eighth" } else { "" };
+            let _ = std::fmt::Write::write_fmt(&mut rows, format_args!("<tr{id}><td>Row {row}</td></tr>"));
+            rows
+        });
+        let html = format!(
+            "<!DOCTYPE html><style>@page {{ size: 400px 300px; margin: 20px }}
+             body {{ margin: 0; font: 14px/20px Inter }} h1 {{ margin: 0; height: 50px; font-size: 14px }}
+             table {{ border-spacing: 0 }} td, th {{ padding: 0 }}</style>
+             <h1 id=title>Invoice</h1><table id=items><thead><tr><th>Item</th></tr></thead>
+             <tbody>{rows}</tbody></table><p id=total style='margin: 0'>Total <b id=sum>12.00</b></p>
+             <span id=hidden style='display: none'></span>"
+        );
+        let document = Document::html(html).created(CREATED).tagged(false);
+        let output = engine().render(&document).expect("rendered");
+        assert_eq!(output.layout, None);
+        let output = engine().render(&document.report_layout(true)).expect("rendered");
+        let layout = output.layout.expect("layout");
+        assert_eq!(output.pages, 2);
+        assert_eq!(
+            layout.pages,
+            [LayoutPage {
+                width: 300.0,
+                height: 225.0
+            }; 2]
+        );
+        let ids: Vec<&str> = layout
+            .elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect();
+        assert_eq!(ids, ["title", "items", "eighth", "total", "sum", "hidden"]);
+        let title = layout.element("title").expect("title");
+        assert_eq!(title.tag, "h1");
+        assert_eq!(title.boxes.len(), 1);
+        let LayoutBox {
+            page, x, y, height, ..
+        } = title.boxes[0];
+        assert_eq!((page, x, y, height), (1, 15.0, 15.0, 37.5));
+        // The page area is 195pt tall: the title, the header and nine rows fit on the first
+        // page, the header and the other eleven rows on the second.
+        let items = layout.element("items").expect("table");
+        assert_eq!(items.pages(), [1, 2]);
+        assert_eq!(items.rows.len(), 21);
+        let header = &items.rows[0];
+        assert_eq!((header.section, header.index), (RowSection::Header, 0));
+        assert_eq!(header.pages(), [1, 2]);
+        assert_eq!(header.boxes[1].y, 15.0);
+        let body: Vec<Vec<usize>> = items.rows[1..].iter().map(LayoutRow::pages).collect();
+        assert_eq!(body[8], [1]);
+        assert_eq!(body[9], [2]);
+        assert_eq!(items.rows[8].id.as_deref(), Some("eighth"));
+        assert_eq!(items.rows[8].index, 7);
+        assert_eq!(items.rows[10].boxes[0].y, 30.0);
+        // A row with an `id` has the box of its row.
+        assert_eq!(layout.element("eighth").expect("row").boxes, items.rows[8].boxes);
+        let total = layout.element("total").expect("total");
+        assert_eq!(total.pages(), [2]);
+        assert_eq!(total.boxes[0].y, 15.0 + 15.0 * 12.0);
+        let sum = layout.element("sum").expect("sum");
+        // An inline box is as tall as its font, inside its line.
+        let (line, inline) = (total.boxes[0], sum.boxes[0]);
+        assert!(inline.x > line.x && inline.y >= line.y, "{inline:?} {line:?}");
+        assert!(
+            inline.y + inline.height <= line.y + line.height,
+            "{inline:?} {line:?}"
+        );
+        assert_eq!(layout.element("hidden").expect("hidden").boxes, []);
     }
 
     #[test]

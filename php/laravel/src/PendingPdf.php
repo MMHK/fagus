@@ -101,6 +101,11 @@ final class PendingPdf implements Responsable
         return $this->with($this->document->strict($strict));
     }
 
+    public function reportLayout(bool $reportLayout = true): self
+    {
+        return $this->with($this->document->reportLayout($reportLayout));
+    }
+
     /**
      * The file name for downloads and the browser.
      */

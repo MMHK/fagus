@@ -78,6 +78,7 @@ document can be rendered with variations.
 | `factur_x_version(impl Into<String>)` | The `Version` of the invoice's XMP metadata (default `1.0`), before or after `factur_x` |
 | `factur_x_description(impl Into<String>)` | The description of the attached invoice XML (default "Factur-X/ZUGFeRD invoice"), before or after `factur_x` |
 | `created(Date)` | The creation date (default: now), for reproducible output |
+| `report_layout(bool)` | Whether `Output::layout` reports where the elements with an `id` ended up (default `false`) |
 
 What these options do to the PDF is described in [pdf.md](pdf.md), how resources are found in
 [resources.md](resources.md).
@@ -139,6 +140,7 @@ frames ask for their resources by their URLs resolved against the frame's URL.
 | `pages` | `usize` | The number of pages |
 | `diagnostics` | `Vec<Diagnostic>` | CSS that was ignored, resources that are missing, warnings about the PDF |
 | `timings` | `Timings` | `parse`, `style`, `layout`, `paint` and `pdf`, each a `Duration` |
+| `layout` | `Option<Layout>` | Where the elements with an `id` ended up, with `report_layout(true)` |
 
 A `Diagnostic` has a `severity` (`Severity::Info`, `Warning` or `Error`, ordered so that
 `severity >= Severity::Warning` works), a stable `code` such as `css.unknown-property`, a
@@ -151,6 +153,40 @@ A `Diagnostic` has a `severity` (`Severity::Info`, `Warning` or `Error`, ordered
 
 Diagnostics never make `render` fail. To treat them as errors, check `output.diagnostics`
 yourself.
+
+### The layout
+
+With `report_layout(true)`, `output.layout` tells where each element with an `id` ended up, in
+PDF points from the top left corner of each page box (before `page-orientation` and `transform`):
+
+```rust
+use fagus::{Document, RowSection};
+
+let output = engine.render(&Document::html(html).report_layout(true))?;
+let layout = output.layout.expect("asked for");
+if let Some(total) = layout.element("total") {
+    let last = total.boxes.last().expect("rendered");
+    println!("the total ends {}pt down page {}", last.y + last.height, last.page);
+}
+for row in layout.element("items").map_or(&[][..], |table| &table.rows) {
+    if row.section == RowSection::Body {
+        println!("row {} is on pages {:?}", row.index, row.pages());
+    }
+}
+```
+
+- `Layout { pages: Vec<LayoutPage>, elements: Vec<LayoutElement> }`, with `element(id)` for the
+  first element with that `id`. A `LayoutPage` has the `width` and `height` of the page box.
+- `LayoutElement { id, tag, boxes: Vec<LayoutBox>, rows: Vec<LayoutRow> }`: a box for each page
+  the element is on (and each line of an inline element), none for an element that is not
+  rendered; `rows` for a table. `pages()` lists the page numbers.
+- `LayoutBox { page, x, y, width, height }`, its `page` counted from 1.
+- `LayoutRow { section, index, id, boxes }`: a row of a table (`<tr>`) in document order, its
+  `section` a `RowSection` (`Header`, `Body`, `Footer`) and `index` its place among the rows of
+  that section; its box on a page is the area of its cells there.
+
+The types are `#[non_exhaustive]`, so that fields can be added; [php.md](php.md#find-where-elements-landed)
+shows how to render twice to adjust a document to its layout.
 
 ## Errors
 

@@ -14,12 +14,14 @@ final readonly class Pdf
     /**
      * @param  list<Diagnostic>  $diagnostics
      * @param  array<string, float>  $timings  milliseconds per phase: parse, style, layout, paint, pdf
+     * @param  ?Layout  $layout  where the elements ended up, if the document asked for it
      */
     public function __construct(
         private string $bytes,
         private int $pages,
         private array $diagnostics = [],
         private array $timings = [],
+        private ?Layout $layout = null,
     ) {}
 
     /**
@@ -34,6 +36,7 @@ final readonly class Pdf
             (int) ($reply['pages'] ?? 0),
             array_values(array_map(Diagnostic::fromArray(...), $reply['diagnostics'] ?? [])),
             array_map(floatval(...), $reply['timings'] ?? []),
+            is_array($reply['layout'] ?? null) ? Layout::fromArray($reply['layout']) : null,
         );
     }
 
@@ -64,6 +67,19 @@ final readonly class Pdf
     public function timings(): array
     {
         return $this->timings;
+    }
+
+    /**
+     * Where the elements with an `id` ended up: their pages and boxes, and the rows of their
+     * tables.
+     *
+     * @throws FagusException when the document was rendered without {@see Document::reportLayout()}
+     */
+    public function layout(): Layout
+    {
+        return $this->layout ?? throw new FagusException(
+            'The layout was not reported; render the document with reportLayout() to read it, with a fagus binary of this release.',
+        );
     }
 
     public function save(string $path): void

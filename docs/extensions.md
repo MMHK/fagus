@@ -75,5 +75,5 @@ A receipt printer prints on a roll and cuts the paper where the document ends. *
 - In vertical writing modes the descriptor is ignored.
 - `size: 80mm auto` is invalid CSS, which Chrome ignores, and so does Fagus, with a `css.invalid-value` warning that points here. A value of `-fagus-page-height` other than `auto` and `fit-content` is ignored with the same warning.
 
-Without Fagus, a browser prints the page at the size of `size`. `@supports (-fagus-page-height: fit-content)` tells the two apart. There is no need to render a document several times to find the height that fits it on one page: one render with `fit-content` gives that page.
+Without Fagus, a browser prints the page at the size of `size`. `@supports (-fagus-page-height: fit-content)` tells the two apart. There is no need to render a document several times to find the height that fits it on one page: one render with `fit-content` gives that page, and the [layout](php.md#find-where-elements-landed) of the PDF tells where its content ended up.
 

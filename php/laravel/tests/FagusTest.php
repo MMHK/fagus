@@ -29,6 +29,15 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_reports_the_layout(): void
+    {
+        $pdf = Fagus::view('invoice', ['number' => 'RE-1', 'lines' => ['Beratung']])->reportLayout()->render();
+
+        $this->assertSame(1, $pdf->layout()->page(1)?->number);
+        $this->assertCount($pdf->pages(), $pdf->layout()->pages);
+    }
+
+    #[Test]
     public function it_downloads_and_shows_pdfs(): void
     {
         $download = Fagus::html('<p>Hallo</p>')->name('rechnung.pdf')->download();

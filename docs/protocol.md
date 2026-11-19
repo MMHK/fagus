@@ -63,6 +63,7 @@ The header of `R`; fields other than `id` and `html` may be left out:
   "attachments": [{ "name": "data.csv", "mime": "text/csv", "relationship": "supplement", "description": "Rohdaten", "blob": 3 }],
   "facturX": { "blob": 4, "profile": "en16931", "version": "1.0", "description": "Factur-X/ZUGFeRD invoice" },
   "created": "2026-11-02T12:00:00Z",
+  "layout": true,
   "blobs": [5120, 812, 20431, 96, 4187]
 }
 ```
@@ -97,6 +98,9 @@ The header of `R`; fields other than `id` and `html` may be left out:
   out or `null`), `description` the description of the attached XML ("Factur-X/ZUGFeRD invoice"
   if left out or `null`). An empty `version` or `description`, or one with control characters,
   is answered with `E`.
+- `layout`: whether the answer reports where the elements with an `id` ended up (`false` if
+  left out), in the `layout` of `P` (see [Layout](#layout)). Finding it takes a little time, so it
+  is only done when asked.
 - `created`: the creation date, as `2026-11-02T12:00:00Z` or with an offset from UTC
   (`2026-11-02T13:00:00+01:00`), which the worker applies; the current time if left out. A date
   without an offset is taken as UTC.
@@ -120,7 +124,41 @@ The header of `P`:
 ```
 
 Times are in milliseconds. `severity` is `info`, `warning` or `error`; `line` and `column` are 0
-when unknown.
+when unknown. With `layout: true` in the request, the header has a `layout` too.
+
+### Layout
+
+The `layout` of `P` tells where the elements with an `id` ended up, in PDF points from the top left
+corner of each page box, rounded to a hundredth of a point:
+
+```json
+{
+  "pages": [{ "width": 595.28, "height": 841.89 }, { "width": 595.28, "height": 841.89 }],
+  "elements": [
+    { "id": "total", "tag": "p", "boxes": [{ "page": 2, "x": 56.69, "y": 412.5, "width": 481.89, "height": 15 }] },
+    {
+      "id": "items", "tag": "table",
+      "boxes": [
+        { "page": 1, "x": 56.69, "y": 120, "width": 481.89, "height": 665.2 },
+        { "page": 2, "x": 56.69, "y": 56.69, "width": 481.89, "height": 340.5 }
+      ],
+      "rows": [
+        { "section": "header", "index": 0, "boxes": [{ "page": 1, "x": 56.69, "y": 120, "width": 481.89, "height": 18 }, { "page": 2, "x": 56.69, "y": 56.69, "width": 481.89, "height": 18 }] },
+        { "section": "body", "index": 0, "id": "line-1", "boxes": [{ "page": 1, "x": 56.69, "y": 138, "width": 481.89, "height": 18 }] }
+      ]
+    }
+  ]
+}
+```
+
+- `pages`: the size of each page box, without bleed and printer's marks, before
+  `page-orientation` turns it.
+- `elements`: every element with an `id`, in document order. `tag` is its tag name. `boxes` are
+  its border boxes, one for each page it is on (and for each line of an inline element), with the
+  page number from 1; empty for an element that is not rendered.
+- `rows`: only for a table, its rows (`<tr>`) in document order. `section` is `header`, `body` or
+  `footer`, `index` the row's place among the rows of that section (from 0), `id` its `id` if it
+  has one; a row's box on a page is the area of its cells there.
 
 The header of `E` has the `message` and a `diagnostics` array of the same form. For a document
 that could not be rendered (it does not meet PDF/A or PDF/UA, or the PDF could not be written),

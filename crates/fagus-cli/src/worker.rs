@@ -157,6 +157,9 @@ struct Request {
     factur_x: Option<FacturX>,
     #[serde(default)]
     created: Option<String>,
+    /// Whether to report where the elements with an `id` ended up.
+    #[serde(default)]
+    layout: bool,
 }
 
 /// The default of fields that are on unless the caller turns them off.
@@ -272,9 +275,8 @@ where
                 let reply = render(&engine, &channel, frame);
                 let mut channel = lock(&channel)?;
                 match reply {
-                    Ok(output) => channel.write(
-                        PDF,
-                        json!({
+                    Ok(output) => {
+                        let mut header = json!({
                             "id": id,
                             "pages": output.pages,
                             "diagnostics": diagnostics(&output.diagnostics),
@@ -285,9 +287,12 @@ where
                                 "paint": output.timings.paint.as_secs_f64() * 1000.0,
                                 "pdf": output.timings.pdf.as_secs_f64() * 1000.0,
                             },
-                        }),
-                        &[&output.pdf],
-                    )?,
+                        });
+                        if let Some(layout) = &output.layout {
+                            header["layout"] = crate::layout_json::layout_json(layout);
+                        }
+                        channel.write(PDF, header, &[&output.pdf])?;
+                    }
                     Err((message, found)) => {
                         channel.write(
                             ERROR,
@@ -427,6 +432,9 @@ where
     if let Some(created) = request.created {
         document = document.created(date(&created).ok_or_else(|| format!("invalid date `{created}`"))?);
     }
+    if request.layout {
+        document = document.report_layout(true);
+    }
     Ok(document)
 }
 
@@ -507,6 +515,27 @@ mod tests {
                 .as_str()
                 .is_some_and(|message| !message.is_empty())
         );
+    }
+
+    #[test]
+    fn reports_the_layout_only_when_asked() {
+        let html: &[u8] = b"<p id=a>x</p>";
+        let mut input = frame(RENDER, &json!({ "id": 1, "html": 0 }), &[html]);
+        input.extend(frame(
+            RENDER,
+            &json!({ "id": 2, "html": 0, "layout": true }),
+            &[html],
+        ));
+        let output = Shared::default();
+        serve(engine(), io::Cursor::new(input), output.clone()).expect("served");
+        let output = output.0.lock().expect("lock").clone();
+        let frames = frames(&output);
+        assert_eq!(frames[1].header.get("layout"), None);
+        let layout = &frames[2].header["layout"];
+        assert_eq!(layout["pages"].as_array().map(Vec::len), Some(1));
+        assert_eq!(layout["elements"][0]["id"], "a");
+        assert_eq!(layout["elements"][0]["tag"], "p");
+        assert_eq!(layout["elements"][0]["boxes"][0]["page"], 1);
     }
 
     #[test]
