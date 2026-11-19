@@ -79,6 +79,7 @@ document can be rendered with variations.
 | `factur_x_description(impl Into<String>)` | The description of the attached invoice XML (default "Factur-X/ZUGFeRD invoice"), before or after `factur_x` |
 | `created(Date)` | The creation date (default: now), for reproducible output |
 | `report_layout(bool)` | Whether `Output::layout` reports where the elements with an `id` ended up (default `false`) |
+| `encrypt(Encryption)` | Protects the PDF with passwords (AES-256) |
 
 What these options do to the PDF is described in [pdf.md](pdf.md), how resources are found in
 [resources.md](resources.md).
@@ -94,6 +95,13 @@ The types they take:
   require a `description`.
 - `FacturXProfile`: `Minimum`, `BasicWl`, `Basic`, `En16931`, `Extended`, `XRechnung`.
   `FacturXProfile::detect(&xml)` reads the profile an XML declares.
+- `Encryption::new()` with `user_password(…)`, `owner_password(…)` and
+  `permissions([Permission::Print, …])` (everything unless given), and at least one of the
+  passwords; `Permission` is `Print`, `PrintLowQuality`, `Modify`, `Copy`, `Annotate`,
+  `FillForms` or `Assemble`, with `from_name("fill-forms")` and `name()`. Its `Debug` hides the
+  passwords. The keys come from the operating system; `seed([u8; 32])` takes them from a
+  generator with that seed instead, so that tests can compare bytes (never in production: the
+  seed decrypts the file).
 - `Date { year, month, day, hour, minute, second }` in UTC. `Date::now()` and
   `Date::from_unix(seconds)` make one; convert a local time to UTC before.
 

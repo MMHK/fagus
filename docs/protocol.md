@@ -30,7 +30,7 @@ ends the worker with exit code 1 and the reason on its error output.
 | `R` render | caller → worker | the document, see below | HTML, stylesheets, resources, attachments, invoice XML |
 | `?` ask | worker → caller | `id`, `url` | – |
 | `r` resource | caller → worker | `found` | the resource, if found |
-| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings` | the PDF |
+| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted` | the PDF |
 | `E` error | worker → caller | `id` (if known), `message`, `diagnostics` | – |
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
@@ -64,6 +64,7 @@ The header of `R`; fields other than `id` and `html` may be left out:
   "facturX": { "blob": 4, "profile": "en16931", "version": "1.0", "description": "Factur-X/ZUGFeRD invoice" },
   "created": "2026-11-02T12:00:00Z",
   "layout": true,
+  "encryption": { "userPassword": "open sesame", "ownerPassword": "change me", "permissions": ["print", "copy"] },
   "blobs": [5120, 812, 20431, 96, 4187]
 }
 ```
@@ -105,6 +106,16 @@ The header of `R`; fields other than `id` and `html` may be left out:
   (`2026-11-02T13:00:00+01:00`), which the worker applies; the current time if left out. A date
   without an offset is taken as UTC.
 
+- `encryption`: encrypts the PDF with AES-256 (see
+  [pdf.md](pdf.md#protect-the-pdf-with-a-password)). `userPassword` is needed to open it,
+  `ownerPassword` lifts the restrictions; either may be left out (or be `null` or empty), but
+  not both. `permissions` lists what the PDF allows without the owner password: `print`,
+  `print-low-quality`, `modify`, `copy`, `annotate`, `fill-forms` and `assemble`; everything if
+  left out or `null`, nothing beyond reading if empty. An unknown permission, no password, and
+  `encryption` together with `conformance`, `facturX` or `accessible` are answered with `E`.
+  Added in 0.3.0: an older worker ignores the field and writes the PDF unencrypted, which the
+  caller notices by the missing `encrypted` in `P`.
+
 A request the worker cannot use (a missing data block, an unknown PDF/A level, relationship or
 profile, an invalid date) is answered with `E` and its reason, as is a document that does not
 meet PDF/A or PDF/UA.
@@ -119,11 +130,14 @@ The header of `P`:
     { "severity": "warning", "code": "css.unknown-property", "message": "unknown property `colr`; the declaration is ignored", "source": "<style> 1", "line": 12, "column": 3 }
   ],
   "timings": { "parse": 0.12, "style": 0.31, "layout": 0.44, "paint": 0.02, "pdf": 0.71 },
+  "encrypted": false,
   "blobs": [48213]
 }
 ```
 
-Times are in milliseconds. `severity` is `info`, `warning` or `error`; `line` and `column` are 0
+`encrypted` is `true` when the PDF is encrypted (the request had `encryption`), `false`
+otherwise; a caller that asked for encryption and does not get `true` must not use the PDF. Times
+are in milliseconds. `severity` is `info`, `warning` or `error`; `line` and `column` are 0
 when unknown. With `layout: true` in the request, the header has a `layout` too.
 
 ### Layout

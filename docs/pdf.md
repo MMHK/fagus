@@ -1,7 +1,7 @@
 # The PDF
 
 This page describes the PDF file Fagus writes and the options that change it: metadata, links and
-bookmarks, tagged and accessible PDF, PDF/A, attachments and electronic invoices. How the pages
+bookmarks, tagged and accessible PDF, PDF/A, attachments, electronic invoices and passwords. How the pages
 look is up to the HTML and CSS (see [css.md](css.md) and [paged-media.md](paged-media.md)); the
 methods of the document builder are described in [php.md](php.md).
 
@@ -673,6 +673,80 @@ VERAPDF=/path/to/verapdf MUSTANG=/path/to/Mustang-CLI.jar tools/validate.sh /tmp
 It uses `target/release/fagus`, or the binary in `FAGUS`. With veraPDF 1.30.3 and Mustang
 2.26.0 every file passes.
 
+## Protect the PDF with a password
+
+`encrypt()` encrypts the PDF with AES-256, as PDF 2.0 defines it (the standard security handler,
+revision 6). It takes a user password, an owner password and permissions:
+
+```php
+use Fagus\Fagus;
+use Fagus\Permission;
+
+Fagus::html($html)
+    ->encrypt(
+        userPassword: 'open sesame',
+        ownerPassword: 'change me',
+        permissions: [Permission::Print, Permission::Copy],
+    )
+    ->save('salary.pdf');
+```
+
+- The **user password** is needed to open the PDF. Without one, the PDF opens without a password,
+  but with only the permissions given.
+- The **owner password** opens the PDF too, and lifts the restrictions of the permissions. Without
+  one, Fagus uses a random password that nobody knows, so the restrictions stay. Giving both the
+  same password lifts the restrictions for everyone who can open the file.
+- The **permissions** say what a reader with the user password (or with none, if there is none)
+  may do. Without the argument, everything is allowed; with an empty list, nothing beyond reading.
+
+At least one of the passwords is needed. `encrypt(ownerPassword: 'change me', permissions: [])`
+makes a PDF that opens for everyone but cannot be printed, copied from or changed.
+
+| Permission | Allows |
+|---|---|
+| `Permission::Print` (`print`) | Printing, in full quality |
+| `Permission::PrintLowQuality` (`print-low-quality`) | Printing, only as a low-resolution image |
+| `Permission::Modify` (`modify`) | Changing the content |
+| `Permission::Copy` (`copy`) | Copying text and images |
+| `Permission::Annotate` (`annotate`) | Adding and changing comments, and filling in forms |
+| `Permission::FillForms` (`fill-forms`) | Filling in form fields |
+| `Permission::Assemble` (`assemble`) | Inserting, deleting and rotating pages, changing bookmarks |
+
+Screen readers and other assistive technology may always extract the text: PDF 2.0 says to allow
+it in every encrypted file, and Fagus does.
+
+What to know about encrypted PDFs:
+
+- The permissions are a request to the PDF viewer, which Acrobat and most other viewers honour.
+  Anyone who can open the file can read its content, and tools exist that ignore the
+  permissions. Only the user password keeps people out.
+- Passwords are used as UTF-8, up to 127 bytes; longer ones are cut there. Viewers differ in how
+  they treat characters beyond ASCII (PDF 2.0 asks for SASLprep, which Fagus does not apply), so
+  passwords of ASCII characters are the safest.
+- Everything is encrypted: the content of the pages, fonts, images, attachments, the XMP metadata
+  and the strings of the document information (title, author), so a search engine or a file
+  manager sees no title either.
+- AES-256 needs a PDF 2.0 reader or a PDF 1.7 one with Adobe's extension level 8, which the PDF
+  declares: Acrobat 9 and later, and every current viewer, browser and library (pdf.js, PDFium,
+  Preview, Poppler, qpdf, pypdf) open it. Older encryption (RC4, AES-128) is not available: it
+  is deprecated in PDF 2.0, and RC4 is broken.
+- PDF/A forbids encryption, so `encrypt()` cannot go with `pdfA()` or `facturX()` (which
+  writes PDF/A-3): rendering fails with ``the document does not meet PDF/A-3b: the PDF cannot be
+  encrypted (PDF/A forbids encryption)``. Encrypt a copy of the archived invoice if you need
+  one. Fagus refuses `accessible()` with `encrypt()` as well, so that PDF/UA files stay readable
+  by every assistive technology.
+- The file key, its salts and the initialization vectors are random, from the operating system:
+  an encrypted PDF is not byte-reproducible (see
+  [Make the output reproducible](#make-the-output-reproducible)), even with `created()`. The Rust
+  library has `Encryption::seed()` for tests that compare bytes.
+
+On the command line, `--user-password`, `--owner-password` and `--permissions print,copy` encrypt
+the PDF; the passwords can come from files or environment variables, so that they do not show up
+in the list of processes (see [cli.md](cli.md#protect-the-pdf-with-a-password)).
+
+To check an encrypted file, `qpdf --password=… --show-encryption file.pdf` shows the encryption
+and the permissions, and `qpdf --password=… --decrypt file.pdf plain.pdf` writes it unencrypted.
+
 ## Make the output reproducible
 
 A PDF contains its creation date, by default the current time, so two renderings of the same
@@ -691,7 +765,8 @@ date in UTC.
 
 The output is the same for the same HTML, resources, fonts, options and version of Fagus, on
 every platform. Fonts installed on the machine (`systemFonts: true`) make it depend on the
-machine.
+machine, and an encrypted PDF differs every time: its keys are random (see
+[Protect the PDF with a password](#protect-the-pdf-with-a-password)).
 
 ## File size and compression
 

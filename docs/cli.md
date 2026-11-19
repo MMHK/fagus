@@ -53,6 +53,11 @@ file as HTML.
 | `--profile <PROFILE>` | the XML's | The invoice profile: `minimum`, `basicwl`, `basic`, `en16931`, `extended` or `xrechnung` |
 | `--factur-x-version <VERSION>` | `1.0` | The `Version` of the Factur-X XMP metadata |
 | `--factur-x-description <TEXT>` | `Factur-X/ZUGFeRD invoice` | The description of the attached invoice XML |
+| `--user-password <PASSWORD>` | none | Encrypt the PDF (AES-256) with the password needed to open it; also from `FAGUS_USER_PASSWORD` |
+| `--user-password-file <FILE>` | none | Read the user password from the first line of a file |
+| `--owner-password <PASSWORD>` | none | Encrypt the PDF with the password that lifts the restrictions of `--permissions`; also from `FAGUS_OWNER_PASSWORD` |
+| `--owner-password-file <FILE>` | none | Read the owner password from the first line of a file |
+| `--permissions <LIST>` | everything | What an encrypted PDF allows without the owner password, separated by commas: `print`, `print-low-quality`, `modify`, `copy`, `annotate`, `fill-forms`, `assemble`, or `none` |
 | `--created <DATE>` | now | The creation date, e.g. `2026-11-13T12:00:00Z` or `2026-11-13T14:00:00+02:00`, for reproducible files |
 | `--strict` | off | Fail on any diagnostic (not only warnings), without writing the PDF |
 | `--layout-json <FILE>` | none | Write where the elements with an `id` ended up (pages, boxes, the rows of tables) to this file as JSON |
@@ -84,6 +89,35 @@ Some details of the command line:
   ```
 
   It is written after the PDF, and not where `--strict` fails.
+
+## Protect the PDF with a password
+
+A user password, an owner password or both encrypt the PDF with AES-256 (see
+[pdf.md](pdf.md#protect-the-pdf-with-a-password)). The user password is needed to open it; the
+owner password lifts the restrictions of `--permissions`. Without a user password, the PDF opens
+for everyone with only the permissions given; without an owner password, nobody can lift them.
+
+```sh
+# needs "open sesame" to open; may be printed and copied from, nothing else
+fagus render salary.html -o salary.pdf \
+  --user-password-file secrets/user.txt --owner-password-file secrets/owner.txt \
+  --permissions print,copy
+
+# opens for everyone, but cannot be printed, copied from or changed
+FAGUS_OWNER_PASSWORD=change-me fagus render terms.html -o terms.pdf --permissions none
+```
+
+Other users of a machine can see the arguments of a process (`ps`), so a password in
+`--user-password` or `--owner-password` is visible to them while Fagus runs. The file options
+read the first line of a file (without its line break), and the environment variables
+`FAGUS_USER_PASSWORD` and `FAGUS_OWNER_PASSWORD` stand in for the options; `--help` does not show
+their values. A file option and the option it reads for cannot be given together; either wins
+over the environment variable. An empty password counts as none;
+`--permissions` without a password is an error.
+
+An encrypted PDF differs from run to run, also with `--created`: its keys are random. PDF/A,
+Factur-X and PDF/UA cannot be encrypted: `--pdfa`, `--factur-x` or `--accessible` with a password
+fail with exit code 1.
 
 ## Read and write
 
@@ -198,6 +232,7 @@ a client of your own only to use Fagus from another language.
 | `--serif <FAMILY>` | none | The family used for `serif` |
 | `--monospace <FAMILY>` | none | The family used for `monospace` |
 
-Everything else (PDF/A, attachments, resources, the creation date) comes with each request. The
+Everything else (PDF/A, attachments, resources, the creation date, passwords) comes with each
+request; the worker does not read `FAGUS_USER_PASSWORD` and `FAGUS_OWNER_PASSWORD`. The
 worker ends with exit code 0 when its input closes, and with 1 when it reads a frame that breaks
 the protocol.

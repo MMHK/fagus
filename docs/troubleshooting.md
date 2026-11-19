@@ -116,6 +116,15 @@ The fagus binary speaks protocol 2, this package needs protocol 1. Install the b
 `FAGUS_BINARY` or the `PATH` points to a binary of another release. Use the binary of the
 package's release.
 
+### A binary that cannot encrypt
+
+```text
+The fagus binary cannot encrypt PDFs and wrote the PDF without a password. Install the binary of the same release.
+```
+
+`encrypt()` was called, but the binary is older than encryption and left the passwords out. The
+PDF is not handed out. Use the binary of the package's release.
+
 ## Rendering
 
 ### The worker did not answer in time
@@ -204,6 +213,24 @@ the document does not meet PDF/A-1b: PDF/A-1 forbids transparency, which the doc
 
 PDF/A-1b allows no transparency. Replace what the message names with opaque colors and images,
 or write PDF/A-2b, which keeps it (see [pdf.md](pdf.md#pdfa-1b)).
+
+```text
+the document does not meet PDF/A-3b: the PDF cannot be encrypted (PDF/A forbids encryption)
+```
+
+`encrypt()` goes with neither `pdfA()` nor `facturX()`, and not with `accessible()` either (the
+message then names Factur-X or PDF/UA-1). Leave out one of them; see
+[pdf.md](pdf.md#protect-the-pdf-with-a-password).
+
+### Encryption without a password
+
+```text
+Encryption needs a user password or an owner password.
+```
+
+`encrypt()` got neither password, or only empty ones. It throws a
+`Fagus\Exception\InvalidArgumentException` when it is called. An unknown permission, such as
+`'everything'`, throws one too, with the list of permissions.
 
 ### An unknown PDF/A level
 

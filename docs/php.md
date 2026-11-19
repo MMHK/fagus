@@ -255,6 +255,31 @@ Diagnostics report a profile that differs from the XML's (`invoice.profile-misma
 without a profile (`invoice.profile-unknown`) and a PDF/A-1 or PDF/A-2 level raised to PDF/A-3
 (`pdf.conformance-raised`). See [pdf.md](pdf.md).
 
+### `encrypt(?string $userPassword = null, ?string $ownerPassword = null, ?array $permissions = null): Document`
+
+Protects the PDF with passwords: it is encrypted with AES-256, as PDF 2.0 defines it. The user
+password is needed to open the PDF; without one, it opens without a password but with only the
+permissions given. The owner password lifts those restrictions; without one, a random password
+nobody knows is used. At least one of them is needed (an empty string counts as none), or an
+`InvalidArgumentException` is thrown.
+
+`$permissions` is a list of `Permission` cases or their values (`'print'`, `'copy'`, …) for what
+the reader may do without the owner password: everything if `null`, nothing beyond reading if
+empty. An unknown value throws an `InvalidArgumentException`.
+
+```php
+use Fagus\Permission;
+
+Fagus::html($html)->encrypt(userPassword: $password);                  // to open; everything allowed
+Fagus::html($html)->encrypt(userPassword: $password, ownerPassword: $admin, permissions: [Permission::Print]);
+Fagus::html($html)->encrypt(ownerPassword: $admin, permissions: []);  // opens for everyone, read only
+```
+
+The bytes of an encrypted PDF differ from run to run, since its keys are random. PDF/A forbids
+encryption: with `pdfA()` or `facturX()`, and with `accessible()`, `render()` throws a
+`RenderException`. The passwords are marked `#[\SensitiveParameter]`, so stack traces leave
+them out. See [pdf.md](pdf.md#protect-the-pdf-with-a-password).
+
 ### `created(DateTimeInterface $date): Document`
 
 The creation date written into the PDF; the current time by default. Fagus converts it to UTC. A
@@ -575,6 +600,21 @@ ending in `a` are tagged for accessibility.
 | `InvoiceProfile::Extended` | `'extended'` |
 | `InvoiceProfile::XRechnung` | `'xrechnung'` |
 
+## `Permission`
+
+`Fagus\Permission` is a string-backed enum of what the reader of an encrypted PDF may do without
+the owner password, for `encrypt()`:
+
+| Case | Value | Allows |
+|---|---|---|
+| `Permission::Print` | `'print'` | Printing, in full quality |
+| `Permission::PrintLowQuality` | `'print-low-quality'` | Printing, only as a low-resolution image |
+| `Permission::Modify` | `'modify'` | Changing the content |
+| `Permission::Copy` | `'copy'` | Copying text and images |
+| `Permission::Annotate` | `'annotate'` | Adding and changing comments, and filling in forms |
+| `Permission::FillForms` | `'fill-forms'` | Filling in form fields |
+| `Permission::Assemble` | `'assemble'` | Inserting, deleting and rotating pages, changing bookmarks |
+
 ## `Relationship`
 
 `Fagus\Relationship` is a string-backed enum of how an attached file relates to the document
@@ -614,8 +654,8 @@ try {
 |---|---|
 | `FagusException` | Base class. Thrown itself by `Pdf::save()` when the file cannot be written. |
 | `RenderException` | The document cannot be rendered (for example PDF/UA requirements that are not met), or has diagnostics in strict mode. `diagnostics(): list<Diagnostic>` returns the diagnostics strict mode refused, or those found before rendering failed (CSS that was ignored, resources that are missing), which often explain the failure. |
-| `EngineException` | The binary was not found or could not be started, a font directory does not exist, the worker did not answer within the timeout, it stopped, it speaks another protocol, or a font passed to `addFont()` cannot be read. When the worker has exited, the message ends with its exit code and what it wrote to its error output. |
-| `InvalidArgumentException` | A value Fagus does not know, such as a PDF/A level passed to `pdfA()` as a string that is not one. |
+| `EngineException` | The binary was not found or could not be started, a font directory does not exist, the worker did not answer within the timeout, it stopped, it speaks another protocol, it cannot encrypt (a binary older than `encrypt()`, which would have written the PDF without a password), or a font passed to `addFont()` cannot be read. When the worker has exited, the message ends with its exit code and what it wrote to its error output. |
+| `InvalidArgumentException` | A value Fagus does not know, such as a PDF/A level passed to `pdfA()` as a string that is not one, or `encrypt()` without a password. |
 | `InstallException` | The binary could not be installed: a development version without binaries, an unsupported platform, a failed download, a checksum mismatch, or a directory that cannot be written. Thrown by `Installer`, `vendor/bin/fagus-install` and `php artisan fagus:install`; the Composer plugin turns it into a warning. |
 
 The exact messages are listed in [troubleshooting.md](troubleshooting.md).

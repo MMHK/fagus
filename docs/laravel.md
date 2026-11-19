@@ -67,7 +67,7 @@ These forward to `Fagus\Document` and take the same arguments; [php.md](php.md#d
 describes each one:
 
 `baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `resolver()`, `pdfA()`, `tagged()`,
-`accessible()`, `attach()`, `facturX()`, `created()`, `strict()`, `reportLayout()`.
+`accessible()`, `attach()`, `facturX()`, `encrypt()`, `created()`, `strict()`, `reportLayout()`.
 
 ```php
 use Fagus\Conformance;
@@ -78,6 +78,17 @@ Fagus::view('invoices.show', ['invoice' => $invoice])
     ->resource('logo.png', $invoice->company->logo)
     ->pdfA(Conformance::PdfA3b)
     ->facturX($invoice->toFacturX());
+```
+
+A payslip that needs a password to open and may be printed, but not changed:
+
+```php
+use Fagus\Permission;
+
+return Fagus::view('payslips.show', ['payslip' => $payslip])
+    ->encrypt(userPassword: $employee->pdf_password, permissions: [Permission::Print])
+    ->name("payslip-{$payslip->month}.pdf")
+    ->download();
 ```
 
 ### `name(string $filename): PendingPdf`
