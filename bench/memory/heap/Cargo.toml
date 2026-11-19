@@ -1,0 +1,19 @@
+# Where the memory of a render goes: the heap of one render through dhat, at its peak or over
+# the phases of the render (see ../../README.md#where-the-memory-goes). A project of its own,
+# outside the workspace, so that dhat stays out of Fagus.
+[package]
+name = "fagus-heap"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+fagus = { path = "../../../crates/fagus" }
+fagus-style = { path = "../../../crates/fagus-style" }
+dhat = "0.3.3"
+
+[profile.release]
+debug = "line-tables-only"
+codegen-units = 16

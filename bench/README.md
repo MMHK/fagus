@@ -99,7 +99,17 @@ The two rows of peak memory were measured again after the changes described in [
 
 ### Where the memory goes
 
-Measured with [dhat](https://docs.rs/dhat) as the global allocator of a small program around the `fagus` crate, on the 100-page classic invoice (the modern one in parentheses), and with the footprint of `fagus render` sampled every few tenths of a millisecond against its `--timings`. The heap peaks at 78 MB (84 MB) while the pages are laid out:
+Measured on the 100-page classic invoice (the modern one in parentheses; `budgets.py` writes both to `compare/docs/`) with `memory/heap`, a small program around the `fagus` crate with [dhat](https://docs.rs/dhat) as its global allocator, and `memory/timeline.py`, which samples the footprint of `fagus render` every few tenths of a millisecond and places it against the render's `--timings`:
+
+```sh
+cd bench/memory
+(cd heap && cargo run --release -- peak ../../compare/docs/classic-1580.html ../out/heap.json)   # minutes
+python3 heap/peak.py out/heap.json          # what the heap holds at its peak, by the code that allocated it
+(cd heap && cargo run --release -- phases ../../compare/docs/classic-1580.html)                # the heap per phase
+python3 timeline.py ../compare/docs/classic-1580.html                                          # the footprint per phase
+```
+
+The heap peaks at 78 MB (84 MB) while the pages are laid out:
 
 | Held at the peak | Heap |
 |---|--:|
