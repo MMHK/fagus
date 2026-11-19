@@ -72,8 +72,9 @@ use instead. It keeps working until the next major release. You notice it:
 - on the command line, as a warning on standard error; the exit code stays the same;
 - in CSS, as a `css.deprecated` diagnostic.
 
-The changelog lists deprecations under *Deprecated*. A major release comes with `UPGRADING.md`,
-which lists every breaking change and what to do.
+The changelog lists deprecations under *Deprecated*. A major release comes with
+[UPGRADING.md](https://github.com/nforst/fagus/blob/main/UPGRADING.md), which lists every
+breaking change and what to do; its section for 1.0 already collects what changed since 0.1.0.
 
 ## Supported versions
 
@@ -81,7 +82,7 @@ which lists every breaking change and what to do.
 |---|---|---|
 | PHP | 8.3 or newer | In a minor release, once PHP stops security fixes for the version |
 | Laravel | 13 | New majors in minor releases; an old one dropped once Laravel stops its security fixes |
-| Rust | 1.97 or newer | In a minor release, listed in the changelog |
+| Rust | 1.97 or newer | In a minor release, to a Rust release at least three months old, listed in the changelog |
 | Platforms | Linux (x64, arm64, glibc 2.17 or newer, musl), macOS (x64, arm64), Windows x64 | Dropped only in a major release |
 
 Composer keeps a project on an older PHP or Laravel at the last release that supports it.

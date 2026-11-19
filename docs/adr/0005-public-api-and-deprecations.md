@@ -92,7 +92,7 @@ What is safe by default does not change at all: no network access, no files outs
 
 - PHP: raising the minimum (8.3) is allowed in a minor release once PHP no longer gives that version security fixes. Composer keeps projects on an older PHP at the last release that supports it.
 - Laravel: support for a new major comes in a minor release. A Laravel major is dropped in a minor release once Laravel no longer gives it security fixes.
-- Rust: `rust-version` (1.97) may be raised in a minor release, listed under *Changed*.
+- Rust: `rust-version` (1.97) may be raised in a minor release, listed under *Changed*, but only to a Rust release that came out at least three months (two releases) before, so that a toolchain a distribution or CI image ships keeps working.
 - Platforms: binaries for Linux (x64 and arm64, glibc 2.17 or newer and musl), macOS (x64 and arm64) and Windows x64. A minor release may add platforms. Dropping one, or raising the glibc minimum, comes only in a major release, unless Rust drops the target or its vendor stopped supporting it.
 - Every raised minimum is listed in the changelog under *Changed*.
 
@@ -120,3 +120,5 @@ Before 1.0, the code needs:
 - A CI job that builds `fagus` with Rust 1.97, so that `rust-version` is checked.
 - A test that every diagnostics code the crates emit is listed in [troubleshooting.md](../troubleshooting.md#read-diagnostics), and the other way round.
 - The code `css.deprecated` and the warning for deprecated command line options, when the first deprecation needs them.
+
+`UPGRADING.md` collects the changes since 0.1.0 that can need action, in a section for 1.0, so that an update from any 0.x release is covered in one place.
