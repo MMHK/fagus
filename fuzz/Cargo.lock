@@ -381,6 +381,7 @@ dependencies = [
  "image-webp",
  "krilla",
  "krilla-svg",
+ "libm",
  "png",
  "resvg",
  "rustc-hash",

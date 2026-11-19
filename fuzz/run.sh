@@ -31,6 +31,9 @@ case "$target" in
 esac
 
 ./seed.sh > /dev/null
-exec cargo +nightly fuzz run --sanitizer "${FUZZ_SANITIZER:-none}" "$target" "corpus/$target" -- \
+# cargo-fuzz builds for the platform it was itself built for unless told otherwise; prebuilt
+# binaries of cargo-fuzz (as in CI) are built for musl, whose standard library nightly lacks here.
+host=$(rustc +nightly -vV | sed -n 's/^host: //p')
+exec cargo +nightly fuzz run --target "$host" --sanitizer "${FUZZ_SANITIZER:-none}" "$target" "corpus/$target" -- \
     -max_total_time="$seconds" -timeout=60 -rss_limit_mb=4096 -print_final_stats=1 \
     "${options[@]}" "$@"

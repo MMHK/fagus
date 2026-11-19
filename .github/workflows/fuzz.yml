@@ -59,7 +59,9 @@ jobs:
       # Keeps the inputs that add coverage; the corpus would otherwise grow every night.
       - name: Minimize the corpus
         if: success()
-        run: cargo +nightly fuzz cmin --sanitizer "$FUZZ_SANITIZER" ${{ matrix.target }} fuzz/corpus/${{ matrix.target }} -- -timeout=60 -rss_limit_mb=4096
+        run: |
+          host=$(rustc +nightly -vV | sed -n 's/^host: //p')
+          cargo +nightly fuzz cmin --target "$host" --sanitizer "$FUZZ_SANITIZER" ${{ matrix.target }} fuzz/corpus/${{ matrix.target }} -- -timeout=60 -rss_limit_mb=4096
       - name: Save the corpus
         if: always()
         uses: actions/cache/save@v4
