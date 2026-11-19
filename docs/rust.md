@@ -320,17 +320,20 @@ that uses it. So that a minor release can add a variant or a field, these types 
 `#[non_exhaustive]`:
 
 - the enums `Error`, `PdfError`, `FontError`, `Conformance`, `Relationship`, `FacturXProfile`,
-  `Permission`, `Algorithm` and `RowSection`: a `match` over one needs a `_` arm;
+  `Permission`, `Algorithm`, `Certification`, `Placement` and `RowSection`: a `match` over one
+  needs a `_` arm;
 - the structs with public fields `Output`, `Timings`, `Failure`, `Diagnostic`, `Attachment`,
-  `Date`, `Layout`, `LayoutPage`, `LayoutElement`, `LayoutBox` and `LayoutRow`: read their fields
+  `Date`, `RevocationRequest`, `Layout`, `LayoutPage`, `LayoutElement`, `LayoutBox` and
+  `LayoutRow`: read their fields
   and set them, but make them with their constructors instead of struct literals
   (`Attachment::new`, `Date::new`, `Diagnostic::new`, `Output::default()`,
   `Timings::default()`, `Failure::from(error)`); a pattern that takes one apart needs `..`.
 
 `Severity` is not: `Info`, `Warning` and `Error` are the severities of the command line and the
 worker protocol and stay the same within a major release. Which severity a diagnostic gets is not
-stable. `Document`, `Engine`, `Encryption` and `Signature` have no public fields. The traits
-`ResourceLoader`, `Signer` and `Timestamper` get new methods only with a default implementation.
+stable. `Document`, `Engine`, `Encryption`, `Signature` and `Limits` have no public fields. The
+traits `ResourceLoader`, `Signer`, `Timestamper` and `Revocation` get new methods only with a
+default implementation.
 
 Something deprecated gets `#[deprecated(since = "…", note = "use … instead")]`, a compiler
 warning, and keeps working until the next major release.
