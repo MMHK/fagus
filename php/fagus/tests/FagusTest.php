@@ -420,6 +420,21 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_replaces_workers_that_reach_their_limits(): void
+    {
+        $html = '<p style="font: italic bold 12px Inter">Kursiv</p>';
+        // Every worker has more than a megabyte, where the binary tells (Linux, macOS); one
+        // document each otherwise.
+        foreach ([new Engine(self::$binary, maxMemory: 1), new Engine(self::$binary, maxDocuments: 1)] as $engine) {
+            $engine->addFont((string) file_get_contents(self::FONTS.'/Inter-BoldItalic.ttf'));
+            for ($i = 0; $i < 3; $i++) {
+                $this->assertStringContainsString('Inter-BoldItalic', self::decoded(Document::html($html)->render($engine)->bytes()), 'each new worker has the font');
+            }
+            $engine->close();
+        }
+    }
+
+    #[Test]
     public function it_passes_large_documents_and_binary_data_unchanged(): void
     {
         // Bytes that text mode would change on Windows (line ends, end of file), and many more.

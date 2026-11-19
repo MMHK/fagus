@@ -7,6 +7,7 @@ namespace Fagus\Tests;
 use Fagus\Document;
 use Fagus\Engine;
 use Fagus\Exception\EngineException;
+use Fagus\Exception\InvalidArgumentException;
 use Fagus\Internal\Release;
 use Fagus\Tests\Fixtures\FakeWorker;
 use PHPUnit\Framework\Attributes\Test;
@@ -97,11 +98,67 @@ final class EngineTest extends TestCase
         }
     }
 
-    /**
-     * @param  list<int>  $rss
-     */
-    private function fake(int $protocol = 1, string $version = Release::VERSION, array $rss = []): string
+    #[Test]
+    public function it_replaces_a_worker_after_as_many_documents_as_it_may_render(): void
     {
-        return $this->binaries[] = FakeWorker::create($protocol, $version, $rss);
+        $engine = new Engine($this->fake(), maxDocuments: 2);
+        $engine->addFont('font');
+
+        $documents = $this->render($engine, 5);
+
+        $this->assertSame([1, 2, 1, 2, 1], array_column($documents, 1));
+        $processes = array_column($documents, 0);
+        $this->assertSame($processes[0], $processes[1]);
+        $this->assertNotSame($processes[1], $processes[2]);
+        $this->assertSame($processes[2], $processes[3]);
+        $this->assertNotSame($processes[3], $processes[4]);
+    }
+
+    #[Test]
+    public function it_replaces_a_worker_that_has_grown_beyond_its_memory(): void
+    {
+        $mb = 1024 * 1024;
+        // Linux tells the size now: it grows with the second document and the third.
+        $engine = new Engine($this->fake(memory: ['rss' => [10 * $mb, 20 * $mb, 21 * $mb], 'maxRss' => [50 * $mb]]), maxMemory: 20);
+        $this->assertSame([1, 2, 3, 1, 2, 3], array_column($this->render($engine, 6), 1), 'replaced after the third, above 20 MB now');
+
+        // macOS tells the peak only.
+        $engine = new Engine($this->fake(memory: ['maxRss' => [10 * $mb, 30 * $mb]]), maxMemory: 20);
+        $this->assertSame([1, 2, 1, 2], array_column($this->render($engine, 4), 1), 'replaced after the second, above 20 MB at its peak');
+
+        // A worker that does not tell (Windows) keeps running.
+        $engine = new Engine($this->fake(), maxMemory: 20);
+        $this->assertSame([1, 2, 3], array_column($this->render($engine, 3), 1));
+    }
+
+    #[Test]
+    public function it_refuses_limits_below_one(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("The engine's maxDocuments must be at least 1 or null, not 0.");
+        new Engine(maxDocuments: 0);
+    }
+
+    /**
+     * Renders `$count` documents and returns the process and the number of each in its process.
+     *
+     * @return list<array{0: int, 1: int}>
+     */
+    private function render(Engine $engine, int $count): array
+    {
+        $documents = [];
+        for ($i = 0; $i < $count; $i++) {
+            $documents[] = FakeWorker::parse(Document::html('<p>x</p>')->render($engine)->bytes());
+        }
+
+        return $documents;
+    }
+
+    /**
+     * @param  array<string, list<int>>  $memory
+     */
+    private function fake(int $protocol = 1, string $version = Release::VERSION, array $memory = []): string
+    {
+        return $this->binaries[] = FakeWorker::create($protocol, $version, $memory);
     }
 }

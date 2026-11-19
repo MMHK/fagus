@@ -9,20 +9,21 @@ use RuntimeException;
 /**
  * A stand-in for `fagus worker`: it greets with the protocol and version it is given, answers
  * every document with a PDF that names its process and how many documents it has rendered, and
- * reports the resident size it is given. {@see self::create()} writes a binary that runs it.
+ * reports the memory it is given. {@see self::create()} writes a binary that runs it.
  */
 final class FakeWorker
 {
     /**
-     * Writes an executable that runs this worker with the given greeting and resident sizes (in
-     * bytes, one per document, the last one repeated; none if empty) and returns its path.
+     * Writes an executable that runs this worker with the given greeting and memory and returns
+     * its path. `$memory` maps fields of the answers (`rss`, `maxRss`) to their values in bytes,
+     * one per document of a process, the last one repeated.
      *
-     * @param  list<int>  $rss
+     * @param  array<string, list<int>>  $memory
      */
-    public static function create(int $protocol = 1, string $version = '0.0.0', array $rss = []): string
+    public static function create(int $protocol = 1, string $version = '0.0.0', array $memory = []): string
     {
         $binary = sys_get_temp_dir().DIRECTORY_SEPARATOR.'fagus-fake-'.bin2hex(random_bytes(6));
-        $settings = escapeshellarg((string) json_encode(['protocol' => $protocol, 'version' => $version, 'rss' => $rss]));
+        $settings = escapeshellarg((string) json_encode(['protocol' => $protocol, 'version' => $version, 'memory' => (object) $memory]));
         file_put_contents($binary, "#!/bin/sh\nexec ".escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__)." {$settings} \"\$@\"\n");
         chmod($binary, 0755);
 
@@ -44,7 +45,7 @@ final class FakeWorker
     }
 
     /**
-     * @param  array{protocol: int, version: string, rss: list<int>}  $settings
+     * @param  array{protocol: int, version: string, memory: array<string, list<int>>}  $settings
      */
     public static function serve(array $settings): void
     {
@@ -57,8 +58,8 @@ final class FakeWorker
             if ($kind === 'R') {
                 $documents++;
                 $reply = ['id' => $header['id'] ?? 0, 'pages' => 1, 'diagnostics' => [], 'timings' => []];
-                if ($settings['rss'] !== []) {
-                    $reply['rss'] = $settings['rss'][min($documents, count($settings['rss'])) - 1];
+                foreach ($settings['memory'] as $field => $values) {
+                    $reply[$field] = $values[min($documents, count($values)) - 1];
                 }
                 self::write($output, 'P', $reply, ['%PDF-fake pid='.getmypid()." n={$documents}"]);
             } elseif ($kind === 'F') {

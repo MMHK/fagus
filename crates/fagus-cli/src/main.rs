@@ -2,6 +2,7 @@
 
 mod date;
 mod layout_json;
+mod memory;
 mod worker;
 
 use std::path::PathBuf;

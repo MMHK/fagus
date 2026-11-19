@@ -81,6 +81,8 @@ sha2 = "=0.11.1"
 # The salts, keys and initialization vectors of encryption; ahash already depends on it.
 getrandom = "0.3.4"
 clap = { version = "4.6.7", features = ["derive"] }
+# The peak resident size of the worker on macOS (getrusage), which it reports with every document.
+nix = { version = "0.31.4", default-features = false, features = ["resource"] }
 anyhow = "1.0.104"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"

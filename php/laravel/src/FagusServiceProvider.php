@@ -40,6 +40,8 @@ final class FagusServiceProvider extends ServiceProvider
                 timeout: (float) ($config['timeout'] ?? 60),
                 systemFonts: (bool) ($config['system_fonts'] ?? false),
                 locale: isset($config['locale']) && $config['locale'] !== '' ? (string) $config['locale'] : null,
+                maxDocuments: self::limit($config['max_documents'] ?? null),
+                maxMemory: self::limit($config['max_memory'] ?? null),
                 // A binary of another release than the package, for example, goes to the log.
                 onWarning: static fn (string $message) => $app->make('log')->warning($message),
             );
@@ -67,6 +69,15 @@ final class FagusServiceProvider extends ServiceProvider
             $this->publishes([__DIR__.'/../config/fagus.php' => config_path('fagus.php')], 'fagus-config');
             $this->commands([InstallCommand::class]);
         }
+    }
+
+    /**
+     * A limit from the configuration, where environment variables give strings: null if unset
+     * or empty.
+     */
+    private static function limit(mixed $value): ?int
+    {
+        return $value === null || $value === '' ? null : (int) $value;
     }
 
     /**

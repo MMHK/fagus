@@ -312,12 +312,14 @@ where
                         if let Some(layout) = &output.layout {
                             header["layout"] = crate::layout_json::layout_json(layout);
                         }
-                        channel.write(PDF, header, &[&output.pdf])?;
+                        channel.write(PDF, with_memory(header), &[&output.pdf])?;
                     }
                     Err((message, found)) => {
                         channel.write(
                             ERROR,
-                            json!({ "id": id, "message": message, "diagnostics": diagnostics(&found) }),
+                            with_memory(
+                                json!({ "id": id, "message": message, "diagnostics": diagnostics(&found) }),
+                            ),
                             &[],
                         )?;
                     }
@@ -345,6 +347,20 @@ where
             }
         }
     }
+}
+
+/// The header of an answer to a render request, with the resident memory of the worker after
+/// the document: `rss` now and `maxRss` at its peak, in bytes, where the system tells them.
+fn with_memory(mut header: Value) -> Value {
+    let resident = crate::memory::resident();
+    if let Some(fields) = header.as_object_mut() {
+        for (name, bytes) in [("rss", resident.now), ("maxRss", resident.peak)] {
+            if let Some(bytes) = bytes {
+                fields.insert(name.to_owned(), bytes.into());
+            }
+        }
+    }
+    header
 }
 
 /// Renders the document of a request; a failure comes with the diagnostics found before it.
@@ -550,6 +566,15 @@ mod tests {
         assert_eq!(frames[2].header["id"], 7);
         assert_eq!(frames[2].header["pages"], 1);
         assert!(frames[2].blobs[0].starts_with(b"%PDF-"));
+        // The worker's memory, where the system tells it.
+        if cfg!(any(target_os = "linux", target_os = "macos")) {
+            assert!(
+                frames[2].header["maxRss"]
+                    .as_u64()
+                    .is_some_and(|bytes| bytes > 1 << 20)
+            );
+        }
+        assert_eq!(frames[2].header.get("rss").is_some(), cfg!(target_os = "linux"));
         assert!(
             frames[3].header["message"]
                 .as_str()

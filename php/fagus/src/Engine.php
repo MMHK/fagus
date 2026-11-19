@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Fagus;
 
-use Fagus\Exception\EngineException;
-use Fagus\Exception\RenderException;
 use Closure;
+use Fagus\Exception\EngineException;
+use Fagus\Exception\InvalidArgumentException;
+use Fagus\Exception\RenderException;
 use Fagus\Internal\Channel;
 use Fagus\Internal\Release;
 use Throwable;
@@ -50,6 +51,9 @@ final class Engine
 
     private int $requests = 0;
 
+    /** The documents the running worker has rendered. */
+    private int $documents = 0;
+
     /** @var list<string> the fonts added with {@see self::addFont()}, for a new worker */
     private array $fonts = [];
 
@@ -74,6 +78,9 @@ final class Engine
      *                             (the output then depends on the machine)
      * @param  ?string  $locale  the language of the texts form controls show of their own (button labels,
      *                           date formats) where documents give no `lang`, e.g. "de-DE"; en-US if null
+     * @param  ?int  $maxDocuments  the documents a worker renders before it is replaced by a new one; no limit if null
+     * @param  ?int  $maxMemory  megabytes of resident memory above which a worker is replaced after a document,
+     *                           as far as the system tells the worker (Linux: now, macOS: at its peak; not Windows)
      * @param  ?Closure(string): void  $onWarning  receives warnings, such as a binary of another release than
      *                                           this package; written to PHP's error log (error_log()) if null
      */
@@ -86,8 +93,16 @@ final class Engine
         private readonly float $timeout = 60.0,
         private readonly bool $systemFonts = false,
         private readonly ?string $locale = null,
+        private readonly ?int $maxDocuments = null,
+        private readonly ?int $maxMemory = null,
         private readonly ?Closure $onWarning = null,
-    ) {}
+    ) {
+        foreach (['maxDocuments' => $maxDocuments, 'maxMemory' => $maxMemory] as $name => $limit) {
+            if ($limit !== null && $limit < 1) {
+                throw InvalidArgumentException::notPositive($name, $limit);
+            }
+        }
+    }
 
     public function __destruct()
     {
@@ -113,9 +128,12 @@ final class Engine
                         if (isset($header['encryption']) && ($reply['encrypted'] ?? false) !== true) {
                             throw EngineException::withoutEncryption();
                         }
+                        $this->rendered($reply);
 
                         return Pdf::fromReply($reply, $data[0] ?? '');
                     case 'E':
+                        $this->rendered($reply);
+
                         throw new RenderException(
                             (string) ($reply['message'] ?? 'The document could not be rendered.'),
                             array_values(array_map(Diagnostic::fromArray(...), $reply['diagnostics'] ?? [])),
@@ -133,6 +151,26 @@ final class Engine
             $this->stop();
 
             throw $exception;
+        }
+    }
+
+    /**
+     * Counts a document the worker has answered, and replaces the worker by a new one when it
+     * has rendered as many documents as it may or has grown beyond the memory it may have: it is
+     * closed, and the next document starts a new one.
+     *
+     * @param  array<string, mixed>  $reply
+     */
+    private function rendered(array $reply): void
+    {
+        $this->documents++;
+        // The resident size now where the worker knows it (Linux), else the peak (macOS).
+        $resident = $reply['rss'] ?? $reply['maxRss'] ?? null;
+        if (
+            ($this->maxDocuments !== null && $this->documents >= $this->maxDocuments)
+            || ($this->maxMemory !== null && is_int($resident) && $resident > $this->maxMemory * 1024 * 1024)
+        ) {
+            $this->close();
         }
     }
 
@@ -250,6 +288,7 @@ final class Engine
         $this->pipes = $pipes;
         $this->errors = $errors;
         $this->errorsRead = 0;
+        $this->documents = 0;
         $channel = new Channel($pipes[1], $pipes[0], $this->timeout);
         try {
             [$kind, $hello] = $channel->read();

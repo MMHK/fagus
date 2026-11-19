@@ -180,6 +180,35 @@ time, as PHP sends them one after another.
 `addFont()` again. When a worker times out or exits, the engine stops it and throws an
 `EngineException`; the next document starts a new worker.
 
+### Restart workers
+
+A worker that has rendered a large document keeps much of the memory it needed: not in caches,
+but in the allocator, which holds freed memory for later rather than handing it back to the
+system. After a 100-page invoice, a worker on macOS keeps about 52 MB at rest, and more after many
+of them ([bench/README.md](https://github.com/nforst/fagus/blob/main/bench/README.md#memory-a-worker-keeps));
+glibc's allocator on Linux keeps freed memory in its arenas too. In a queue worker or under
+Octane, where one worker lives for hours, the engine can replace it with a new one, which starts
+small:
+
+```php
+new Engine(
+    maxDocuments: 500,   // a new worker after 500 documents
+    maxMemory: 256,      // or after a document that leaves the worker with more than 256 MB
+);
+```
+
+In Laravel, set `max_documents` and `max_memory` in `config/fagus.php`, or `FAGUS_MAX_DOCUMENTS`
+and `FAGUS_MAX_MEMORY`. The engine closes the worker after the document that reaches a limit;
+the next document starts a new one, which gets the fonts of `addFont()` again; the start of a
+process costs 3 to 4 ms once. Both are off by default.
+
+`maxMemory` compares the resident size the worker reports with every document
+([protocol.md](protocol.md#rendering)): on Linux its size after the document, on macOS the
+largest it has been, which macOS tells without the size now. The resident size counts the
+binary's own pages too, about 20 MB, so leave room above what one document needs: a limit
+below that replaces the worker after every document. On Windows the worker does not report its
+memory and only `maxDocuments` applies.
+
 ## Speed and memory
 
 Rendering times of invoices on an Apple M3, once the worker runs, unless noted:

@@ -258,6 +258,45 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_replaces_the_worker_as_configured(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('The stand-in binary is a shell script.');
+        }
+        $binary = FakeWorker::create(version: Release::VERSION, memory: ['rss' => [1 << 20, 3 << 20]]);
+        // As environment variables give them.
+        $this->app['config']->set('fagus.binary', $binary);
+        $this->app['config']->set('fagus.max_documents', '3');
+        $this->app['config']->set('fagus.max_memory', '2');
+        $this->app->forgetInstance(Engine::class);
+        $this->app->forgetInstance('fagus');
+        $this->app->forgetInstance(PdfFactory::class);
+        Fagus::clearResolvedInstances();
+        try {
+            $numbers = [];
+            for ($i = 0; $i < 4; $i++) {
+                $numbers[] = FakeWorker::parse(Fagus::html('<p>x</p>')->render()->bytes())[1];
+            }
+            $this->assertSame([1, 2, 1, 2], $numbers, 'replaced when above 2 MB');
+
+            $this->app['config']->set('fagus.max_memory', '');
+            $this->app->make(Engine::class)->close();
+            $this->app->forgetInstance(Engine::class);
+            $this->app->forgetInstance('fagus');
+            $this->app->forgetInstance(PdfFactory::class);
+            Fagus::clearResolvedInstances();
+            $numbers = [];
+            for ($i = 0; $i < 4; $i++) {
+                $numbers[] = FakeWorker::parse(Fagus::html('<p>x</p>')->render()->bytes())[1];
+            }
+            $this->assertSame([1, 2, 3, 1], $numbers, 'replaced after three documents');
+        } finally {
+            $this->app->make(Engine::class)->close();
+            unlink($binary);
+        }
+    }
+
+    #[Test]
     public function it_reports_why_artisan_cannot_install_the_binary(): void
     {
         // A source without the binary: the installer fails, with or without pinned binaries.

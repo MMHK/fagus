@@ -339,8 +339,10 @@ This writes `config/fagus.php`. Every key, with its environment variable and def
 | `root` | – | `null` | A larger directory that contains `base_directory`, for documents whose URLs lead out of it (`../fonts/…`). URLs that start with `/` resolve against it. |
 | `tagged` | – | `true` | Whether PDFs are tagged with the logical structure that screen readers read. Single documents can say otherwise with `tagged()` or ask for PDF/UA with `accessible()`. |
 | `timeout` | – | `60` | Seconds to wait for each answer of the worker before it is stopped. Not on Windows, where PHP cannot wait for a pipe with a time limit. |
+| `max_documents` | `FAGUS_MAX_DOCUMENTS` | `null` | The documents a worker process renders before it is replaced with a new one. No limit if `null` ([deployment.md](deployment.md#restart-workers)). |
+| `max_memory` | `FAGUS_MAX_MEMORY` | `null` | Megabytes of resident memory: a worker process that has more after a document is replaced with a new one (Linux and macOS). No limit if `null`. |
 
-`binary`, `fonts`, `system_fonts`, `locale`, `families` and `timeout` configure the engine;
+`binary`, `fonts`, `system_fonts`, `locale`, `families`, `timeout`, `max_documents` and `max_memory` configure the engine;
 `base_directory`, `root` and `tagged` apply to each new `PendingPdf`.
 
 ```php

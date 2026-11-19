@@ -480,6 +480,8 @@ All arguments are optional and named as below.
 | `timeout` | `float`, `60.0` | Seconds to wait for each answer of the worker. A worker that does not answer in time is stopped and an `EngineException` is thrown. Not on Windows, where PHP cannot wait for a pipe with a time limit. |
 | `systemFonts` | `bool`, `false` | Whether the fonts installed on the machine serve too, as in Chrome. The output then depends on the machine. |
 | `locale` | `?string`, `null` | The language of the texts that form controls show of their own (button labels, date formats) and of the PDF where a document has no `lang`, such as `'de-DE'`. American English if `null`. |
+| `maxDocuments` | `?int`, `null` | The documents a worker renders before the engine replaces it with a new one, which takes 3 to 4 ms. No limit if `null`. See [deployment.md](deployment.md#restart-workers). |
+| `maxMemory` | `?int`, `null` | Megabytes of resident memory: a worker that has more after a document is replaced with a new one. The worker tells its size on Linux (now) and macOS (its peak); on Windows the limit does not apply. No limit if `null`. |
 | `onWarning` | `?Closure(string): void`, `null` | Receives the engine's warnings: so far, that the binary is of another release than the package ([below](#engineprotocol)). If `null`, they go to PHP's error log (`error_log()`), never to the output. The Laravel integration writes them to Laravel's log. |
 
 Form controls write their texts (the labels of submit and reset buttons, "Choose File", the
@@ -539,6 +541,8 @@ warm, until the engine is closed or destroyed:
 
 When a render fails with an `EngineException` (a timeout, a worker that exited), the worker is
 stopped and the next document starts a new one. A `RenderException` leaves the worker running.
+With `maxDocuments` or `maxMemory`, the engine also closes a worker after the document that
+reaches the limit, and the next document starts a new one.
 More in [deployment.md](deployment.md#worker-processes).
 
 ## `Diagnostic` and `Severity`

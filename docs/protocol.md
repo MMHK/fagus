@@ -30,8 +30,8 @@ ends the worker with exit code 1 and the reason on its error output.
 | `R` render | caller → worker | the document, see below | HTML, stylesheets, resources, attachments, invoice XML |
 | `?` ask | worker → caller | `id`, `url` | – |
 | `r` resource | caller → worker | `found` | the resource, if found |
-| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted` | the PDF |
-| `E` error | worker → caller | `id` (if known), `message`, `diagnostics` | – |
+| `P` PDF | worker → caller | `id`, `pages`, `diagnostics`, `timings`, `encrypted`, `layout`, `rss`, `maxRss` | the PDF |
+| `E` error | worker → caller | `id` (if known), `message`, `diagnostics`, `rss`, `maxRss` | – |
 | `F` font | caller → worker | – | a font file (TTF, OTF, TTC, WOFF, WOFF2) |
 | `K` done | worker → caller | `faces` | – |
 
@@ -131,6 +131,8 @@ The header of `P`:
   ],
   "timings": { "parse": 0.12, "style": 0.31, "layout": 0.44, "paint": 0.02, "pdf": 0.71 },
   "encrypted": false,
+  "rss": 41943040,
+  "maxRss": 102760448,
   "blobs": [48213]
 }
 ```
@@ -174,7 +176,14 @@ corner of each page box, rounded to a hundredth of a point:
   `footer`, `index` the row's place among the rows of that section (from 0), `id` its `id` if it
   has one; a row's box on a page is the area of its cells there.
 
-The header of `E` has the `message` and a `diagnostics` array of the same form. For a document
+`rss` and `maxRss` are the worker's resident memory after the document, in bytes: now and the
+largest it has been since the worker started. They are there where the system tells them without
+unsafe code: both on Linux (from `/proc/self/status`), `maxRss` on macOS (from `getrusage`),
+neither on Windows. A caller can replace a worker that has grown by closing its input and
+starting a new one, as the PHP package does with `maxMemory` ([deployment.md](deployment.md#restart-workers)).
+
+The header of `E` for a render request has the same `rss` and `maxRss`, the `message` and a
+`diagnostics` array of the same form. For a document
 that could not be rendered (it does not meet PDF/A or PDF/UA, or the PDF could not be written),
 it holds the diagnostics found until then, which often explain the failure; for a request the
 worker cannot use, an `F` it cannot read and a message of an unknown type, it is empty.
@@ -218,3 +227,7 @@ than that ignores them:
 | Field | Message | Since |
 |---|---|---|
 | `facturX.version`, `facturX.description` | `R` | 0.2.0 |
+| `layout` | `R`, `P` | 0.3.0 |
+| `encryption` | `R` | 0.3.0 |
+| `encrypted` | `P` | 0.3.0 |
+| `rss`, `maxRss` | `P`, `E` | 0.3.0 |

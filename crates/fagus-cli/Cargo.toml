@@ -22,6 +22,9 @@ serde.workspace = true
 serde_json.workspace = true
 rayon = { workspace = true, optional = true }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+nix.workspace = true
+
 [features]
 default = ["parallel"]
 # Writes the PDF on a pool of threads (see the feature of fagus-pdf).

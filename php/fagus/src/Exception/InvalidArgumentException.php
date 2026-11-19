@@ -32,6 +32,11 @@ final class InvalidArgumentException extends FagusException
         return new self('Encryption needs a user password or an owner password.');
     }
 
+    public static function notPositive(string $name, int $value): self
+    {
+        return new self("The engine's {$name} must be at least 1 or null, not {$value}.");
+    }
+
     public static function emptyInvoiceField(string $field): self
     {
         return new self("The invoice {$field} must not be empty.");

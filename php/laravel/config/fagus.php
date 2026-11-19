@@ -62,4 +62,15 @@ return [
     */
     'timeout' => 60,
 
+    /*
+    | When the worker process is replaced by a new one, which takes 3 to 4 ms: after as many
+    | documents (FAGUS_MAX_DOCUMENTS), or after a document that left it with more resident memory
+    | than as many megabytes (FAGUS_MAX_MEMORY; as far as the system tells, on Linux and macOS).
+    | A long-running worker (queue, Octane) keeps memory its allocator holds after large
+    | documents; a new one starts small. Never if null.
+    */
+    'max_documents' => env('FAGUS_MAX_DOCUMENTS'),
+
+    'max_memory' => env('FAGUS_MAX_MEMORY'),
+
 ];
