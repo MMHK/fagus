@@ -484,8 +484,9 @@ the string, `string()` shows it.
 `content(after)`, `content(first-letter)` and `content(marker)`), `attr()` and counters.
 `counter(page)` and `counter(pages)` in it are the number of the page the element is on and the page
 count: `string-set: chapter content() ", page " counter(page)` keeps the page where the chapter
-starts on the pages after it. `string()` takes a second argument for the case that the string is
-set several times on a page:
+starts on the pages after it. An element with `display: none` sets its strings too, where its box
+would be, so a hidden element can name the chapter without printing. `string()` takes a second
+argument for the case that the string is set several times on a page:
 
 | Value | Shows |
 |---|---|

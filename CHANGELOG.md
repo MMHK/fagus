@@ -74,6 +74,7 @@ All notable changes to this project are documented in this file. The format is b
 - Registered custom properties of numbers, percentages, lengths, angles and times are interpolated between two keyframes of an animation, as Chrome prints them: `@property --x { syntax: '<length>' }` halfway from `50px` to `150px` is `100px` in every `var(--x)`. They flipped at the middle before.
 - `all` no longer resets `direction` and `unicode-bidi`, which CSS Cascade 4 leaves out of it: right-to-left text with `unicode-bidi: bidi-override` and `all: initial` after it showed left to right.
 - `counter(page)` and `counter(pages)` in `string-set` give the number of the page the element is on and the page count, on every page that shows the string: `string-set: chapter content() ' (p. ' counter(page) ')'` printed 0 before.
+- An element with `display: none` sets its named strings where its box would be, at the start of the next box (CSS GCPM 3), as do elements with `display: contents` and line breaks; their strings were lost.
 
 ## [0.2.0] - 2026-11-17
 

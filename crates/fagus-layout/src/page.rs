@@ -1990,6 +1990,24 @@ impl Marks<StringValue> {
         for child in &fragment.children {
             self.collect(tree, child, content_seen);
         }
+        // Elements with `display: none` after the last box assign where the root element ends.
+        if let FragmentKind::Box {
+            node: Some(node),
+            sides,
+            ..
+        } = &fragment.kind
+            && sides.bottom
+            && !tree.trailing_strings.is_empty()
+            && tree.root.and_then(|root| tree.get(root).node) == Some(*node)
+        {
+            for (name, value) in &tree.trailing_strings {
+                self.strings.push(Assignment {
+                    name: Arc::clone(name),
+                    value: value.clone(),
+                    at_start: !*content_seen,
+                });
+            }
+        }
     }
 
     /// The assignments with the page counters in the values of named strings counted for page

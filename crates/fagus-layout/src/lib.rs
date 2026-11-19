@@ -476,6 +476,55 @@ mod tests {
     }
 
     #[test]
+    fn assigns_the_named_strings_of_elements_without_a_box() {
+        // An element with `display: none` sets its strings where its box would be: where the
+        // next box starts, or, after the last, where the content ends. Its counters do not
+        // change.
+        let pages = render(
+            "<style>
+               @page { @top-left { content: string(title, first); }
+                       @top-right { content: string(title, last); } }
+               body { font-family: Inter; counter-reset: n }
+               h1 { display: none; counter-increment: n; string-set: title content() ' ' counter(n); }
+               .break { break-before: page; }
+             </style>
+             <h1>Eins</h1><p>a</p>
+             <div class=break><h1>Zwei</h1><p>b</p><h1>Drei</h1></div>",
+        );
+        assert_eq!(pages.len(), 2);
+        assert_eq!(margin_text(&pages[0]), "Eins 0|Eins 0|");
+        assert_eq!(margin_text(&pages[1]), "Zwei 0|Drei 0|");
+    }
+
+    #[test]
+    fn assigns_the_named_strings_of_elements_without_a_box_of_their_own_at_the_next_box() {
+        for (html, expected) in [
+            (
+                "<div style='display: contents; string-set: t \"C\"'><p>x</p></div>",
+                "C|",
+            ),
+            ("<p>a<br style='string-set: t \"B\"'><span>x</span></p>", "B|"),
+            (
+                "<p>a <b style='display: none; string-set: t \"I\"'></b><span>x</span></p>",
+                "I|",
+            ),
+            (
+                "<table><tr style='display: none; string-set: t \"R\"'><td>a</td></tr><tr><td>b</td></tr></table>",
+                "R|",
+            ),
+            (
+                "<div style='display: flex'><b style='display: none; string-set: t \"F\"'></b><i>x</i></div>",
+                "F|",
+            ),
+        ] {
+            let pages = render(&format!(
+                "<style>@page {{ @top-left {{ content: string(t); }} }} body {{ font-family: Inter }}</style>{html}"
+            ));
+            assert_eq!(margin_text(&pages[0]), expected, "{html}");
+        }
+    }
+
+    #[test]
     fn breaks_and_sizes_named_pages() {
         let pages = render(
             "<style>

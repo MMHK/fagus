@@ -315,6 +315,9 @@ pub struct BoxTree {
     /// Every assignment to a named string, in document order: where `string()` in the content of
     /// an element finds its value.
     pub(crate) string_log: Vec<(Arc<str>, StringValue)>,
+    /// The named strings of elements without a box of their own after the last element with
+    /// one, assigned where the root element ends.
+    pub(crate) trailing_strings: Vec<(Arc<str>, StringValue)>,
     /// For each table row, the length of [`Self::string_log`] before and after the row's own
     /// assignments; for each table, its length after the table.
     pub(crate) string_positions: FxHashMap<BoxId, (usize, usize)>,
@@ -800,6 +803,7 @@ impl BoxTree {
                 ids: std::cell::OnceCell::new(),
                 strings: RefCell::default(),
                 string_log: RefCell::default(),
+                deferred_strings: RefCell::default(),
                 parent: std::cell::Cell::default(),
                 anonymous_tables: RefCell::default(),
                 contents_parents: RefCell::default(),
@@ -828,6 +832,11 @@ impl BoxTree {
                     ..ComputedValues::clone(style)
                 }));
             }
+            tree.trailing_strings = builder.deferred_strings.take();
+            builder
+                .string_log
+                .borrow_mut()
+                .extend(tree.trailing_strings.iter().cloned());
             tree.strings = builder.strings.take();
             tree.string_log = builder.string_log.take();
             tree.found = Targets {
@@ -1203,6 +1212,10 @@ struct Builder<'a> {
     strings: RefCell<NamedStrings>,
     /// The same assignments in document order.
     string_log: RefCell<Vec<(Arc<str>, StringValue)>>,
+    /// The named strings of elements without a box of their own (`display: none` or
+    /// `contents`, line breaks) since the last element with one, which the next one assigns
+    /// (see `defer_strings`).
+    deferred_strings: RefCell<Vec<(Arc<str>, StringValue)>>,
     /// What the children being collected are in: a block container, an inline box, or a table,
     /// row group or row.
     parent: std::cell::Cell<Parent>,
@@ -2077,7 +2090,9 @@ impl Builder<'_> {
                 scrolled = Some(child);
             }
             let strings_before = self.string_log.borrow().len();
-            if child_style.display != Display::None {
+            if child_style.display == Display::None {
+                self.defer_strings(child, child_style);
+            } else {
                 self.enter(child, child_style);
             }
             if child_style.footnote {
@@ -2462,12 +2477,28 @@ impl Builder<'_> {
                 .or_insert_with(|| counters.snapshot());
         }
         drop(counters);
-        // Named strings take the values the element has here, its counters included.
-        let values = self.string_values(element, style);
+        // Named strings take the values the element has here, its counters included, after
+        // those of the elements without a box before it.
+        let mut values = self.deferred_strings.take();
+        values.extend(self.string_values(element, style));
+        // An element with `display: contents` and a line break have no box of their own: the
+        // next element's box assigns their strings.
+        if style.display == Display::Contents || data.is_some_and(|data| data.is("br") || data.is("wbr")) {
+            *self.deferred_strings.borrow_mut() = values;
+            return;
+        }
         if !values.is_empty() {
             self.string_log.borrow_mut().extend(values.iter().cloned());
             self.strings.borrow_mut().insert(element, values);
         }
+    }
+
+    /// The named strings an element with `display: none` sets: they are assigned where its box
+    /// would have been (CSS GCPM 3, §1.1.1), which is where the next element's box starts. Its
+    /// counters do not change (CSS Display 3, §2.5).
+    fn defer_strings(&self, element: NodeId, style: &ComputedStyle) {
+        let values = self.string_values(element, style);
+        self.deferred_strings.borrow_mut().extend(values);
     }
 
     /// The values of the named strings `element` sets with `string-set`, taken where the box tree
@@ -3518,7 +3549,9 @@ impl Builder<'_> {
                 }
                 continue;
             }
-            if child_style.display != Display::None {
+            if child_style.display == Display::None {
+                self.defer_strings(child, child_style);
+            } else {
                 self.enter(child, child_style);
             }
             let line_break = self.document.element(child).is_some_and(|data| data.is("br"));
