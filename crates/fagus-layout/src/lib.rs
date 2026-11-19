@@ -186,11 +186,13 @@ pub fn layout_shrunk(
     scrollbars::add_scrolling(&mut tree);
     let (mut pages, mut numbers) = page::paginate(&tree, fonts, rules, &root_style, shrink);
     // Scroll containers whose content overflows get their scroll bars, and the document is laid
-    // out again with them.
+    // out again with them. The pages before go first: `paginate` charges the budget of the
+    // render only for the pages it lays out, the caller for those it gets.
     for _ in 0..scrollbars::MAX_PASSES {
         if !scrollbars::add_overflowing(&mut tree, &pages) {
             break;
         }
+        drop(pages);
         (pages, numbers) = page::paginate(&tree, fonts, rules, &root_style, shrink);
     }
     let mut found = tree.found_targets().clone();

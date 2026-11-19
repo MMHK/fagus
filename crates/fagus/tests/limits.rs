@@ -164,6 +164,19 @@ fn ends_a_document_when_its_time_is_up() {
 }
 
 #[test]
+fn ends_a_document_laid_out_again_for_scroll_bars_when_its_time_is_up() {
+    // Each box overflows, gets a scroll bar and makes the document be laid out again.
+    let document = Document::html(
+        "<div style='overflow: auto; height: 20px'>Hallo Welt,<br>ein Absatz,<br>der überläuft.</div>"
+            .repeat(10_000),
+    );
+    let failure =
+        render(&document, Limits::new().time(Some(Duration::from_millis(20)))).expect_err("too slow");
+    assert!(matches!(failure.error, Error::TimeLimit { .. }));
+    assert_eq!(failure.diagnostics[0].code, "limit.time");
+}
+
+#[test]
 fn counts_the_time_a_loader_takes() {
     struct Slow;
     impl ResourceLoader for Slow {
@@ -186,7 +199,8 @@ fn counts_the_time_a_loader_takes() {
 fn renders_the_same_bytes_within_the_limits() {
     let mut html = String::from(
         "<style>td { border: 1px solid; box-shadow: 0 0 4px red } .f { filter: blur(1px) }</style>\
-         <img src='logo.png'><div class=f><div style='opacity: .5'>Filter</div></div><table>",
+         <img src='logo.png'><div class=f><div style='opacity: .5'>Filter</div></div>\
+         <div style='overflow: auto; height: 30px'>Laid out again<br>for the scroll bar<br>it gets</div><table>",
     );
     for row in 0..300 {
         write!(html, "<tr><td>{row}</td><td rowspan=2>Posten</td></tr>").expect("written");
