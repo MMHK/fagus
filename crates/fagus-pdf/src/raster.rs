@@ -80,9 +80,9 @@ pub(crate) fn conic_pixels(
         let y = (row as f32 + 0.5) / scale - center.1;
         for column in 0..width {
             let x = (column as f32 + 0.5) / scale - center.0;
-            let angle = (x.atan2(-y).to_degrees() - start_angle) / 360.0;
+            let angle = (atan2(x, -y).to_degrees() - start_angle) / 360.0;
             // The part of a turn a pixel spans at its distance from the center.
-            let span = (1.0 / (scale * x.hypot(y) * std::f32::consts::TAU)).min(1.0);
+            let span = (1.0 / (scale * hypot(x, y) * std::f32::consts::TAU)).min(1.0);
             let value = turn.mean(angle, span);
             color.extend([channel(value.r), channel(value.g), channel(value.b)]);
             alpha.push(channel(value.a));
@@ -94,6 +94,21 @@ pub(crate) fn conic_pixels(
         width: width as u32,
         height: height as u32,
     }
+}
+
+/// `y.atan2(x)`, but with the same bits on every platform: Rust's goes to the system's `atan2f`,
+/// which is one bit off glibc's on macOS for about one pixel in six, enough to change a channel of
+/// some of them by one (and the PDF/A files with conic gradients with it). libm's is the FreeBSD
+/// one, as glibc's, written in Rust, so Linux keeps its bytes.
+fn atan2(y: f32, x: f32) -> f32 {
+    libm::atan2f(y, x)
+}
+
+/// `x.hypot(y)` as glibc computes it, the same on every platform: the squares of two `f32` are
+/// exact as `f64`, and their sum and its root are rounded as IEEE 754 requires.
+fn hypot(x: f32, y: f32) -> f32 {
+    let (x, y) = (f64::from(x), f64::from(y));
+    (x * x + y * y).sqrt() as f32
 }
 
 /// A piece of a turn where the color changes linearly.
@@ -285,5 +300,18 @@ mod tests {
         // A linear stretch keeps its color.
         let linear = Turn::new(&[(0.0, red), (1.0, blue)]);
         assert!(close(linear.mean(0.5, 0.2), (0.5, 0.5)));
+    }
+
+    #[test]
+    fn computes_the_same_angles_on_every_platform() {
+        // Pixels of a conic gradient where macOS's atan2f gives other bits than libm's, the
+        // FreeBSD ones as on Linux. At -95.75 they are not the closest `f32`: what counts is that
+        // every platform gives the same.
+        assert_eq!(atan2(-97.75, 99.75).to_bits(), 0xbf46_7839);
+        assert_eq!(atan2(-95.75, 99.75).to_bits(), 0xbf43_d326);
+        assert_eq!(atan2(-85.75, 99.75).to_bits(), 0xbf35_c71a);
+        assert_eq!(atan2(-84.75, 99.75).to_bits(), 0xbf34_4b6a);
+        assert_eq!(hypot(3.0, 4.0), 5.0);
+        assert_eq!(hypot(-97.75, 99.75).to_bits(), 0x430b_a927);
     }
 }

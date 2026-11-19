@@ -33,6 +33,7 @@ fagus-style.workspace = true
 fagus-css.workspace = true
 fagus-layout.workspace = true
 rustc-hash.workspace = true
+libm.workspace = true
 # Compresses the object streams side by side; krilla compresses pages with it.
 rayon = { workspace = true, optional = true }
 thiserror.workspace = true

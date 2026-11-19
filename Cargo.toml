@@ -55,6 +55,9 @@ resvg = { version = "0.47.0", default-features = false }
 # krilla compresses with flate2; the zlib-rs backend is several times faster than miniz_oxide.
 flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
 rustc-hash = "2.1.3"
+# The angles of conic gradients drawn as images, the same on every platform (the system's atan2f
+# differs between glibc and macOS); rustybuzz already depends on it.
+libm = "0.2.16"
 # Rasterizes the glyphs of blurred text shadows; krilla-svg already depends on it.
 tiny-skia = "0.12.0"
 # Decode the images that filters change; krilla already depends on them.

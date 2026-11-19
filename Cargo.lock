@@ -459,6 +459,7 @@ dependencies = [
  "image-webp",
  "krilla",
  "krilla-svg",
+ "libm",
  "png",
  "rayon",
  "resvg",
