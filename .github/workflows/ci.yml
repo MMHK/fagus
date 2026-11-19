@@ -146,3 +146,7 @@ jobs:
         run: |
           composer install --no-interaction --no-progress
           php vendor/bin/phpunit
+      # The code style of pint.json, checked once: the result is the same on every runner.
+      - name: Code style (Pint)
+        if: matrix.os == 'ubuntu-latest' && matrix.php == '8.5'
+        run: php vendor/bin/pint --test
