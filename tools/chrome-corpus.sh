@@ -14,9 +14,9 @@
 #   tools/chrome-corpus.sh OUT_DIR [fagus-conformance corpus options]
 #
 # CHROME names the Chrome binary. Without it, the script downloads Chrome for Testing at the
-# version below (Linux x64 only), checks its SHA-256 and keeps it in target/chrome. Fagus renders
-# with tests/fonts and the fonts installed on the machine, as Chrome uses those; on CI the fonts
-# of tests/fonts are installed for Chrome too, so both have the same. FAGUS_CONFORMANCE names a
+# version below (Linux x64 only), checks its SHA-256 and keeps it in target/chrome, and gives
+# Chrome and Fagus the same fixed set of fonts (see set_up_fonts). With CHROME, Fagus renders with
+# tests/fonts and the fonts installed on the machine, as Chrome uses those. FAGUS_CONFORMANCE names a
 # harness binary built before (otherwise cargo builds it). The PDFs go to OUT_DIR/chrome and
 # OUT_DIR/fagus, the result of each document to OUT_DIR/results.txt, the summary to
 # OUT_DIR/summary.md (and the job summary on GitHub Actions) and the expectations this run would
@@ -30,6 +30,48 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 out=${1:?usage: tools/chrome-corpus.sh OUT_DIR [options]}
 shift
 mkdir -p "$out"
+
+# The fonts Chrome and Fagus both see on Linux: the test fonts, the metric-compatible Liberation
+# fonts, DejaVu, and one Noto family for each other script of the corpus, from the packages of
+# Ubuntu 24.04 (fonts-liberation2, fonts-dejavu-core, fonts-dejavu-extra, fonts-noto-core,
+# fonts-noto-cjk). A fontconfig configuration of their own (FONTCONFIG_FILE, which Chrome's
+# fontconfig and Fagus read) lists only these, with the system's rules (aliases such as Arial to
+# Liberation Sans), so that both fall back to the same font for a script.
+set_up_fonts() {
+  local fonts=$root/target/chrome-fonts files=() file
+  files+=("$root"/tests/fonts/*.ttf)
+  for file in Sans Serif Mono; do
+    files+=(/usr/share/fonts/truetype/liberation2/Liberation"$file"-{Regular,Bold,Italic,BoldItalic}.ttf)
+  done
+  files+=(/usr/share/fonts/truetype/dejavu/DejaVu{Sans,SansMono}{,-Bold,-Oblique,-BoldOblique}.ttf)
+  files+=(/usr/share/fonts/truetype/dejavu/DejaVuSerif{,-Bold,-Italic,-BoldItalic}.ttf)
+  for file in Thai Devanagari Bengali Tamil Ethiopic; do
+    files+=(/usr/share/fonts/truetype/noto/NotoSans"$file"-{Regular,Bold}.ttf)
+  done
+  files+=(/usr/share/fonts/opentype/noto/NotoSansCJK-{Regular,Bold}.ttc)
+  rm -rf "$fonts"
+  mkdir -p "$fonts/files" "$fonts/cache"
+  for file in "${files[@]}"; do
+    if [[ ! -f $file ]]; then
+      echo "missing font $file; install the packages named in tools/chrome-corpus.sh" >&2
+      exit 2
+    fi
+    cp "$file" "$fonts/files/"
+  done
+  cat > "$fonts/fonts.conf" <<CONF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <dir>$fonts/files</dir>
+  <cachedir>$fonts/cache</cachedir>
+  <include ignore_missing="yes">/etc/fonts/conf.d</include>
+</fontconfig>
+CONF
+  export FONTCONFIG_FILE=$fonts/fonts.conf
+  fc-cache -f > /dev/null 2>&1 || true
+  echo "fonts for Chrome and Fagus:"
+  (cd "$fonts/files" && sha256sum ./*)
+}
 
 chrome=${CHROME:-}
 arguments=()
@@ -50,6 +92,7 @@ if [[ -z $chrome ]]; then
   chrome=$directory/chrome-linux64/chrome
   # The sandbox needs user namespaces, which Ubuntu 24.04 restricts; the corpus is trusted.
   arguments+=(--chrome-arg=--no-sandbox)
+  set_up_fonts
 fi
 
 harness=${FAGUS_CONFORMANCE:-}

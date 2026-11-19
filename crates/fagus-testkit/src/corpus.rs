@@ -257,6 +257,9 @@ pub fn compare(options: &Options) -> anyhow::Result<Vec<Comparison>> {
     Ok(comparisons)
 }
 
+/// The default fonts of Chrome on Linux in English (`locale_settings_linux.grd`).
+const LINUX_FONT_PREFERENCES: &str = r#"{"webkit":{"webprefs":{"default_font_size":16,"default_fixed_font_size":13,"fonts":{"standard":{"Zyyy":"Times New Roman"},"serif":{"Zyyy":"Times New Roman"},"sansserif":{"Zyyy":"Arial"},"fixed":{"Zyyy":"Monospace"},"cursive":{"Zyyy":"Comic Sans MS"},"fantasy":{"Zyyy":"Impact"}}}}}"#;
+
 /// The language of a document as its `<html lang>` gives it.
 pub fn root_lang(html: &str) -> Option<String> {
     let lower = html.to_ascii_lowercase();
@@ -282,6 +285,15 @@ fn print_with_chrome(options: &Options, source: &Path, pdf: &Path, profile: &Pat
     let lang = std::fs::read_to_string(source)
         .ok()
         .and_then(|html| root_lang(&html));
+    // Chrome takes its default fonts (the standard, serif, sans-serif and monospace family, and
+    // their sizes) from the language of its user interface as well; they stay those of English,
+    // which Fagus follows, in the profile's preferences.
+    if cfg!(target_os = "linux") {
+        let preferences = profile.join("Default");
+        std::fs::create_dir_all(&preferences).map_err(|error| error.to_string())?;
+        std::fs::write(preferences.join("Preferences"), LINUX_FONT_PREFERENCES)
+            .map_err(|error| error.to_string())?;
+    }
     let _ = std::fs::remove_file(pdf);
     let status = process::run(
         Command::new(&options.chrome)
