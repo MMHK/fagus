@@ -388,6 +388,20 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_in_the_sandbox_unless_turned_off(): void
+    {
+        $free = new Engine(self::$binary, [self::FONTS], sandbox: false);
+
+        $this->assertSame('off', $free->sandbox());
+        $this->assertStringStartsWith('%PDF-', Document::html('<p>x</p>')->render($free)->bytes());
+        if (PHP_OS_FAMILY === 'Linux') {
+            $this->assertContains(self::$engine->sandbox(), ['on', 'partial']);
+        } else {
+            $this->assertSame('off', self::$engine->sandbox());
+        }
+    }
+
+    #[Test]
     public function it_explains_a_missing_binary(): void
     {
         $this->expectException(EngineException::class);

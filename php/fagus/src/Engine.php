@@ -49,6 +49,9 @@ final class Engine
 
     private ?string $version = null;
 
+    /** How much of its sandbox the running worker is in, as its hello says. */
+    private string $sandboxed = 'off';
+
     private int $requests = 0;
 
     /** The documents the running worker has rendered. */
@@ -83,6 +86,7 @@ final class Engine
      *                           as far as the system tells the worker (Linux: now, macOS: at its peak; not Windows)
      * @param  ?Closure(string): void  $onWarning  receives warnings, such as a binary of another release than
      *                                           this package; written to PHP's error log (error_log()) if null
+     * @param  bool  $sandbox  whether the worker renders in its sandbox on Linux (docs/cli.md#sandbox)
      */
     public function __construct(
         private readonly ?string $binary = null,
@@ -96,6 +100,7 @@ final class Engine
         private readonly ?int $maxDocuments = null,
         private readonly ?int $maxMemory = null,
         private readonly ?Closure $onWarning = null,
+        private readonly bool $sandbox = true,
     ) {
         foreach (['maxDocuments' => $maxDocuments, 'maxMemory' => $maxMemory] as $name => $limit) {
             if ($limit !== null && $limit < 1) {
@@ -197,6 +202,17 @@ final class Engine
     }
 
     /**
+     * How much of its sandbox the running worker is in: "on", "partial" (the kernel lacks Landlock
+     * or seccomp) or "off" (turned off, or not Linux).
+     */
+    public function sandbox(): string
+    {
+        $this->start();
+
+        return $this->sandboxed;
+    }
+
+    /**
      * Stops the worker process; the next document starts a new one. The worker ends when its
      * input closes; one that has not ended after two seconds is terminated.
      */
@@ -268,6 +284,9 @@ final class Engine
                 array_push($command, $option, $family);
             }
         }
+        if (! $this->sandbox) {
+            $command[] = '--no-sandbox';
+        }
         if (! function_exists('proc_open')) {
             throw EngineException::notStarted($binary, 'PHP does not allow proc_open() (disable_functions).');
         }
@@ -309,6 +328,7 @@ final class Engine
         if ($this->version !== Release::VERSION) {
             $this->warnOnce($binary, $this->version);
         }
+        $this->sandboxed = (string) ($hello['sandbox'] ?? 'off');
 
         return $this->channel = $channel;
     }

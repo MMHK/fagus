@@ -483,6 +483,7 @@ All arguments are optional and named as below.
 | `maxDocuments` | `?int`, `null` | The documents a worker renders before the engine replaces it with a new one, which takes 3 to 4 ms. No limit if `null`. See [deployment.md](deployment.md#restart-workers). |
 | `maxMemory` | `?int`, `null` | Megabytes of resident memory: a worker that has more after a document is replaced with a new one. The worker tells its size on Linux (now) and macOS (its peak); on Windows the limit does not apply. No limit if `null`. |
 | `onWarning` | `?Closure(string): void`, `null` | Receives the engine's warnings: so far, that the binary is of another release than the package ([protocol.md](protocol.md#versions)). If `null`, they go to PHP's error log (`error_log()`), never to the output. The Laravel integration writes them to Laravel's log. |
+| `sandbox` | `bool`, `true` | Whether the worker renders in its sandbox on Linux, without network, programs or writing files ([cli.md](cli.md#sandbox)). `false` starts it with `--no-sandbox`. |
 
 Form controls write their texts (the labels of submit and reset buttons, "Choose File", the
 placeholders and formats of date and time fields, the decimal separator of number fields) as
@@ -514,6 +515,12 @@ Fagus::engine()->addFont(file_get_contents(__DIR__.'/resources/fonts/CorporateSa
 ### `version(): string`
 
 The version of the running binary, such as `0.2.0`. Starts the worker if it is not running.
+
+### `sandbox(): string`
+
+How much of its [sandbox](cli.md#sandbox) the running worker is in: `on`, `partial` (the kernel
+lacks Landlock, as before Linux 5.13, or seccomp) or `off` (turned off, or not Linux).
+Starts the worker if it is not running.
 
 ### `close(): void`
 

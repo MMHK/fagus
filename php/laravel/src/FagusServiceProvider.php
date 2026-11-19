@@ -44,6 +44,7 @@ final class FagusServiceProvider extends ServiceProvider
                 maxMemory: self::limit($config['max_memory'] ?? null),
                 // A binary of another release than the package, for example, goes to the log.
                 onWarning: static fn (string $message) => $app->make('log')->warning($message),
+                sandbox: (bool) ($config['sandbox'] ?? true),
             );
         });
 

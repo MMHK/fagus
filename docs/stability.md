@@ -24,7 +24,7 @@ What these pages describe is the public API:
 - **PHP and Laravel:** the classes, methods, enums and exceptions of [PHP API](php.md), with the
   names of their parameters; the facade, `PendingPdf`, the configuration keys and the commands of
   [Laravel](laravel.md); the environment variables (`FAGUS_BINARY`, `FAGUS_SYSTEM_FONTS`,
-  `FAGUS_LOCALE`, `FAGUS_DOWNLOAD_URL`, `FAGUS_GITHUB_TOKEN`). Not covered: anything marked
+  `FAGUS_LOCALE`, `FAGUS_SANDBOX`, `FAGUS_DOWNLOAD_URL`, `FAGUS_GITHUB_TOKEN`). Not covered: anything marked
   `@internal` and the namespace `Fagus\Internal`.
 - **Rust:** the crate `fagus` with the types it exports and its features ([Rust library](rust.md)).
   The other crates of the repository are internal and change in any release.

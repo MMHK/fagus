@@ -156,6 +156,15 @@ final class FagusTest extends TestCase
     }
 
     #[Test]
+    public function it_turns_the_sandbox_off_when_configured(): void
+    {
+        $this->app['config']->set('fagus.sandbox', false);
+        $this->app->forgetInstance(Engine::class);
+
+        $this->assertSame('off', $this->app->make(Engine::class)->sandbox());
+    }
+
+    #[Test]
     public function it_passes_the_version_and_description_of_invoices_on(): void
     {
         $xml = (string) file_get_contents(__DIR__.'/../../../tests/corpus/invoice/factur-x.xml');

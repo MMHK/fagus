@@ -73,4 +73,10 @@ return [
 
     'max_memory' => env('FAGUS_MAX_MEMORY'),
 
+    /*
+    | Whether the worker renders in its sandbox on Linux: without network, without starting
+    | programs and without writing files (docs/cli.md#sandbox). Turn it off only to debug.
+    */
+    'sandbox' => env('FAGUS_SANDBOX', true),
+
 ];
