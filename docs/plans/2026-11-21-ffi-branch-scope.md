@@ -150,5 +150,6 @@ parity 基準。** 所以「能不能刪」不是編譯問題，而是產品與�
 `nforst/fagus` 不再從這個 repo 發佈時才重新評估。
 
 後續工作回到 `docs/plans/2026-11-20-php-ffi-cdylib.md` §14 / §16 的待辦：FPM
-`ffi.enable=preload` 驗證、把 `ffi-release.yml` 併入 `release.yml`、SBOM 與 Composer 發佈。
+`ffi.enable=preload` 驗證、把 `ffi-release.yml` 併入 `release.yml`、SBOM 與 Composer 發佈
+（前三項已於該檔 §18 完成，只剩 Packagist 發佈）。
 

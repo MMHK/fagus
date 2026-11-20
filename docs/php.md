@@ -828,6 +828,13 @@ Pass the path of the library to `new Engine()`, set `FAGUS_FFI_LIB`, or put it w
 looks for it: `lib/linux-x86_64/`, `lib/linux-aarch64/` or `lib/windows-x86_64/` beside
 `composer.json`.
 
+`ffi.enable` is `preload` by default, and then FFI works only in files OPcache preloads: a pool
+that renders documents in a request has to set `ffi.enable=true` in its `php.ini`, and so has the
+command line. Without it, `Engine` reports that the FFI extension is not loaded. A preload file
+(`opcache.preload=/app/preload.php`, `opcache.preload_user=www-data`) can call the library as the
+pool starts, which warms it up but does not replace the setting. [.github/workflows/ffi.yml](../.github/workflows/ffi.yml)
+checks both against a real `php-fpm`.
+
 ### Usage
 
 ```php

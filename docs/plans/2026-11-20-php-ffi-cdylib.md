@@ -314,9 +314,9 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 | 階段 | 內容 | 估時 | 驗收 | 狀態 |
 |---|---|---|---|---|
 | M1 | `fagus-protocol` 抽取、`fagus-ffi`、`fagus.h` | 1–1.5 天 | `cargo test -p fagus-ffi`；Linux x64 上 `php -r` 產出 `%PDF-` | 完成（`c9971a13`…`cda340c`，見 §14） |
-| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 | 建置、smoke、封裝與 draft release 已在 `ffi-release.yml` 完成；併入 `release.yml` 待做 |
+| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 | 完成：建置、smoke、封裝與 draft release 已在 `ffi-release.yml` 驗證，並於 §18 併入 `release.yml` |
 | M3 | `php/fagus-ffi`（7.4 語法）+ Composer | 1 天 | PHP 7.4 / 8.0 / 8.3 / 8.4 全綠 | 完成（`b1831f0`…`350f7dc`），含 PKCS#12 簽章 |
-| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 | 文件已完成（`docs/php.md`、`SECURITY.md`、`CHANGELOG.md`）；釘選流程待做 |
+| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 | 文件已完成（`docs/php.md`、`SECURITY.md`、`CHANGELOG.md`）；釘選流程見 §18（FFI 套件不需釘選） |
 
 約 3–4 天可交出不含 callback 的 MVP。
 
@@ -343,9 +343,11 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 - [x] `nm -D --defined-only` 只有 `fagus_*`（spike，§13）
 - [x] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠（CI `44732710202`，含 PHP 套件）
 - [x] PKCS#12 簽章經 C ABI 產出（`cargo test -p fagus-ffi`、PHP smoke）
-- [ ] `php -r 'echo ini_get("ffi.enable");'` 在 FPM 與 CLI 都是 `true`（或 preload）
-- [x] FFI 與 CLI 輸出位元組相同：`ffi.yml` 的「The library and the command line agree byte for
-      byte」以同一份 HTML 與 `--created` 比對 `cmp`
+- [x] `php -r 'echo ini_get("ffi.enable");'` 在 FPM 與 CLI 都是 `true`（或 preload）：`ffi.yml`
+      的 PHP-FPM 步驟用真的 pool 驗證 `ffi.enable=true` 會渲染、預設 `preload` 沒有 preload 檔
+      會被拒、有 preload 檔會在啟動時渲染（§18）
+- [ ] FFI 與 CLI 輸出位元組相同：`ffi.yml` 的 parity 步驟已寫好（建置 CLI、`parity.php`
+      經 FFI 渲染、`cmp`），但 `ffi.yml` 只隨 `main` / PR 觸發，尚未在 CI 實際跑過
 - [x] 文件標明無沙箱（`docs/php.md`、`SECURITY.md`）
 
 ## 12. 校對記錄（2026-11-20）
@@ -477,9 +479,10 @@ CI（workflow `Spike FFI`，分支 `spike/ffi`）：
    `php tools/check-docs.php` 通過。
 5. ~~進 PR 前：CI 恢復 `--locked`、決定 `spike-ffi.yml` 的去留、補一個 `ffi.enable=preload`
    的 FPM 驗證。~~ → 已把 `spike-ffi.yml` 改名為 `ffi.yml`（main / PR 觸發、`--locked`、移除與
-   `ci.yml` 重複的 check job）；`ffi.enable=preload` 的 FPM 驗證仍待做。
-6. ~~驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。~~ → `ffi.yml` 的 parity
-   步驟會建置 CLI、用 `parity.php` 經 FFI 渲染同一份 HTML，然後 `cmp` 兩份 PDF。
+   `ci.yml` 重複的 check job）；`ffi.enable=preload` 的 FPM 驗證見 §18。
+6. ~~驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。~~ → `ffi.yml` 已加入 parity
+   步驟（建置 CLI、`parity.php` 經 FFI 渲染同一份 HTML，再 `cmp` 兩份 PDF）；因為 `ffi.yml`
+   只在 `main` / PR 觸發，尚未在 CI 實際執行。
 
 ## 15. FFI 預覽發版 workflow（2026-11-20）
 
@@ -556,12 +559,12 @@ InternalError: error fetching tlog entry - (404) Not Found
 - 文件：`docs/php.md` 新增「The FFI package」、`SECURITY.md` 補無沙箱與 abort/OOM 風險、
   `CHANGELOG.md` 的 `[Unreleased]` 補條目。
 
-仍待做：
+仍待做（§18 已完成前三項，只剩 Packagist 發佈）：
 
-- `ffi.enable=preload` 的 FPM 驗證（需要 php-fpm + preload 檔）。
-- 把 `ffi-release.yml` 的 `library` / `php` job 併入 `release.yml`，以及
-  `tools/pin-binaries.php` 的釘選流程。
-- SBOM 與 Packagist / Composer 發佈。
+- ~~`ffi.enable=preload` 的 FPM 驗證（需要 php-fpm + preload 檔）。~~ → §18。
+- ~~把 `ffi-release.yml` 的 `library` / `php` job 併入 `release.yml`，以及
+  `tools/pin-binaries.php` 的釘選流程。~~ → §18。
+- ~~SBOM~~ → §18；Packagist / Composer 發佈仍未做。
 
 重跑後 Windows job（含 attestation）全綠，證實 404 是 transient；接著暴露第二個問題：
 `php` job 的 `tar -xzf … --wildcards '*.so' '*.dll'` 在只有 `.so` 的 Linux archive 上
@@ -570,5 +573,75 @@ InternalError: error fetching tlog entry - (404) Not Found
 `fagus.h` 與 README 留在 archive 的 `dist/`，不放進 `lib/<platform>/`。
 
 [actions/attest-build-provenance#679]: https://github.com/actions/attest-build-provenance/issues/679
+
+### rc2 結果（2026-11-21）
+
+`ffi-v0.2.0-rc2`（run `44777216196`）全綠，包含：
+
+- Windows x64（static CRT）與 PHP 7.4 / 8.4
+- Linux x86_64 與 PHP 7.4 / 8.0 / 8.3 / 8.4
+- Linux aarch64 與 PHP 8.4
+- PHP package：三平台 `lib/<platform>/` 佈局 + 封裝 smoke test
+- Draft release `ffi-v0.2.0-rc2`：6 個平台 archive、`fagus-ffi-php-0.2.0-rc2.tar.gz`、
+  `SHA256SUMS`、`THIRD-PARTY-NOTICES`
+
+這證明 attestation 重試與 tar pattern 的修正有效；這兩個 job 都在第一次嘗試就成功，重試步驟被跳過。
+
+`ffi.yml` 的 parity 步驟還沒跑：`ffi.yml` 只在 `main` / PR 觸發，而 `workflow_dispatch`
+要求 workflow 已在預設分支上。等 `spike/ffi` 開 PR 或併回 `main` 時會第一次執行。
+
+## 18. 併回 `release.yml`、SBOM 與 FPM（2026-11-21）
+
+分支範圍的決策是方案 A（`docs/plans/2026-11-21-ffi-branch-scope.md`），所以 FFI 不再有自己的
+發版 workflow：`.github/workflows/ffi-release.yml` 已刪除，內容併進 `release.yml`。
+
+### `release.yml`
+
+同一次 *Release*（`workflow_dispatch` + `version`）現在建置三類產物，全部進同一個 draft
+`v<version>`：
+
+| Job | 產物 |
+|---|---|
+| `build` | `fagus-<target>` 與各自的 `fagus-<target>.cdx.json`（不變） |
+| `library` | `fagus-ffi-<target>.tar.gz` / `.zip`（函式庫、`fagus.h`、README、`fagus-ffi-<target>.cdx.json`） |
+| `php` | `fagus-ffi-php-<version>.tar.gz`（`lib/{linux-x86_64,linux-aarch64,windows-x86_64}/`） |
+
+- 觸發只剩 `workflow_dispatch`；`ffi-v*` tag 與「tag 必須指向 `spike/ffi`」的檢查移除，因為
+  發版流程本來就是「dispatch → draft → 釘選 → 打 `v<version>` tag → 發佈」。
+- 版本檢查沿用 `Cargo.toml` 的 workspace 版本（`ffi-v` 後綴規則不再適用）。
+- `php` job 的 artifact 下載用 `fagus-ffi-*`，迴圈只認三個 target，其他（例如重跑時下載到
+  自己的 `fagus-ffi-php`）跳過而不是失敗。
+- `SHA256SUMS` 由 `sha256sum fagus-*` 產生，因此也涵蓋 FFI 的 tar/zip、SBOM 與 PHP 套件。
+- `tools/pin-binaries.php` 不需修改：它的正則只認 `fagus-<target>`（可帶 `.exe`），
+  `fagus-ffi-*` 不會被當成 CLI binary；FFI 套件也不需要釘選，因為函式庫就在它自己的 archive
+  裡，而該 archive 的 SHA-256 已在 `SHA256SUMS`，provenance attestation 也涵蓋它。
+- Attestation 保留 §16 的重試（Rekor 404），並新增 `attest-sbom`（函式庫）與 `SHA256SUMS`
+  的重試。
+
+### SBOM
+
+`library` job 用與 CLI 相同的 `cargo-cyclonedx@0.5.10 --format json --all --spec-version 1.5`
+產生 `fagus-ffi-<target>.cdx.json`：一份放進 `dist/`（所以也在 tar/zip 裡），一份當成 release
+asset，並用 `actions/attest-sbom@v2` 對函式庫本體簽發 attestation。
+
+### FPM
+
+`php/fagus-ffi/tests/fpm-preload.sh` 在 `php:8.4-fpm` 容器裡裝好 FFI 與 OPcache，起一個真的
+pool，用 `cgi-fcgi` 送請求，驗證三件事：
+
+1. `ffi.enable=true`：請求內渲染成功（README 要求的設定）。
+2. 預設 `ffi.enable=preload` 且沒有 preload 檔：請求呼叫 FFI 被拒，所以文件必須說明這個設定。
+3. `ffi.enable=preload` + `opcache.preload`：preload 檔在 pool 啟動時就渲染成功。
+
+`ffi.yml` 的 Linux x64 job 在 parity 之後執行它，`docs/php.md` 的 requirements 段落也補了
+`ffi.enable` 與 preload 的差別。
+
+### 仍未做
+
+- Packagist / Composer 發佈 `nforst/fagus-ffi`（目前只產出 tar.gz，`composer.json` 已在
+  `php/fagus-ffi/`）。
+- root `.gitattributes` 只排除 `crates/`、`tests/`、`tools/`、`docs/`，所以 `nforst/fagus` 的
+  archive 仍會帶上 `php/fagus-ffi/` 的原始碼（不含 `lib/`）。若之後要讓兩個套件互不攙雜，
+  那是方案 B 的一部分，不在方案 A 的範圍。
 
 
