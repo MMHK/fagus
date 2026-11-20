@@ -42,6 +42,30 @@ final class Pdf
     }
 
     /**
+     * Whether the PDF is encrypted.
+     */
+    public function encrypted(): bool
+    {
+        return ($this->meta['encrypted'] ?? false) === true;
+    }
+
+    /**
+     * Whether the PDF is signed.
+     */
+    public function signed(): bool
+    {
+        return ($this->meta['signed'] ?? false) === true;
+    }
+
+    /**
+     * Whether the form controls became the fields of an interactive form.
+     */
+    public function forms(): bool
+    {
+        return ($this->meta['forms'] ?? false) === true;
+    }
+
+    /**
      * @return Diagnostic[]
      */
     public function diagnostics(): array

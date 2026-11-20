@@ -260,6 +260,17 @@ final class Document
     }
 
     /**
+     * Signs the PDF with a PKCS#12 file, as a certification signature if the signature asks for
+     * one, and shows it where the signature says.
+     */
+    public function sign(Signature $signature): self
+    {
+        $this->options['signature'] = $signature->request($this->addBlob($signature->bytes()));
+
+        return $this;
+    }
+
+    /**
      * The request of the worker protocol, and its data blocks in order.
      *
      * @return array{0: array<string, mixed>, 1: string[]}

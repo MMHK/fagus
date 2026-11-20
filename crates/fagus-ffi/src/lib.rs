@@ -13,7 +13,7 @@ use std::ffi::{CString, c_char, c_void};
 use std::path::PathBuf;
 
 use fagus::Engine;
-use fagus_protocol::Request;
+use fagus_protocol::{Request, SignatureRequest};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -188,6 +188,12 @@ fn render(
     blob_data_len: usize,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let json = bytes(request_json, request_len).ok_or_else(|| "the request is missing".to_owned())?;
+    let data = bytes(blob_data, blob_data_len).unwrap_or(&[]);
+    render_bytes(engine, json, data)
+}
+
+/// Renders one document from its request JSON and its data blocks.
+fn render_bytes(engine: &Engine, json: &[u8], data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
     let mut value: Value =
         serde_json::from_slice(json).map_err(|error| format!("invalid request: {error}"))?;
     let lengths: Vec<usize> = match value
@@ -197,13 +203,13 @@ fn render(
         Some(lengths) => serde_json::from_value(lengths).map_err(|_| "invalid `blobLengths`".to_owned())?,
         None => Vec::new(),
     };
-    let request: Request =
+    let mut request: Request =
         serde_json::from_value(value).map_err(|error| format!("invalid request: {error}"))?;
-    if request.signature.is_some() {
-        return Err("signatures need the worker, not the C ABI, for now".to_owned());
-    }
+    let encrypted = request.encryption.is_some();
+    let forms = request.forms;
+    let signature_request = request.signature.take();
+    let signed = signature_request.is_some();
 
-    let data = bytes(blob_data, blob_data_len).unwrap_or(&[]);
     let total = lengths
         .iter()
         .try_fold(0_usize, |total, &length| total.checked_add(length))
@@ -221,15 +227,79 @@ fn render(
         offset += length;
     }
 
-    let document = fagus_protocol::document(request, &mut blobs, engine.limits(), None)?;
+    let mut document = fagus_protocol::document(request, &mut blobs, engine.limits(), None)?;
+    if let Some(request) = signature_request {
+        document = document.sign(signature(request, &mut blobs)?);
+    }
     let output = engine
         .render_with_diagnostics(&document)
         .map_err(|failure| failure.error.to_string())?;
-    let meta = fagus_protocol::output_json(&output);
+    let mut meta = fagus_protocol::output_json(&output);
+    meta["encrypted"] = Value::Bool(encrypted);
+    meta["signed"] = Value::Bool(signed);
+    meta["forms"] = Value::Bool(forms);
     Ok((
         output.pdf,
         serde_json::to_vec(&meta).map_err(|error| error.to_string())?,
     ))
+}
+
+/// The signature of a render request.
+///
+/// Only PKCS#12 needs no channel, so only that is available here: a timestamp, revocation data or
+/// an external signer would call back into the caller, which this ABI cannot do.
+fn signature(request: SignatureRequest, blobs: &mut [Option<Vec<u8>>]) -> Result<fagus::Signature, String> {
+    if !request.certificates.is_empty()
+        || request.timestamp
+        || request.revocation
+        || request.archive_timestamp
+    {
+        return Err(
+            "only a PKCS#12 signature is available here; timestamps, revocation and external \
+             signers need the worker"
+                .to_owned(),
+        );
+    }
+    let index = request
+        .pkcs12
+        .ok_or_else(|| "a signature needs `pkcs12` through the C ABI".to_owned())?;
+    let data = blobs
+        .get_mut(index)
+        .and_then(Option::take)
+        .ok_or_else(|| format!("data block {index} is missing"))?;
+    let mut signature = fagus::Signature::pkcs12(&data, request.password.as_deref().unwrap_or_default())
+        .map_err(|error| error.to_string())?;
+    if let Some(name) = request.name {
+        signature = signature.name(name);
+    }
+    if let Some(reason) = request.reason {
+        signature = signature.reason(reason);
+    }
+    if let Some(location) = request.location {
+        signature = signature.location(location);
+    }
+    if let Some(contact) = request.contact_info {
+        signature = signature.contact_info(contact);
+    }
+    if let Some(time) = request.time {
+        signature = signature
+            .time(fagus_protocol::date::parse(&time).ok_or_else(|| format!("invalid date `{time}`"))?);
+    }
+    if let Some(certify) = request.certify {
+        signature = signature.certify(
+            fagus::Certification::from_name(&certify)
+                .ok_or_else(|| format!("unknown certification `{certify}`"))?,
+        );
+    }
+    match (request.element, request.area) {
+        (Some(_), Some(_)) => return Err("a signature has either `element` or `area`".to_owned()),
+        (Some(id), None) => signature = signature.visible_on(id),
+        (None, Some(area)) => {
+            signature = signature.visible_at(area.page, area.x, area.y, area.width, area.height);
+        }
+        (None, None) => {}
+    }
+    Ok(signature)
 }
 
 /// A byte slice of `len` bytes at `ptr`, or `None` when the pointer is null.
@@ -271,4 +341,60 @@ pub extern "C" fn fagus_last_error() -> *const c_char {
             .as_ref()
             .map_or(NONE.as_ptr().cast(), |message| message.as_ptr())
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn fixture(name: &str) -> Vec<u8> {
+        std::fs::read(format!(
+            "{}/../../tests/signing/{name}",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .expect("fixture")
+    }
+
+    /// A request and its data blocks, as `fagus_render` takes them.
+    fn request(mut header: Value, blobs: &[&[u8]]) -> (Vec<u8>, Vec<u8>) {
+        let lengths: Vec<usize> = blobs.iter().map(|blob| blob.len()).collect();
+        header["blobLengths"] = json!(lengths);
+        (serde_json::to_vec(&header).expect("json"), blobs.concat())
+    }
+
+    #[test]
+    fn signs_with_pkcs12() {
+        let engine = Engine::new();
+        let p12 = fixture("ecdsa.p12");
+        let (json, data) = request(
+            json!({
+                "id": 1,
+                "html": 0,
+                "created": "2026-11-20T00:00:00Z",
+                "signature": { "pkcs12": 1, "password": "fagus-test-only" },
+            }),
+            &[b"<p>Signed</p>", &p12],
+        );
+        let (pdf, meta) = render_bytes(&engine, &json, &data).expect("renders");
+        assert!(pdf.starts_with(b"%PDF-"));
+        let meta: Value = serde_json::from_slice(&meta).expect("meta");
+        assert_eq!(meta["signed"], true);
+        assert_eq!(meta["pages"], 1);
+    }
+
+    #[test]
+    fn refuses_what_needs_a_channel() {
+        let engine = Engine::new();
+        let (json, data) = request(
+            json!({
+                "id": 1,
+                "html": 0,
+                "signature": { "certificates": [1], "timestamp": true },
+            }),
+            &[b"<p>Signed</p>", b"certificate"],
+        );
+        let error = render_bytes(&engine, &json, &data).expect_err("refused");
+        assert!(error.contains("only a PKCS#12 signature"), "{error}");
+    }
 }

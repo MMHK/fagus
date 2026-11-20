@@ -15,6 +15,7 @@ require __DIR__.'/autoload.php';
 use Fagus\Ffi\Document;
 use Fagus\Ffi\Engine;
 use Fagus\Ffi\Exception\RenderException;
+use Fagus\Ffi\Signature;
 
 $library = $argv[1] ?? (getenv('FAGUS_FFI_LIB') ?: null);
 $temporary = sys_get_temp_dir().'/fagus-ffi-smoke-'.bin2hex(random_bytes(6));
@@ -74,6 +75,16 @@ try {
 
     $encrypted = $engine->html($html)->encrypt('open sesame', 'change me', ['print'])->render();
     $check(substr($encrypted->bytes(), 0, 5) === '%PDF-', 'the encrypted document renders');
+    $check($encrypted->encrypted(), 'the encrypted document reports its encryption');
+
+    $pkcs12 = dirname(__DIR__, 3).'/tests/signing/ecdsa.p12';
+    if (is_file($pkcs12)) {
+        $signed = $engine->html('<p id="signature">Signed</p>')
+            ->sign(Signature::pkcs12(file_get_contents($pkcs12), 'fagus-test-only')->reason('Smoke test'))
+            ->render();
+        $check(substr($signed->bytes(), 0, 5) === '%PDF-', 'the signed document renders');
+        $check($signed->signed(), 'the signed document reports its signature');
+    }
 
     try {
         $engine->html($html)->pdfA('9z')->render();

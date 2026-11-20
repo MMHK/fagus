@@ -34,14 +34,24 @@ printf("%d pages, %d diagnostics\n", $pdf->pages(), count($pdf->diagnostics()));
 
 `Engine` keeps fonts and caches warm, so reuse it for many documents. `Document` has the options
 of the worker protocol: `baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `pdfA()`,
-`tagged()`, `accessible()`, `forms()`, `attach()`, `facturX()`, `created()`, `encrypt()`,
+`tagged()`, `accessible()`, `forms()`, `attach()`, `facturX()`, `created()`, `encrypt()`, `sign()`,
 `memoryBudget()`, `timeLimit()` and `reportLayout()`. `Pdf` exposes the bytes, the page count, the
 diagnostics, the timings and the layout.
 
+Signing is available with a PKCS#12 file:
+
+```php
+use Fagus\Ffi\Signature;
+
+$pdf = $engine->html($html)
+    ->sign(Signature::pkcs12(file_get_contents('certificate.p12'), 'secret')->reason('Invoice 42'))
+    ->render();
+```
+
 Limits of the C ABI for now:
 
-- Signatures need the worker protocol, not the C ABI: the PKCS#12 signing of the engine is not
-  wired up yet, and external signers, timestamps and revocation data would need callbacks.
+- Signatures are PKCS#12 only: external signers, timestamps and revocation data need callbacks
+  into PHP, which the worker protocol provides instead.
 - Resources must be given with `resource()`; the engine cannot call back into PHP to ask for one.
 - Strict mode is not part of the engine settings.
 - The library has no sandbox: a library loaded into PHP runs in the PHP process, unlike the
