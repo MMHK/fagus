@@ -24,6 +24,7 @@ fagus-paint = { path = "crates/fagus-paint" }
 # Their default feature `parallel` is chosen by the crates that use them.
 fagus-pdf = { path = "crates/fagus-pdf", default-features = false }
 fagus = { path = "crates/fagus", default-features = false }
+fagus-protocol = { path = "crates/fagus-protocol" }
 
 html5ever = "0.40.1"
 markup5ever = "0.40.0"

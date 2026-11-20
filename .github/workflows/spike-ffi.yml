@@ -1,13 +1,16 @@
-name: Spike FFI
+name: FFI
 
-# A throwaway spike, not part of the release: it answers the open questions of the PHP FFI plan
-# (docs/plans/2026-11-20-php-ffi-cdylib.md) before the real crate exists. Push to this branch or
-# run it by hand; it never touches main and publishes nothing.
+# The FFI work in progress: fmt, clippy and the tests of the crates it changes, plus the shared
+# library built and smoke-tested on three platforms and four PHP versions
+# (docs/plans/2026-11-20-php-ffi-cdylib.md). Push to this branch or run it by hand; it never
+# touches main and publishes nothing.
 on:
   push:
     branches: [spike/ffi]
     paths:
       - crates/fagus-ffi/**
+      - crates/fagus-protocol/**
+      - crates/fagus-cli/**
       - tools/spike/**
       - .github/workflows/spike-ffi.yml
   workflow_dispatch:
@@ -19,6 +22,22 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  check:
+    name: fmt, clippy and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ffi-check
+      - run: cargo fmt --all --check
+      - run: cargo clippy -p fagus-cli -p fagus-protocol --all-targets -- -D warnings
+      - run: cargo test -p fagus-cli -p fagus-protocol
+
   linux-x64:
     name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.4
     runs-on: ubuntu-latest

@@ -426,7 +426,7 @@ mod tests {
                 let document = fagus::Document::html(html)
                     .base_directory(page.parent().expect("a directory"))
                     .root(tests)
-                    .created(crate::date::parse("2026-01-01T12:00:00Z").expect("a date"));
+                    .created(fagus_protocol::date::parse("2026-01-01T12:00:00Z").expect("a date"));
                 let output = engine
                     .render_with_diagnostics(&document)
                     .unwrap_or_else(|failure| panic!("{}: {}", page.display(), failure.error));

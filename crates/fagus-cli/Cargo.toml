@@ -16,6 +16,7 @@ workspace = true
 
 [dependencies]
 fagus.workspace = true
+fagus-protocol.workspace = true
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
