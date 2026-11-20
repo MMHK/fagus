@@ -462,10 +462,11 @@ CI（workflow `Spike FFI`，分支 `spike/ffi`）：
 
 ### 待辦（M2 收尾與 M4）
 
-1. `.github/workflows/release.yml` 新增 `lib` job（三個 target），產出
-   `fagus-ffi-<target>.tar.gz` / `.zip`（函式庫 + `fagus.h`），比照現有 draft release 做
-   `SHA256SUMS`、attestation，必要時附 SBOM。
-2. 在 `spike-ffi.yml` 先驗證封裝內容與 artifact 名稱，再搬進 `release.yml`。
+1. ~~`.github/workflows/release.yml` 新增 `lib` job（三個 target）~~ → 先在獨立的
+   `.github/workflows/ffi-release.yml` 驗證（見 §15），確認封裝與 PHP 套件組裝後再併入
+   `release.yml`。
+2. ~~在 `spike-ffi.yml` 先驗證封裝內容與 artifact 名稱~~ → 改由 §15 的 workflow 直接驗證
+   封裝、`lib/<platform>/` 佈局與 draft release。
 3. PHP 套件發佈：把三平台二進位放進 `php/fagus-ffi/lib/<platform>/`，或由 Composer 安裝流程
    下載；`Native::locate()` 已支援這個路徑。
 4. 文件：`docs/php.md`（FFI 用法與限制）、`SECURITY.md`（FFI 無沙箱、OOM/abort 會殺 FPM
@@ -473,4 +474,52 @@ CI（workflow `Spike FFI`，分支 `spike/ffi`）：
 5. 進 PR 前：CI 恢復 `--locked`、決定 `spike-ffi.yml` 的去留（併入或改名為 `ffi.yml`）、
    補一個 `ffi.enable=preload` 的 FPM 驗證。
 6. 驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。
+
+## 15. FFI 預覽發版 workflow（2026-11-20）
+
+`.github/workflows/ffi-release.yml`，只在 `spike/ffi` 上存在，不會影響 `main` 的 `release.yml`。
+
+### 觸發方式
+
+| 觸發 | 行為 |
+|---|---|
+| push tag `ffi-v*` | 建置、測試、產生 **draft release**（不會自動公開） |
+| `workflow_dispatch`（輸入 `version`） | 只建置並上傳 workflow artifact，不建立 release |
+
+版本規則：`ffi-v0.2.0-rc1` → `0.2.0-rc1`；`-` 之前的部分必須等於 `Cargo.toml` 的
+`version`，否則 job 直接失敗。
+
+發版前先確認 tag 指向 `spike/ffi`：`release` job 會 `git merge-base --is-ancestor
+"$GITHUB_SHA" FETCH_HEAD`，避免有人把 tag 打在別的 commit 上。
+
+```sh
+git tag ffi-v0.2.0-rc1
+git push origin ffi-v0.2.0-rc1
+```
+
+### Job
+
+1. `library`（matrix 三個 target）
+   - Linux x86_64 / aarch64：`cargo zigbuild … .2.17`，檢查 `GLIBC_2.17`、只匯出 `fagus_*`、
+     無 `GLIBCXX_` / `CXXABI_`
+   - Windows x64：`cargo rustc … -- -C target-feature=+crt-static`，`dumpbin /dependents`
+     不得有 `VCRUNTIME` / `MSVCP` / `ucrtbase` / `MSVCR`
+   - PHP smoke：x64 跑 7.4 / 8.0 / 8.3 / 8.4（Docker `php:*-cli`）；arm64 跑 8.4；
+     Windows 跑 7.4 與 8.4（`shivammathur/setup-php`）
+   - 產物：`fagus-ffi-<target>.tar.gz` 與 `.zip`（函式庫 + `fagus.h` + README），各附
+     build provenance attestation
+2. `php`
+   - 下載三個平台的函式庫，放進 `package/lib/{linux-x86_64,linux-aarch64,windows-x86_64}/`
+   - 用**不含明確路徑**的 smoke test 驗證 `Native::locate()` 的封裝佈局
+   - 產物：`fagus-ffi-php-<version>.tar.gz`，附 attestation
+3. `release`（只在 tag 觸發）
+   - 合併所有產物、加上 `THIRD-PARTY-NOTICES`、產生 `SHA256SUMS` 並做 attestation
+   - `gh release create "ffi-v<version>" … --draft`：保持 draft，人工檢查後才發布
+
+### 尚未包含
+
+- CycloneDX SBOM（現有 CLI release 有；函式庫可之後補）
+- Packagist / Composer 發佈流程；目前只產出 tar.gz
+- `tools/pin-binaries.php` 的釘選流程（等併入 `release.yml` 時一起做）
+- musl：不列入，PHP 官方映像都是 glibc
 
