@@ -1,0 +1,139 @@
+name: Spike FFI
+
+# A throwaway spike, not part of the release: it answers the open questions of the PHP FFI plan
+# (docs/plans/2026-11-20-php-ffi-cdylib.md) before the real crate exists. Push to this branch or
+# run it by hand; it never touches main and publishes nothing.
+on:
+  push:
+    branches: [spike/ffi]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux-x64:
+    name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          targets: x86_64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: spike-ffi-linux-x64
+      # No --locked: this spike crate is not in Cargo.lock yet, and it publishes nothing. The real
+      # build will add it with cargo and keep --locked.
+      - name: Build against glibc 2.17
+        run: |
+          pip install ziglang==0.16.0
+          cargo install --locked cargo-zigbuild@0.23.4
+          cargo zigbuild --release -p fagus-ffi --target x86_64-unknown-linux-gnu.2.17
+      - name: Symbols and glibc floor
+        run: |
+          so=target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
+          ls -l "$so"
+          echo '--- exported symbols (expect fagus_*) ---'
+          nm -D --defined-only "$so" | awk '{print $3}' | sort
+          echo '--- required glibc versions ---'
+          objdump -T "$so" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -5
+          highest=$(objdump -T "$so" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1)
+          echo "highest: $highest"
+          if [ "$highest" != "GLIBC_2.17" ]; then
+            echo "::error::the library needs $highest, not GLIBC_2.17"
+            exit 1
+          fi
+          if objdump -T "$so" | grep -q 'GLIBCXX_\|CXXABI_'; then
+            echo "::error::the library depends on libstdc++, which it should not"
+            exit 1
+          fi
+      - name: PHP smoke tests
+        run: |
+          so=/w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
+          for version in 7.4 8.0 8.3 8.4; do
+            echo "== PHP $version =="
+            docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
+              sh /w/tools/spike/php-smoke.sh "$so"
+          done
+
+  linux-arm64:
+    name: Linux aarch64 (glibc 2.17) and PHP 8.4
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          targets: aarch64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: spike-ffi-linux-arm64
+      - name: Build against glibc 2.17
+        run: |
+          pip install ziglang==0.16.0
+          cargo install --locked cargo-zigbuild@0.23.4
+          cargo zigbuild --release -p fagus-ffi --target aarch64-unknown-linux-gnu.2.17
+      - name: Symbols and glibc floor
+        run: |
+          so=target/aarch64-unknown-linux-gnu/release/libfagus_ffi.so
+          ls -l "$so"
+          nm -D --defined-only "$so" | awk '{print $3}' | sort
+          objdump -T "$so" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -5
+      - name: PHP smoke test
+        run: |
+          so=/w/target/aarch64-unknown-linux-gnu/release/libfagus_ffi.so
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli sh /w/tools/spike/php-smoke.sh "$so"
+
+  windows-x64:
+    name: Windows x86_64 (static CRT) and PHP 7.4, 8.4
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: spike-ffi-windows-x64
+      - uses: ilammy/msvc-dev-cmd@v1
+      # The static CRT is what removes the Visual C++ redistributable from the picture, so that
+      # one DLL serves PHP 7.4 (VS15) and 8.4 (VS17). Blanket RUSTFLAGS is acceptable on MSVC
+      # (unlike on other targets, build scripts may link the static CRT too); the real build will
+      # set it per target in .cargo/config.toml instead.
+      - name: Build with the static CRT
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release -p fagus-ffi --target x86_64-pc-windows-msvc
+      - name: DLL dependencies
+        shell: pwsh
+        run: |
+          $dll = "target/x86_64-pc-windows-msvc/release/fagus_ffi.dll"
+          Get-Item $dll | Format-List Length, FullName
+          dumpbin /dependents $dll
+          $deps = dumpbin /dependents $dll | Out-String
+          if ($deps -match 'VCRUNTIME|MSVCP|ucrtbase|MSVCR') {
+            Write-Error "the DLL still depends on the Visual C++ runtime"
+            exit 1
+          }
+      - name: PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 8.4
+        run: php tools/spike/ffi-smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+      - name: PHP 7.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 7.4
+        run: php tools/spike/ffi-smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
