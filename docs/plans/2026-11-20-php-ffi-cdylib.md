@@ -311,12 +311,12 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 
 ## 9. 里程碑
 
-| 階段 | 內容 | 估時 | 驗收 |
-|---|---|---|---|
-| M1 | `fagus-protocol` 抽取、`fagus-ffi`、`fagus.h` | 1–1.5 天 | `cargo test -p fagus-ffi`；Linux x64 上 `php -r` 產出 `%PDF-` |
-| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 |
-| M3 | `php/fagus-ffi`（7.4 語法）+ Composer | 1 天 | PHP 7.4 / 8.0 / 8.3 / 8.4 全綠 |
-| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 |
+| 階段 | 內容 | 估時 | 驗收 | 狀態 |
+|---|---|---|---|---|
+| M1 | `fagus-protocol` 抽取、`fagus-ffi`、`fagus.h` | 1–1.5 天 | `cargo test -p fagus-ffi`；Linux x64 上 `php -r` 產出 `%PDF-` | 完成（`c9971a13`…`cda340c`，見 §14） |
+| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 | 建置與 smoke 已完成；封裝與 release.yml 合併待做 |
+| M3 | `php/fagus-ffi`（7.4 語法）+ Composer | 1 天 | PHP 7.4 / 8.0 / 8.3 / 8.4 全綠 | 完成（`b1831f0`…`350f7dc`），含 PKCS#12 簽章 |
+| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 | 待做 |
 
 約 3–4 天可交出不含 callback 的 MVP。
 
@@ -325,16 +325,23 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 1. **PHP 7.4 的 API 範圍：精簡。** 7.4 套件只提供 render 與核心選項（PDF/A、附件、加密、
    Factur-X、字型），不複製 8.3 的完整 `Document` 鏈式 API。與 `nforst/fagus` 分開維護。
 2. **Windows 只支援 x64。** 不出 `i686-pc-windows-msvc`；文件與 CI 明確寫死 x64。
+3. **PKCS#12 簽章列入第一階段。** 它不需要 callback，只是 `Signature::pkcs12()` 加請求欄位，
+   所以 C ABI 直接支援；外部簽章器、時間戳、吊銷查詢仍留給 worker，FFI 明確拒絕而非默默忽略。
+4. **`+crt-static` 只套用在函式庫。** 不用全域 `.cargo/config.toml`（它會一起改變 CLI 的
+   Windows 產物），release job 用
+   `cargo rustc -p fagus-ffi --release --locked --target x86_64-pc-windows-msvc -- -C target-feature=+crt-static`。
 
 ## 11. 驗證清單（實作後）
 
-- [ ] `fagus_abi_version()` 與 `fagus.h` 一致
-- [ ] 所有 `extern "C"` 入口包 `catch_unwind`
-- [ ] 空指標、長度 0、超大輸入、無效 JSON 都有明確錯誤
+- [x] `fagus_abi_version()` 與 `fagus.h` 一致
+- [x] 所有 `extern "C"` 入口包 `catch_unwind`
+- [x] 空指標、長度 0、超大輸入、無效 JSON 都有明確錯誤（無效 JSON 由 `serde_json` 回報；
+      null 指標在 `fagus_render` 入口檢查）
 - [x] `dumpbin /dependents` 無 `VCRUNTIME140` / `MSVCP140` / `ucrtbase`（spike，§13）
 - [x] `readelf --version-info` 最高 `GLIBC_2.17`（spike，§13）
 - [x] `nm -D --defined-only` 只有 `fagus_*`（spike，§13）
-- [x] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠（spike，Linux；Windows 7.4/8.4）
+- [x] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠（CI `44732710202`，含 PHP 套件）
+- [x] PKCS#12 簽章經 C ABI 產出（`cargo test -p fagus-ffi`、PHP smoke）
 - [ ] `php -r 'echo ini_get("ffi.enable");'` 在 FPM 與 CLI 都是 `true`（或 preload）
 - [ ] FFI 與 CLI 輸出位元組相同（需要真的 render）
 - [ ] 文件標明無沙箱
@@ -415,8 +422,55 @@ PHP 8.x 之後才可能是 `CData`。`php/fagus-ffi` 與 smoke test 都要用上
 ### 帶回 plan 的結論
 
 - M1 可以直接用 `crates/fagus-ffi` 目前的最小 ABI 與 `include/fagus.h`，不需要改形狀。
-- Windows 的 `+crt-static` 可以定案；正式 build 改用 `.cargo/config.toml` 的
-  `[target.x86_64-pc-windows-msvc] rustflags`，不要用全域 `RUSTFLAGS`。
+- Windows 的 `+crt-static` 可以定案；正式 build 只對 `fagus-ffi` 套用（`cargo rustc`，見 §10.4），
+  不用全域 `RUSTFLAGS`。
 - glibc 2.17 的 baseline 成立，Linux 只出 gnu 版即可。
 - PHP 端包裝要處理 7.4 的 `const char *` 差異（已列入 §5）。
+
+## 14. 進度與後續（2026-11-20 收尾）
+
+### 已完成
+
+| 項目 | 位置 | 驗證 |
+|---|---|---|
+| 請求 JSON 與輸出 JSON 共用 | `crates/fagus-protocol` | CLI 測試、`fagus-ffi` 測試 |
+| C ABI（engine、render、free、last error） | `crates/fagus-ffi`、`include/fagus.h` | `cargo test -p fagus-ffi`；CI 三平台 |
+| 真實渲染與 metadata JSON | `crates/fagus-ffi/src/lib.rs` | PHP smoke 產出 `%PDF-` |
+| PKCS#12 簽章 | 同上，`signature()` | `signs_with_pkcs12`；PHP smoke |
+| PHP 7.4 套件 | `php/fagus-ffi`（`Engine`/`Document`/`Pdf`/`Signature`/`Diagnostic`） | PHP 7.4、8.0、8.3、8.4（CI `44732710202`） |
+| 平台二進位搜尋 | `Native::locate()` 找 `lib/<platform>/`，可用 `FAGUS_FFI_LIB` 覆寫 | 路徑邏輯 |
+
+CI（workflow `Spike FFI`，分支 `spike/ffi`）：
+
+- `fmt, clippy and tests`：`cargo fmt --all --check`、
+  `cargo clippy -p fagus-cli -p fagus-protocol -p fagus-ffi --all-targets -- -D warnings`、
+  同三個 crate 的 `cargo test`
+- `Linux x86_64`：zigbuild `GLIBC_2.17`，PHP 7.4 / 8.0 / 8.3 / 8.4 跑 `php/fagus-ffi/tests/smoke.php`
+- `Linux aarch64`：原生 arm64 runner，PHP 8.4
+- `Windows x86_64`：`+crt-static` DLL，PHP 7.4 與 8.4
+
+### 本輪新發現
+
+1. **PHP 7.4 不接受 PHP string 傳給 `uint8_t *`**（只接受 `char *`）。spike 只驗證了
+   `const char *` 回傳值，沒有驗證輸入。包裝層現在一律
+   `FFI::new('uint8_t[n]')` + `FFI::memcpy`，長度 0 傳 `null`。
+2. **`layout` 是 `{pages, elements:[{id, tag, boxes}]}`**，不是以 `id` 為鍵的 map。
+3. **`+crt-static` 的範圍要收斂**：放進 `.cargo/config.toml` 會連 CLI 的 Windows 產物一起改，
+   因此 release job 改用 `cargo rustc -p fagus-ffi ... -- -C target-feature=+crt-static`。
+4. 官方 `php:*-cli` 映像沒有 FFI，`php/fagus-ffi/tests/php-smoke.sh` 會安裝 `libffi-dev` 並
+   `docker-php-ext-install ffi`，Linux CI 直接重用它。
+
+### 待辦（M2 收尾與 M4）
+
+1. `.github/workflows/release.yml` 新增 `lib` job（三個 target），產出
+   `fagus-ffi-<target>.tar.gz` / `.zip`（函式庫 + `fagus.h`），比照現有 draft release 做
+   `SHA256SUMS`、attestation，必要時附 SBOM。
+2. 在 `spike-ffi.yml` 先驗證封裝內容與 artifact 名稱，再搬進 `release.yml`。
+3. PHP 套件發佈：把三平台二進位放進 `php/fagus-ffi/lib/<platform>/`，或由 Composer 安裝流程
+   下載；`Native::locate()` 已支援這個路徑。
+4. 文件：`docs/php.md`（FFI 用法與限制）、`SECURITY.md`（FFI 無沙箱、OOM/abort 會殺 FPM
+   worker）、`CHANGELOG.md`（`[Unreleased]`）；`docs/nav.yml` 與 `php tools/check-docs.php`。
+5. 進 PR 前：CI 恢復 `--locked`、決定 `spike-ffi.yml` 的去留（併入或改名為 `ffi.yml`）、
+   補一個 `ffi.enable=preload` 的 FPM 驗證。
+6. 驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。
 
