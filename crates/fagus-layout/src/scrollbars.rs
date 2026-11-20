@@ -14,13 +14,13 @@ use std::sync::Arc;
 
 use fagus_style::ComputedStyle;
 use fagus_style::values::{
-    BoxSizing, CalcNode, Display, DisplayInside, DisplayOutside, LengthPercentage, Overflow, Scrollbar,
-    ScrollbarWidth, Size, WhiteSpaceCollapse,
+    BoxSizing, CalcNode, Display, DisplayInside, DisplayOutside, InternalDisplay, LengthPercentage, MaxSize,
+    Overflow, Scrollbar, ScrollbarWidth, Size, WhiteSpaceCollapse,
 };
 use rustc_hash::FxHashMap;
 
 use crate::fragment::{Fragment, FragmentKind, Page, TextRun};
-use crate::tree::{BoxId, BoxTree};
+use crate::tree::{BoxId, BoxKind, BoxTree};
 
 /// How many times a document is laid out again for scroll bars that overflowing content asks
 /// for at most: a bar takes room, which can make the content overflow the other way.
@@ -43,16 +43,19 @@ fn may_scroll(style: &ComputedStyle) -> bool {
 }
 
 /// Whether a box of `style` takes scroll bars or their gutters where its `overflow` asks for
-/// them: a block, flex or grid container in horizontal writing, with bars of some thickness.
+/// them: a block, flex or grid container or a table cell in horizontal writing, with bars of
+/// some thickness.
 fn takes_bars(style: &ComputedStyle) -> bool {
     thickness(style.scrollbar_width) > 0.0
         && !style.is_vertical()
-        && matches!(
-            style.display,
-            Display::Normal { outside, inside, .. }
-                if inside != DisplayInside::Table
+        && match style.display {
+            Display::Normal { outside, inside, .. } => {
+                inside != DisplayInside::Table
                     && !(outside == DisplayOutside::Inline && inside == DisplayInside::Flow)
-        )
+            }
+            Display::Internal(InternalDisplay::TableCell) => true,
+            _ => false,
+        }
 }
 
 /// Whether a box of `style` keeps the gutters of `scrollbar-gutter: stable` (CSS Overflow 4,
@@ -92,6 +95,34 @@ fn less(size: &Size, delta: f32) -> Size {
     }
 }
 
+/// A maximum size given as a length less `delta` pixels, not below zero; other sizes as they are.
+fn less_max(size: &MaxSize, delta: f32) -> MaxSize {
+    match size {
+        MaxSize::Length(length) => match less(&Size::Length(length.clone()), delta) {
+            Size::Length(length) => MaxSize::Length(length),
+            _ => size.clone(),
+        },
+        other => other.clone(),
+    }
+}
+
+/// Takes `delta` pixels of the room of scroll bars from the sizes of a `content-box` box along
+/// an axis: its size, minimum and maximum, which Chrome's scroll bars take their room from.
+fn take_room(style: &mut ComputedStyle, horizontal: bool, delta: f32) {
+    if style.box_sizing != BoxSizing::ContentBox {
+        return;
+    }
+    if horizontal {
+        style.width = less(&style.width, delta);
+        style.min_width = less(&style.min_width, delta);
+        style.max_width = less_max(&style.max_width, delta);
+    } else {
+        style.height = less(&style.height, delta);
+        style.min_height = less(&style.min_height, delta);
+        style.max_height = less_max(&style.max_height, delta);
+    }
+}
+
 /// `style` with the gutters of `scrollbar-gutter: stable` (see [`keeps_gutters`]): the room of
 /// a vertical scroll bar on the side its bar would be on (the right, the left right to left), and
 /// on the other side too with `both-edges`, taken as a bar's (see the module). A bar the box gets
@@ -111,10 +142,8 @@ fn with_gutters(style: &ComputedStyle) -> ComputedStyle {
     if right {
         style.padding.right = plus(&style.padding.right, thickness);
     }
-    if style.box_sizing == BoxSizing::ContentBox {
-        let count = f32::from(u8::from(left) + u8::from(right));
-        style.width = less(&style.width, thickness * count);
-    }
+    let count = f32::from(u8::from(left) + u8::from(right));
+    take_room(&mut style, true, thickness * count);
     style.scrollbars.gutters = (left, right);
     style.scrollbars.thickness = thickness;
     style
@@ -139,7 +168,6 @@ pub(crate) fn room(style: &ComputedStyle) -> (f32, f32, f32) {
 pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal: bool) -> ComputedStyle {
     let mut style = style.clone();
     let thickness = thickness(style.scrollbar_width);
-    let content_box = style.box_sizing == BoxSizing::ContentBox;
     if vertical && !style.scrollbars.vertical {
         // Right to left, the vertical bar is on the left (Blink's
         // `IsLeftSideVerticalScrollbar`). A gutter there holds it already.
@@ -149,16 +177,14 @@ pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal:
         } else if !style.is_rtl() && !right {
             style.padding.right = plus(&style.padding.right, thickness);
         }
-        if content_box && !(if style.is_rtl() { left } else { right }) {
-            style.width = less(&style.width, thickness);
+        if !(if style.is_rtl() { left } else { right }) {
+            take_room(&mut style, true, thickness);
         }
         style.scrollbars.vertical = true;
     }
     if horizontal && !style.scrollbars.horizontal {
         style.padding.bottom = plus(&style.padding.bottom, thickness);
-        if content_box {
-            style.height = less(&style.height, thickness);
-        }
+        take_room(&mut style, false, thickness);
         style.scrollbars.horizontal = true;
     }
     style.scrollbars.thickness = thickness;
@@ -169,6 +195,11 @@ pub(crate) fn with_scrollbars(style: &ComputedStyle, vertical: bool, horizontal:
 /// content overflows or not, and those with `scrollbar-gutter: stable` their gutters.
 pub(crate) fn add_scrolling(tree: &mut BoxTree) {
     for id in tree.ids() {
+        // `overflow` clips a replaced element (`<img>`) but gives it no scroll bars (CSS Overflow
+        // 3, §3.1), as in Chrome.
+        if matches!(tree.get(id).kind, BoxKind::Replaced { .. }) {
+            continue;
+        }
         if keeps_gutters(&tree.get(id).style) {
             let style = Arc::new(with_gutters(&tree.get(id).style));
             tree.box_mut(id).style = style;
@@ -195,6 +226,7 @@ pub(crate) fn add_overflowing(tree: &mut BoxTree, pages: &[Page]) -> bool {
     for id in tree.ids() {
         let style = &tree.get(id).style;
         if may_scroll(style)
+            && !matches!(tree.get(id).kind, BoxKind::Replaced { .. })
             && (style.scrollbar_x == Scrollbar::Auto && !style.scrollbars.horizontal
                 || style.scrollbar_y == Scrollbar::Auto && !style.scrollbars.vertical)
         {
@@ -401,7 +433,29 @@ impl Extent {
                     let left = fixed(&style.margin.left);
                     let right = fixed(&style.margin.right);
                     let bottom = fixed(&style.margin.bottom);
-                    self.reach(x - left, y, width + left + right, height + bottom);
+                    // Where flow put the box, before `position: relative` moved it (its border
+                    // box counts where it was moved to, see `add`).
+                    let (dx, dy) = if style.position == fagus_style::values::Position::Relative {
+                        let auto = |inset: &fagus_style::values::LengthPercentageAuto| {
+                            matches!(inset, fagus_style::values::LengthPercentageAuto::Auto)
+                        };
+                        let inset = &style.inset;
+                        (
+                            if auto(&inset.left) {
+                                -fixed(&inset.right)
+                            } else {
+                                fixed(&inset.left)
+                            },
+                            if auto(&inset.top) {
+                                -fixed(&inset.bottom)
+                            } else {
+                                fixed(&inset.top)
+                            },
+                        )
+                    } else {
+                        (0.0, 0.0)
+                    };
+                    self.reach(x - dx - left, y - dy, width + left + right, height + bottom);
                 }
                 FragmentKind::Text(text) => {
                     if let Some((start, width)) = unhung(text, x, width) {
@@ -437,10 +491,36 @@ impl Extent {
                 // The resize handle of a text area is drawn in its corner, as no box.
                 FragmentKind::Box { style, .. } if style.control_part && style.is_out_of_flow() => continue,
                 FragmentKind::Box { style, .. } if style.control_part => {}
+                // What a box with layout containment holds overflows it as ink only (CSS
+                // Containment 2, §3.2).
+                FragmentKind::Box { style, .. } if style.layout_containment => {
+                    reach();
+                    continue;
+                }
                 FragmentKind::Box { style, .. }
                     if style.overflow_x != Overflow::Visible || style.overflow_y != Overflow::Visible =>
                 {
                     reach();
+                    // `overflow: clip` along one axis lets what the box holds overflow it along
+                    // the other.
+                    let clips_x = style.overflow_x != Overflow::Visible;
+                    let clips_y = style.overflow_y != Overflow::Visible;
+                    if clips_x && clips_y {
+                        continue;
+                    }
+                    let mut inner = Self::EMPTY;
+                    inner.add(child, (x, y));
+                    if clips_x {
+                        inner.left = inner.left.max(x);
+                        inner.right = inner.right.min(x + width);
+                    } else {
+                        inner.bottom = inner.bottom.min(y + height);
+                    }
+                    if inner.left <= inner.right {
+                        self.left = self.left.min(inner.left);
+                        self.right = self.right.max(inner.right);
+                    }
+                    self.bottom = self.bottom.max(inner.bottom);
                     continue;
                 }
                 _ => reach(),

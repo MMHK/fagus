@@ -3226,6 +3226,67 @@ mod tests {
     }
 
     #[test]
+    fn gives_scroll_bars_where_chrome_on_linux_prints_them() {
+        // A table cell scrolls; an image does not (`overflow` only clips it). A bar takes its
+        // room from a minimum and maximum width too. Content that a box clips along one axis
+        // overflows along the other; what a box with layout containment holds does not overflow.
+        let (document, pages) = render_document_with(
+            "<style>@page { margin: 0 } body { margin: 0 } .big { width: 300px; height: 300px }</style>
+             <div style='display: table-cell; max-width: 100px; overflow-x: auto' class=cell><div class=big></div></div>
+             <svg class=img style='overflow: scroll; width: 50px; height: 50px; display: block'></svg>
+             <div class=max style='overflow-y: scroll; max-width: 60px'>x</div>
+             <div class=clip style='overflow: auto; width: 100px; height: 100px'>
+               <div style='overflow-x: clip; height: 50px'><div class=big></div></div></div>
+             <div class=contained style='overflow: auto; width: 100px; height: 100px'>
+               <div style='contain: layout; height: 50px'><div class=big></div></div></div>
+             <div class=moved style='overflow: auto; width: 60px; height: 60px; padding: 10px'>
+               <div style='position: relative; left: 10px; top: 10px; width: 60px; height: 60px'></div></div>",
+            |document| {
+                let mut images = Images::default();
+                for node in document.descendants(fagus_dom::NodeId::DOCUMENT) {
+                    if document.element(node).is_some_and(|data| data.is_svg("svg")) {
+                        images.insert_inline(
+                            node,
+                            Arc::new(Image {
+                                data: Arc::new(Vec::new()),
+                                format: ImageFormat::Svg,
+                                width: 300.0,
+                                height: 300.0,
+                                natural: (true, true),
+                                ratio: Some(1.0),
+                                inline: true,
+                                orientation: 1,
+                                filters: Arc::from([]),
+                                pad: 0,
+                            }),
+                        );
+                    }
+                }
+                images
+            },
+        );
+        let bars = |class: &str| {
+            let (_, _, fragment) = find(&pages[0], &document, class).expect(class);
+            let FragmentKind::Box { style, .. } = &fragment.kind else {
+                panic!("{class}: a box");
+            };
+            (
+                style.scrollbars.vertical,
+                style.scrollbars.horizontal,
+                fragment.rect.width.to_px(),
+            )
+        };
+        assert_eq!(bars("cell"), (false, true, 100.0));
+        assert_eq!(bars("img"), (false, false, 50.0));
+        assert_eq!(bars("max"), (true, false, 60.0));
+        assert_eq!(bars("clip"), (true, false, 100.0));
+        assert_eq!(bars("contained"), (false, false, 100.0));
+        // A relatively positioned child adds the end padding where flow put it, not where it
+        // was moved to (which stays inside the padding box here).
+        assert_eq!(bars("moved"), (false, false, 80.0));
+    }
+
+    #[test]
     fn keeps_the_gutters_of_scrollbar_gutter() {
         // `stable` keeps the room of a vertical bar on the right of a scroll container (on the
         // left right to left) and `both-edges` on both sides; a bar lies in the gutter on its
