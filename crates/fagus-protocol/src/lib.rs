@@ -226,8 +226,8 @@ pub fn document(
         document = document.loader(loader);
     }
     if let Some(level) = request.conformance {
-        let level = fagus::Conformance::from_level(&level)
-            .ok_or_else(|| format!("unknown PDF/A level `{level}`"))?;
+        let level =
+            fagus::Conformance::from_level(&level).ok_or_else(|| format!("unknown PDF/A level `{level}`"))?;
         document = document.conformance(level);
     }
     document = document.tagged(request.tagged).forms(request.forms);
@@ -301,8 +301,7 @@ pub fn document(
             let permissions = names
                 .iter()
                 .map(|name| {
-                    fagus::Permission::from_name(name)
-                        .ok_or_else(|| format!("unknown permission `{name}`"))
+                    fagus::Permission::from_name(name).ok_or_else(|| format!("unknown permission `{name}`"))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             protection = protection.permissions(permissions);
