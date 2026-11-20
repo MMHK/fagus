@@ -142,7 +142,6 @@ FAIL css/CSS2/normal-flow/max-height-110.xht
 FAIL css/CSS2/normal-flow/max-height-applies-to-008.xht
 FAIL css/CSS2/normal-flow/max-width-105.xht
 FAIL css/CSS2/normal-flow/max-width-106.xht
-FAIL css/CSS2/normal-flow/max-width-107.xht  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/CSS2/normal-flow/max-width-applies-to-005.xht
 FAIL css/CSS2/normal-flow/max-width-applies-to-006.xht
 FAIL css/CSS2/normal-flow/max-width-applies-to-008.xht
@@ -156,7 +155,6 @@ FAIL css/CSS2/normal-flow/min-height-081.xht
 FAIL css/CSS2/normal-flow/min-height-082.xht
 FAIL css/CSS2/normal-flow/min-height-104.xht
 FAIL css/CSS2/normal-flow/min-height-105.xht
-FAIL css/CSS2/normal-flow/min-height-106.xht  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/CSS2/normal-flow/min-height-applies-to-008.xht
 FAIL css/CSS2/normal-flow/min-width-applies-to-008.xht
 FAIL css/CSS2/normal-flow/replaced-intrinsic-001.xht
@@ -284,6 +282,7 @@ FAIL css/CSS2/text/white-space-processing-051.xht
 FAIL css/CSS2/text/white-space-processing-054.xht
 FAIL css/CSS2/text/white-space-processing-055.xht
 FAIL css/CSS2/text/white-space-processing-056.xht
+FAIL css/CSS2/text/word-spacing-justify-001.xht  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
 FAIL css/CSS2/visudet/inline-block-baseline-003.xht
 FAIL css/CSS2/visudet/inline-block-baseline-004.xht
 FAIL css/CSS2/visudet/inline-block-baseline-005.xht
@@ -547,8 +546,8 @@ FAIL css/css-backgrounds/css-border-radius-001.html
 FAIL css/css-backgrounds/css3-border-image-repeat-repeat.html
 FAIL css/css-backgrounds/css3-border-image-repeat-stretch.html
 FAIL css/css-backgrounds/first-letter-space-not-selected.html
-FAIL css/css-backgrounds/inset-box-shadow-scroll.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-backgrounds/inset-box-shadow-stacking-context-scroll.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-backgrounds/inset-box-shadow-scroll.html  # the inset shadow of the scroll container reaches one pixel column further left beside its horizontal scroll bar than the reference's shadow on the scrolled child (15 pixels)
+FAIL css/css-backgrounds/inset-box-shadow-stacking-context-scroll.html  # the inset shadow of the scroll container reaches one pixel column further left beside its horizontal scroll bar than the reference's shadow on the scrolled child (15 pixels)
 FAIL css/css-borders/border-image-color-scheme.html
 FAIL css/css-borders/border-shape-absolute-coords-shape.tentative.html
 FAIL css/css-borders/border-shape/border-shape-clips-background.html
@@ -904,8 +903,8 @@ FAIL css/css-conditional/at-supports-namespace-002.html
 FAIL css/css-conditional/container-queries/inline-size-bfc-floats.html
 FAIL css/css-conditional/container-queries/multiple-conditions-001.html
 FAIL css/css-conditional/container-queries/query-style-color.html
-FAIL css/css-conditional/container-queries/scrollbar-container-units-block.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-conditional/container-queries/scrollbar-container-units-inline.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-conditional/container-queries/scrollbar-container-units-block.html  # container query units resolve against the size of the container without its scroll bars, which layout adds after the style is computed
+FAIL css/css-conditional/container-queries/scrollbar-container-units-inline.html  # container query units resolve against the size of the container without its scroll bars, which layout adds after the style is computed
 FAIL css/css-conditional/container-queries/style-query-attr-tainted.html
 FAIL css/css-conditional/css-supports-004.xht
 FAIL css/css-contain/contain-content-011.html
@@ -921,21 +920,15 @@ FAIL css/css-contain/contain-layout-baseline-004.html
 FAIL css/css-contain/contain-layout-baseline-005.html
 FAIL css/css-contain/contain-layout-baseline-006.html
 FAIL css/css-contain/contain-layout-button-001.tentative.html
-FAIL css/css-contain/contain-layout-overflow-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-contain/contain-layout-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-layout-select-001.tentative.html
 FAIL css/css-contain/contain-paint-023.html
-FAIL css/css-contain/contain-paint-clip-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-contain/contain-paint-clip-004.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-contain/contain-paint-clip-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-contain/contain-paint-clip-003.html  # the box with paint containment and overflow-y: scroll gets no horizontal scroll bar for the word that overflows it; the reference has one
+FAIL css/css-contain/contain-paint-clip-004.html  # the box with paint containment and overflow-y: scroll gets no horizontal scroll bar for the word that overflows it; the reference has one
+FAIL css/css-contain/contain-paint-clip-005.html  # the box with paint containment and overflow-y: scroll gets no horizontal scroll bar for the word that overflows it; the reference has one
 FAIL css/css-contain/contain-size-006.html
 FAIL css/css-contain/contain-size-051.html
 FAIL css/css-contain/contain-size-052.html
-FAIL css/css-contain/contain-size-block-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-contain/contain-size-block-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-size-fieldset-002.html
-FAIL css/css-contain/contain-size-inline-block-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-contain/contain-size-inline-block-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-contain/contain-size-multicol-003.html
 FAIL css/css-contain/contain-strict-011.html
 FAIL css/css-contain/contain-style-counters-001.html
@@ -1032,6 +1025,7 @@ FAIL css/css-counter-styles/korean-hanja-formal/css3-counter-styles-065.html
 FAIL css/css-counter-styles/korean-hanja-formal/css3-counter-styles-066.html
 FAIL css/css-counter-styles/korean-hanja-informal/counter-korean-hanja-informal-extended-range.optional.html
 FAIL css/css-counter-styles/korean-hanja-informal/counter-korean-hanja-informal-extended.html
+FAIL css/css-counter-styles/korean-hanja-informal/counter-korean-hanja-informal.html  # the comma after the generated counter lies a fraction of a pixel apart from the reference's comma in the same text, which pdftoppm draws a quarter pixel apart (2 pixels)
 FAIL css/css-counter-styles/korean-hanja-informal/css3-counter-styles-057.html
 FAIL css/css-counter-styles/korean-hanja-informal/css3-counter-styles-058.html
 FAIL css/css-counter-styles/korean-hanja-informal/css3-counter-styles-059.html
@@ -1153,8 +1147,7 @@ FAIL css/css-flexbox/baseline-synthesis-001.html
 FAIL css/css-flexbox/baseline-synthesis-003.html
 FAIL css/css-flexbox/baseline-synthesis-004.html
 FAIL css/css-flexbox/baseline-synthesis-vert-lr-line-under.html
-FAIL css/css-flexbox/content-height-with-scrollbars.html
-FAIL css/css-flexbox/cross-axis-scrollbar.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-flexbox/cross-axis-scrollbar.html  # flex containers whose items overflow them along the cross axis get scroll bars along other axes than the reference's
 FAIL css/css-flexbox/flex-aspect-ratio-img-column-012.html
 FAIL css/css-flexbox/flex-aspect-ratio-img-row-007.html
 FAIL css/css-flexbox/flex-aspect-ratio-img-row-014.html
@@ -1167,7 +1160,6 @@ FAIL css/css-flexbox/flex-container-max-content-001.html
 FAIL css/css-flexbox/flex-container-min-content-001.html
 FAIL css/css-flexbox/flex-item-min-width-min-content-max-width.html
 FAIL css/css-flexbox/flex-item-z-ordering-001.html
-FAIL css/css-flexbox/flex-lines/multi-line-wrap-reverse-column-reverse.html
 FAIL css/css-flexbox/flex-lines/multi-line-wrap-with-column-reverse.html
 FAIL css/css-flexbox/flex-minimum-height-flex-items-026.html
 FAIL css/css-flexbox/flex-minimum-height-flex-items-029.html
@@ -1193,7 +1185,6 @@ FAIL css/css-flexbox/flexbox-collapsed-item-baseline-001.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-001.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-002.html
 FAIL css/css-flexbox/flexbox-collapsed-item-horiz-003.html
-FAIL css/css-flexbox/flexbox-definite-sizes-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-flexbox/flexbox-flex-wrap-flexing-003.html
 FAIL css/css-flexbox/flexbox-justify-content-horiz-002.xhtml
 FAIL css/css-flexbox/flexbox-mbp-horiz-001-reverse.xhtml
@@ -1213,6 +1204,7 @@ FAIL css/css-flexbox/flexbox-writing-mode-014.html
 FAIL css/css-flexbox/flexbox-writing-mode-015.html
 FAIL css/css-flexbox/flexbox_align-items-stretch-3.html
 FAIL css/css-flexbox/flexbox_direction-row-reverse.html
+FAIL css/css-flexbox/flexbox_flex-natural-mixed-basis-auto.html  # the items grow from text widths rounded up to 1/64px, as in Chrome on Linux, and start 1/64px before the reference's boxes; pdftoppm draws their Ahem glyphs a quarter pixel apart (glyphs at quarter pixels, rounded down)
 FAIL css/css-flexbox/flexbox_visibility-collapse-line-wrapping.html
 FAIL css/css-flexbox/flexbox_visibility-collapse.html
 FAIL css/css-flexbox/flexible-order.html
@@ -1224,7 +1216,6 @@ FAIL css/css-flexbox/justify-content-004.htm
 FAIL css/css-flexbox/justify-content-sideways-001.html
 FAIL css/css-flexbox/order/order-abs-children-painting-order.html
 FAIL css/css-flexbox/ortho-table-item-001.html
-FAIL css/css-flexbox/overflow-area-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-flexbox/stretch-obeys-min-max-002.html
 FAIL css/css-flexbox/stretching-orthogonal-flows.html
 FAIL css/css-flexbox/svg-root-as-flex-item-005.html
@@ -1443,7 +1434,7 @@ FAIL css/css-grid/grid-items/grid-inline-order-property-auto-placement-005.html
 FAIL css/css-grid/grid-items/grid-intrinsic-maximums.html
 FAIL css/css-grid/grid-items/grid-item-inline-contribution-003.html
 FAIL css/css-grid/grid-items/grid-item-inline-contribution-005.html
-FAIL css/css-grid/grid-items/grid-item-min-size-auto-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-items/grid-item-min-size-auto-overflow-002.html  # the 50px grid item with overflow: auto gets both scroll bars, the reference's box a vertical one only
 FAIL css/css-grid/grid-items/grid-item-minmax-img-002.html
 FAIL css/css-grid/grid-items/grid-item-percentage-sizes-001.html
 FAIL css/css-grid/grid-items/grid-item-percentage-sizes-002.html
@@ -1843,10 +1834,10 @@ FAIL css/css-grid/grid-lanes/order/row-order-property-auto-placement-005.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflow-modes-001.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflow-reverse-003.html
 FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-005.html
-FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-007.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-008.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-009.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-010.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-007.html  # display: grid-lanes is not supported, so the container does not overflow
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-008.html  # display: grid-lanes is not supported, so the container does not overflow
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-009.html  # display: grid-lanes is not supported, so the container does not overflow
+FAIL css/css-grid/grid-lanes/overflow/grid-lanes-overflowing-container-010.html  # display: grid-lanes is not supported, so the container does not overflow
 FAIL css/css-grid/grid-lanes/row-empty-grid-lanes-container-content-editable-001.html
 FAIL css/css-grid/grid-lanes/row-min-max-content-container.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-lanes-subgridded-to-grid-lanes/column/grid-lanes-subgrid-001a.html
@@ -1995,7 +1986,6 @@ FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-scrollbar
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-abs-pos-001.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-abs-pos-002.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-ignores-height-001.html
-FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-orthogonal-writing-mode-001.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-orthogonal-writing-mode-003.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-orthogonal-writing-mode-004.html
 FAIL css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-standalone-column-axis-size-001.html
@@ -2244,13 +2234,13 @@ FAIL css/css-grid/grid-lanes/track-sizing/row-track-sizing-004.html
 FAIL css/css-grid/grid-lanes/track-sizing/row-track-sizing-005.html
 FAIL css/css-grid/grid-model/display-grid.html
 FAIL css/css-grid/grid-model/display-inline-grid.html
-FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-001.html  # the scrollable overflow of a grid container leaves out its tracks where no item fills them, so the empty grid gets no scroll bars
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-002.html  # the scrollable overflow of a grid container leaves out its tracks where no item fills them, so the empty grid gets no scroll bars
+FAIL css/css-grid/grid-model/grid-areas-overflowing-grid-container-003.html  # the scrollable overflow of a grid container leaves out its tracks where no item fills them, so the empty grid gets no scroll bars
 FAIL css/css-grid/grid-model/grid-display-grid-001.html
 FAIL css/css-grid/grid-model/grid-inline-vertical-align-001.html
-FAIL css/css-grid/grid-model/grid-overflow-padding-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-grid/grid-model/grid-overflow-padding-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-grid/grid-model/grid-overflow-padding-001.html  # the scrollable overflow of a grid container leaves out its tracks where no item fills them, so the empty grid gets no scroll bars
+FAIL css/css-grid/grid-model/grid-overflow-padding-002.html  # the scrollable overflow of a grid container leaves out its tracks where no item fills them, so the empty grid gets no scroll bars
 FAIL css/css-grid/grid-model/grid-vertical-align-001.html
 FAIL css/css-grid/grid-with-orthogonal-child-within-flexbox.html
 FAIL css/css-grid/layout-algorithm/grid-percent-rows-filled-shrinkwrap-001.html
@@ -2334,6 +2324,7 @@ FAIL css/css-images/gradient/gradient-longer-hue-lch-005.html
 FAIL css/css-images/gradient/gradient-longer-hue-lch-006.html
 FAIL css/css-images/gradient/gradient-longer-hue-lch-007.html
 FAIL css/css-images/gradient/oklab-gradient.html
+FAIL css/css-images/gradient/repeating-gradient-hsl-and-oklch.html  # the band edges of both repeating gradients fall exactly on pixel corners, where Poppler samples the PostScript shading; rounding puts the test's edge at 40px a pixel row into the band before (91 pixels)
 FAIL css/css-images/gradient/srgb-linear-gradient.html
 FAIL css/css-images/gradient/xyz-gradient.html
 FAIL css/css-images/gradients-with-border.html
@@ -2491,16 +2482,13 @@ FAIL css/css-inline/initial-letter/initial-letter-block-position-raise-over-ruby
 FAIL css/css-inline/initial-letter/initial-letter-block-position-raise-over-ruby.html
 FAIL css/css-inline/initial-letter/initial-letter-block-position-raise-under-ruby-tall.html
 FAIL css/css-inline/initial-letter/initial-letter-block-position-raise-under-ruby.html
-FAIL css/css-inline/initial-letter/initial-letter-breaking-slr.html
 FAIL css/css-inline/initial-letter/initial-letter-breaking-srl.html
 FAIL css/css-inline/initial-letter/initial-letter-drop-initial-rtl.html
-FAIL css/css-inline/initial-letter/initial-letter-drop-initial-slr.html
 FAIL css/css-inline/initial-letter/initial-letter-drop-initial-srl.html
 FAIL css/css-inline/initial-letter/initial-letter-drop-initial-vlr.html
 FAIL css/css-inline/initial-letter/initial-letter-drop-initial-vrl.html
 FAIL css/css-inline/initial-letter/initial-letter-drop-initial.html
 FAIL css/css-inline/initial-letter/initial-letter-float-001-rtl.html
-FAIL css/css-inline/initial-letter/initial-letter-float-001-slr.html
 FAIL css/css-inline/initial-letter/initial-letter-float-001-srl.html
 FAIL css/css-inline/initial-letter/initial-letter-float-001-vlr.html
 FAIL css/css-inline/initial-letter/initial-letter-float-001-vrl.html
@@ -2511,7 +2499,6 @@ FAIL css/css-inline/initial-letter/initial-letter-float-004.html
 FAIL css/css-inline/initial-letter/initial-letter-float-005.html
 FAIL css/css-inline/initial-letter/initial-letter-indentation-rtl.html
 FAIL css/css-inline/initial-letter/initial-letter-indentation.html
-FAIL css/css-inline/initial-letter/initial-letter-raise-initial-slr.html
 FAIL css/css-inline/initial-letter/initial-letter-raise-initial-srl.html
 FAIL css/css-inline/initial-letter/initial-letter-raise-initial-vlr.html
 FAIL css/css-inline/initial-letter/initial-letter-raise-initial-vrl.html
@@ -2519,7 +2506,6 @@ FAIL css/css-inline/initial-letter/initial-letter-raised-sunken-caps-raise.html
 FAIL css/css-inline/initial-letter/initial-letter-raised-sunken-caps-sunken.html
 FAIL css/css-inline/initial-letter/initial-letter-short-para-initial-letter-clears.html
 FAIL css/css-inline/initial-letter/initial-letter-short-para-initial-letter-wraps.html
-FAIL css/css-inline/initial-letter/initial-letter-sunk-initial-slr.html
 FAIL css/css-inline/initial-letter/initial-letter-sunk-initial-srl.html
 FAIL css/css-inline/initial-letter/initial-letter-sunk-initial-vlr.html
 FAIL css/css-inline/initial-letter/initial-letter-sunk-initial-vrl.html
@@ -2768,6 +2754,7 @@ FAIL css/css-multicol/multicol-gap-negative-001.xht
 FAIL css/css-multicol/multicol-height-block-child-001.xht
 FAIL css/css-multicol/multicol-inherit-001.xht
 FAIL css/css-multicol/multicol-inherit-002.xht
+FAIL css/css-multicol/multicol-inherit-003.xht  # Ahem glyphs at 16px are 16.00003px wide (Chrome on Linux): words after the first lie a hair past the pixel edges where the reference's own boxes put them, which pdftoppm draws a quarter pixel apart (glyphs at quarter pixels, rounded down)
 FAIL css/css-multicol/multicol-margin-001.xht
 FAIL css/css-multicol/multicol-margin-002.xht
 FAIL css/css-multicol/multicol-margin-child-001.xht
@@ -2845,7 +2832,7 @@ FAIL css/css-nesting/conditional-rules.html
 FAIL css/css-nesting/contextually-invalid-selectors-001.html
 FAIL css/css-nesting/implicit-nesting.html
 FAIL css/css-nesting/nest-containing-forgiving.html
-FAIL css/css-overflow/clip-003.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-overflow/clip-003.html  # a box clipped along one axis whose content overflows along the other gets both scroll bars (the vertical bar makes its fixed width overflow); the reference has one
 FAIL css/css-overflow/clip-005.html
 FAIL css/css-overflow/display-flex-svg-overflow-default.html
 FAIL css/css-overflow/line-clamp/block-ellipsis-001.html
@@ -3121,16 +3108,15 @@ FAIL css/css-overflow/line-clamp/webkit-line-clamp-051.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-052.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-053.html
 FAIL css/css-overflow/line-clamp/webkit-line-clamp-with-max-height.html
-FAIL css/css-overflow/overflow-clip-margin-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-overflow/overflow-clip-margin-005.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-overflow/overflow-clip-margin-002.html  # overflow-clip-margin does not add to the scrollable overflow of the scroll container around the clipped box
+FAIL css/css-overflow/overflow-clip-margin-005.html  # overflow-clip-margin does not add to the scrollable overflow of the scroll container around the clipped box
 FAIL css/css-overflow/overflow-clip-margin-018.html
 FAIL css/css-overflow/overflow-clip-margin-019.html
 FAIL css/css-overflow/overflow-clip-margin-020.html
 FAIL css/css-overflow/overflow-clip-margin-visual-box-and-value-with-border-radius.html
 FAIL css/css-overflow/overflow-does-not-apply-to-inline-box.html
-FAIL css/css-overflow/overflow-img-scroll-replaced.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-overflow/overflow-overlay.html
-FAIL css/css-overflow/overflow-scroll-intrinsic-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-overflow/overflow-scroll-intrinsic-001.html  # boxes in vertical writing modes get no scroll bars
 FAIL css/css-overflow/rounded-overflow-clip-visible.html
 FAIL css/css-overflow/scroll-markers/column-scroll-marker-001.html
 FAIL css/css-overflow/scroll-markers/column-scroll-marker-004.html
@@ -3151,7 +3137,7 @@ FAIL css/css-overflow/scroll-markers/scroll-marker-group-016.html
 FAIL css/css-overflow/scroll-markers/scroll-marker-selection-in-2d.html
 FAIL css/css-overflow/scroll-markers/scroll-target-group-001.html
 FAIL css/css-overflow/scroll-markers/scroll-target-group-004.html
-FAIL css/css-overflow/scrollbar-empty-002.html  # prints a scroll bar where the reference has none
+FAIL css/css-overflow/scrollbar-empty-002.html  # prints scroll bars for the absolutely positioned SVG overflowing a box 0px tall, where the reference has none
 FAIL css/css-overflow/text-overflow-006.html
 FAIL css/css-overflow/text-overflow-007.html
 FAIL css/css-overflow/text-overflow-011.html
@@ -3270,7 +3256,7 @@ FAIL css/css-position/static-position/vrl-ltr-ltr.html
 FAIL css/css-position/static-position/vrl-ltr-rtl.tentative.html
 FAIL css/css-position/static-position/vrl-rtl-ltr.tentative.html
 FAIL css/css-position/static-position/vrl-rtl-rtl.html
-FAIL css/css-position/sticky/position-sticky-in-fixed-container.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-position/sticky/position-sticky-in-fixed-container.html  # the scroll bar of the fixed scroll container on the right edge of the page differs from the reference's
 FAIL css/css-position/sticky/position-sticky-table-pixel-rounding.html
 FAIL css/css-properties-values-api/registered-property-computation-color-005.html
 FAIL css/css-pseudo/file-selector-button-001.html
@@ -3427,7 +3413,7 @@ FAIL css/css-shapes/spec-examples/shape-outside-005.html
 FAIL css/css-shapes/spec-examples/shape-outside-006.html
 FAIL css/css-shapes/spec-examples/shape-outside-007.html
 FAIL css/css-shapes/spec-examples/shape-outside-008.html
-FAIL css/css-sizing/aspect-ratio/block-aspect-ratio-011.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-sizing/aspect-ratio/block-aspect-ratio-011.html  # aspect-ratio takes the height from the width less the vertical scroll bar (85px for 100px), Chrome from the whole width
 FAIL css/css-sizing/aspect-ratio/block-aspect-ratio-017.html
 FAIL css/css-sizing/aspect-ratio/flex-aspect-ratio-025.html
 FAIL css/css-sizing/aspect-ratio/flex-aspect-ratio-026.html
@@ -3491,10 +3477,7 @@ FAIL css/css-tables/col-definite-min-size-001.html
 FAIL css/css-tables/col-definite-size-001.html
 FAIL css/css-tables/collapsed-border-background-inset.html
 FAIL css/css-tables/collapsed-border-positioned-tr-td.html
-FAIL css/css-tables/height-distribution/percentage-sizing-of-table-cell-children-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-tables/height-distribution/percentage-sizing-of-table-cell-replaced-children-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-tables/row-group-order.html
-FAIL css/css-tables/table-cell-overflow-auto.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-tables/tentative/paint/background-image-row-collapsed.html
 FAIL css/css-tables/tentative/paint/collapsed-border-large-cell.html
 FAIL css/css-tables/tentative/paint/overflow-hidden-table.html
@@ -3711,7 +3694,6 @@ FAIL css/css-text/line-break/line-break-anywhere-016.html
 FAIL css/css-text/line-break/line-break-anywhere-017.html
 FAIL css/css-text/line-break/line-break-anywhere-and-white-space-001.html
 FAIL css/css-text/line-break/line-break-anywhere-and-white-space-002.html
-FAIL css/css-text/line-break/line-break-anywhere-and-white-space-003.html
 FAIL css/css-text/line-break/line-break-anywhere-and-white-space-004.html
 FAIL css/css-text/line-break/line-break-anywhere-and-white-space-005.html
 FAIL css/css-text/line-break/line-break-anywhere-and-white-space-006.html
@@ -3832,6 +3814,12 @@ FAIL css/css-text/tab-size/tab-size-integer-005.html
 FAIL css/css-text/tab-size/tab-size-spacing-001.html
 FAIL css/css-text/tab-size/tab-size-spacing-002.html
 FAIL css/css-text/tab-size/tab-size-spacing-003.html
+FAIL css/css-text/text-align/text-align-justify-001.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-justify-002.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-justify-003.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-justify-004.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-justify-005.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-justify-006.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
 FAIL css/css-text/text-align/text-align-justify-bidi-control.html
 FAIL css/css-text/text-align/text-align-justify-tabs-001.html
 FAIL css/css-text/text-align/text-align-justify-tabs-002.html
@@ -3843,6 +3831,8 @@ FAIL css/css-text/text-align/text-align-justifyall-003.html
 FAIL css/css-text/text-align/text-align-justifyall-004.html
 FAIL css/css-text/text-align/text-align-justifyall-005.html
 FAIL css/css-text/text-align/text-align-justifyall-006.html
+FAIL css/css-text/text-align/text-align-last-015.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
+FAIL css/css-text/text-align/text-align-last-simple.html  # justified as in Chrome (the line's items rounded up to 1/64px before its spaces widen): the words after a justified space lie up to 1/64px before the pixel where the reference's spaces or word-spacing put them, and pdftoppm draws glyphs at quarter pixels rounded down (Chrome rounds them to whole pixels)
 FAIL css/css-text/text-align/text-align-match-parent-05.html
 FAIL css/css-text/text-autospace/text-autospace-004.html
 FAIL css/css-text/text-autospace/text-autospace-elements-007.html
@@ -3852,6 +3842,7 @@ FAIL css/css-text/text-autospace/text-autospace-mixed-001.html
 FAIL css/css-text/text-autospace/text-autospace-preformatted-001.html
 FAIL css/css-text/text-autospace/text-autospace-size-001.html
 FAIL css/css-text/text-autospace/text-autospace-vertical-combine-001.html
+FAIL css/css-text/text-fit/shrink-per-line-all.html  # text-fit scales the advances measured at 20px (Chrome's default method); the reference's text at 10px and 15px has FreeType's advances at those sizes, less than 1/1000px apart per glyph, which pdftoppm draws a quarter pixel apart
 FAIL css/css-text/text-fit/text-align.html
 FAIL css/css-text/text-indent/anonymous-flex-item-001.html
 FAIL css/css-text/text-indent/anonymous-grid-item-001.html
@@ -3866,8 +3857,6 @@ FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-001.html
 FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-002.html
 FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-003.html
 FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-004.html
-FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-005.html
-FAIL css/css-text/text-justify/text-justify-and-trailing-spaces-006.html
 FAIL css/css-text/text-justify/text-justify-distribute-001.html
 FAIL css/css-text/text-justify/text-justify-inter-word-001.html
 FAIL css/css-text/text-justify/text-justify-word-separators.html
@@ -4074,6 +4063,7 @@ FAIL css/css-text/white-space/trailing-ideographic-space-022.html
 FAIL css/css-text/white-space/trailing-ideographic-space-023.html
 FAIL css/css-text/white-space/trailing-ideographic-space-024.html
 FAIL css/css-text/white-space/trailing-ideographic-space-025.html
+FAIL css/css-text/white-space/trailing-ideographic-space-break-spaces-007.html  # with the advances of Chrome on Linux (25.00009px per Ahem glyph at 25px) two ideographic spaces after the item "XX", rounded up to 50.015625px, overflow the 4ch line by more than a layout unit, so only one stays on the first line (not compared with Chrome on Linux)
 FAIL css/css-text/white-space/trailing-ideographic-space-break-spaces-008.html
 FAIL css/css-text/white-space/trailing-ogham-001.html
 FAIL css/css-text/white-space/trailing-ogham-002.html
@@ -4085,7 +4075,6 @@ FAIL css/css-text/white-space/trailing-other-space-separators-004.html
 FAIL css/css-text/white-space/trailing-space-align-start.tentative.html
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-002.html
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-004.html
-FAIL css/css-text/white-space/trailing-space-and-text-alignment-rtl-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
 FAIL css/css-text/white-space/trailing-space-and-text-alignment-rtl-004.html
 FAIL css/css-text/white-space/white-space-collapse-discard-001.xht
 FAIL css/css-text/white-space/white-space-collapse-preserve-breaks-001.xht
@@ -4117,8 +4106,6 @@ FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-010.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-011.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-014.html
 FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-021.html
-FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-022.html  # prints a scroll bar where the reference has none
-FAIL css/css-text/white-space/white-space-pre-wrap-trailing-spaces-023.html  # prints a scroll bar where the reference has none
 FAIL css/css-text/white-space/white-space-trim-atomic-inline.html
 FAIL css/css-text/white-space/white-space-trim-block-in-inline.html
 FAIL css/css-text/white-space/white-space-trim-content.html
@@ -4302,8 +4289,8 @@ FAIL css/css-transforms/transform-origin-009.html
 FAIL css/css-transforms/transform-origin-010.html
 FAIL css/css-transforms/transform-origin-011.html
 FAIL css/css-transforms/transform-origin-012.html
-FAIL css/css-transforms/transform-overflow-001.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
-FAIL css/css-transforms/transform-overflow-002.html  # the scroll bars printed as in Chrome on Linux differ from those of the reference
+FAIL css/css-transforms/transform-overflow-001.html  # the scrollable overflow leaves out transforms: the box translated out of the scroll container gives it no scroll bar
+FAIL css/css-transforms/transform-overflow-002.html  # the scrollable overflow leaves out transforms: the box translated out of the scroll container gives it no scroll bar
 FAIL css/css-transforms/transform-singular-001.html
 FAIL css/css-transforms/transform-table-007.html
 FAIL css/css-transforms/transform-transformable-inline-block.html
@@ -4729,9 +4716,7 @@ FAIL css/css-writing-modes/block-embed-001.html
 FAIL css/css-writing-modes/block-embed-002.html
 FAIL css/css-writing-modes/block-embed-003.html
 FAIL css/css-writing-modes/block-flow-direction-vrl-026.xht
-FAIL css/css-writing-modes/block-override-001.html
 FAIL css/css-writing-modes/block-override-004.html
-FAIL css/css-writing-modes/block-override-isolate-001.html
 FAIL css/css-writing-modes/block-override-isolate-004.html
 FAIL css/css-writing-modes/block-plaintext-002.html
 FAIL css/css-writing-modes/block-plaintext-003.html
