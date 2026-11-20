@@ -48,7 +48,9 @@ if ($abi !== 1) {
 }
 
 $config = '{}';
-$engine = $ffi->fagus_engine_new($config, strlen($config));
+$configBuffer = $ffi->new('uint8_t['.strlen($config).']');
+FFI::memcpy($configBuffer, $config, strlen($config));
+$engine = $ffi->fagus_engine_new($configBuffer, strlen($config));
 if (FFI::isNull($engine)) {
     $fail('fagus_engine_new returned null');
 }
@@ -62,6 +64,9 @@ $request = json_encode([
     'layout' => true,
 ], JSON_THROW_ON_ERROR);
 
+/* PHP 7.4 accepts a string for `char *` but not for `uint8_t *`: copy both into C data. */
+$requestBuffer = $ffi->new('uint8_t['.strlen($request).']');
+FFI::memcpy($requestBuffer, $request, strlen($request));
 $blob = $ffi->new('uint8_t['.strlen($html).']');
 FFI::memcpy($blob, $html, strlen($html));
 
@@ -71,7 +76,7 @@ $meta = $ffi->new('uint8_t*');
 $metaLen = $ffi->new('size_t');
 $status = $ffi->fagus_render(
     $engine,
-    $request, strlen($request),
+    $requestBuffer, strlen($request),
     $blob, strlen($html),
     FFI::addr($pdf), FFI::addr($pdfLen),
     FFI::addr($meta), FFI::addr($metaLen),
