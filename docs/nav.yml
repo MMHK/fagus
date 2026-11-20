@@ -41,3 +41,4 @@
 - { page: adr/0005-public-api-and-deprecations, title: "5. Public API, semantic versioning and deprecations", group: Internals, parent: Architecture decisions, optional: true }
 - { page: adr/0006-pages-that-grow-with-their-content, title: 6. Pages that grow with their content, group: Internals, parent: Architecture decisions, optional: true }
 - { page: adr/0007-layers-for-screen-and-print, title: "7. Layers for screen and print, and form fields as an option", group: Internals, parent: Architecture decisions, optional: true }
+- { page: plans/2026-11-20-php-ffi-cdylib, title: "Plan: PHP FFI library", group: Internals, optional: true }
