@@ -72,11 +72,14 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       # The static CRT removes the Visual C++ redistributable from the picture, so one DLL serves
-      # PHP 7.4 (VS15) and 8.4 (VS17). It is set for this crate only, not through RUSTFLAGS or
-      # .cargo/config.toml, which would change the Windows CLI binary too.
+      # PHP 7.4 (VS15) and 8.4 (VS17). The flag has to cover the dependency graph as well, which
+      # only RUSTFLAGS does; it is scoped to this step (the spike proved it on MSVC). Blanket use
+      # across the whole workflow would change the Windows CLI binary too.
       - name: Build with the static CRT
         if: runner.os == 'Windows'
-        run: cargo rustc --release --locked -p fagus-ffi --target ${{ matrix.target }} -- -C target-feature=+crt-static
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked -p fagus-ffi --target ${{ matrix.target }}
       - name: Symbols and glibc floor
         if: runner.os == 'Linux'
         run: |

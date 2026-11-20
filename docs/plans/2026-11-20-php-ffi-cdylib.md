@@ -327,9 +327,10 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 2. **Windows 只支援 x64。** 不出 `i686-pc-windows-msvc`；文件與 CI 明確寫死 x64。
 3. **PKCS#12 簽章列入第一階段。** 它不需要 callback，只是 `Signature::pkcs12()` 加請求欄位，
    所以 C ABI 直接支援；外部簽章器、時間戳、吊銷查詢仍留給 worker，FFI 明確拒絕而非默默忽略。
-4. **`+crt-static` 只套用在函式庫。** 不用全域 `.cargo/config.toml`（它會一起改變 CLI 的
-   Windows 產物），release job 用
-   `cargo rustc -p fagus-ffi --release --locked --target x86_64-pc-windows-msvc -- -C target-feature=+crt-static`。
+4. **`+crt-static` 只套用在函式庫的建置步驟。** 不用全域 `.cargo/config.toml`（它會一起改變
+   CLI 的 Windows 產物），而是在 Windows 的 build step 設 `RUSTFLAGS=-C
+   target-feature=+crt-static`。`cargo rustc -- -C …` 只作用在最後一個 crate，相依 crate 仍可能
+   帶進動態 CRT，spike 驗證的是整棵依賴圖一起套用。
 
 ## 11. 驗證清單（實作後）
 
@@ -502,8 +503,8 @@ git push origin ffi-v0.2.0-rc1
 1. `library`（matrix 三個 target）
    - Linux x86_64 / aarch64：`cargo zigbuild … .2.17`，檢查 `GLIBC_2.17`、只匯出 `fagus_*`、
      無 `GLIBCXX_` / `CXXABI_`
-   - Windows x64：`cargo rustc … -- -C target-feature=+crt-static`，`dumpbin /dependents`
-     不得有 `VCRUNTIME` / `MSVCP` / `ucrtbase` / `MSVCR`
+   - Windows x64：`RUSTFLAGS=-C target-feature=+crt-static`（整棵依賴圖），`dumpbin
+     /dependents` 不得有 `VCRUNTIME` / `MSVCP` / `ucrtbase` / `MSVCR`
    - PHP smoke：x64 跑 7.4 / 8.0 / 8.3 / 8.4（Docker `php:*-cli`）；arm64 跑 8.4；
      Windows 跑 7.4 與 8.4（`shivammathur/setup-php`）
    - 產物：`fagus-ffi-<target>.tar.gz` 與 `.zip`（函式庫 + `fagus.h` + README），各附
