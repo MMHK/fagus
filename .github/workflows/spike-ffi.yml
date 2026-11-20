@@ -6,6 +6,10 @@ name: Spike FFI
 on:
   push:
     branches: [spike/ffi]
+    paths:
+      - crates/fagus-ffi/**
+      - tools/spike/**
+      - .github/workflows/spike-ffi.yml
   workflow_dispatch:
 
 permissions:

@@ -180,8 +180,10 @@ PHP 7.4 的實作限制：
 - `ffi.enable` 預設是 `preload`，CLI / FPM 需設 `ffi.enable=true`（或寫入 preload 檔）。
 - Windows 需 `extension=ffi`（官方 build 內含 `php_ffi.dll`）。
 - 表頭避免 C99 `bool`；用 `uint32_t` 回傳 0/1。
+- PHP 7.4 把 `const char *` 的回傳值直接變成 PHP `string`，不是 `FFI\CData`；包裝要用
+  `is_string($v) ? $v : FFI::string($v)`，8.x 之後才可能是 `CData`（spike 已驗證，見 §13）。
 - PHP 7.4 的 C 宣告解析器較舊，`fagus.h` 要用保守語法（不用 `_Bool`、不依賴複雜 typedef），
-  且 CI 必須真的在 7.4 上 `FFI::cdef` 成功一次，不能只靠編譯通過。
+  且 CI 必須真的在 7.4 上 `FFI::cdef` 成功一次，不能只靠編譯通過（spike 已通過）。
 - 建議使用 NTS build（CLI 與 php-fpm 預設）。ZTS（Apache `mod_php`）不建議：
   PHP 手冊說 callback「not supported on all libffi platforms」，ZTS 會讓風險更高。
 - PHP 7.4 自 2022-11 起 EOL，定位為「客戶環境支援」，不是推薦版本。
@@ -328,12 +330,12 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 - [ ] `fagus_abi_version()` 與 `fagus.h` 一致
 - [ ] 所有 `extern "C"` 入口包 `catch_unwind`
 - [ ] 空指標、長度 0、超大輸入、無效 JSON 都有明確錯誤
-- [ ] `dumpbin /dependents` 無 `VCRUNTIME140` / `MSVCP140` / `ucrtbase`
-- [ ] `readelf --version-info` 最高 `GLIBC_2.17`
-- [ ] `nm -D --defined-only` 只有 `fagus_*`（否則加 version script）
-- [ ] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠
+- [x] `dumpbin /dependents` 無 `VCRUNTIME140` / `MSVCP140` / `ucrtbase`（spike，§13）
+- [x] `readelf --version-info` 最高 `GLIBC_2.17`（spike，§13）
+- [x] `nm -D --defined-only` 只有 `fagus_*`（spike，§13）
+- [x] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠（spike，Linux；Windows 7.4/8.4）
 - [ ] `php -r 'echo ini_get("ffi.enable");'` 在 FPM 與 CLI 都是 `true`（或 preload）
-- [ ] FFI 與 CLI 輸出位元組相同
+- [ ] FFI 與 CLI 輸出位元組相同（需要真的 render）
 - [ ] 文件標明無沙箱
 
 ## 12. 校對記錄（2026-11-20）
@@ -365,7 +367,55 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 
 尚未在真實環境驗證、需要在 M1/M2 實測的假設：
 
-1. PHP 7.4 的 C 宣告解析器能接受 `fagus.h`（尤其 `const uint8_t *const *` 之類的多層指標）。
-2. `+crt-static` 的 DLL 在 PHP 7.4（VS15）與 8.4（VS17）上都能被 `FFI::cdef` 載入。
-3. `cargo-zigbuild` 產出的 `libfagus_ffi.so` 只要求 `GLIBC_2.17` 符號。
-4. 官方 `php:7.4-cli` 映像能成功 `docker-php-ext-install ffi`（舊 Debian base 的套件仍在）。
+1. ~~PHP 7.4 的 C 宣告解析器能接受 `fagus.h`~~ → 已驗證，見 §13。
+2. ~~`+crt-static` 的 DLL 在 PHP 7.4（VS15）與 8.4（VS17）上都能被 `FFI::cdef` 載入~~ → 已驗證。
+3. ~~`cargo-zigbuild` 產出的 `libfagus_ffi.so` 只要求 `GLIBC_2.17` 符號~~ → 已驗證。
+4. ~~官方 `php:7.4-cli` 映像能成功 `docker-php-ext-install ffi`~~ → 已驗證。
+
+## 13. Spike 結果（2026-11-20）
+
+`spike/ffi` 分支（commit `test(ffi): spike the C ABI shared library build`）推上 GitHub Actions，
+workflow `Spike FFI`（`.github/workflows/spike-ffi.yml`）三個 job 全綠：
+
+| Job | 結果 |
+|---|---|
+| Linux x86_64 | `highest: GLIBC_2.17`；只匯出 `fagus_*`；PHP 7.4 / 8.0 / 8.3 / 8.4 全部 `PASS` |
+| Linux aarch64 | `GLIBC_2.17`；PHP 8.4 `PASS`（原生 arm64 runner） |
+| Windows x86_64 | PHP 8.4.28 與 7.4.33 都 `PASS`；同一份 DLL |
+
+`dumpbin /dependents fagus_ffi.dll` 只剩系統 DLL：
+
+```
+bcryptprimitives.dll
+kernel32.dll
+api-ms-win-core-synch-l1-2-0.dll
+KERNEL32.dll
+ntdll.dll
+```
+
+沒有 `VCRUNTIME140` / `MSVCP140` / `ucrtbase`，所以 `+crt-static` 達成目標：一份 DLL 同時服務
+PHP 7.4（VS15）與 8.4（VS17），不需要使用者安裝 Visual C++ redistributable。
+
+每次 smoke 都真的在 PHP process 內渲染了一份小 PDF（`fagus_spike_probe()` 回傳 4254 bytes），
+不只是載入符號；`objdump -T` 也沒有 `GLIBCXX_` / `CXXABI_` 依賴。
+
+### 新發現：PHP 7.4 的 `const char *` 回傳值
+
+PHP 7.4 會把 `const char *` 的回傳值直接轉成 PHP `string`，不是 `FFI\CData`：
+
+```php
+// PHP 7.4: $ffi->fagus_version() 是 string，FFI::string() 會丟 TypeError
+$version = is_string($v) ? $v : FFI::string($v);
+```
+
+PHP 8.x 之後才可能是 `CData`。`php/fagus-ffi` 與 smoke test 都要用上面這種寫法，
+不能直接 `FFI::string()`。
+
+### 帶回 plan 的結論
+
+- M1 可以直接用 `crates/fagus-ffi` 目前的最小 ABI 與 `include/fagus.h`，不需要改形狀。
+- Windows 的 `+crt-static` 可以定案；正式 build 改用 `.cargo/config.toml` 的
+  `[target.x86_64-pc-windows-msvc] rustflags`，不要用全域 `RUSTFLAGS`。
+- glibc 2.17 的 baseline 成立，Linux 只出 gnu 版即可。
+- PHP 端包裝要處理 7.4 的 `const char *` 差異（已列入 §5）。
+
