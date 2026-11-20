@@ -320,10 +320,11 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 
 約 3–4 天可交出不含 callback 的 MVP。
 
-## 10. 待決策
+## 10. 決策（2026-11-20 已定）
 
-1. PHP 7.4 的 API 範圍：精簡（render + 主要選項）或對齊 8.3 的完整鏈式 API？
-2. 是否支援 32-bit Windows PHP（`i686-pc-windows-msvc`）？
+1. **PHP 7.4 的 API 範圍：精簡。** 7.4 套件只提供 render 與核心選項（PDF/A、附件、加密、
+   Factur-X、字型），不複製 8.3 的完整 `Document` 鏈式 API。與 `nforst/fagus` 分開維護。
+2. **Windows 只支援 x64。** 不出 `i686-pc-windows-msvc`；文件與 CI 明確寫死 x64。
 
 ## 11. 驗證清單（實作後）
 
