@@ -36,7 +36,4 @@ void        fagus_bytes_free(uint8_t *ptr, size_t len);
 /* The last error of this thread, NUL-terminated, owned by Fagus. */
 const char *fagus_last_error(void);
 
-/* SPIKE: renders one tiny document in-process and returns the length of the PDF, or 0. */
-size_t      fagus_spike_probe(void);
-
 #endif

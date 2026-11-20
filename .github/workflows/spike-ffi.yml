@@ -35,8 +35,8 @@ jobs:
         with:
           key: ffi-check
       - run: cargo fmt --all --check
-      - run: cargo clippy -p fagus-cli -p fagus-protocol --all-targets -- -D warnings
-      - run: cargo test -p fagus-cli -p fagus-protocol
+      - run: cargo clippy -p fagus-cli -p fagus-protocol -p fagus-ffi --all-targets -- -D warnings
+      - run: cargo test -p fagus-cli -p fagus-protocol -p fagus-ffi
 
   linux-x64:
     name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.4

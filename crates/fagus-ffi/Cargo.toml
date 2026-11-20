@@ -1,6 +1,6 @@
 [package]
 name = "fagus-ffi"
-description = "C ABI shared library for Fagus, for PHP's FFI extension (spike)"
+description = "C ABI shared library for Fagus, for PHP's FFI extension"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -21,3 +21,7 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 # The engine itself: the point of the spike is to link and load the real dependency graph, so a
 # standalone stub would not answer the question about the glibc floor or the DLL's imports.
 fagus = { workspace = true, features = ["parallel"] }
+# The request the worker takes, so that the two cannot drift apart.
+fagus-protocol.workspace = true
+serde.workspace = true
+serde_json.workspace = true

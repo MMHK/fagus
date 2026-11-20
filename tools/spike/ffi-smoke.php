@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 /*
- * SPIKE: loads the C ABI shared library with PHP's FFI extension and checks the surface that the
- * plan (docs/plans/2026-11-20-php-ffi-cdylib.md) depends on. Rendering is not implemented yet;
- * fagus_spike_probe() renders one tiny document in-process.
+ * Loads the C ABI shared library with PHP's FFI extension and renders one document in-process,
+ * through the same request the worker takes (docs/plans/2026-11-20-php-ffi-cdylib.md).
  *
  *     php -d ffi.enable=true tools/spike/ffi-smoke.php <libfagus_ffi.so|fagus_ffi.dll>
  */
@@ -37,18 +36,34 @@ $cString = static function ($value): string {
     return is_string($value) ? $value : FFI::string($value);
 };
 
+$fail = static function (string $message) use ($ffi, $cString): void {
+    fwrite(STDERR, 'FAIL: '.$message.' ('.$cString($ffi->fagus_last_error()).")\n");
+    exit(1);
+};
+
 $abi = $ffi->fagus_abi_version();
 printf("abi=%d version=%s\n", $abi, $cString($ffi->fagus_version()));
 if ($abi !== 1) {
-    fwrite(STDERR, "unexpected ABI version\n");
-    exit(1);
+    $fail('unexpected ABI version');
 }
 
-$engine = $ffi->fagus_engine_new(null, 0);
+$config = '{}';
+$engine = $ffi->fagus_engine_new($config, strlen($config));
 if (FFI::isNull($engine)) {
-    fwrite(STDERR, "fagus_engine_new returned null\n");
-    exit(1);
+    $fail('fagus_engine_new returned null');
 }
+
+$html = '<h1>Spike</h1><p>Rendered in-process through PHP FFI.</p>';
+$request = json_encode([
+    'id' => 1,
+    'html' => 0,
+    'blobLengths' => [strlen($html)],
+    'created' => '2026-11-20T00:00:00Z',
+    'layout' => true,
+], JSON_THROW_ON_ERROR);
+
+$blob = $ffi->new('uint8_t['.strlen($html).']');
+FFI::memcpy($blob, $html, strlen($html));
 
 $pdf = $ffi->new('uint8_t*');
 $pdfLen = $ffi->new('size_t');
@@ -56,23 +71,32 @@ $meta = $ffi->new('uint8_t*');
 $metaLen = $ffi->new('size_t');
 $status = $ffi->fagus_render(
     $engine,
-    null, 0,
-    null, 0,
+    $request, strlen($request),
+    $blob, strlen($html),
     FFI::addr($pdf), FFI::addr($pdfLen),
     FFI::addr($meta), FFI::addr($metaLen),
 );
-printf("render stub: status=%d message=%s\n", $status, $cString($ffi->fagus_last_error()));
-if ($status !== -1) {
-    fwrite(STDERR, "unexpected status from the stub\n");
-    exit(1);
+if ($status !== 0) {
+    $fail('fagus_render returned '.$status);
 }
 
-$bytes = $ffi->fagus_spike_probe();
-printf("probe: %d bytes of PDF\n", $bytes);
-if ($bytes < 5) {
-    fwrite(STDERR, "the engine did not render\n");
-    exit(1);
+$bytes = FFI::string($pdf, $pdfLen->cdata);
+printf("pdf: %d bytes\n", strlen($bytes));
+if (substr($bytes, 0, 5) !== '%PDF-') {
+    $fail('the PDF does not start with %PDF-');
 }
 
+$info = json_decode(FFI::string($meta, $metaLen->cdata), true, 512, JSON_THROW_ON_ERROR);
+printf("meta: %d pages, %d diagnostics, layout %s\n",
+    $info['pages'] ?? 0,
+    count($info['diagnostics'] ?? []),
+    isset($info['layout']) ? 'yes' : 'no',
+);
+if (($info['pages'] ?? 0) < 1) {
+    $fail('the document has no pages');
+}
+
+$ffi->fagus_bytes_free($pdf, $pdfLen->cdata);
+$ffi->fagus_bytes_free($meta, $metaLen->cdata);
 $ffi->fagus_engine_free($engine);
 echo "PASS\n";
