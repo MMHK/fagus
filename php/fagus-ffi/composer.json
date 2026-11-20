@@ -1,0 +1,42 @@
+{
+    "name": "nforst/fagus-ffi",
+    "description": "HTML and CSS to PDF for PHP 7.4 and later, through the C ABI of the Fagus engine: no browser, no worker process.",
+    "keywords": [
+        "php",
+        "pdf",
+        "html",
+        "css",
+        "html-to-pdf",
+        "pdfa",
+        "pdf-ua",
+        "factur-x",
+        "zugferd",
+        "ffi"
+    ],
+    "type": "library",
+    "license": "MIT OR Apache-2.0",
+    "homepage": "https://fagus.niklasforst.de",
+    "support": {
+        "issues": "https://github.com/nforst/fagus/issues",
+        "source": "https://github.com/nforst/fagus"
+    },
+    "authors": [
+        {
+            "name": "Niklas Forst",
+            "homepage": "https://github.com/nforst"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-ffi": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fagus\\Ffi\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}

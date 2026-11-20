@@ -11,6 +11,7 @@ on:
       - crates/fagus-ffi/**
       - crates/fagus-protocol/**
       - crates/fagus-cli/**
+      - php/fagus-ffi/**
       - tools/spike/**
       - .github/workflows/spike-ffi.yml
   workflow_dispatch:
@@ -81,7 +82,7 @@ jobs:
           for version in 7.4 8.0 8.3 8.4; do
             echo "== PHP $version =="
             docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
-              sh /w/tools/spike/php-smoke.sh "$so"
+              sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
           done
 
   linux-arm64:
@@ -110,7 +111,8 @@ jobs:
       - name: PHP smoke test
         run: |
           so=/w/target/aarch64-unknown-linux-gnu/release/libfagus_ffi.so
-          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli sh /w/tools/spike/php-smoke.sh "$so"
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli \
+            sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
 
   windows-x64:
     name: Windows x86_64 (static CRT) and PHP 7.4, 8.4
@@ -151,7 +153,7 @@ jobs:
           extensions: ffi
           ini-values: ffi.enable=true
       - name: Smoke test with PHP 8.4
-        run: php tools/spike/ffi-smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+        run: php php/fagus-ffi/tests/smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
       - name: PHP 7.4
         uses: shivammathur/setup-php@v2
         with:
@@ -159,4 +161,4 @@ jobs:
           extensions: ffi
           ini-values: ffi.enable=true
       - name: Smoke test with PHP 7.4
-        run: php tools/spike/ffi-smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+        run: php php/fagus-ffi/tests/smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
