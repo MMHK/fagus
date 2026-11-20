@@ -15,11 +15,11 @@ use std::sync::Arc;
 use fagus_style::ComputedStyle;
 use fagus_style::values::{
     BoxSizing, CalcNode, Display, DisplayInside, DisplayOutside, LengthPercentage, Overflow, Scrollbar,
-    ScrollbarWidth, Size,
+    ScrollbarWidth, Size, WhiteSpaceCollapse,
 };
 use rustc_hash::FxHashMap;
 
-use crate::fragment::{Fragment, FragmentKind, Page};
+use crate::fragment::{Fragment, FragmentKind, Page, TextRun};
 use crate::tree::{BoxId, BoxTree};
 
 /// How many times a document is laid out again for scroll bars that overflowing content asks
@@ -118,6 +118,21 @@ fn with_gutters(style: &ComputedStyle) -> ComputedStyle {
     style.scrollbars.gutters = (left, right);
     style.scrollbars.thickness = thickness;
     style
+}
+
+/// The room that the scroll bars and gutters of a box of `style` take between its border and
+/// its padding (see the module): on its left, on its right and at its bottom, in pixels. It is
+/// no part of the padding box in which absolutely positioned boxes are placed, as in Chrome.
+pub(crate) fn room(style: &ComputedStyle) -> (f32, f32, f32) {
+    let bars = &style.scrollbars;
+    let (left, right) = bars.gutters;
+    let rtl = style.is_rtl();
+    let side = |taken: bool| if taken { bars.thickness } else { 0.0 };
+    (
+        side(left || bars.vertical && rtl),
+        side(right || bars.vertical && !rtl),
+        side(bars.horizontal),
+    )
 }
 
 /// `style` with the scroll bars it lacks of `vertical` and `horizontal` (see the module).
@@ -301,6 +316,46 @@ pub fn scroll_size(style: &ComputedStyle, fragment: &Fragment) -> ScrollSize {
     }
 }
 
+/// Where a run of text at `x`, `width` wide, reaches without the spaces that hang at the end of
+/// its line, which Chrome leaves out of the scrollable overflow; `None` for spaces alone. Spaces
+/// hang where lines wrap, unless they break (`white-space: break-spaces`): at the end of the run
+/// (on the right of left-to-right glyphs, on the left of right-to-left ones), and in a
+/// right-to-left paragraph, where they stand on the left of the line, at the start of the run.
+fn unhung(text: &TextRun, x: f32, width: f32) -> Option<(f32, f32)> {
+    let white_space = &text.style.white_space;
+    if !white_space.wraps() || white_space.collapse == WhiteSpaceCollapse::BreakSpaces {
+        return Some((x, width));
+    }
+    let hangs = crate::inline::hangs;
+    let end = text.text.trim_end_matches(hangs).len();
+    let start = if text.style.is_rtl() {
+        text.text.len() - text.text.trim_start_matches(hangs).len()
+    } else {
+        0
+    };
+    if end == text.text.len() && start == 0 {
+        return Some((x, width));
+    }
+    if end <= start {
+        return None;
+    }
+    // The glyphs before the hanging spaces and after them, on the page. (The glyphs of
+    // collapsible spaces may be gone, their room not.)
+    let kept = |glyph: &&crate::fragment::Glyph| (start..end).contains(&(glyph.cluster.0 as usize));
+    let mut left = 0.0;
+    let mut content = 0.0;
+    let mut seen = false;
+    for glyph in &text.glyphs {
+        if kept(&glyph) {
+            seen = true;
+            content += glyph.advance;
+        } else if !seen {
+            left += glyph.advance;
+        }
+    }
+    Some((x + left, content.min(width - left)))
+}
+
 /// How far left, right and down the content of a box reaches, from its border box.
 struct Extent {
     left: f32,
@@ -348,7 +403,12 @@ impl Extent {
                     let bottom = fixed(&style.margin.bottom);
                     self.reach(x - left, y, width + left + right, height + bottom);
                 }
-                FragmentKind::Text(_) | FragmentKind::Image(_) => self.reach(x, y, width, height),
+                FragmentKind::Text(text) => {
+                    if let Some((start, width)) = unhung(text, x, width) {
+                        self.reach(start, y, width, height);
+                    }
+                }
+                FragmentKind::Image(_) => self.reach(x, y, width, height),
             }
         }
     }
@@ -364,6 +424,12 @@ impl Extent {
             let mut reach = || self.reach(x, y, width, height);
             match &child.kind {
                 FragmentKind::Placeholder(_) => continue,
+                FragmentKind::Text(text) => {
+                    if let Some((start, width)) = unhung(text, x, width) {
+                        self.reach(start, y, width, height);
+                    }
+                    continue;
+                }
                 FragmentKind::Line { .. } if height <= 0.0 => continue,
                 // A line box is as wide as its container; what it holds may reach farther. So
                 // may what the parts of a form control hold, which are no boxes in Chrome.

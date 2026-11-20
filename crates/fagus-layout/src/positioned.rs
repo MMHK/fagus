@@ -1087,16 +1087,19 @@ fn collect(
     }
 }
 
-/// The padding box of a fragment in page coordinates.
+/// The padding box of a fragment in page coordinates, without the room of its scroll bars and
+/// their gutters, which lie between its border and its padding.
 fn padding_box(fragment: &Fragment, style: &ComputedStyle, origin: (Au, Au)) -> Rect {
-    let border = |width: f32| Au::from_px(width);
-    let left = border(style.border_width.left);
-    let top = border(style.border_width.top);
+    let (bar_left, bar_right, bar_bottom) = crate::scrollbars::room(style);
+    let left = Au::from_px(style.border_width.left + bar_left);
+    let top = Au::from_px(style.border_width.top);
+    let right = Au::from_px(style.border_width.right + bar_right);
+    let bottom = Au::from_px(style.border_width.bottom + bar_bottom);
     Rect::new(
         origin.0 + left,
         origin.1 + top,
-        (fragment.rect.width - left - border(style.border_width.right)).clamp_non_negative(),
-        (fragment.rect.height - top - border(style.border_width.bottom)).clamp_non_negative(),
+        (fragment.rect.width - left - right).clamp_non_negative(),
+        (fragment.rect.height - top - bottom).clamp_non_negative(),
     )
 }
 

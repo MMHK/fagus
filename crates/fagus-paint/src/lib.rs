@@ -470,6 +470,9 @@ fn paint_pages(
                 hidden_controls: Vec::new(),
                 placement: fields::Placement::default(),
                 layers: Vec::new(),
+                stacked: (Vec::new(), None),
+                outline_clips: Vec::new(),
+                resizers: Vec::new(),
             };
             painter.design(|painter| page_box(page, images, &mut painter.items));
             let (width, height) = (page.width.to_px(), page.height.to_px());
@@ -1343,6 +1346,15 @@ struct Painter<'a> {
     placement: fields::Placement,
     /// The layers (`-fagus-layer`) around what is painted, innermost last.
     layers: Vec<Arc<fagus_style::values::Layer>>,
+    /// The boxes painted as layers of the stacking context whose content is painted, with a
+    /// `z-index` of 0 or more, by address, in the order they are painted; and the index of the
+    /// one being painted.
+    stacked: (Vec<*const Fragment>, Option<usize>),
+    /// The clips around the outlines painted, from the stacking context's content on.
+    outline_clips: Vec<Item>,
+    /// Resize handles painted after a layer of `stacked` (by its index): those of boxes that
+    /// hold it, as Chrome paints a box's resize handle over what it holds.
+    resizers: Vec<(usize, Vec<Item>)>,
 }
 
 /// What the next stacking context painted is, where it matters.
@@ -1490,13 +1502,33 @@ impl Painter<'_> {
         for layer in layers.iter().filter(|layer| layer.z < 0) {
             self.layer(layer);
         }
+        let stacked = layers
+            .iter()
+            .filter(|layer| layer.z >= 0)
+            .map(|layer| std::ptr::from_ref(layer.fragment))
+            .collect();
+        let outer_stacked = std::mem::replace(&mut self.stacked, (stacked, None));
+        let outer_clips = std::mem::take(&mut self.outline_clips);
+        let outer_resizers = std::mem::take(&mut self.resizers);
         self.in_plane(|painter| {
             painter.in_flow(fragment, x, y, clip.as_ref());
             painter.outlines(fragment, x, y);
         });
-        for layer in layers.iter().filter(|layer| layer.z >= 0) {
+        for (index, layer) in layers.iter().filter(|layer| layer.z >= 0).enumerate() {
+            self.stacked.1 = Some(index);
             self.layer(layer);
+            // The resize handles of the boxes that hold this layer and none painted after it.
+            let (due, later) = std::mem::take(&mut self.resizers)
+                .into_iter()
+                .partition::<Vec<_>, _>(|(after, _)| *after == index);
+            self.resizers = later;
+            for (_, items) in due {
+                self.design(|painter| painter.items.extend(items));
+            }
         }
+        self.stacked = outer_stacked;
+        self.outline_clips = outer_clips;
+        self.resizers = outer_resizers;
         self.space = outer_space;
         // What the box draws, filtered inside its clip and opacity (Filter Effects 1, §2).
         if let FragmentKind::Box { style, .. } = &fragment.kind
@@ -1579,6 +1611,7 @@ impl Painter<'_> {
         };
         for clip in &layer.clips {
             self.items.push(clip.item());
+            self.outline_clips.push(clip.item());
         }
         if layer.context {
             if layer.isolated {
@@ -1590,12 +1623,18 @@ impl Painter<'_> {
             let own = css_clip(layer.fragment, x, y);
             if let Some(clip) = own {
                 self.items.push(Item::PushClip(clip, None));
+                self.outline_clips.push(Item::PushClip(clip, None));
             }
             self.decorations(layer.fragment, x, y);
             self.in_flow(layer.fragment, x, y, clip_rect(layer.fragment, x, y).as_ref());
             self.outlines(layer.fragment, x, y);
             self.pop(usize::from(own.is_some()));
+            if own.is_some() {
+                self.outline_clips.pop();
+            }
         }
+        let kept = self.outline_clips.len().saturating_sub(layer.clips.len());
+        self.outline_clips.truncate(kept);
         self.pop(layer.clips.len() + usize::from(in_plane));
         self.next_space = None;
         self.space = space;
@@ -1611,6 +1650,7 @@ impl Painter<'_> {
         let clip = clip_rect(fragment, x, y);
         if let Some(clip) = &clip {
             self.items.push(clip.item());
+            self.outline_clips.push(clip.item());
         }
         let before = self.items.len();
         for child in &fragment.children {
@@ -1622,6 +1662,9 @@ impl Painter<'_> {
             }
             let (child_x, child_y) = position(child, (x, y));
             self.outlines(child, child_x, child_y);
+        }
+        if clip.is_some() {
+            self.outline_clips.pop();
         }
         if self.items.len() == before {
             // Nothing inside has an outline: no clip for it.
@@ -1666,6 +1709,21 @@ impl Painter<'_> {
             width: (rect.width - left - right).max(0.0),
             height: (rect.height - top - border.bottom).max(0.0),
         };
+        // Chrome paints it over the boxes it holds that are painted as layers after it (Blink
+        // reorders its overflow controls after them): after the last of them.
+        let (stacked, painting) = &self.stacked;
+        let last = stacked
+            .iter()
+            .rposition(|&layer| holds(fragment, layer))
+            .filter(|&last| painting.is_none_or(|painting| last > painting));
+        if let Some(last) = last {
+            let mut items = self.outline_clips.clone();
+            let clips = items.len();
+            scrollbars::paint_lone_resizer(style, padding, &mut items);
+            items.extend(std::iter::repeat_n(Item::Pop, clips));
+            self.resizers.push((last, items));
+            return;
+        }
         self.design(|painter| scrollbars::paint_lone_resizer(style, padding, &mut painter.items));
     }
 
@@ -3330,6 +3388,14 @@ fn is_layered(fragment: &Fragment) -> bool {
 /// Collects the positioned descendants and stacking contexts that belong to the stacking context
 /// of `fragment` (at `origin`), with the clips of the ancestors in between. `node` is the closest
 /// element around the children.
+/// Whether the fragment at the address `inner` lies in `outer` (not `outer` itself).
+fn holds(outer: &Fragment, inner: *const Fragment) -> bool {
+    outer
+        .children
+        .iter()
+        .any(|child| std::ptr::eq(child, inner) || holds(child, inner))
+}
+
 /// Whether `inner` is `outer` or lies in it.
 fn contains(outer: &Fragment, inner: &Fragment) -> bool {
     std::ptr::eq(outer, inner) || outer.children.iter().any(|child| contains(child, inner))

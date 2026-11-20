@@ -3180,6 +3180,52 @@ mod tests {
     }
 
     #[test]
+    fn places_absolute_boxes_inside_the_scroll_bars_and_gutters() {
+        // The padding box in which absolutely positioned boxes are placed lies inside the scroll
+        // bars and the gutters of a scroll container, between its border and its padding.
+        let (document, pages) = render_document(
+            "<style>@page { margin: 0 } body { margin: 0 }
+               .c { position: relative; width: 100px; height: 50px; border: 0 solid; border-width: 0 2px }
+               .a { position: absolute; left: 0; top: 0; width: 100%; height: 100% }</style>
+             <div class=c style='overflow-y: auto; scrollbar-gutter: stable'><div class='a gutter'></div></div>
+             <div class=c style='overflow: scroll' dir=rtl><div class='a bars'></div></div>
+             <div class=c style='overflow: hidden'><div class='a none'></div></div>",
+        );
+        let placed = |class: &str| {
+            let (x, _, fragment) = find(&pages[0], &document, class).expect(class);
+            (x, fragment.rect.width.to_px(), fragment.rect.height.to_px())
+        };
+        assert_eq!(placed("gutter"), (2.0, 85.0, 50.0));
+        assert_eq!(placed("bars"), (17.0, 85.0, 35.0));
+        assert_eq!(placed("none"), (2.0, 100.0, 50.0));
+    }
+
+    #[test]
+    fn leaves_hanging_spaces_out_of_the_scrollable_overflow() {
+        // Spaces that hang at the end of a line add nothing that scrolls, as in Chrome: a line
+        // that fills its box but for them (two zeros are 25.23 pixels wide) gives no scroll bar.
+        let (document, pages) = render_document(
+            "<style>@page { margin: 0 } body { margin: 0; font: 20px Inter }
+               div { width: 25.25px; height: 50px; overflow-x: auto; overflow-y: hidden }</style>
+             <div class=wrap style='white-space: pre-wrap'>00 00</div>
+             <div class=normal>00 00</div>
+             <div class=rtl style='white-space: pre-wrap' dir=rtl>00 00</div>
+             <div class=pre style='white-space: pre'>00 00</div>",
+        );
+        let horizontal = |class: &str| {
+            let (_, _, fragment) = find(&pages[0], &document, class).expect(class);
+            let FragmentKind::Box { style, .. } = &fragment.kind else {
+                panic!("{class}: a box");
+            };
+            style.scrollbars.horizontal
+        };
+        assert!(!horizontal("wrap"));
+        assert!(!horizontal("normal"));
+        assert!(!horizontal("rtl"));
+        assert!(horizontal("pre"));
+    }
+
+    #[test]
     fn keeps_the_gutters_of_scrollbar_gutter() {
         // `stable` keeps the room of a vertical bar on the right of a scroll container (on the
         // left right to left) and `both-edges` on both sides; a bar lies in the gutter on its

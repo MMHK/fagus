@@ -695,6 +695,24 @@ mod tests {
     }
 
     #[test]
+    fn resizes_elements_but_not_their_generated_content() {
+        // `resize` on `::before` and `::after` gives no resize handle (CSS UI 4 leaves it
+        // undefined; web-platform-tests expect none).
+        let (document, styled) = styles(
+            "<div id=a></div>",
+            "#a, #a::before, #a::after { content: ''; overflow: hidden; resize: both }",
+        );
+        assert!(by_id(&document, &styled, "a").resize);
+        let node = node(&document, "a");
+        for key in [PseudoKey::Before, PseudoKey::After] {
+            assert!(
+                !styled.pseudo(node, key).expect("pseudo-element").resize,
+                "{key:?}"
+            );
+        }
+    }
+
+    #[test]
     fn computes_the_scroll_bar_properties() {
         use values::{Rgba, ScrollbarWidth};
         let (document, styled) = styles(

@@ -1057,8 +1057,11 @@ pub fn compute_styles_with(
             ) {
                 let pseudo = ComputedStyle::from(ComputedValues {
                     before_of: (key == PseudoKey::Before).then_some(element),
-                    // Only elements are footnotes.
+                    // Only elements are footnotes, and only elements are resized: generated
+                    // content gets no resize handle (CSS UI 4 leaves `resize` on it undefined;
+                    // web-platform-tests expect none).
                     footnote: false,
+                    resize: false,
                     ..ComputedValues::from(pseudo)
                 });
                 // A `::before` or `::after` that is a list item has a marker too.

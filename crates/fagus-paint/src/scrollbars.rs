@@ -562,6 +562,43 @@ mod tests {
     }
 
     #[test]
+    fn draws_resize_handles_over_the_layers_their_boxes_hold() {
+        // Chrome paints a box's resize handle after the boxes it holds that are painted as
+        // layers after it (a child with `will-change: transform`, a positioned one), clipped as
+        // the box clips them, and before the layers after the last of them.
+        let items = |child: &str| {
+            painted(&format!(
+                "<div style='overflow: auto; resize: both; width: 50px; height: 50px'>
+                   <div style='{child}; width: 100%; height: 100%; background: yellow'></div></div>
+                 <div style='position: relative; height: 10px; background: blue'></div>"
+            ))
+        };
+        let colored = |items: &[Item], blue: f32| {
+            items
+                .iter()
+                .rposition(
+                    |item| matches!(item, Item::Rect { color, .. } if (color.b - blue).abs() < 0.01 && color.a > 0.0),
+                )
+                .expect("a background")
+        };
+        // (After the blue box too where what it holds comes after it.)
+        for (child, before_blue) in [
+            ("will-change: transform", true),
+            ("position: relative", true),
+            ("position: relative; z-index: 1", false),
+        ] {
+            let items = items(child);
+            let handle = items
+                .iter()
+                .position(|item| matches!(item, Item::DashedLine { .. }))
+                .expect("a handle");
+            assert!(handle > colored(&items, 0.0), "{child}");
+            assert_eq!(handle < colored(&items, 1.0), before_blue, "{child}");
+            assert_eq!(handle_lines(&items).len(), 4, "{child}");
+        }
+    }
+
+    #[test]
     fn places_arrows_as_chrome_on_linux() {
         // Measured in Chrome 157's PDF: a vertical bar at x 287, 15px wide, buttons 18px long;
         // a horizontal one at y 63; and `scrollbar-width: thin`, 10px with 12px buttons.
