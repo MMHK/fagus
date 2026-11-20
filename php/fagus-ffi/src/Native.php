@@ -221,6 +221,39 @@ final class Native
 
             return $real;
         }
+        // The package may ship the binaries of the platforms it supports.
+        $packaged = dirname(__DIR__).'/lib/'.self::platform().'/'.self::libraryName();
+        if (is_file($packaged)) {
+            return realpath($packaged) ?: $packaged;
+        }
+
+        return self::libraryName();
+    }
+
+    /**
+     * The platform directory name of the shipped binaries: `linux-x86_64`, `windows-x86_64` and so
+     * on.
+     */
+    private static function platform(): string
+    {
+        $machine = strtolower((string) php_uname('m'));
+        if (in_array($machine, ['aarch64', 'arm64'], true)) {
+            $machine = 'aarch64';
+        } else {
+            $machine = 'x86_64';
+        }
+        if (PHP_OS_FAMILY === 'Windows') {
+            return 'windows-'.$machine;
+        }
+        if (PHP_OS_FAMILY === 'Darwin') {
+            return 'macos-'.$machine;
+        }
+
+        return 'linux-'.$machine;
+    }
+
+    private static function libraryName(): string
+    {
         if (PHP_OS_FAMILY === 'Windows') {
             return 'fagus_ffi.dll';
         }

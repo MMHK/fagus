@@ -11,7 +11,9 @@ package is the full API for PHP 8.3 and later, over the worker protocol.
 - the shared library for the platform: `libfagus_ffi.so` (Linux, glibc 2.17 or later, x86_64 and
   aarch64) or `fagus_ffi.dll` (Windows, x64, one DLL for PHP 7.4 to 8.4)
 
-Point `FAGUS_FFI_LIB` at the library, or pass its path to `new Engine()`.
+Point `FAGUS_FFI_LIB` at the library, or pass its path to `new Engine()`. Otherwise the package looks
+for a binary it ships at `lib/<platform>/` (`linux-x86_64`, `linux-aarch64`, `windows-x86_64`) and
+falls back to the system loader's search path.
 
 ## Usage
 
