@@ -2,7 +2,7 @@ name: FFI
 
 # The C ABI shared library (`crates/fagus-ffi`, docs/plans/2026-11-20-php-ffi-cdylib.md): built
 # for the three supported platforms and smoke-tested with PHP 7.4 to 8.4. The format, clippy and
-# the Rust tests are ci.yml's, which covers the whole workspace. Publishing is ffi-release.yml.
+# the Rust tests are ci.yml's, which covers the whole workspace. Publishing is release.yml.
 on:
   push:
     branches: [main]
@@ -95,6 +95,13 @@ jobs:
               /w/parity/document.html /w/parity/ffi.pdf 2026-11-20T00:00:00Z'
           cmp parity/cli.pdf parity/ffi.pdf
           ls -l parity/*.pdf
+      # `ffi.enable` is `preload` by default, so a pool needs `ffi.enable=true` or a file that
+      # OPcache preloads; both are checked against a real php-fpm, and that the default refuses
+      # FFI in a request (docs/php.md).
+      - name: FFI in PHP-FPM
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-fpm sh /w/php/fagus-ffi/tests/fpm-preload.sh \
+            /w/php/fagus-ffi /w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
 
   linux-arm64:
     name: Linux aarch64 (glibc 2.17) and PHP 8.4
@@ -140,7 +147,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       # The static CRT is what removes the Visual C++ redistributable from the picture, so that
       # one DLL serves PHP 7.4 (VS15) and 8.4 (VS17). RUSTFLAGS is scoped to this step so that the
-      # Windows CLI binary keeps the dynamic CRT, as ffi-release.yml does.
+      # Windows CLI binary keeps the dynamic CRT, as release.yml does.
       - name: Build with the static CRT
         env:
           RUSTFLAGS: -C target-feature=+crt-static
