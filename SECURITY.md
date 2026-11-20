@@ -45,9 +45,10 @@ What Fagus promises for untrusted documents:
   only if they lie inside the root after resolving `..`, percent-encoding and symbolic links.
   URLs with a scheme or a host, absolute paths, drives and network shares are refused. Images
   inside SVG documents must be `data:` URLs.
-- **No code execution.** Fagus runs no scripts, and its own code has no `unsafe` but one call of
-  glibc's `malloc_trim` in the command line, which takes no arguments from the document (the crates
-  it depends on do have `unsafe`).
+- **No code execution.** Fagus runs no scripts, and its own code has no `unsafe` but the pointers of
+  the C ABI library (`crates/fagus-ffi`, which PHP's FFI extension loads) and one call of glibc's
+  `malloc_trim` in the command line, which takes no arguments from the document (the crates it
+  depends on do have `unsafe`).
 - **Bounded work.** The limits below keep a document from taking unbounded memory or time.
   Where the limit of a part is reached, the part is left out (often with a diagnostic) and the
   rest renders. Where the memory budget or the time limit of the whole document is reached, the
@@ -107,6 +108,12 @@ These are known and not fixed in the engine; deploy accordingly:
   images itself. They are fuzzed through the targets in `fuzz/`.
 - **Without the sandbox** (macOS, Windows, Linux without Landlock or seccomp, `--no-sandbox`),
   only the checks of the engine stand between a document and the file system.
+- **The FFI library has no sandbox at all.** `libfagus_ffi.so` and `fagus_ffi.dll` (the
+  `nforst/fagus-ffi` package) render inside the PHP process, so the process-level sandbox of the
+  worker cannot wrap them: they read files with the rights of PHP-FPM. They catch panics, but an
+  abort or running out of memory in the engine or a native dependency ends the PHP-FPM worker
+  with the document. Render untrusted HTML with the worker package, and set `memoryBudget` and
+  `timeLimit` when the FFI library is used. See [docs/php.md](docs/php.md#the-ffi-package-php-74-and-later).
 
 ## Verify a binary
 

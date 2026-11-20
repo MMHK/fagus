@@ -314,9 +314,9 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 | 階段 | 內容 | 估時 | 驗收 | 狀態 |
 |---|---|---|---|---|
 | M1 | `fagus-protocol` 抽取、`fagus-ffi`、`fagus.h` | 1–1.5 天 | `cargo test -p fagus-ffi`；Linux x64 上 `php -r` 產出 `%PDF-` | 完成（`c9971a13`…`cda340c`，見 §14） |
-| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 | 建置與 smoke 已完成；封裝與 release.yml 合併待做 |
+| M2 | release.yml `lib` job、三平台 smoke | 0.5 天 | CI 產出 3 個產物；dumpbin / readelf 檢查通過 | 建置、smoke、封裝與 draft release 已在 `ffi-release.yml` 完成；併入 `release.yml` 待做 |
 | M3 | `php/fagus-ffi`（7.4 語法）+ Composer | 1 天 | PHP 7.4 / 8.0 / 8.3 / 8.4 全綠 | 完成（`b1831f0`…`350f7dc`），含 PKCS#12 簽章 |
-| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 | 待做 |
+| M4 | 文件與釘選流程 | 0.5–1 天 | 文件與 release 產物一致 | 文件已完成（`docs/php.md`、`SECURITY.md`、`CHANGELOG.md`）；釘選流程待做 |
 
 約 3–4 天可交出不含 callback 的 MVP。
 
@@ -344,8 +344,9 @@ php -r 'exit(extension_loaded("ffi") ? 0 : 1);'
 - [x] PHP 7.4 / 8.0 / 8.3 / 8.4 smoke test 全綠（CI `44732710202`，含 PHP 套件）
 - [x] PKCS#12 簽章經 C ABI 產出（`cargo test -p fagus-ffi`、PHP smoke）
 - [ ] `php -r 'echo ini_get("ffi.enable");'` 在 FPM 與 CLI 都是 `true`（或 preload）
-- [ ] FFI 與 CLI 輸出位元組相同（需要真的 render）
-- [ ] 文件標明無沙箱
+- [x] FFI 與 CLI 輸出位元組相同：`ffi.yml` 的「The library and the command line agree byte for
+      byte」以同一份 HTML 與 `--created` 比對 `cmp`
+- [x] 文件標明無沙箱（`docs/php.md`、`SECURITY.md`）
 
 ## 12. 校對記錄（2026-11-20）
 
@@ -468,13 +469,17 @@ CI（workflow `Spike FFI`，分支 `spike/ffi`）：
    `release.yml`。
 2. ~~在 `spike-ffi.yml` 先驗證封裝內容與 artifact 名稱~~ → 改由 §15 的 workflow 直接驗證
    封裝、`lib/<platform>/` 佈局與 draft release。
-3. PHP 套件發佈：把三平台二進位放進 `php/fagus-ffi/lib/<platform>/`，或由 Composer 安裝流程
-   下載；`Native::locate()` 已支援這個路徑。
-4. 文件：`docs/php.md`（FFI 用法與限制）、`SECURITY.md`（FFI 無沙箱、OOM/abort 會殺 FPM
-   worker）、`CHANGELOG.md`（`[Unreleased]`）；`docs/nav.yml` 與 `php tools/check-docs.php`。
-5. 進 PR 前：CI 恢復 `--locked`、決定 `spike-ffi.yml` 的去留（併入或改名為 `ffi.yml`）、
-   補一個 `ffi.enable=preload` 的 FPM 驗證。
-6. 驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。
+3. ~~PHP 套件發佈：把三平台二進位放進 `php/fagus-ffi/lib/<platform>/`，或由 Composer 安裝流程
+   下載；`Native::locate()` 已支援這個路徑。~~ → `ffi-release.yml` 的 `php` job 已把三個平台
+   放進 `package/lib/<platform>/` 並用不含明確路徑的 smoke test 驗證。
+4. ~~文件：`docs/php.md`（FFI 用法與限制）、`SECURITY.md`、`CHANGELOG.md`；
+   `docs/nav.yml` 與 `php tools/check-docs.php`。~~ → 已寫入（沒有新頁面，`nav.yml` 不需新增）；
+   `php tools/check-docs.php` 通過。
+5. ~~進 PR 前：CI 恢復 `--locked`、決定 `spike-ffi.yml` 的去留、補一個 `ffi.enable=preload`
+   的 FPM 驗證。~~ → 已把 `spike-ffi.yml` 改名為 `ffi.yml`（main / PR 觸發、`--locked`、移除與
+   `ci.yml` 重複的 check job）；`ffi.enable=preload` 的 FPM 驗證仍待做。
+6. ~~驗證 FFI 與 CLI 在同一份 HTML 與 `--created` 下位元組相同。~~ → `ffi.yml` 的 parity
+   步驟會建置 CLI、用 `parity.php` 經 FFI 渲染同一份 HTML，然後 `cmp` 兩份 PDF。
 
 ## 15. FFI 預覽發版 workflow（2026-11-20）
 
@@ -523,4 +528,47 @@ git push origin ffi-v0.2.0-rc1
 - Packagist / Composer 發佈流程；目前只產出 tar.gz
 - `tools/pin-binaries.php` 的釘選流程（等併入 `release.yml` 時一起做）
 - musl：不列入，PHP 官方映像都是 glibc
+
+## 16. Preview run 44735444601 與收尾（2026-11-21）
+
+第一支 `ffi-v0.2.0-rc1` 的 `FFI preview release` 在 Windows job 的
+`actions/attest-build-provenance@v2` 失敗：
+
+```
+InternalError: error fetching tlog entry - (404) Not Found
+```
+
+建置、`dumpbin`、封裝與 PHP 7.4 / 8.4 smoke 都成功，Linux 兩個 target 與其 attestation 也成功；
+失敗發生在 Sigstore 的 Rekor 寫入後回讀（transient，[actions/attest-build-provenance#679]）。
+處理方式：
+
+1. 重跑失敗的 job（`gh run rerun 44735444601 --failed`），不需要改動 commit。
+2. `ffi-release.yml` 的三個 attestation 步驟（library、php、release）都改成
+   `continue-on-error` + 等 60 秒重試一次；只有第二次失敗才讓 job 失敗。Rekor 的讀取通常幾分鐘
+   內恢復，重試可避免整個 preview release 卡住。
+
+同一輪的其他收尾：
+
+- `spike-ffi.yml` → `ffi.yml`，在 `main` / PR 上依 FFI 相關路徑觸發；移除與 `ci.yml` 重複的
+  check job，建置恢復 `--locked`，cache key 改名。
+- `ffi.yml` 新增 parity 步驟：建置 `fagus` CLI，同一份 HTML 與 `--created` 分別經 CLI 與
+  `parity.php`（FFI）渲染，`cmp` 兩份 PDF。
+- 文件：`docs/php.md` 新增「The FFI package」、`SECURITY.md` 補無沙箱與 abort/OOM 風險、
+  `CHANGELOG.md` 的 `[Unreleased]` 補條目。
+
+仍待做：
+
+- `ffi.enable=preload` 的 FPM 驗證（需要 php-fpm + preload 檔）。
+- 把 `ffi-release.yml` 的 `library` / `php` job 併入 `release.yml`，以及
+  `tools/pin-binaries.php` 的釘選流程。
+- SBOM 與 Packagist / Composer 發佈。
+
+重跑後 Windows job（含 attestation）全綠，證實 404 是 transient；接著暴露第二個問題：
+`php` job 的 `tar -xzf … --wildcards '*.so' '*.dll'` 在只有 `.so` 的 Linux archive 上
+以 exit 2 結束（`tar: *.dll: Not found in archive`）。這是第一次跑到該步驟才出現的錯誤。
+修正：依 `platform` 只解開對應的 pattern（Linux 用 `*.so`，Windows 用 `*.dll`），
+`fagus.h` 與 README 留在 archive 的 `dist/`，不放進 `lib/<platform>/`。
+
+[actions/attest-build-provenance#679]: https://github.com/actions/attest-build-provenance/issues/679
+
 
