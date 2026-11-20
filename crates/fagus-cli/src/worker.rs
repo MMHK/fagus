@@ -335,7 +335,7 @@ where
         serde_json::from_value(frame.header).map_err(|error| format!("invalid request: {error}"))?;
     let id = request.id;
     // A signature may need the caller's channel, so it is applied once the document is built.
-    let signature = request.signature.take();
+    let signature_request = request.signature.take();
     let loader = request.ask.then(|| {
         Arc::new(Asker {
             channel: Arc::clone(channel),
@@ -344,7 +344,7 @@ where
     });
     let mut blobs: Vec<Option<Vec<u8>>> = frame.blobs.into_iter().map(Some).collect();
     let mut document = fagus_protocol::document(request, &mut blobs, limits, loader)?;
-    if let Some(request_signature) = signature {
+    if let Some(request_signature) = signature_request {
         let mut take = |index: usize| -> Result<Vec<u8>, String> {
             blobs
                 .get_mut(index)
