@@ -1323,3 +1323,114 @@ fn takes_no_first_letter_after_a_block_without_lines() {
         "{found:?}"
     );
 }
+
+/// The text runs below `fragment` (at `x`): where each starts on the page, and its run.
+fn text_runs<'f>(fragment: &'f Fragment, x: f32, out: &mut Vec<(f32, &'f crate::fragment::TextRun)>) {
+    let x = x + fragment.rect.x.to_px();
+    if let FragmentKind::Text(run) = &fragment.kind {
+        out.push((x, run));
+    }
+    for child in &fragment.children {
+        text_runs(child, x, out);
+    }
+}
+
+#[test]
+fn starts_left_to_right_words_where_right_to_left_lines_align_them() {
+    // In a right-to-left paragraph, the spaces that hang at the end of a line of left-to-right
+    // words stand on its left, as wide as Blink's item of them in layout units, and the room
+    // that rounding the words' item adds goes after the words: they start where the line's
+    // alignment puts them (here on the left), as in Chrome, not a rounding of either later.
+    let pages = render(
+        "<style>body { font: 10pt Inter; margin: 0 } div { width: 120px; text-align: left }</style>
+         <div dir=rtl>Tes tes tes tes tes tes tes tes tes tes</div>
+         <div dir=rtl style='white-space: pre-wrap'>Tes tes tes tes tes tes tes tes tes tes</div>",
+    );
+    let mut runs = Vec::new();
+    // From the left of the content area.
+    text_runs(
+        &pages[0].fragments[0],
+        -pages[0].fragments[0].rect.x.to_px(),
+        &mut runs,
+    );
+    let mut lines = 0;
+    for (x, run) in runs {
+        // Where the first glyph that is no space starts.
+        let mut start = x;
+        for glyph in &run.glyphs {
+            if !run.text[glyph.cluster.0 as usize..].starts_with(' ') {
+                break;
+            }
+            start += glyph.advance;
+        }
+        if run.text.trim().is_empty() {
+            continue;
+        }
+        lines += 1;
+        assert!(start.abs() < 1e-4, "{:?} starts at {start}", run.text);
+    }
+    assert!(lines >= 4, "{lines} lines");
+}
+
+#[test]
+fn rounds_right_to_left_items_up_at_their_right_end() {
+    // Blink draws the glyphs of an item from its left and rounds its width up to layout units:
+    // right to left, the room that adds lies at the right end of the item's first piece, which
+    // stands rightmost, not between the words of its pieces. The words of an item broken at its
+    // spaces stand as those of one that cannot break.
+    let advances = |text: &str| {
+        let pages = render(&format!(
+            "<style>body {{ font: 10pt Inter; margin: 0 }}</style>
+             <div style='white-space: pre; unicode-bidi: bidi-override; direction: rtl'>{text}</div>"
+        ));
+        let mut runs = Vec::new();
+        text_runs(&pages[0].fragments[0], 0.0, &mut runs);
+        runs.iter()
+            .flat_map(|(_, run)| run.glyphs.iter().map(|glyph| glyph.advance))
+            .collect::<Vec<_>>()
+    };
+    let pieces = advances("one two three");
+    let whole = advances("one\u{a0}two\u{a0}three");
+    assert_eq!(pieces.len(), 13);
+    assert_eq!(pieces, whole);
+}
+
+#[test]
+fn balances_lines_with_inline_boxes_as_without() {
+    // Breaking balanced lines measures them as laying them out does, each of Blink's items
+    // rounded up to layout units: inline boxes, which end items, do not push a word to a line
+    // of its own.
+    let lines = |content: &str, width: u32| {
+        let pages = render(&format!(
+            "<style>body {{ font: 10pt Inter; margin: 0 }} div {{ text-wrap: balance; width: {width}px }}</style>
+             <div>{content}</div>"
+        ));
+        let mut lines = Vec::new();
+        line_texts(&pages[0].fragments[0], &mut lines);
+        lines
+    };
+    let plain = "The quickest brown fox jumped over the lazy dog";
+    let boxed = "<span>The</span> <span>quickest</span> <span>brown</span> <span>fox</span> <span>jumped</span> \
+                 <span>over</span> <span>the</span> <span>lazy</span> <span>dog</span>";
+    for width in (150..300).step_by(3) {
+        assert_eq!(lines(boxed, width), lines(plain, width), "{width}px");
+    }
+}
+
+#[test]
+fn ends_outside_markers_where_their_box_ends() {
+    // An outside marker's box is as wide as its text rounded up to layout units, as Blink's,
+    // and ends where the content starts: its text starts that far to the left.
+    let pages = render(
+        "<style>body { font: 10pt Inter; margin: 0 } ol { margin: 0; padding-left: 100px }</style>
+         <ol><li style='list-style-type: \"XXXppp\"'>x</li></ol>",
+    );
+    let mut runs = Vec::new();
+    text_runs(&pages[0].fragments[0], 0.0, &mut runs);
+    let (x, marker) = runs.iter().find(|(_, run)| run.marker).expect("a marker");
+    let (content, _) = runs.iter().find(|(_, run)| run.text == "x").expect("the content");
+    let width: f32 = marker.glyphs.iter().map(|glyph| glyph.advance).sum();
+    let snapped = (width * 64.0).ceil() / 64.0;
+    assert!(snapped > width, "{width}");
+    assert!((content - x - snapped).abs() < 1e-4, "{x} {content}");
+}

@@ -475,7 +475,14 @@ impl Face {
     /// (kerning) adds, which the shaper scales to 1/65536 pixel at the size cut to that
     /// precision (`em_mult`). At 11pt (14.67px, set as 14.66px) a line is 0.07 % narrower than
     /// the font's advances times the size, which decides whether a word still fits.
+    ///
+    /// A glyph the shaper sets without advance (a default ignorable character such as a
+    /// direction mark, or a mark of zero width) has none: the shaper sets it to zero, whatever
+    /// the advance Skia gave.
     pub fn layout_advance(&self, glyph: &ShapedGlyph, size: f32) -> f32 {
+        if glyph.x_advance == 0.0 {
+            return 0.0;
+        }
         let size = size * self.size_adjust;
         #[allow(clippy::cast_possible_truncation, reason = "font units of an em")]
         let units_per_em = (self.metrics.units_per_em as i64).max(1);
@@ -4527,6 +4534,28 @@ mod tests {
         let own = f64::from(db.face(face).layout_advance(&unkerned, 13.33)) * 65536.0;
         let advance = db.face(face).layout_advance(kerned, 13.33);
         assert!((f64::from(advance) - (own + positioned) / 65536.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn gives_glyphs_the_shaper_sets_without_advance_none() {
+        // HarfBuzz zeroes the advance of a direction mark (a default ignorable character),
+        // whatever the advance of its glyph that Skia hands it: none, not the difference between
+        // `FreeType`'s scaled advance and the shaper's.
+        let Some(db) = test_db() else { return };
+        let face = db.query(&["Inter"], 400.0, FontStyle::Normal).expect("Inter");
+        let shaped = db.shape(face, "a\u{200F}b");
+        let mark = shaped
+            .glyphs
+            .iter()
+            .find(|glyph| glyph.x_advance == 0.0)
+            .expect("the mark");
+        assert_eq!(db.face(face).layout_advance(mark, 25.0), 0.0);
+        assert!(
+            shaped
+                .glyphs
+                .iter()
+                .any(|glyph| db.face(face).layout_advance(glyph, 25.0) > 0.0)
+        );
     }
 
     #[test]

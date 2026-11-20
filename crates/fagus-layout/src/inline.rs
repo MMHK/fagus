@@ -2224,6 +2224,9 @@ fn shape_pieces(
                         }
                         (start, room, Some(symbol.1))
                     }
+                    // Outside, the marker's box is as wide as its text rounded up to layout
+                    // units, as Blink's, and ends where the content starts.
+                    None if !*inside => (-snapped_width(width), 0.0, None),
                     None => (-width, 0.0, None),
                 };
                 // Lines break after a symbol inside the box, as in Chrome (see
@@ -4147,7 +4150,9 @@ fn snapped_width(width: f32) -> f32 {
 
 /// Widens the last piece of each of Blink's inline items on a line (see [`same_item`]), and its
 /// last glyph, by what rounding the item's width up to layout units adds, so that what follows
-/// the item starts where it does in Chrome. The spaces that hang at the end of the line do not
+/// the item starts where it does in Chrome; right to left, where its first piece stands on the
+/// right, that piece at its right end, after which Blink's item ends too. The spaces that hang
+/// at the end of the line do not
 /// count; with `before_hanging`, the room goes before them, where Blink's item ends (which tells
 /// how far a justified line reaches). Returns the pieces widened, by how much and the spaces
 /// the room went before (see [`unsnap_items`]).
@@ -4155,11 +4160,15 @@ fn snap_items(pieces: &mut [Piece], before_hanging: bool) -> Vec<(usize, f32, f3
     let last = pieces.len().saturating_sub(1);
     let mut snaps = Vec::new();
     let mut width = 0.0;
+    // The first piece of the item, once one has started.
+    let mut start = None;
     for index in 0..pieces.len() {
         if !matches!(pieces[index].kind, PieceKind::Text { .. }) {
             width = 0.0;
+            start = None;
             continue;
         }
+        let first = *start.get_or_insert(index);
         width += pieces[index].width;
         if index < last && same_item(&pieces[index], &pieces[index + 1]) {
             continue;
@@ -4170,10 +4179,17 @@ fn snap_items(pieces: &mut [Piece], before_hanging: bool) -> Vec<(usize, f32, f3
             0.0
         };
         let snap = snapped_width(width - hanging) - (width - hanging);
-        let hanging = if before_hanging { hanging } else { 0.0 };
-        widen_item_end(&mut pieces[index], snap, hanging);
-        snaps.push((index, snap, hanging));
+        // Left-to-right text in a right-to-left paragraph loses the spaces that hang at its end
+        // to the other side of the line (UAX #9, rule L1; see `split_hanging`): the room goes
+        // before them, where Blink's item ends, or it would move the text with them.
+        let bidi = pieces[index].bidi;
+        let moved = bidi.paragraph_rtl() && !bidi.is_rtl();
+        let hanging = if before_hanging || moved { hanging } else { 0.0 };
+        let target = if bidi.is_rtl() { first } else { index };
+        widen_item_end(&mut pieces[target], snap, hanging);
+        snaps.push((target, snap, hanging));
         width = 0.0;
+        start = None;
     }
     snaps
 }
@@ -4227,13 +4243,30 @@ fn expansion_shares(free: f32, count: usize) -> (f32, f32) {
     ((share / UNIT) as f32, (last / UNIT) as f32)
 }
 
-/// The width of a line of pieces: without the spaces that hang at its end, with the hyphen of a
-/// break at a hyphenation point.
+/// The width of a line of pieces as breaking lines measures it: without the spaces that hang at
+/// its end, with the hyphen of a break at a hyphenation point, and with each of Blink's inline
+/// items but the last rounded up to layout units (see [`snap_items`]).
 fn line_width(pieces: &[&Piece]) -> f32 {
     let last = pieces.last().map_or(0.0, |piece| {
         piece.hyphen - piece.trailing_space + broken_delta(piece)
     });
-    pieces.iter().map(|piece| piece.width).sum::<f32>() + last
+    let mut width = 0.0;
+    let mut item = 0.0;
+    for (index, piece) in pieces.iter().enumerate() {
+        width += piece.width;
+        if !matches!(piece.kind, PieceKind::Text { .. }) {
+            item = 0.0;
+            continue;
+        }
+        item += piece.width;
+        if let Some(next) = pieces.get(index + 1)
+            && !same_item(piece, next)
+        {
+            width += snapped_width(item) - item;
+            item = 0.0;
+        }
+    }
+    width + last
 }
 
 /// Greedy lines at break opportunities alone of the pieces in `range`, the first of them line
@@ -4253,17 +4286,31 @@ fn greedy_breaks(
         let available = room.available(first_line + lines.len());
         let (mut used, mut end) = (0.0, start);
         let mut run = 0.0;
+        // Each of Blink's inline items is rounded up to layout units, as breaking lines does,
+        // but the one a line ends with.
+        let mut item = 0.0;
         for (index, piece) in pieces.range(start..range.end).enumerate() {
             let index = start + index;
             if matches!(piece.kind, PieceKind::Float { .. }) && room.float != Some(index) {
                 return None;
             }
             run += piece.width;
+            let mut snap = 0.0;
+            if matches!(piece.kind, PieceKind::Text { .. }) {
+                item += piece.width;
+                if !pieces.get(index + 1).is_some_and(|next| same_item(piece, next)) {
+                    snap = snapped_width(item) - item;
+                    run += snap;
+                    item = 0.0;
+                }
+            } else {
+                item = 0.0;
+            }
             // The last word of the paragraph is hyphenated only where it starts the line.
             let after_words = end > start && !pieces[end - 1].last_word_hyphenation;
             let breakable = is_opportunity(piece) && !(piece.last_word_hyphenation && after_words);
             if breakable || index + 1 == range.end {
-                if used + run - piece.trailing_space + piece.hyphen + broken_delta(piece)
+                if used + run - snap - piece.trailing_space + piece.hyphen + broken_delta(piece)
                     > available + FIT_TOLERANCE
                 {
                     break;
@@ -5565,8 +5612,10 @@ impl LineBuilder<'_> {
                 _ => 0.0,
             }
         };
+        // Right to left, the spaces that hang stand before the line, as wide as Blink's item of
+        // them, in layout units (see `split_hanging`).
         let offset = if rtl {
-            aligned - hanging - end_hang
+            aligned - snapped_width(hanging) - end_hang
         } else {
             indent + aligned - start_hang
         };
@@ -5775,9 +5824,18 @@ impl LineBuilder<'_> {
                     // Outside the box, the marker is placed from where the content box starts:
                     // on its right in a right-to-left block (whatever the marker's own
                     // direction, as in Chrome), mirrored, as inside its room on the line.
-                    let width = image
-                        .as_ref()
-                        .map_or_else(|| runs.iter().map(|run| run.3).sum(), |image| image.1);
+                    let width = image.as_ref().map_or_else(
+                        || {
+                            let width = runs.iter().map(|run| run.3).sum();
+                            // The box of an outside marker's text (see where it starts).
+                            if inside || symbol.is_some() {
+                                width
+                            } else {
+                                snapped_width(width)
+                            }
+                        },
+                        |image| image.1,
+                    );
                     let rtl = if inside {
                         piece.style.is_rtl()
                     } else {
@@ -6342,8 +6400,24 @@ fn orientation(
 
 /// Splits the spaces that hang at the end of a line off its last text: they take the level of
 /// the line's paragraph (UAX #9, rule L1) and, as in Chrome, which drops them, stand outside the
-/// inline boxes. Returns the index of the piece they make, at the end of the line.
+/// inline boxes. Right to left, where they stand before the line, they are as wide as Blink's
+/// item of them, in layout units (its `HangWidth`), so that the text after them starts where
+/// the line's alignment puts it. Returns the index of the piece they make, at the end of the
+/// line.
 fn split_hanging(pieces: &mut Vec<Piece>, paragraph: u8) -> Option<usize> {
+    // Widens spaces that hang before a right-to-left line to layout units.
+    let snap = |glyphs: &mut [Glyph], width: f32| {
+        let snapped = if paragraph % 2 == 1 {
+            snapped_width(width)
+        } else {
+            width
+        };
+        if let Some(glyph) = glyphs.last_mut() {
+            glyph.advance += snapped - width;
+            return snapped;
+        }
+        width
+    };
     // (Past out-of-flow boxes that the line ends with after the spaces.)
     let last = pieces
         .iter()
@@ -6365,13 +6439,17 @@ fn split_hanging(pieces: &mut Vec<Piece>, paragraph: u8) -> Option<usize> {
     // A text of nothing but spaces (between or in inline boxes) takes the level where it is.
     if end == 0 {
         piece.bidi.level = paragraph;
+        let width = snap(glyphs, piece.width);
+        piece.trailing_space += width - piece.width;
+        piece.width = width;
+        piece.min_width = width;
         return None;
     }
     let (kept, spaces): (Vec<Glyph>, Vec<Glyph>) = std::mem::take(glyphs)
         .into_iter()
         .partition(|glyph| (glyph.cluster.0 as usize) < end);
     *glyphs = kept;
-    let spaces: Vec<Glyph> = spaces
+    let mut spaces: Vec<Glyph> = spaces
         .into_iter()
         .map(|glyph| Glyph {
             cluster: (glyph.cluster.0 - end as u32, glyph.cluster.1 - end as u32),
@@ -6379,7 +6457,9 @@ fn split_hanging(pieces: &mut Vec<Piece>, paragraph: u8) -> Option<usize> {
         })
         .collect();
     let space_text = text.split_off(end);
-    let width: f32 = spaces.iter().map(|glyph| glyph.advance).sum();
+    let measured: f32 = spaces.iter().map(|glyph| glyph.advance).sum();
+    piece.width -= measured;
+    let width = snap(&mut spaces, measured);
     let hanging = Piece {
         kind: PieceKind::Text {
             face: *face,
@@ -6403,7 +6483,6 @@ fn split_hanging(pieces: &mut Vec<Piece>, paragraph: u8) -> Option<usize> {
         edges: spacing::Edges::default(),
         broken: None,
     };
-    piece.width -= width;
     piece.min_width = piece.width;
     piece.trailing_space = 0.0;
     pieces.push(hanging);

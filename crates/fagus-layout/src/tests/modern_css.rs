@@ -176,9 +176,10 @@ fn places_outside_markers_beside_the_border_box_of_the_list_item() {
     );
     let marker = |text: &str| text_at(&pages[0], text).0;
     // Chrome: markers end where the list item's border box starts, whatever its padding and
-    // border.
+    // border (their boxes, as wide as their text rounded up to layout units).
     assert!((marker("2.") - marker("1.")).abs() < 0.01);
-    assert!((marker("\u{2212}") + marker_width(&pages[0]) - marker("E plain")).abs() < 0.01);
+    let end = marker("\u{2212}") + marker_width(&pages[0]);
+    assert!(end <= marker("E plain") && marker("E plain") - end <= 1.0 / 64.0);
     let mut found = Vec::new();
     for fragment in &pages[0].fragments {
         texts(fragment, (0.0, 0.0), &mut found);
