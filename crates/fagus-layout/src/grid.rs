@@ -2000,7 +2000,7 @@ fn grow_bases(span: &mut [Track], targets: &[usize], missing: Au) {
             .filter(|&index| room(&span[index]).is_some_and(|room| room < share))
             .collect();
         if full.is_empty() {
-            for &index in &open {
+            for (index, share) in shares(left, &open) {
                 span[index].base += share;
             }
             return;
@@ -2014,11 +2014,22 @@ fn grow_bases(span: &mut [Track], targets: &[usize], missing: Au) {
     }
     // All tracks reached their limits: the rest goes past them.
     if left > Au::ZERO && !targets.is_empty() {
-        let share = left / targets.len() as i32;
-        for &index in targets {
+        for (index, share) in shares(left, targets) {
             span[index].base += share;
         }
     }
+}
+
+/// `space` in equal shares over the tracks `targets`, as Chrome splits it (Blink's
+/// `DistributeExtraSpaceToSets`): each takes what is left divided by the tracks left, so that the
+/// shares add up to all of it, the last ones a layout unit more where it does not divide.
+fn shares(space: Au, targets: &[usize]) -> impl Iterator<Item = (usize, Au)> + '_ {
+    let mut left = space;
+    targets.iter().enumerate().map(move |(position, &index)| {
+        let share = left / (targets.len() - position) as i32;
+        left -= share;
+        (index, share)
+    })
 }
 
 /// Grows the growth limits of the tracks `targets` of `span` by `missing` together, in equal
@@ -2033,8 +2044,7 @@ fn grow_limits(span: &mut [Track], targets: &[usize], growable: &[bool], missing
         .filter(|&index| growable.get(index).copied().unwrap_or(false))
         .collect();
     let open = if open.is_empty() { targets.to_vec() } else { open };
-    let share = missing / open.len().max(1) as i32;
-    for index in open {
+    for (index, share) in shares(missing, &open) {
         let limit = span[index].limit.unwrap_or(span[index].base);
         span[index].limit = Some(limit + share);
     }

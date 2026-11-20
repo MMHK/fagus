@@ -253,3 +253,18 @@ fn keeps_the_first_line_of_a_block_out_of_grid_items() {
         "{found:?}"
     );
 }
+
+#[test]
+fn splits_what_a_spanning_item_needs_without_losing_layout_units() {
+    // Chrome gives each track what is left divided by the tracks left (Blink's
+    // `DistributeExtraSpaceToSets`): 100.015625px over five tracks add up to all of it.
+    let (document, pages) = render_document_with(
+        "<style>body { margin: 0 } .g { display: grid; grid-template-columns: repeat(5, auto);
+           justify-content: start } .a { grid-column: span 5; width: 100.015625px; height: 1px }
+           .b { grid-column: 1 / 6; height: 1px }</style>
+         <div class=g><div class=a></div><div class=b></div></div>",
+        |_| Images::default(),
+    );
+    let (_, _, b) = find(&pages[0], &document, "b").expect("b");
+    assert_eq!(b.rect.width.to_px(), 100.015_625);
+}
