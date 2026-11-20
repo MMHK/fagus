@@ -1,19 +1,24 @@
 name: FFI
 
-# The FFI work in progress: fmt, clippy and the tests of the crates it changes, plus the shared
-# library built and smoke-tested on three platforms and four PHP versions
-# (docs/plans/2026-11-20-php-ffi-cdylib.md). Push to this branch or run it by hand; it never
-# touches main and publishes nothing.
+# The C ABI shared library (`crates/fagus-ffi`, docs/plans/2026-11-20-php-ffi-cdylib.md): built
+# for the three supported platforms and smoke-tested with PHP 7.4 to 8.4. The format, clippy and
+# the Rust tests are ci.yml's, which covers the whole workspace. Publishing is ffi-release.yml.
 on:
   push:
-    branches: [spike/ffi]
+    branches: [main]
     paths:
       - crates/fagus-ffi/**
       - crates/fagus-protocol/**
       - crates/fagus-cli/**
       - php/fagus-ffi/**
-      - tools/spike/**
-      - .github/workflows/spike-ffi.yml
+      - .github/workflows/ffi.yml
+  pull_request:
+    paths:
+      - crates/fagus-ffi/**
+      - crates/fagus-protocol/**
+      - crates/fagus-cli/**
+      - php/fagus-ffi/**
+      - .github/workflows/ffi.yml
   workflow_dispatch:
 
 permissions:
@@ -23,22 +28,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check:
-    name: fmt, clippy and tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.99.1
-          components: clippy, rustfmt
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ffi-check
-      - run: cargo fmt --all --check
-      - run: cargo clippy -p fagus-cli -p fagus-protocol -p fagus-ffi --all-targets -- -D warnings
-      - run: cargo test -p fagus-cli -p fagus-protocol -p fagus-ffi
-
   linux-x64:
     name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.4
     runs-on: ubuntu-latest
@@ -50,14 +39,13 @@ jobs:
           targets: x86_64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@v2
         with:
-          key: spike-ffi-linux-x64
-      # No --locked: this spike crate is not in Cargo.lock yet, and it publishes nothing. The real
-      # build will add it with cargo and keep --locked.
+          key: ffi-linux-x64
+      # The crates are in Cargo.lock now, so the build is locked like the rest of CI.
       - name: Build against glibc 2.17
         run: |
           pip install ziglang==0.16.0
           cargo install --locked cargo-zigbuild@0.23.4
-          cargo zigbuild --release -p fagus-ffi --target x86_64-unknown-linux-gnu.2.17
+          cargo zigbuild --release --locked -p fagus-ffi --target x86_64-unknown-linux-gnu.2.17
       - name: Symbols and glibc floor
         run: |
           so=target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
@@ -84,6 +72,29 @@ jobs:
             docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
               sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
           done
+      # Byte identity with the command line tool: the same HTML and the same --created through
+      # both paths must give the same PDF (docs/plans/2026-11-20-php-ffi-cdylib.md, section 7).
+      # The document has no external resources, so the base directory does not matter.
+      - name: The library and the command line agree byte for byte
+        run: |
+          cargo build --release --locked -p fagus-cli
+          mkdir -p parity
+          cat > parity/document.html <<'HTML'
+          <!doctype html><html lang="en"><head><title>Parity</title>
+          <style>h1 { color: teal } .note { margin-top: 1em }</style></head>
+          <body><h1 id="title">Fagus</h1><p class="note">Same bytes on every path.</p></body></html>
+          HTML
+          target/release/fagus render parity/document.html -o parity/cli.pdf \
+            --created 2026-11-20T00:00:00Z
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli sh -c '
+            apt-get update -qq
+            apt-get install -y -qq libffi-dev >/dev/null
+            docker-php-ext-install ffi >/dev/null
+            php -d ffi.enable=true /w/php/fagus-ffi/tests/parity.php \
+              /w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so \
+              /w/parity/document.html /w/parity/ffi.pdf 2026-11-20T00:00:00Z'
+          cmp parity/cli.pdf parity/ffi.pdf
+          ls -l parity/*.pdf
 
   linux-arm64:
     name: Linux aarch64 (glibc 2.17) and PHP 8.4
@@ -96,12 +107,12 @@ jobs:
           targets: aarch64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@v2
         with:
-          key: spike-ffi-linux-arm64
+          key: ffi-linux-arm64
       - name: Build against glibc 2.17
         run: |
           pip install ziglang==0.16.0
           cargo install --locked cargo-zigbuild@0.23.4
-          cargo zigbuild --release -p fagus-ffi --target aarch64-unknown-linux-gnu.2.17
+          cargo zigbuild --release --locked -p fagus-ffi --target aarch64-unknown-linux-gnu.2.17
       - name: Symbols and glibc floor
         run: |
           so=target/aarch64-unknown-linux-gnu/release/libfagus_ffi.so
@@ -125,16 +136,15 @@ jobs:
           targets: x86_64-pc-windows-msvc
       - uses: Swatinem/rust-cache@v2
         with:
-          key: spike-ffi-windows-x64
+          key: ffi-windows-x64
       - uses: ilammy/msvc-dev-cmd@v1
       # The static CRT is what removes the Visual C++ redistributable from the picture, so that
-      # one DLL serves PHP 7.4 (VS15) and 8.4 (VS17). Blanket RUSTFLAGS is acceptable on MSVC
-      # (unlike on other targets, build scripts may link the static CRT too); the real build will
-      # set it per target in .cargo/config.toml instead.
+      # one DLL serves PHP 7.4 (VS15) and 8.4 (VS17). RUSTFLAGS is scoped to this step so that the
+      # Windows CLI binary keeps the dynamic CRT, as ffi-release.yml does.
       - name: Build with the static CRT
         env:
           RUSTFLAGS: -C target-feature=+crt-static
-        run: cargo build --release -p fagus-ffi --target x86_64-pc-windows-msvc
+        run: cargo build --release --locked -p fagus-ffi --target x86_64-pc-windows-msvc
       - name: DLL dependencies
         shell: pwsh
         run: |

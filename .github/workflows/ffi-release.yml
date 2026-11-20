@@ -163,7 +163,24 @@ jobs:
       - name: Smoke test with PHP 7.4
         if: matrix.smoke == 'windows'
         run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
-      - uses: actions/attest-build-provenance@v2
+      # Sigstore's Rekor log sometimes answers 404 for an entry it has just written (run 44735444601
+      # failed this way on Windows); one retry a minute later recovers without a manual re-run. Only
+      # the retry can fail the job.
+      - name: Attest the archives
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            fagus-ffi-${{ matrix.target }}.tar.gz
+            fagus-ffi-${{ matrix.target }}.zip
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        shell: bash
+        run: sleep 60
+      - name: Attest the archives again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
             fagus-ffi-${{ matrix.target }}.tar.gz
@@ -202,13 +219,16 @@ jobs:
             target=$(basename "$archive" .tar.gz)
             target="${target#fagus-ffi-}"
             case "$target" in
-              x86_64-unknown-linux-gnu) platform=linux-x86_64 ;;
-              aarch64-unknown-linux-gnu) platform=linux-aarch64 ;;
-              x86_64-pc-windows-msvc) platform=windows-x86_64 ;;
+              x86_64-unknown-linux-gnu) platform=linux-x86_64; pattern='*.so' ;;
+              aarch64-unknown-linux-gnu) platform=linux-aarch64; pattern='*.so' ;;
+              x86_64-pc-windows-msvc) platform=windows-x86_64; pattern='*.dll' ;;
               *) echo "::error::unknown target $target"; exit 1 ;;
             esac
             mkdir -p "package/lib/$platform"
-            tar -xzf "$archive" -C "package/lib/$platform" --wildcards '*.so' '*.dll'
+            # Only the library of this platform: tar would fail on a pattern the archive does not
+            # hold (it holds either the .so or the .dll), and fagus.h and README stay at the root
+            # of the archive's dist/.
+            tar -xzf "$archive" -C "package/lib/$platform" --wildcards "$pattern"
           done
           find package/lib -type f | sort
       # The library is found by the package's own lib/ layout, not by an explicit path: this checks
@@ -224,7 +244,18 @@ jobs:
         run: |
           tar -czf "fagus-ffi-php-${FAGUS_VERSION}.tar.gz" -C . package
           ls -l fagus-ffi-php-*
-      - uses: actions/attest-build-provenance@v2
+      - name: Attest the package
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: fagus-ffi-php-*.tar.gz
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        run: sleep 60
+      - name: Attest the package again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: fagus-ffi-php-*.tar.gz
       - uses: actions/upload-artifact@v4
@@ -265,7 +296,18 @@ jobs:
       - name: Sum
         working-directory: dist
         run: sha256sum * > SHA256SUMS && cat SHA256SUMS
-      - uses: actions/attest-build-provenance@v2
+      - name: Attest the sums
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/SHA256SUMS
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        run: sleep 60
+      - name: Attest the sums again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: dist/SHA256SUMS
       - name: Create the draft release
