@@ -819,6 +819,7 @@ dependencies = [
  "anyhow",
  "clap",
  "fagus",
+ "fagus-protocol",
  "landlock",
  "libc",
  "nix",
@@ -850,6 +851,16 @@ dependencies = [
  "markup5ever",
  "rustc-hash",
  "xml5ever",
+]
+
+[[package]]
+name = "fagus-ffi"
+version = "0.2.0"
+dependencies = [
+ "fagus",
+ "fagus-protocol",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -924,6 +935,15 @@ dependencies = [
  "usvg",
  "x509-cert",
  "zune-jpeg",
+]
+
+[[package]]
+name = "fagus-protocol"
+version = "0.2.0"
+dependencies = [
+ "fagus",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -23,7 +23,7 @@ const ABI_VERSION: u32 = 1;
 /// The version of the library, NUL-terminated for C.
 static VERSION: &[u8] = concat!(env!("CARGO_PKG_VERSION"), "\0").as_bytes();
 
-/// The last error of each thread, as `fagus_last_error` returns it.
+// The last error of each thread, as `fagus_last_error` returns it.
 thread_local! {
     static LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
 }
@@ -79,8 +79,8 @@ pub extern "C" fn fagus_engine_new(config_json: *const u8, config_len: usize) ->
         let config: Config = if config_len == 0 {
             Config::default()
         } else {
-            let bytes = bytes(config_json, config_len)
-                .ok_or_else(|| "the engine settings are missing".to_owned())?;
+            let bytes =
+                bytes(config_json, config_len).ok_or_else(|| "the engine settings are missing".to_owned())?;
             serde_json::from_slice(bytes).map_err(|error| format!("invalid settings: {error}"))?
         };
         let mut engine = Engine::new();
@@ -108,7 +108,7 @@ pub extern "C" fn fagus_engine_new(config_json: *const u8, config_len: usize) ->
             }
             engine.set_limits(limits);
         }
-        Ok(Box::into_raw(Box::new(engine)).cast::<c_void>())
+        Ok::<*mut c_void, String>(Box::into_raw(Box::new(engine)).cast::<c_void>())
     })) {
         Ok(Ok(engine)) => engine,
         Ok(Err(message)) => {
@@ -190,7 +190,10 @@ fn render(
     let json = bytes(request_json, request_len).ok_or_else(|| "the request is missing".to_owned())?;
     let mut value: Value =
         serde_json::from_slice(json).map_err(|error| format!("invalid request: {error}"))?;
-    let lengths: Vec<usize> = match value.as_object_mut().and_then(|object| object.remove("blobLengths")) {
+    let lengths: Vec<usize> = match value
+        .as_object_mut()
+        .and_then(|object| object.remove("blobLengths"))
+    {
         Some(lengths) => serde_json::from_value(lengths).map_err(|_| "invalid `blobLengths`".to_owned())?,
         None => Vec::new(),
     };
@@ -223,7 +226,10 @@ fn render(
         .render_with_diagnostics(&document)
         .map_err(|failure| failure.error.to_string())?;
     let meta = fagus_protocol::output_json(&output);
-    Ok((output.pdf, serde_json::to_vec(&meta).map_err(|error| error.to_string())?))
+    Ok((
+        output.pdf,
+        serde_json::to_vec(&meta).map_err(|error| error.to_string())?,
+    ))
 }
 
 /// A byte slice of `len` bytes at `ptr`, or `None` when the pointer is null.
@@ -252,9 +258,9 @@ pub extern "C" fn fagus_bytes_free(ptr: *mut u8, len: usize) {
     if ptr.is_null() || len == 0 {
         return;
     }
-    // SAFETY: `ptr` and `len` come from `fagus_render`; the allocation is exactly `len` bytes,
-    // so the rebuilt `Vec` has the capacity it was allocated with.
-    drop(unsafe { Vec::from_raw_parts(ptr, len, len) });
+    // SAFETY: `ptr` and `len` come from `fagus_render`, which allocated them as a `Box<[u8]>`
+    // exactly `len` bytes long; this is the same box, freed.
+    drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len)) });
 }
 
 #[unsafe(no_mangle)]
