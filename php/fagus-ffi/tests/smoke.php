@@ -50,7 +50,12 @@ try {
     $check(substr($pdf->bytes(), 0, 5) === '%PDF-', 'the PDF starts with %PDF-');
     $check($pdf->pages() >= 1, 'the document has a page');
     $check($pdf->size() === strlen($pdf->bytes()), 'the size is the length of the bytes');
-    $check(is_array($pdf->layout()) && isset($pdf->layout()['title']), 'the layout reports the element with an id');
+    $layout = $pdf->layout();
+    $check(
+        is_array($layout) && isset($layout['elements'][0]) && $layout['elements'][0]['id'] === 'title',
+        'the layout reports the element with an id'
+    );
+    $check(isset($layout['elements'][0]['boxes'][0]['page']), 'the element has its box on a page');
     $check($pdf->diagnostics() === [], 'a clean document has no diagnostics');
     printf("basic: %d bytes, %d pages, %d diagnostics\n", $pdf->size(), $pdf->pages(), count($pdf->diagnostics()));
     $pdf->save($temporary.'/basic.pdf');
