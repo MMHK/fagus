@@ -675,7 +675,7 @@ Composer 2.10 預設會擋下有 advisory 的版本。
 | 位置 | 變更 |
 |---|---|
 | `ffi.yml` Linux x64 | smoke 版本改為 7.4 / 8.0 / 8.3 / 8.4 / 8.5；新增 7.4 與 8.5 的 PHPUnit 步驟 |
-| `ffi.yml` Windows x64 | 新增 PHP 8.5：smoke 與 PHPUnit（Composer 已在 runner 上） |
+| `ffi.yml` Windows x64 | 新增 PHP 8.5：smoke 與 PHPUnit（同樣用 phar，避免 PHPUnit 12 的 vendor 目錄讓 7.4 的 smoke 解析失敗） |
 | `release.yml` library | Docker smoke 也跑 8.5；Windows 也 smoke 8.5 |
 | 文件 | `docs/php.md`、`php/fagus-ffi/README.md`、`CHANGELOG.md`：7.4 到 8.5 |
 
