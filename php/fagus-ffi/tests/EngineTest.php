@@ -13,9 +13,11 @@ final class EngineTest extends TestCase
     public function test_the_library_reports_its_version_and_path(): void
     {
         $engine = $this->engine();
+        $library = $this->library();
 
         $this->assertMatchesRegularExpression('/^\d+\.\d+/', $engine->version());
-        $this->assertSame($this->library(), $engine->native()->library());
+        // The engine resolves the path, so a relative FAGUS_FFI_LIB comes back absolute.
+        $this->assertSame(realpath($library) ?: $library, $engine->native()->library());
     }
 
     public function test_the_engine_takes_settings(): void

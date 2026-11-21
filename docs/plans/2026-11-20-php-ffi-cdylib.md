@@ -657,7 +657,7 @@ pool，用 `cgi-fcgi` 送請求，驗證三件事：
 | `tests/TestCase.php` | 找函式庫：`FAGUS_FFI_LIB` → `lib/<platform>/` → `target/{release,debug}` → `target/*/{release,debug}`；找不到就 `markTestSkipped` |
 | `tests/EngineTest.php` | 版本與路徑、settings、關閉後拒絕、路徑不存在時的錯誤 |
 | `tests/DocumentTest.php` | 渲染、位元組決定性、diagnostic、layout、PDF/A + 附件、加密、PKCS#12 簽章、錯誤、存檔 |
-| `tests/php-unit.sh` | 在 `php:*-cli` 容器內裝 FFI 與 Composer，跑 `vendor/bin/phpunit` |
+| `tests/php-unit.sh` | 在 `php:*-cli` 容器內裝 FFI，用 PHPUnit phar（7.4/8.0 用 9.6、8.3+ 用 12.5）跑測試；不需要 Composer，因為 bullseye 的 apt 清單已找不到 `unzip` |
 | `tests/smoke.php` | 不變：零依賴的檢查，release 封裝與每個 PHP 版本都跑它 |
 
 版本策略：`require-dev` 是 `phpunit/phpunit: ^9.6.33 || ^12.5.8`。Composer 在 PHP 7.4 / 8.0 會挑
