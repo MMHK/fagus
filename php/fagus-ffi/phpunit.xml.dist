@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The suite of the FFI package, which needs a real library: set FAGUS_FFI_LIB, or build one with
+    `cargo build -p fagus-ffi` (the tests look in the workspace's target/ too). Without a library
+    the tests are skipped, so `composer install && vendor/bin/phpunit` still runs everywhere.
+
+    PHPUnit 9.6 on PHP 7.4 and 8.0, PHPUnit 12 on 8.3 and later; the configuration and the tests
+    use only what both have.
+-->
+<phpunit bootstrap="tests/bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Fagus for PHP through FFI">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

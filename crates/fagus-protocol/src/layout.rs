@@ -1,5 +1,5 @@
 //! The layout of a rendered document as JSON, for `--layout-json` and the worker's `layout`
-//! (docs/protocol.md).
+//! (`docs/protocol.md`).
 
 use serde_json::{Map, Value, json};
 
@@ -27,7 +27,7 @@ fn boxes(boxes: &[fagus::LayoutBox]) -> Value {
 
 /// The layout as JSON: its pages and its elements, each with its boxes and, for tables, its
 /// rows.
-pub(crate) fn layout_json(layout: &fagus::Layout) -> Value {
+pub fn layout_json(layout: &fagus::Layout) -> Value {
     let pages: Vec<Value> = layout
         .pages
         .iter()

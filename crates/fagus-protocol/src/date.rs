@@ -1,9 +1,9 @@
-//! Creation dates as the command line and the worker take them.
+//! Creation dates as the command line and the protocol take them.
 
 /// The date of `text` in UTC: six numbers (year, month, day, hour, minute, second), such as
 /// `2026-11-13T12:00:00Z`, optionally with a fraction of a second, which is dropped, and an offset
 /// from UTC (`Z`, `+02:00`, `-0530`), which is applied. A date without an offset is taken as UTC.
-pub(crate) fn parse(text: &str) -> Option<fagus::Date> {
+pub fn parse(text: &str) -> Option<fagus::Date> {
     let text = text.trim();
     // The six numbers, separated by anything but digits, and where they end.
     let mut numbers = [0_u32; 6];

@@ -1,15 +1,16 @@
 name: Release
 
-# Builds the fagus binary for every platform and puts the binaries, with their SHA-256 sums and a
-# CycloneDX SBOM of each, into a draft release. Every binary gets an attestation of the build
-# that made it (SLSA provenance, signed through Sigstore with the workflow's identity, no key) and
-# one of its SBOM; `gh attestation verify` checks them (SECURITY.md). docs/releasing.md describes
-# the steps around it.
+# Builds the fagus binary and the C ABI shared library for every platform, the PHP package that
+# ships the library, and puts them, with their SHA-256 sums and a CycloneDX SBOM of each binary and
+# the library, into a draft release. Every binary and archive gets an attestation of the build that
+# made it (SLSA provenance, signed through Sigstore with the workflow's identity, no key) and the
+# binary and the library one of their SBOM; `gh attestation verify` checks them (SECURITY.md).
+# docs/releasing.md describes the steps around it.
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: The version to build, as in Cargo.toml (0.1.0)
+        description: The version to build, as in Cargo.toml (0.1.0), optionally with a suffix for a preview (0.2.0-rc1)
         required: true
 
 permissions:
@@ -44,7 +45,9 @@ jobs:
       - name: Check the version
         shell: bash
         run: |
-          grep -q "^version = \"$VERSION\"$" Cargo.toml || { echo "Cargo.toml is not at version $VERSION"; exit 1; }
+          # A suffix (-rc1) builds a preview of that version; Cargo.toml holds the version itself.
+          base="${VERSION%%-*}"
+          grep -q "^version = \"$base\"$" Cargo.toml || { echo "Cargo.toml is not at version $base"; exit 1; }
       # With the components of rust-toolchain.toml, so that rustup does not add them during the
       # build (which fails on some runner images).
       - uses: dtolnay/rust-toolchain@master
@@ -102,9 +105,277 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  # The C ABI shared library of the FFI package (docs/php.md, docs/plans/2026-11-20-php-ffi-cdylib.md):
+  # three native artefacts serve PHP 7.4 to 8.5, because FFI does not go through the Zend API.
+  library:
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # glibc 2.17 covers Debian 11 and later; no musl, because PHP's own images are glibc.
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, zig: x86_64-unknown-linux-gnu.2.17, smoke: docker-x64 }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zig: aarch64-unknown-linux-gnu.2.17, smoke: docker-arm }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, smoke: windows }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the version
+        shell: bash
+        run: |
+          base="${VERSION%%-*}"
+          if ! grep -q "^version = \"$base\"$" Cargo.toml; then
+            echo "::error::Cargo.toml is not at version $base"
+            exit 1
+          fi
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ffi-release-${{ matrix.target }}
+      - name: Build with zig
+        if: matrix.zig
+        run: |
+          pip install ziglang==0.16.0
+          cargo install --locked cargo-zigbuild@0.23.4
+          cargo zigbuild --release --locked -p fagus-ffi --target ${{ matrix.zig }}
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      # The static CRT removes the Visual C++ redistributable from the picture, so one DLL serves
+      # PHP 7.4 (VS15) and 8.5 (VS17). The flag has to cover the dependency graph as well, which
+      # only RUSTFLAGS does; it is scoped to this step (the spike proved it on MSVC). Blanket use
+      # across the whole workflow would change the Windows CLI binary too.
+      - name: Build with the static CRT
+        if: runner.os == 'Windows'
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked -p fagus-ffi --target ${{ matrix.target }}
+      - name: Symbols and glibc floor
+        if: runner.os == 'Linux'
+        run: |
+          so="target/${{ matrix.target }}/release/libfagus_ffi.so"
+          ls -l "$so"
+          echo '--- exported symbols (expect fagus_*) ---'
+          nm -D --defined-only "$so" | awk '{print $3}' | sort
+          echo '--- required glibc versions ---'
+          objdump -T "$so" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -5
+          highest=$(objdump -T "$so" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1)
+          if [ "$highest" != "GLIBC_2.17" ]; then
+            echo "::error::the library needs $highest, not GLIBC_2.17"
+            exit 1
+          fi
+          if objdump -T "$so" | grep -q 'GLIBCXX_\|CXXABI_'; then
+            echo "::error::the library depends on libstdc++, which it should not"
+            exit 1
+          fi
+      - name: DLL dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dll = "target/${{ matrix.target }}/release/fagus_ffi.dll"
+          Get-Item $dll | Format-List Length, FullName
+          $deps = dumpbin /dependents $dll | Out-String
+          if ($deps -match 'VCRUNTIME|MSVCP|ucrtbase|MSVCR') {
+            Write-Error "the DLL still depends on the Visual C++ runtime"
+            exit 1
+          }
+      # The crates the library is built from, for this target, with their versions and licenses.
+      # `--all` writes one file per workspace member; only the library's goes into dist/, and so
+      # into the archives.
+      - name: SBOM
+        shell: bash
+        run: |
+          mkdir -p dist
+          cargo install --locked cargo-cyclonedx@0.5.10
+          cargo cyclonedx --manifest-path crates/fagus-ffi/Cargo.toml --format json --all \
+            --target "${{ matrix.target }}" --spec-version 1.5 \
+            --override-filename "fagus-ffi-${{ matrix.target }}.cdx"
+          mv "crates/fagus-ffi/fagus-ffi-${{ matrix.target }}.cdx.json" dist/
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            lib="target/${{ matrix.target }}/release/fagus_ffi.dll"
+          else
+            lib="target/${{ matrix.target }}/release/libfagus_ffi.so"
+          fi
+          cp "$lib" dist/
+          cp crates/fagus-ffi/include/fagus.h dist/
+          cp php/fagus-ffi/README.md dist/README.md
+          tar -czf "fagus-ffi-${{ matrix.target }}.tar.gz" -C dist .
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            powershell -NoProfile -Command "Compress-Archive -Path 'dist/*' -DestinationPath 'fagus-ffi-${{ matrix.target }}.zip' -Force"
+          else
+            zip -q -j "fagus-ffi-${{ matrix.target }}.zip" dist/*
+          fi
+          ls -l fagus-ffi-*
+      - name: PHP smoke tests
+        if: matrix.smoke == 'docker-x64'
+        run: |
+          so="/w/target/${{ matrix.target }}/release/libfagus_ffi.so"
+          for version in 7.4 8.0 8.3 8.4 8.5; do
+            echo "== PHP $version =="
+            docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
+              sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
+          done
+      - name: PHP smoke test
+        if: matrix.smoke == 'docker-arm'
+        run: |
+          so="/w/target/${{ matrix.target }}/release/libfagus_ffi.so"
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli \
+            sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
+      - name: PHP 8.4
+        if: matrix.smoke == 'windows'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 8.4
+        if: matrix.smoke == 'windows'
+        run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
+      - name: PHP 8.5
+        if: matrix.smoke == 'windows'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 8.5
+        if: matrix.smoke == 'windows'
+        run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
+      - name: PHP 7.4
+        if: matrix.smoke == 'windows'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 7.4
+        if: matrix.smoke == 'windows'
+        run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
+      # Sigstore's Rekor log sometimes answers 404 for an entry it has just written (run 44735444601
+      # failed this way on Windows); one retry a minute later recovers without a manual re-run. Only
+      # the retry can fail the job.
+      - name: Attest the archives
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            fagus-ffi-${{ matrix.target }}.tar.gz
+            fagus-ffi-${{ matrix.target }}.zip
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        shell: bash
+        run: sleep 60
+      - name: Attest the archives again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            fagus-ffi-${{ matrix.target }}.tar.gz
+            fagus-ffi-${{ matrix.target }}.zip
+      - name: Attest the SBOM
+        id: sbom
+        continue-on-error: true
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: dist/${{ contains(matrix.target, 'windows') && 'fagus_ffi.dll' || 'libfagus_ffi.so' }}
+          sbom-path: dist/fagus-ffi-${{ matrix.target }}.cdx.json
+      - name: Wait before retrying the attestation
+        if: steps.sbom.outcome == 'failure'
+        shell: bash
+        run: sleep 60
+      - name: Attest the SBOM again
+        if: steps.sbom.outcome == 'failure'
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: dist/${{ contains(matrix.target, 'windows') && 'fagus_ffi.dll' || 'libfagus_ffi.so' }}
+          sbom-path: dist/fagus-ffi-${{ matrix.target }}.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fagus-ffi-${{ matrix.target }}
+          path: |
+            fagus-ffi-${{ matrix.target }}.tar.gz
+            fagus-ffi-${{ matrix.target }}.zip
+            dist/fagus-ffi-${{ matrix.target }}.cdx.json
+          if-no-files-found: error
+
+  # The PHP package with the three libraries in lib/<platform>/, which Native::locate() finds.
+  php:
+    name: PHP package
+    needs: library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: fagus-ffi-*
+      - name: Assemble the package
+        shell: bash
+        run: |
+          cp -r php/fagus-ffi package
+          for archive in artifacts/*/*.tar.gz; do
+            target=$(basename "$archive" .tar.gz)
+            target="${target#fagus-ffi-}"
+            case "$target" in
+              x86_64-unknown-linux-gnu) platform=linux-x86_64; pattern='*.so' ;;
+              aarch64-unknown-linux-gnu) platform=linux-aarch64; pattern='*.so' ;;
+              x86_64-pc-windows-msvc) platform=windows-x86_64; pattern='*.dll' ;;
+              # A rerun downloads the package this job uploaded before; it is not a library.
+              *) echo "skipping $archive"; continue ;;
+            esac
+            mkdir -p "package/lib/$platform"
+            # Only the library of this platform: tar would fail on a pattern the archive does not
+            # hold (it holds either the .so or the .dll), and fagus.h and README stay at the root
+            # of the archive's dist/.
+            tar -xzf "$archive" -C "package/lib/$platform" --wildcards "$pattern"
+          done
+          find package/lib -type f | sort
+      # The library is found by the package's own lib/ layout, not by an explicit path: this checks
+      # Native::locate() as a user's installation sees it.
+      - name: Smoke test the packaged layout
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w php:8.4-cli sh -c '
+            apt-get update -qq >/dev/null 2>&1
+            apt-get install -y -qq libffi-dev >/dev/null 2>&1
+            docker-php-ext-install ffi >/dev/null 2>&1
+            php -d ffi.enable=true /w/package/tests/smoke.php'
+      - name: Package the PHP package
+        run: |
+          tar -czf "fagus-ffi-php-${VERSION}.tar.gz" -C . package
+          ls -l fagus-ffi-php-*
+      - name: Attest the package
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: fagus-ffi-php-*.tar.gz
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        run: sleep 60
+      - name: Attest the package again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: fagus-ffi-php-*.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fagus-ffi-php
+          path: fagus-ffi-php-*.tar.gz
+          if-no-files-found: error
+
   release:
     name: Draft release
-    needs: build
+    needs:
+      - build
+      - library
+      - php
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +389,18 @@ jobs:
       - name: Sum
         working-directory: dist
         run: sha256sum fagus-* > SHA256SUMS && cat SHA256SUMS
-      - uses: actions/attest-build-provenance@v2
+      - name: Attest the sums
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/SHA256SUMS
+      - name: Wait before retrying the attestation
+        if: steps.attest.outcome == 'failure'
+        run: sleep 60
+      - name: Attest the sums again
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: dist/SHA256SUMS
       # The licenses of the code and data of others in the binaries (tools/notices.sh).
@@ -133,4 +415,4 @@ jobs:
             --draft \
             --target "$GITHUB_SHA" \
             --title "Fagus $VERSION" \
-            --notes "Binaries built from $GITHUB_SHA, with a CycloneDX SBOM each (fagus-<target>.cdx.json). Check one with \`gh attestation verify fagus-<target> --repo $GITHUB_REPOSITORY\`. Pin them with tools/pin-binaries.php before publishing (docs/releasing.md)."
+            --notes "The binaries, built from $GITHUB_SHA, with a CycloneDX SBOM each (fagus-<target>.cdx.json); the C ABI shared library (fagus-ffi-<target>.tar.gz and .zip) with its SBOM; and the PHP package that ships the libraries (fagus-ffi-php-<version>.tar.gz). Check one with \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\`. Pin the binaries with tools/pin-binaries.php before publishing (docs/releasing.md)."

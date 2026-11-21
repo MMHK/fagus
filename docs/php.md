@@ -10,6 +10,9 @@ The PHP API lives in the namespace `Fagus\` (`php/fagus/src`). It has four parts
 In Laravel, use the facade described in [laravel.md](laravel.md); it offers the same document
 methods and renders with the engine of `config/fagus.php`.
 
+For PHP 7.4 to 8.2, or to render without a worker process, there is a second, smaller package over
+the C ABI shared library: see [The FFI package](#the-ffi-package-php-74-and-later) below.
+
 ```php
 use Fagus\Conformance;
 use Fagus\Fagus;
@@ -805,3 +808,77 @@ Installer::asset('x86_64-pc-windows-msvc'); // "fagus-x86_64-pc-windows-msvc.exe
 
 `install(?string $directory = null): string` returns the path of the binary. A binary that is
 already there with the right SHA-256 is kept. See [deployment.md](deployment.md).
+
+## The FFI package (PHP 7.4 and later)
+
+`nforst/fagus-ffi` renders through the C ABI shared library of the engine, in the PHP process:
+no worker process and no binary to install. It is a smaller API than the one above, in the
+namespace `Fagus\Ffi`, and it is the way to use Fagus on PHP 7.4 to 8.2, which the main package
+does not support.
+
+### Requirements
+
+- PHP 7.4 or later, non-thread-safe, with `ext-ffi` (7.4, 8.0 and 8.3 to 8.5 are tested)
+- `ffi.enable=true` in `php.ini` for CLI and FPM (`preload` is the default; a preload file works
+  too)
+- the shared library for the platform: `libfagus_ffi.so` (Linux, glibc 2.17 or later, x86_64 and
+  aarch64) or `fagus_ffi.dll` (Windows, x64; one DLL serves PHP 7.4 to 8.5)
+
+Pass the path of the library to `new Engine()`, set `FAGUS_FFI_LIB`, or put it where the package
+looks for it: `lib/linux-x86_64/`, `lib/linux-aarch64/` or `lib/windows-x86_64/` beside
+`composer.json`.
+
+`ffi.enable` is `preload` by default, and then FFI works only in files OPcache preloads: a pool
+that renders documents in a request has to set `ffi.enable=true` in its `php.ini`, and so has the
+command line. Without it, `Engine` reports that the FFI extension is not loaded. A preload file
+(`opcache.preload=/app/preload.php`, `opcache.preload_user=www-data`) can call the library as the
+pool starts, which warms it up but does not replace the setting. [.github/workflows/ffi.yml](../.github/workflows/ffi.yml)
+checks both against a real `php-fpm`.
+
+### Usage
+
+```php
+use Fagus\Ffi\Engine;
+use Fagus\Ffi\Signature;
+
+$engine = new Engine([
+    'fontDirs' => [__DIR__.'/fonts'],
+    'systemFonts' => true,
+]);
+
+$pdf = $engine->html('<h1>Invoice</h1><p>Rendered in-process.</p>')
+    ->stylesheet('h1 { color: teal }')
+    ->pdfA('3b')
+    ->created(new DateTimeImmutable('2026-11-02 12:00'))
+    ->render();
+
+$pdf->save(__DIR__.'/invoice.pdf');
+printf("%d pages, %d diagnostics\n", $pdf->pages(), count($pdf->diagnostics()));
+
+$engine->html($html)
+    ->sign(Signature::pkcs12(file_get_contents('certificate.p12'), 'secret')->reason('Invoice 42'))
+    ->render()
+    ->save('signed.pdf');
+```
+
+An `Engine` keeps fonts and caches warm, so reuse it for many documents. `Document` takes the
+options of the worker protocol, with the same names as in the API above and in camelCase:
+`baseDirectory()`, `root()`, `stylesheet()`, `resource()`, `pdfA()`, `tagged()`, `accessible()`,
+`forms()`, `attach()`, `facturX()`, `created()`, `encrypt()`, `sign()`, `memoryBudget()`,
+`timeLimit()` and `reportLayout()`. `Pdf` has `bytes()`, `save()`, `size()`, `pages()`,
+`diagnostics()`, `timings()`, `layout()`, `encrypted()`, `signed()` and `forms()`.
+
+### Differences from the worker
+
+- **There is no sandbox.** The library runs inside PHP, with the file system access of PHP-FPM,
+  so the process-level sandbox of `fagus worker` (Landlock and seccomp on Linux) cannot be used.
+  Render untrusted HTML with the worker package, not with FFI; see [SECURITY.md](../SECURITY.md).
+- **A crash ends the PHP worker.** Panics are caught and returned as exceptions, but running out
+  of memory or an abort in a native dependency ends the PHP-FPM worker with the document. Set
+  `memoryBudget` (and `timeLimit`) on the engine, and `pm.max_requests` in FPM.
+- **Resources must be given.** The engine cannot call back into PHP to ask for a file or a URL;
+  pass data with `resource()` and fonts with `fontDirs`.
+- **Signatures are PKCS#12 only.** External signers, timestamps and revocation data need the
+  worker protocol.
+- **There is no strict mode.** Diagnostics do not become exceptions; check them on the `Pdf`.
+
