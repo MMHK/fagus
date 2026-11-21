@@ -818,11 +818,11 @@ does not support.
 
 ### Requirements
 
-- PHP 7.4 or later, non-thread-safe, with `ext-ffi`
+- PHP 7.4 or later, non-thread-safe, with `ext-ffi` (7.4, 8.0 and 8.3 to 8.5 are tested)
 - `ffi.enable=true` in `php.ini` for CLI and FPM (`preload` is the default; a preload file works
   too)
 - the shared library for the platform: `libfagus_ffi.so` (Linux, glibc 2.17 or later, x86_64 and
-  aarch64) or `fagus_ffi.dll` (Windows, x64; one DLL serves PHP 7.4 to 8.4)
+  aarch64) or `fagus_ffi.dll` (Windows, x64; one DLL serves PHP 7.4 to 8.5)
 
 Pass the path of the library to `new Engine()`, set `FAGUS_FFI_LIB`, or put it where the package
 looks for it: `lib/linux-x86_64/`, `lib/linux-aarch64/` or `lib/windows-x86_64/` beside

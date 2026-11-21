@@ -106,7 +106,7 @@ jobs:
           if-no-files-found: error
 
   # The C ABI shared library of the FFI package (docs/php.md, docs/plans/2026-11-20-php-ffi-cdylib.md):
-  # three native artefacts serve PHP 7.4 to 8.4, because FFI does not go through the Zend API.
+  # three native artefacts serve PHP 7.4 to 8.5, because FFI does not go through the Zend API.
   library:
     name: ${{ matrix.target }}
     strategy:
@@ -144,7 +144,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       # The static CRT removes the Visual C++ redistributable from the picture, so one DLL serves
-      # PHP 7.4 (VS15) and 8.4 (VS17). The flag has to cover the dependency graph as well, which
+      # PHP 7.4 (VS15) and 8.5 (VS17). The flag has to cover the dependency graph as well, which
       # only RUSTFLAGS does; it is scoped to this step (the spike proved it on MSVC). Blanket use
       # across the whole workflow would change the Windows CLI binary too.
       - name: Build with the static CRT
@@ -216,7 +216,7 @@ jobs:
         if: matrix.smoke == 'docker-x64'
         run: |
           so="/w/target/${{ matrix.target }}/release/libfagus_ffi.so"
-          for version in 7.4 8.0 8.3 8.4; do
+          for version in 7.4 8.0 8.3 8.4 8.5; do
             echo "== PHP $version =="
             docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
               sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
@@ -235,6 +235,16 @@ jobs:
           extensions: ffi
           ini-values: ffi.enable=true
       - name: Smoke test with PHP 8.4
+        if: matrix.smoke == 'windows'
+        run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
+      - name: PHP 8.5
+        if: matrix.smoke == 'windows'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 8.5
         if: matrix.smoke == 'windows'
         run: php php/fagus-ffi/tests/smoke.php target/${{ matrix.target }}/release/fagus_ffi.dll
       - name: PHP 7.4

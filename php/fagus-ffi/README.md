@@ -6,10 +6,10 @@ package is the full API for PHP 8.3 and later, over the worker protocol.
 
 ## Requirements
 
-- PHP 7.4 or later, non-thread-safe, with `ext-ffi`
+- PHP 7.4 to 8.5, non-thread-safe, with `ext-ffi`
 - `ffi.enable=true` in `php.ini` for CLI and FPM (`preload` by default; a preload file works too)
 - the shared library for the platform: `libfagus_ffi.so` (Linux, glibc 2.17 or later, x86_64 and
-  aarch64) or `fagus_ffi.dll` (Windows, x64, one DLL for PHP 7.4 to 8.4)
+  aarch64) or `fagus_ffi.dll` (Windows, x64, one DLL for PHP 7.4 to 8.5)
 
 Point `FAGUS_FFI_LIB` at the library, or pass its path to `new Engine()`. Otherwise the package looks
 for a binary it ships at `lib/<platform>/` (`linux-x86_64`, `linux-aarch64`, `windows-x86_64`) and
@@ -64,3 +64,14 @@ Limits of the C ABI for now:
 ```sh
 php -d ffi.enable=true php/fagus-ffi/tests/smoke.php path/to/libfagus_ffi.so
 ```
+
+The PHPUnit suite covers the same ground in named tests, and skips when there is no library:
+
+```sh
+composer install --working-dir php/fagus-ffi
+FAGUS_FFI_LIB=path/to/libfagus_ffi.so \
+    php -d ffi.enable=true php/fagus-ffi/vendor/bin/phpunit -c php/fagus-ffi/phpunit.xml.dist
+```
+
+Composer installs PHPUnit 9.6 on PHP 7.4 and 8.0 and PHPUnit 12 on 8.3 and later; CI runs the suite
+on 7.4 and 8.5, and `smoke.php` on every version, since it needs nothing but PHP.

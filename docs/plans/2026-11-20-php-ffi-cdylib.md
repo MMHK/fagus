@@ -644,4 +644,42 @@ pool，用 `cgi-fcgi` 送請求，驗證三件事：
   archive 仍會帶上 `php/fagus-ffi/` 的原始碼（不含 `lib/`）。若之後要讓兩個套件互不攙雜，
   那是方案 B 的一部分，不在方案 A 的範圍。
 
+## 19. PHP 8.5 與 PHPUnit（2026-11-21）
+
+### PHPUnit
+
+`php/fagus-ffi` 現在有自己的測試套件，與 `smoke.php` 並存：
+
+| 檔案 | 用途 |
+|---|---|
+| `phpunit.xml.dist` | bootstrap 與 testsuite，只用 PHPUnit 9 與 12 都有的設定屬性 |
+| `tests/bootstrap.php` | 載入 `tests/autoload.php`（有 Composer 時用它的 autoloader） |
+| `tests/TestCase.php` | 找函式庫：`FAGUS_FFI_LIB` → `lib/<platform>/` → `target/{release,debug}` → `target/*/{release,debug}`；找不到就 `markTestSkipped` |
+| `tests/EngineTest.php` | 版本與路徑、settings、關閉後拒絕、路徑不存在時的錯誤 |
+| `tests/DocumentTest.php` | 渲染、位元組決定性、diagnostic、layout、PDF/A + 附件、加密、PKCS#12 簽章、錯誤、存檔 |
+| `tests/php-unit.sh` | 在 `php:*-cli` 容器內裝 FFI 與 Composer，跑 `vendor/bin/phpunit` |
+| `tests/smoke.php` | 不變：零依賴的檢查，release 封裝與每個 PHP 版本都跑它 |
+
+版本策略：`require-dev` 是 `phpunit/phpunit: ^9.6.33 || ^12.5.8`。Composer 在 PHP 7.4 / 8.0 會挑
+9.6，在 8.3 以上挑 12，所以測試碼只用兩者共有的 API（`assertSame`、
+`assertMatchesRegularExpression`、`expectException*`、`markTestSkipped`，沒有 data provider
+或 attribute）。`^9.6.33` / `^12.5.8` 的下限是避開 CVE-2026-24765（`<9.6.33`、`<12.5.8`）；
+Composer 2.10 預設會擋下有 advisory 的版本。
+
+實測：PHP 8.3.37 上 PHPUnit 12.5.45 與 9.6.39 都對同一份 `ffi-v0.2.0-rc2` 的
+`fagus_ffi.dll` 跑過，14 個測試中 13 個執行、1 個因沒有 `tests/signing/ecdsa.p12` 而跳過
+（PHPUnit 12 全綠 14/14，含簽章）。
+
+### PHP 8.5
+
+| 位置 | 變更 |
+|---|---|
+| `ffi.yml` Linux x64 | smoke 版本改為 7.4 / 8.0 / 8.3 / 8.4 / 8.5；新增 7.4 與 8.5 的 PHPUnit 步驟 |
+| `ffi.yml` Windows x64 | 新增 PHP 8.5：smoke 與 PHPUnit（Composer 已在 runner 上） |
+| `release.yml` library | Docker smoke 也跑 8.5；Windows 也 smoke 8.5 |
+| 文件 | `docs/php.md`、`php/fagus-ffi/README.md`、`CHANGELOG.md`：7.4 到 8.5 |
+
+8.5 只需要新的 smoke 與測試步驟：C ABI 不經過 Zend API，同一個 `.so` / `.dll` 本來就沒有版本
+綁定；差別只在 PHP 端語法仍鎖在 7.4。
+
 

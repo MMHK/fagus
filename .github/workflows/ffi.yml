@@ -1,7 +1,8 @@
 name: FFI
 
 # The C ABI shared library (`crates/fagus-ffi`, docs/plans/2026-11-20-php-ffi-cdylib.md): built
-# for the three supported platforms and smoke-tested with PHP 7.4 to 8.4. The format, clippy and
+# for the three supported platforms, smoke-tested with PHP 7.4 to 8.5 and unit-tested on 7.4 and
+# 8.5. The format, clippy and
 # the Rust tests are ci.yml's, which covers the whole workspace. Publishing is release.yml.
 on:
   push:
@@ -29,7 +30,7 @@ env:
 
 jobs:
   linux-x64:
-    name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.4
+    name: Linux x86_64 (glibc 2.17) and PHP 7.4-8.5
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,11 +68,22 @@ jobs:
       - name: PHP smoke tests
         run: |
           so=/w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
-          for version in 7.4 8.0 8.3 8.4; do
+          for version in 7.4 8.0 8.3 8.4 8.5; do
             echo "== PHP $version =="
             docker run --rm -v "$PWD:/w" -w /w "php:$version-cli" \
               sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
           done
+      # The PHPUnit suite at both ends of the range: PHPUnit 9.6 on 7.4, 12 on 8.5.
+      - name: PHPUnit on PHP 7.4
+        run: |
+          so=/w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
+          docker run --rm -v "$PWD:/w" -w /w php:7.4-cli \
+            sh /w/php/fagus-ffi/tests/php-unit.sh /w/php/fagus-ffi "$so"
+      - name: PHPUnit on PHP 8.5
+        run: |
+          so=/w/target/x86_64-unknown-linux-gnu/release/libfagus_ffi.so
+          docker run --rm -v "$PWD:/w" -w /w php:8.5-cli \
+            sh /w/php/fagus-ffi/tests/php-unit.sh /w/php/fagus-ffi "$so"
       # Byte identity with the command line tool: the same HTML and the same --created through
       # both paths must give the same PDF (docs/plans/2026-11-20-php-ffi-cdylib.md, section 7).
       # The document has no external resources, so the base directory does not matter.
@@ -133,7 +145,7 @@ jobs:
             sh /w/php/fagus-ffi/tests/php-smoke.sh /w/php/fagus-ffi "$so"
 
   windows-x64:
-    name: Windows x86_64 (static CRT) and PHP 7.4, 8.4
+    name: Windows x86_64 (static CRT) and PHP 7.4, 8.5
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -146,7 +158,7 @@ jobs:
           key: ffi-windows-x64
       - uses: ilammy/msvc-dev-cmd@v1
       # The static CRT is what removes the Visual C++ redistributable from the picture, so that
-      # one DLL serves PHP 7.4 (VS15) and 8.4 (VS17). RUSTFLAGS is scoped to this step so that the
+      # one DLL serves PHP 7.4 (VS15) and 8.5 (VS17). RUSTFLAGS is scoped to this step so that the
       # Windows CLI binary keeps the dynamic CRT, as release.yml does.
       - name: Build with the static CRT
         env:
@@ -171,6 +183,20 @@ jobs:
           ini-values: ffi.enable=true
       - name: Smoke test with PHP 8.4
         run: php php/fagus-ffi/tests/smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+      - name: PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: ffi
+          ini-values: ffi.enable=true
+      - name: Smoke test with PHP 8.5
+        run: php php/fagus-ffi/tests/smoke.php target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+      - name: PHPUnit with PHP 8.5
+        env:
+          FAGUS_FFI_LIB: target/x86_64-pc-windows-msvc/release/fagus_ffi.dll
+        run: |
+          composer install --working-dir php/fagus-ffi --no-interaction --no-progress
+          php -d ffi.enable=true php/fagus-ffi/vendor/bin/phpunit -c php/fagus-ffi/phpunit.xml.dist
       - name: PHP 7.4
         uses: shivammathur/setup-php@v2
         with:
