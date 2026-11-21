@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Fagus\Ffi;
 
+use DateTimeInterface;
+
 /**
  * A digital signature: a PKCS#12 file and where it shows.
  *
@@ -70,7 +72,7 @@ final class Signature
      */
     public function time($time): self
     {
-        if ($time instanceof \DateTimeInterface) {
+        if ($time instanceof DateTimeInterface) {
             $time = $time->format('Y-m-d\TH:i:sP');
         }
         $this->options['time'] = (string) $time;

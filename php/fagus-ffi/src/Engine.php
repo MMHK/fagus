@@ -51,7 +51,7 @@ final class Engine
     public static function shared(): self
     {
         if (self::$shared === null) {
-            self::$shared = new self();
+            self::$shared = new self;
         }
 
         return self::$shared;

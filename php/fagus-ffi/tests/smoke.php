@@ -29,7 +29,7 @@ $check = static function (bool $condition, string $message) use (&$failures): vo
     if ($condition) {
         return;
     }
-    ++$failures;
+    $failures++;
     fwrite(STDERR, "FAIL: $message\n");
 };
 
@@ -95,15 +95,15 @@ try {
     }
 
     try {
-        (new Document())->render($engine);
+        (new Document)->render($engine);
         $check(false, 'a document without HTML is refused');
     } catch (RenderException $error) {
         $check(strpos($error->getMessage(), 'HTML') !== false, 'the refusal names the HTML');
     }
 
     $engine->close();
-} catch (\Throwable $error) {
-    ++$failures;
+} catch (Throwable $error) {
+    $failures++;
     fwrite(STDERR, 'FAIL: '.get_class($error).': '.$error->getMessage()."\n");
 }
 

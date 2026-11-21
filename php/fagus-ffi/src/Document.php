@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fagus\Ffi;
 
+use DateTimeInterface;
 use Fagus\Ffi\Exception\RenderException;
 
 /**
@@ -196,7 +197,7 @@ final class Document
      */
     public function created($date): self
     {
-        if ($date instanceof \DateTimeInterface) {
+        if ($date instanceof DateTimeInterface) {
             $date = $date->format('Y-m-d\TH:i:sP');
         }
         $this->options['created'] = (string) $date;
@@ -303,8 +304,8 @@ final class Document
     public function render(?Engine $engine = null): Pdf
     {
         $engine = $engine ?: $this->engine ?: Engine::shared();
-        list($header, $blobs) = $this->request();
-        list($bytes, $meta) = $engine->native()->render($engine->handle(), $header, $blobs);
+        [$header, $blobs] = $this->request();
+        [$bytes, $meta] = $engine->native()->render($engine->handle(), $header, $blobs);
 
         return new Pdf($bytes, $meta);
     }

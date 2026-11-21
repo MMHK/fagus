@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fagus\Ffi\Exception;
 
 use Fagus\Ffi\Diagnostic;
+use Throwable;
 
 /**
  * A document could not be rendered: a missing data block, an unknown PDF/A level, a document that
@@ -18,7 +19,7 @@ class RenderException extends FagusException
     /**
      * @param Diagnostic[] $diagnostics
      */
-    public function __construct(string $message, array $diagnostics = [], ?\Throwable $previous = null)
+    public function __construct(string $message, array $diagnostics = [], ?Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
         $this->diagnostics = $diagnostics;

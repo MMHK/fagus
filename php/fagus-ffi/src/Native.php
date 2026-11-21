@@ -6,6 +6,8 @@ namespace Fagus\Ffi;
 
 use Fagus\Ffi\Exception\EngineException;
 use Fagus\Ffi\Exception\RenderException;
+use FFI;
+use Throwable;
 
 /**
  * The C ABI library, loaded once per path, and the calls of its header.
@@ -24,13 +26,13 @@ final class Native
     /** @var array<string, self> */
     private static $loaded = [];
 
-    /** @var \FFI */
+    /** @var FFI */
     private $ffi;
 
     /** @var string */
     private $library;
 
-    private function __construct(\FFI $ffi, string $library)
+    private function __construct(FFI $ffi, string $library)
     {
         $this->ffi = $ffi;
         $this->library = $library;
@@ -56,8 +58,8 @@ final class Native
             );
         }
         try {
-            $ffi = \FFI::cdef(self::header(), $library);
-        } catch (\Throwable $error) {
+            $ffi = FFI::cdef(self::header(), $library);
+        } catch (Throwable $error) {
             throw new EngineException(sprintf('Cannot load %s: %s', $library, $error->getMessage()), 0, $error);
         }
         $native = new self($ffi, $library);
@@ -101,7 +103,7 @@ final class Native
             throw new EngineException('The engine settings cannot be JSON encoded: '.json_last_error_msg());
         }
         $engine = $this->ffi->fagus_engine_new($this->buffer($json), strlen($json));
-        if (\FFI::isNull($engine)) {
+        if (FFI::isNull($engine)) {
             throw new EngineException('Cannot create an engine: '.$this->lastError());
         }
 
@@ -122,7 +124,6 @@ final class Native
      * @param \FFI\CData    $engine
      * @param array<string, mixed> $header the worker protocol's request header, with `blobLengths`
      * @param string[]      $blobs  the data blocks, in the order their indices name
-     *
      * @return array{0: string, 1: array<string, mixed>} the PDF and its metadata
      *
      * @throws RenderException
@@ -148,10 +149,10 @@ final class Native
             strlen($request),
             $dataBuffer,
             strlen($data),
-            \FFI::addr($pdf),
-            \FFI::addr($pdfLength),
-            \FFI::addr($meta),
-            \FFI::addr($metaLength)
+            FFI::addr($pdf),
+            FFI::addr($pdfLength),
+            FFI::addr($meta),
+            FFI::addr($metaLength)
         );
         if ($status !== 0) {
             throw new RenderException($this->lastError());
@@ -160,8 +161,8 @@ final class Native
         $pdfBytes = (int) $pdfLength->cdata;
         $metaBytes = (int) $metaLength->cdata;
         try {
-            $bytes = \FFI::string($pdf, $pdfBytes);
-            $answer = json_decode(\FFI::string($meta, $metaBytes), true);
+            $bytes = FFI::string($pdf, $pdfBytes);
+            $answer = json_decode(FFI::string($meta, $metaBytes), true);
             if (! is_array($answer)) {
                 throw new RenderException('The engine answered with invalid metadata: '.json_last_error_msg());
             }
@@ -185,7 +186,7 @@ final class Native
      */
     private function cString($value): string
     {
-        return is_string($value) ? $value : \FFI::string($value);
+        return is_string($value) ? $value : FFI::string($value);
     }
 
     /**
@@ -200,7 +201,7 @@ final class Native
             return null;
         }
         $buffer = $this->ffi->new('uint8_t['.$length.']');
-        \FFI::memcpy($buffer, $data, $length);
+        FFI::memcpy($buffer, $data, $length);
 
         return $buffer;
     }

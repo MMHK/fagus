@@ -21,7 +21,7 @@ if ($argc !== 5) {
     exit(2);
 }
 
-list(, $library, $input, $output, $created) = $argv;
+[, $library, $input, $output, $created] = $argv;
 
 $html = file_get_contents($input);
 if ($html === false) {
