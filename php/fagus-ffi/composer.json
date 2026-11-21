@@ -30,10 +30,21 @@
         "php": ">=7.4",
         "ext-ffi": "*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6.33 || ^12.5.8"
+    },
     "autoload": {
         "psr-4": {
             "Fagus\\Ffi\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fagus\\Ffi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "config": {
         "sort-packages": true

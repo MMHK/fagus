@@ -9,3 +9,7 @@
 /.phpunit.cache/
 /php/fagus/bin/fagus
 /php/fagus/bin/fagus.exe
+/php/fagus-ffi/vendor/
+/php/fagus-ffi/composer.lock
+/php/fagus-ffi/.phpunit.cache/
+/php/fagus-ffi/.phpunit.result.cache
